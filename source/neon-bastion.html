@@ -382,42 +382,84 @@ html{background:var(--bg)}
 .chk{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:var(--muted);gap:8px}
 .chk input{width:18px;height:18px;accent-color:var(--cyan)}
 
-/* Téléphone en portrait : plateau bord à bord, barre d'action en bas (zone du pouce) */
-@media (max-width:900px){
-  body.in-game{padding-top:max(6px,env(safe-area-inset-top,0px));padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
-  body.in-game .hud .stats{display:none}
-  body.in-game .hud .lvl{flex-direction:row;gap:8px;align-items:baseline;flex-wrap:wrap}
-  body.in-game .hud .lvl b{font-size:.9rem}
-  body.in-game .hud small{display:none}
-  .hudmini{display:flex}
-  body.in-game .shop{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
-  body.in-game .tbtn{padding:5px 2px}
-  body.in-game .tbtn b{font-size:.62rem}
-  body.in-game .tbtn em{font-size:.64rem}
-  body.in-game .shop + .hint{display:none}
-  .nextwave{bottom:auto;top:38px;left:8px;right:auto;max-width:calc(100% - 16px);justify-content:flex-start}
-  .board .toast{top:auto;bottom:10px}
-  body.in-game .board{margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));border-radius:0;border-left:0;border-right:0}
-  body.in-game .ctrl{position:fixed;left:0;right:0;bottom:0;z-index:25;clip-path:none;border-radius:0;border-width:1px 0 0;
-    padding:8px max(10px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));background:rgba(8,12,22,.94)}
-  body.in-game .ctrl .btn{padding:9px 8px}
-}
-@media (max-width:520px){ body.in-game .ctrl{grid-template-columns:minmax(0,1fr) !important} body.in-game .ctrl .row .btn{font-size:.72rem;padding:7px 4px} }
-/* Téléphone en paysage : plateau à gauche sur toute la hauteur, commandes à droite */
-@media (max-width:1000px) and (orientation:landscape) and (max-height:520px){
-  body.in-game{padding:max(4px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) 4px max(8px,env(safe-area-inset-left,0px))}
-  body.in-game .hud{display:none}
-  body.in-game .screen{gap:0}
-  body.in-game .game-grid{grid-template-columns:min(calc((100dvh - 8px) * 1.6),calc(100vw - 250px)) minmax(0,1fr);gap:8px}
-  body.in-game .board{margin:0;border-radius:4px;border:1px solid var(--line)}
-  body.in-game .side{max-height:calc(100dvh - 8px);overflow:auto;gap:6px}
-  body.in-game .ctrl{position:static;display:flex !important;flex-direction:column;padding:6px;clip-path:none}
-  body.in-game .ctrl .row{flex-wrap:wrap}
-  body.in-game .ctrl .row .btn{flex:1 1 40%;font-size:.7rem;padding:6px 4px}
-  body.in-game .shop{grid-template-columns:repeat(3,minmax(0,1fr))}
-  body.in-game #btnWave{white-space:normal;font-size:.74rem;padding:8px 6px;line-height:1.2}
-  .dialog{left:6px;bottom:6px;max-width:70%;padding:4px 8px;gap:6px}.dialog canvas{width:26px;height:26px}.dialog b{font-size:.66rem}.dialog p{font-size:.7rem;line-height:1.25}
-}
+/* =====================================================================
+   PARTIE EN PLEIN ÉCRAN SUR TÉLÉPHONE
+   La carte occupe le maximum de place (tournée d'un quart de tour en portrait) ;
+   barre d'infos en haut, bulles et commandes en dessous : rien ne se superpose à la carte.
+   ===================================================================== */
+body.fsgame{padding:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
+body.fsgame .app{max-width:none}
+body.fsgame #scrGame{position:fixed;inset:0;z-index:20;background:#05070d;display:grid;gap:4px;align-content:stretch;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) 86px auto;grid-template-areas:"hud" "map" "info" "ctrl";
+  padding:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-right,0px)) max(4px,env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+body.fsgame .game-grid{display:contents}
+body.fsgame .board{grid-area:map;justify-self:center;align-self:center;margin:0;border-radius:4px}
+body.fsgame .board canvas#game{width:100%;height:100%}
+body.fsgame .hudmini{display:none}
+/* Barre d'infos du haut */
+body.fsgame .hud{grid-area:hud;flex-wrap:nowrap;gap:6px}
+body.fsgame .hud .lvl{min-width:0;flex:1 1 auto}
+body.fsgame .hud .lvl .eyebrow{font-size:.56rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.fsgame .hud .lvl b{font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.fsgame .hud small{display:none}
+body.fsgame .hud .stats{flex-wrap:nowrap;gap:3px}
+body.fsgame .hud .stat{min-width:0;padding:2px 6px;border-radius:4px}
+body.fsgame .hud .stat .k{font-size:.5rem;letter-spacing:.08em}
+body.fsgame .hud .stat .v{font-size:.8rem}
+body.fsgame .hud .stat:nth-child(4){display:none}
+/* Bulles : prochaine vague, messages, dialogues */
+body.fsgame .infobar{grid-area:info;position:relative;min-width:0;overflow:hidden}
+body.fsgame .infobar .nextwave{position:static;max-width:none;justify-content:flex-start;margin:0;width:max-content;max-width:100%}
+body.fsgame .infobar .toast{position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:3;font-size:.72rem;padding:3px 10px}
+body.fsgame .infobar .dialog{position:absolute;left:0;right:0;bottom:0;height:58px;max-width:none;padding:4px 8px;gap:6px;opacity:1}
+body.fsgame .infobar .dialog canvas{width:26px;height:26px}
+body.fsgame .infobar .dialog b{font-size:.62rem}
+body.fsgame .infobar .dialog p{font-size:.7rem;line-height:1.22;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* Commandes */
+body.fsgame #scrGame > .ctrl{grid-area:ctrl;display:flex !important;flex-direction:column;gap:4px;padding:5px;clip-path:none;border-radius:4px}
+body.fsgame .ctrl .row{flex-wrap:nowrap;gap:4px;width:100%}
+body.fsgame #scrGame > .ctrl > .btn{width:100%}
+body.fsgame .hud .stat .v{white-space:nowrap}
+.btn.sound-gate{position:fixed}
+body.fsgame .sound-gate{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
+body.fsgame .ctrl .row .btn{flex:1 1 0;min-width:0;font-size:.66rem;padding:7px 2px;overflow:hidden;text-overflow:ellipsis}
+body.fsgame #btnWave{padding:9px 6px;font-size:.82rem;white-space:normal;line-height:1.15}
+/* Tiroir : fiche, tourelles, ennemis (ouvert à la demande, par-dessus la carte) */
+body.fsgame .side{position:fixed;left:0;right:0;bottom:0;z-index:35;max-height:70dvh;overflow:auto;background:rgba(8,12,22,.97);
+  padding:10px max(10px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);
+  transform:translateY(105%);transition:transform .25s ease;box-shadow:0 -10px 30px rgba(0,0,0,.6)}
+body.fsgame.sheet .side{transform:none}
+.sheetclose{display:none}
+body.fsgame .sheetclose{display:block;align-self:flex-end}
+body.fsgame .shop{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+body.fsgame .tbtn{padding:5px 2px}
+body.fsgame .tbtn b{font-size:.62rem}
+body.fsgame .tbtn em{font-size:.64rem}
+body.fsgame .shop + .hint{display:none}
+body.fsgame .overlay{position:fixed;z-index:40}
+/* Paysage : carte à gauche sur toute la hauteur, colonne d'infos et de commandes à droite */
+body.fsgame.fsland #scrGame{grid-template-columns:auto minmax(160px,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"map hud" "map info" "map ctrl"}
+body.fsgame.fsland .hud{flex-direction:column;align-items:stretch}
+body.fsgame.fsland .hud .stats{flex-wrap:wrap}
+body.fsgame.fsland .hud .stat{flex:1 1 20%;padding:2px 4px}
+body.fsgame.fsland .hud .lvl b{display:none}
+body.fsgame.fsland .hud .stat .k{display:none}
+body.fsgame.fsland .infobar{display:flex;flex-direction:column;gap:4px}
+body.fsgame.fsland .infobar .toast{position:static;transform:none;white-space:normal;border-radius:6px;font-size:.72rem}
+body.fsgame.fsland .infobar .dialog{position:static;height:auto}
+body.fsgame.fsland .infobar .dialog p{-webkit-line-clamp:4}
+body.fsgame.fsland .ctrl .row{flex-wrap:wrap}
+body.fsgame.fsland .ctrl .row .btn{flex:1 1 28%}
+body.fsgame.fsland .side{left:auto;top:0;width:min(340px,60vw);max-height:none;transform:translateX(105%);border-top:0;border-left:1px solid var(--line)}
+body.fsgame.fsland.sheet .side{transform:none}
+.flygem{position:fixed;z-index:60;pointer-events:none;color:var(--gem);font-size:22px;text-shadow:0 0 10px var(--gem),0 0 2px #fff}
+.flylabel{position:fixed;z-index:60;pointer-events:none;transform:translateX(-50%);font:700 .95rem var(--font-ui);color:var(--cyan);white-space:nowrap;
+  text-shadow:0 0 8px rgba(0,0,0,.9);animation:flyup 1.6s ease-out forwards}
+.flylabel.gem{color:var(--gem);font-size:1.15rem}
+@keyframes flyup{0%{opacity:0;transform:translate(-50%,8px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-40px)}}
+.gempulse{animation:gempulse .25s ease-out}
+@keyframes gempulse{50%{transform:scale(1.3);text-shadow:0 0 12px var(--gem)}}
+#questGems{display:inline-block}
 @media (prefers-reduced-motion:reduce){.screen.enter,.rbtn,.rhub,.bgfx::before,.bgfx::after,.insp::before{animation:none}}
 </style>
 
@@ -536,6 +578,7 @@ html{background:var(--bg)}
     <div class="topbar">
       <div class="who"><p class="eyebrow">Objectifs et récompenses</p><h2>Quêtes</h2></div>
       <div class="row">
+        <button class="btn small primary" id="btnClaimAll" type="button" hidden>Tout récupérer</button>
         <span class="stat"><span class="k">Gemmes</span><span class="v gem" id="questGems">0</span></span>
         <button class="btn small" id="btnQuestsBack" type="button">Retour à la carte</button>
       </div>
@@ -592,17 +635,20 @@ html{background:var(--bg)}
         <div class="dialog" id="dialog" hidden></div>
         <div class="overlay" id="endOverlay" hidden><div class="card" id="endCard"></div></div>
       </div>
+      <div class="infobar" id="infobar"></div>
       <aside class="side">
         <section class="panel ctrl">
           <button class="btn primary" id="btnWave" type="button">Lancer la vague</button>
           <div class="row">
             <button class="btn small" id="btnSpeed" type="button">Vitesse x1</button>
             <button class="btn small" id="btnPause" type="button">Pause</button>
+            <button class="btn small" id="btnSheet" type="button" hidden>Tourelles</button>
             <button class="btn small" id="btnSoundGame" type="button" aria-label="Réglages du son et des graphismes">Réglages</button>
             <button class="btn small" id="btnFull" type="button" hidden>Plein écran</button>
             <button class="btn small" id="btnQuit" type="button">Quitter</button>
           </div>
         </section>
+        <button class="btn small sheetclose" id="btnSheetClose" type="button">Fermer ✕</button>
         <section class="panel insp" id="insp" hidden aria-live="polite"></section>
         <section class="panel">
           <p class="eyebrow">Tourelles</p>
@@ -2900,8 +2946,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const CHANGELOG = [
+  { v: '2.1', date: '27.10.2026', items: ['Sur téléphone, la partie prend tout l’écran : la carte est agrandie au maximum (tournée en portrait)', 'Infos, messages et commandes placés autour de la carte, plus rien ne la recouvre', 'Quêtes : bouton « Tout récupérer », plus de fenêtre à fermer, les gemmes s’envolent vers le compteur'] },
   { v: '2.0', date: '27.10.2026', items: ['Graphismes refaits : lueur néon sur tout l’écran, particules, explosions, douilles, traînées de missiles', 'Tirs qui ont du poids : éclairs de canon, recul, tremblement de l’écran, ralenti d’impact sur les boss', 'Barres de vie segmentées avec traînée des dégâts, grande barre de boss, chiffres de dégâts', 'Carte animée : circuits imprimés, flux de données sur la route, portail et noyau vivants', 'Effets GPU (WebGL 2) : ondes de choc, aberration chromatique, lueur sur deux niveaux', 'Menu en cercle sur la carte pour construire, améliorer, vendre', 'Bouton de vague près du portail, aperçu de la prochaine vague', 'Interface en verre, transitions, bruitages, mode plein écran et réglages graphiques'] },
   { v: '1.8', date: '27.10.2026', items: ['Installation sur téléphone (iPhone et Android) avec mises à jour automatiques', 'Écran « Quoi de neuf » après chaque mise à jour', 'Numéro de version dans le menu'] },
   { v: '1.7', date: '26.10.2026', items: ['Le nombre de vagues suit le niveau : 10 au niveau 1, 60 au niveau 50', 'Difficulté revue à la hausse, compétences rééquilibrées', 'Cases à acheter plus chères, moins de cases gratuites'] },
@@ -2944,6 +2991,47 @@ const VersionInfo = {
         : '<div><b>Les mises à jour</b><p class="hint">L’icône ouvre toujours la dernière version publiée : rien à réinstaller. Un écran « Mise à jour installée » s’affiche quand une nouvelle version arrive.</p></div>') +
       '<div><b>Tes sauvegardes</b><p class="hint">Chaque navigateur garde ses propres sauvegardes. Pour reprendre ta partie de Claude sur l’icône du téléphone, utilise « Exporter » ici puis « Importer un code » là-bas.</p></div></div>';
     Modal.open({ title: 'Installer sur ton téléphone', html, actions: [{ label: 'Compris', cls: 'primary' }] });
+  }
+};
+
+/* Animation des gemmes qui volent jusqu'au compteur, qui monte au fur et à mesure. */
+const GemFx = {
+  fly(from, target, before, after) {
+    const gain = after - before;
+    if (gain <= 0 || !target) return;
+    const to = target.getBoundingClientRect(), n = Math.max(4, Math.min(16, Math.round(gain / 8)));
+    const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+    target.textContent = fmtBig(before);
+    const sx = from.left + from.width / 2, sy = from.top + from.height / 2, tx = to.left + to.width / 2, ty = to.top + to.height / 2;
+    this.label(from, `+${fmtBig(gain)} ${GEM}`, -1, 'gem');
+    let arrived = 0;
+    for (let i = 0; i < n; i++) {
+      const g = document.createElement('span');
+      g.className = 'flygem'; g.textContent = GEM;
+      g.style.left = sx + 'px'; g.style.top = sy + 'px';
+      document.body.appendChild(g);
+      const a = Math.random() * TAU, r = 30 + Math.random() * 40, mx = (sx + tx) / 2 + Math.cos(a) * r * 2, my = Math.min(sy, ty) - 60 - Math.random() * 60;
+      const anim = g.animate([
+        { transform: 'translate(-50%,-50%) scale(.4)', opacity: 0 },
+        { transform: `translate(calc(-50% + ${Math.cos(a) * r}px), calc(-50% + ${Math.sin(a) * r}px)) scale(1.2)`, opacity: 1, offset: 0.25 },
+        { transform: `translate(calc(-50% + ${mx - sx}px), calc(-50% + ${my - sy}px)) scale(1)`, opacity: 1, offset: 0.6 },
+        { transform: `translate(calc(-50% + ${tx - sx}px), calc(-50% + ${ty - sy}px)) scale(.5)`, opacity: 0.9 }
+      ], { duration: reduce ? 10 : 850 + i * 45, easing: 'cubic-bezier(.5,0,.6,1)', delay: reduce ? 0 : i * 35 });
+      anim.onfinish = () => {
+        g.remove(); arrived++;
+        target.textContent = fmtBig(Math.round(before + gain * arrived / n));
+        target.classList.remove('gempulse'); void target.offsetWidth; target.classList.add('gempulse');
+        if (arrived % 3 === 1) Sound.sfx && Sound.sfx('ui');
+      };
+    }
+  },
+  label(from, text, i, cls) {
+    const el = document.createElement('span');
+    el.className = 'flylabel ' + (cls || '');
+    el.textContent = text;
+    el.style.left = (from.left + from.width / 2) + 'px'; el.style.top = Math.min(innerHeight - 40, from.bottom + 14 + (i + 1) * 24) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1600);
   }
 };
 
@@ -3042,6 +3130,9 @@ const Meta = {
     const s = App.slot;
     this.refreshQuests(s);
     $('questGems').textContent = fmtBig(s.gems);
+    const ready = this.claimables(s), all = $('btnClaimAll');
+    all.hidden = !ready; all.textContent = `Tout récupérer (${ready})`;
+    all.onclick = () => this.claimAll(all);
     const n = k => { const c = this.countTab(s, k); return c ? ` <span class="count">${c}</span>` : ''; };
     this.tabs($('questTabs'), [['story', 'Histoire' + n('story')], ['challenges', 'Défis'], ['daily', 'Quotidiennes' + n('daily')], ['weekly', 'Hebdomadaires' + n('weekly')], ['crew', 'Équipage' + n('crew')], ['ach', 'Succès' + n('ach')]],
       this.qTab, id => { this.qTab = id; this.renderQuests(); });
@@ -3083,7 +3174,38 @@ const Meta = {
     }
     body.innerHTML = h;
     body.querySelectorAll('[data-portrait]').forEach(c => drawPortrait(c, c.dataset.portrait));
-    body.querySelectorAll('[data-claim]').forEach(bt => { bt.onclick = () => this.claim(bt.dataset.claim); });
+    body.querySelectorAll('[data-claim]').forEach(bt => { bt.onclick = () => this.claimWithFx([bt.dataset.claim], bt); });
+  },
+  /* Toutes les récompenses prêtes, dans tous les onglets (les paliers successifs compris). */
+  readyKeys(s) {
+    this.refreshQuests(s);
+    const keys = [];
+    for (let w = 1; w <= maxWorld(s); w++) if (chapterDone(s, w) && !s.story.logs[w]) keys.push('ch:' + w);
+    for (const k of ['daily', 'weekly']) s[k].quests.forEach((q, i) => { if (!q.claimed && questProgress(s, q) >= q.target) keys.push(`${k}:${i}`); });
+    for (const id in CREW_TOWERS) if (charKills(s, id) >= charGoal(s.chars[id] || 0)) keys.push('crew:' + id);
+    for (const a of ACHS) { const g = a.goal(s.ach[a.id] || 0); if (g !== undefined && a.val(s) >= g) keys.push('ach:' + a.id); }
+    return keys;
+  },
+  claimAll(btn) {
+    const s = App.slot, keys = [];
+    for (let guard = 0; guard < 1000; guard++) { const k = this.readyKeys(s); if (!k.length) break; for (const x of k) { keys.push(x); this.claim(x, true); } }
+    this.finishClaim(keys.length, btn);
+  },
+  claimWithFx(keys, btn) { let n = 0; for (const k of keys) if (this.claim(k, true)) n++; this.finishClaim(n, btn); },
+  /* Pas de fenêtre à fermer : les gemmes s'envolent vers le compteur, les autres gains s'affichent un instant. */
+  finishClaim(n, btn) {
+    const s = App.slot, before = this.gemsBefore, extras = this.extras || [];
+    this.gemsBefore = null; this.extras = [];
+    if (!n) return;
+    const from = btn.getBoundingClientRect();
+    Store.touch(s);
+    this.renderQuests();
+    Sound.sfx && Sound.sfx('up');
+    GemFx.fly(from, $('questGems'), before, s.gems);
+    const cnt = new Map();
+    for (const t of extras) cnt.set(t, (cnt.get(t) || 0) + 1);
+    let i = 0;
+    for (const [t, c] of cnt) GemFx.label(from, c > 1 ? `${t} ×${c}` : t, i++);
   },
   countTab(s, k) {
     if (k === 'story') { let n = 0; for (let w = 1; w <= maxWorld(s); w++) if (chapterDone(s, w) && !s.story.logs[w]) n++; return n; }
@@ -3092,8 +3214,10 @@ const Meta = {
     if (k === 'ach') return ACHS.filter(a => { const g = a.goal(s.ach[a.id] || 0); return g !== undefined && a.val(s) >= g; }).length;
     return 0;
   },
-  claim(key) {
+  claim(key, quiet) {
     const s = App.slot, [kind, id] = key.split(':');
+    if (this.gemsBefore == null) this.gemsBefore = s.gems;
+    this.extras = this.extras || [];
     let msg = '';
     if (kind === 'ch') { const w = +id; if (!chapterDone(s, w) || s.story.logs[w]) return; s.story.logs[w] = 1; msg = grant(s, chapterReward(w)) + ', nouveau fragment dans le journal'; }
     if (kind === 'daily' || kind === 'weekly') { const q = s[kind].quests[+id]; if (q.claimed || questProgress(s, q) < q.target) return; q.claimed = true; msg = grant(s, q); }
@@ -3103,9 +3227,10 @@ const Meta = {
       msg = grant(s, { gems: r.gems, point: r.point, relic: r.relic, skinFor: r.skin ? CREW_TOWERS[id] : null });
     }
     if (kind === 'ach') { const a = ACHS.find(x => x.id === id), k = s.ach[id] || 0, g = a.goal(k); if (g === undefined || a.val(s) < g) return; s.ach[id] = k + 1; msg = grant(s, achReward(k)); }
-    Store.touch(s);
-    this.renderQuests();
-    Modal.open({ title: 'Récompense obtenue', text: msg, actions: [{ label: 'Super' }] });
+    if (!msg) return false;
+    for (const part of msg.split(', ')) if (!part.includes(GEM)) this.extras.push(part);
+    if (!quiet) this.finishClaim(1, document.body);
+    return true;
   },
 
   /* ---------- Écran Boutique ---------- */
@@ -3451,13 +3576,19 @@ const PFX = {
 /* Chiffres de dégâts : petits arcs qui montent et s'effacent. */
 const Nums = {
   list: [],
-  add(x, y, text, color, size) {
+  add(x, y, d, text, color, size) {
     if (!GFX.s.numbers) return;
     if (this.list.length > 70) this.list.shift();
-    this.list.push({ x: x + (Math.random() - 0.5) * 10, y, vx: (Math.random() - 0.5) * 50, vy: -85 - Math.random() * 25, life: 0.8, max: 0.8, text, color, size });
+    const p = R.above(x, y, d), j = (Math.random() - 0.5) * 10;
+    this.list.push({ x: p.x + (R.rot ? 0 : j), y: p.y + (R.rot ? j : 0), vx: (Math.random() - 0.5) * 50, vy: -85 - Math.random() * 25, life: 0.8, max: 0.8, text, color, size });
   },
+  /* Vitesse exprimée à l'écran, convertie en coordonnées de la carte. */
   update(dt) {
-    for (const n of this.list) { n.life -= dt; n.x += n.vx * dt; n.y += n.vy * dt; n.vy += 160 * dt; }
+    for (const n of this.list) {
+      n.life -= dt;
+      if (R.rot) { n.x += n.vy * dt; n.y -= n.vx * dt; } else { n.x += n.vx * dt; n.y += n.vy * dt; }
+      n.vy += 160 * dt;
+    }
     this.list = this.list.filter(n => n.life > 0);
   },
   draw(ctx) {
@@ -3466,8 +3597,10 @@ const Nums = {
       const t = n.life / n.max, pop = t > 0.82 ? 1 + (t - 0.82) * 3 : 1;
       ctx.globalAlpha = Math.min(1, t * 2.2);
       ctx.font = `700 ${Math.round(n.size * pop)}px "Chakra Petch", sans-serif`;
-      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(5,8,14,.9)'; ctx.strokeText(n.text, n.x, n.y);
-      ctx.fillStyle = n.color; ctx.fillText(n.text, n.x, n.y);
+      const [x, y] = beginUp(ctx, n.x, n.y);
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(5,8,14,.9)'; ctx.strokeText(n.text, x, y);
+      ctx.fillStyle = n.color; ctx.fillText(n.text, x, y);
+      endUp(ctx);
     }
     ctx.globalAlpha = 1;
   }
@@ -3477,6 +3610,11 @@ const Nums = {
    RENDU — état visuel d'une partie (tremblement, ralenti d'impact, ondes)
    ===================================================================== */
 const R = {
+  rot: false,                         // téléphone en portrait : la carte est tournée d'un quart de tour pour remplir l'écran
+  get LW() { return this.rot ? H : W; },
+  get LH() { return this.rot ? W : H; },
+  /* Point situé d px « au-dessus » à l'écran (tient compte de la rotation). */
+  above(x, y, d) { return this.rot ? { x: x - d, y } : { x, y: y - d }; },
   k: 1, time: 0, trauma: 0, hitstop: 0, flash: 0, chroma: 0,
   waves: [], callBtn: null, portalT: 0, shakeX: 0, shakeY: 0,
   reset() { this.trauma = 0; this.hitstop = 0; this.flash = 0; this.chroma = 0; this.waves = []; PFX.clear(); Nums.list = []; },
@@ -3517,8 +3655,8 @@ const R = {
           break;
         case 'hit': {
           const e = ev.e;
-          if (ev.crit) Nums.add(e.x, e.y - e.r - 4, fmtBig(Math.round(ev.v)) + '!', '#ff4fa3', 18);
-          else if (ev.v >= e.maxHp * 0.04 || Nums.list.length < 30) Nums.add(e.x, e.y - e.r - 4, fmtBig(Math.max(1, Math.round(ev.v))), '#e4ecfb', 12 + Math.min(4, Math.log10(ev.v + 1)));
+          if (ev.crit) Nums.add(e.x, e.y, e.r + 4, fmtBig(Math.round(ev.v)) + '!', '#ff4fa3', 18);
+          else if (ev.v >= e.maxHp * 0.04 || Nums.list.length < 30) Nums.add(e.x, e.y, e.r + 4, fmtBig(Math.max(1, Math.round(ev.v))), '#e4ecfb', 12 + Math.min(4, Math.log10(ev.v + 1)));
           break;
         }
         case 'kill': {
@@ -3623,7 +3761,7 @@ const R = {
         e._age = (e._age || 0) + dt;
         if (e.dotAcc > 0) {
           e._dotT = (e._dotT || 0) + dt;
-          if (e._dotT >= 0.5) { Nums.add(e.x, e.y - e.r - 4, fmtBig(Math.max(1, Math.round(e.dotAcc))), e.poisonT > 0 ? '#9cff57' : '#ffb3b3', 11); e.dotAcc = 0; e._dotT = 0; }
+          if (e._dotT >= 0.5) { Nums.add(e.x, e.y, e.r + 4, fmtBig(Math.max(1, Math.round(e.dotAcc))), e.poisonT > 0 ? '#9cff57' : '#ffb3b3', 11); e.dotAcc = 0; e._dotT = 0; }
         }
         if (e.speed > 95 && Math.random() < dt * 30) {
           const p = PFX.get('ember', e.x - Math.cos(e.angle) * e.r, e.y - Math.sin(e.angle) * e.r, 0, 0, 0.25, e.r * 0.5, e.type.color);
@@ -3640,6 +3778,9 @@ const R = {
     Nums.update(dt);
   }
 };
+/* Texte et jauges toujours à l'endroit, même quand la carte est tournée. */
+function beginUp(ctx, x, y) { if (!R.rot) return [x, y]; ctx.save(); ctx.translate(x, y); ctx.rotate(-Math.PI / 2); return [0, 0]; }
+function endUp(ctx) { if (R.rot) ctx.restore(); }
 function rgbHexMix(hex) { const c = rgbOf(hex); return '#' + c.map(v => Math.round(v * 0.35 + 40).toString(16).padStart(2, '0')).join(''); }
 function buzz(ms) { try { if (navigator.vibrate && GFX.mobile) navigator.vibrate(ms); } catch (e) { /* vibration indisponible */ } }
 
@@ -3739,10 +3880,10 @@ function renderPadLayer(b, k) {
 const Overlay = {
   key: '', c: null,
   get(k, scan) {
-    const key = k + '|' + scan;
+    const key = k + '|' + scan + '|' + R.rot;
     if (this.key === key) return this.c;
     const c = document.createElement('canvas');
-    c.width = Math.round(W * k); c.height = Math.round(H * k);
+    c.width = Math.round(R.LW * k); c.height = Math.round(R.LH * k);
     const g = c.getContext('2d');
     const gr = g.createRadialGradient(c.width / 2, c.height / 2, c.height * 0.35, c.width / 2, c.height / 2, c.width * 0.62);
     gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.5)');
@@ -3758,7 +3899,7 @@ const Overlay = {
 const Bloom2D = {
   a: null, b: null,
   apply(ctx, canvas) {
-    const w1 = Math.max(1, Math.round(W / 4)), h1 = Math.max(1, Math.round(H / 4));
+    const w1 = Math.max(1, Math.round(R.LW / 4)), h1 = Math.max(1, Math.round(R.LH / 4));
     if (!this.a) { this.a = document.createElement('canvas'); this.b = document.createElement('canvas'); }
     const A = this.a, B = this.b;
     if (A.width !== w1) { A.width = w1; A.height = h1; B.width = Math.round(w1 / 2); B.height = Math.round(h1 / 2); }
@@ -3789,8 +3930,8 @@ function drawRange(ctx, x, y, range, color, strong, time) {
   ctx.restore();
 }
 
-function drawLockedHover(ctx, p, cost, afford) {
-  const s = 26;
+function drawLockedHover(ctx, p0, cost, afford) {
+  const s = 26, [px, py] = beginUp(ctx, p0.x, p0.y), p = { x: px, y: py };
   ctx.fillStyle = 'rgba(255,207,74,.08)';
   roundRectPath(ctx, p.x - s, p.y - s, s * 2, s * 2, 8); ctx.fill();
   ctx.strokeStyle = afford ? '#ffcf4a' : 'rgba(255,207,74,.45)'; ctx.lineWidth = 2; ctx.setLineDash([4, 5]); ctx.stroke(); ctx.setLineDash([]);
@@ -3799,6 +3940,7 @@ function drawLockedHover(ctx, p, cost, afford) {
   ctx.fillRect(p.x - 7, p.y - 8, 14, 10);
   ctx.font = '700 11px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(fmtBig(cost), p.x, p.y + 13);
+  endUp(ctx);
 }
 
 /* ---------- Tourelles ---------- */
@@ -3839,7 +3981,9 @@ function drawTowerFX(ctx, t, hl, time) {
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   ctx.restore();
-  drawTowerBadge(ctx, def, t.x, t.y, t.level);
+  const [bx, by] = beginUp(ctx, t.x, t.y);
+  drawTowerBadge(ctx, def, bx, by, t.level);
+  endUp(ctx);
 }
 
 /* ---------- Ennemis et barres de vie ---------- */
@@ -3881,7 +4025,8 @@ function drawHpBar(ctx, e, sel, dt) {
   const ratio = updateLag(e, dt);
   if (e.type.boss) return;                         // les boss ont leur grande barre en haut de l'écran
   if (ratio >= 0.999 && e._lag >= 0.999 && !sel && !e.elite && !(e.maxShield && e.shield < e.maxShield)) return;
-  const w = Math.max(26, e.r * 2.6), h = 5, x = e.x - w / 2, y = e.y - e.r - 13, sk = 3;
+  const [cx, cy] = beginUp(ctx, e.x, e.y);
+  const w = Math.max(26, e.r * 2.6), h = 5, x = cx - w / 2, y = cy - e.r - 13, sk = 3;
   const para = (x0, w0, y0, h0) => { ctx.beginPath(); ctx.moveTo(x0 + sk, y0); ctx.lineTo(x0 + w0 + sk, y0); ctx.lineTo(x0 + w0, y0 + h0); ctx.lineTo(x0, y0 + h0); ctx.closePath(); };
   ctx.fillStyle = 'rgba(4,7,13,.85)'; para(x - 1.5, w + 3, y - 1.5, h + 3); ctx.fill();
   const col = ratio > 0.6 ? '#3ef2c8' : ratio > 0.3 ? '#ffcf4a' : '#ff5468';
@@ -3898,11 +4043,12 @@ function drawHpBar(ctx, e, sel, dt) {
     for (let i = 3; i < sw; i += 5) ctx.fillRect(x + i, y - 4, 1.5, 2.5);
   }
   if (e.elite) { ctx.fillStyle = '#ffcf4a'; ctx.beginPath(); ctx.moveTo(x - 7, y + h / 2); ctx.lineTo(x - 3, y - 1); ctx.lineTo(x - 3, y + h + 1); ctx.closePath(); ctx.fill(); }
+  endUp(ctx);
 }
 function drawBossBar(ctx, b, time) {
   const boss = b.enemies.find(e => e.alive && e.type.boss);
   if (!boss) return;
-  const ratio = boss.hp / boss.maxHp, lag = boss._lag === undefined ? ratio : boss._lag, w = 440, h = 12, x = (W - w) / 2, y = 30;
+  const ratio = boss.hp / boss.maxHp, lag = boss._lag === undefined ? ratio : boss._lag, w = Math.min(440, R.LW - 40), h = 12, x = (R.LW - w) / 2, y = 30;
   ctx.save();
   ctx.fillStyle = 'rgba(5,8,14,.85)'; roundRectPath(ctx, x - 10, y - 22, w + 20, h + 32, 8); ctx.fill();
   ctx.strokeStyle = rgba('#ff3355', 0.6 + 0.3 * Math.sin(time * 5)); ctx.lineWidth = 1.5; ctx.stroke();
@@ -3975,8 +4121,10 @@ function drawEffectFX(ctx, f) {
     const pop = t > 0.8 ? 1 + (t - 0.8) * 2 : 1;
     ctx.globalAlpha = Math.min(1, t * 2);
     ctx.font = `700 ${Math.round(12 * pop)}px "Chakra Petch", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(5,8,14,.9)'; ctx.strokeText(f.text, f.x, f.y);
-    ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
+    const [tx, ty] = beginUp(ctx, f.x, f.y);
+    ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(5,8,14,.9)'; ctx.strokeText(f.text, tx, ty);
+    ctx.fillStyle = f.color; ctx.fillText(f.text, tx, ty);
+    endUp(ctx);
     ctx.globalAlpha = 1;
     return;
   }
@@ -4061,7 +4209,9 @@ function drawCallButton(ctx, b, time) {
   ctx.fillStyle = ctx.strokeStyle;
   for (const o of [-5, 3]) { ctx.beginPath(); ctx.moveTo(x + o - 3, y - 6); ctx.lineTo(x + o + 5, y); ctx.lineTo(x + o - 3, y + 6); ctx.closePath(); ctx.fill(); }
   ctx.font = '700 9px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(early ? '+' + fmtBig(b.earlyBonus(b.chain + 1)) : `${b.wave + 1}/${b.level.waves}`, x, y + r + 12);
+  const [lx, ly] = beginUp(ctx, x, y);
+  ctx.fillText(early ? '+' + fmtBig(b.earlyBonus(b.chain + 1)) : `${b.wave + 1}/${b.level.waves}`, lx, ly + r + 12);
+  endUp(ctx);
   ctx.restore();
 }
 
@@ -4088,7 +4238,8 @@ function drawPathFlow(ctx, b, time) {
 function renderBattle(ctx, b, view) {
   const time = view.time, k = R.k, gpu = GPU.active;
   NO_GLOW = true;
-  ctx.setTransform(k, 0, 0, k, 0, 0);
+  const world = () => { if (R.rot) ctx.setTransform(0, k, -k, 0, H * k, 0); else ctx.setTransform(k, 0, 0, k, 0, 0); };
+  world();
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   ctx.save();
   if (!gpu && (R.shakeX || R.shakeY)) ctx.translate(R.shakeX, R.shakeY);
@@ -4153,6 +4304,7 @@ function renderBattle(ctx, b, view) {
 
   if (!gpu && GFX.bloom) Bloom2D.apply(ctx, ctx.canvas);
   Nums.draw(ctx);
+  ctx.setTransform(k, 0, 0, k, 0, 0);       // à partir d'ici : coordonnées de l'écran
   drawBossBar(ctx, b, time);
   if (!gpu) {
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -4165,9 +4317,9 @@ function renderBattle(ctx, b, view) {
     ctx.restore();
   }
   if (view.paused) {
-    ctx.fillStyle = 'rgba(6,9,16,.6)'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(6,9,16,.6)'; ctx.fillRect(0, 0, R.LW, R.LH);
     ctx.fillStyle = '#e4ecfb'; ctx.font = '800 44px "Orbitron", "Chakra Petch", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('PAUSE', W / 2, H / 2);
+    ctx.fillText('PAUSE', R.LW / 2, R.LH / 2);
   }
   NO_GLOW = false;
   if (gpu) GPU.frame(ctx.canvas, time);
@@ -4233,13 +4385,14 @@ void main(){
 }`,
   VS_PART: `#version 300 es
 in vec2 corner; in vec2 ipos; in float isize; in vec4 icol; in vec2 idir;
-uniform vec2 res; out vec2 c; out vec4 col;
+uniform vec2 res; uniform float rot; uniform float worldH; out vec2 c; out vec4 col;
 void main(){
   vec2 dir = idir; float len = length(dir);
   vec2 ax = len > 0.0 ? dir / len : vec2(1.0, 0.0);
   vec2 ay = vec2(-ax.y, ax.x);
   float lx = len > 0.0 ? len + isize : isize;
   vec2 pos = ipos + ax * corner.x * lx + ay * corner.y * isize;
+  if (rot > 0.5) pos = vec2(worldH - pos.y, pos.x);
   c = corner; col = icol;
   gl_Position = vec4(pos.x / res.x * 2.0 - 1.0, 1.0 - pos.y / res.y * 2.0, 0.0, 1.0);
 }`,
@@ -4371,7 +4524,9 @@ void main(){
       const n = PFX.pack(this.buf);
       if (n) {
         gl.useProgram(this.pPart);
-        gl.uniform2f(this.uni(this.pPart, 'res'), W, H);
+        gl.uniform2f(this.uni(this.pPart, 'res'), R.LW, R.LH);
+        gl.uniform1f(this.uni(this.pPart, 'rot'), R.rot ? 1 : 0);
+        gl.uniform1f(this.uni(this.pPart, 'worldH'), H);
         gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
         gl.bindVertexArray(this.vaoPart);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.ib);
@@ -4393,7 +4548,7 @@ void main(){
       this.pass(F, null, this.scene.t);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.h1.t); gl.uniform1i(this.uni(F, 'b1'), 1);
       gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, this.q1.t); gl.uniform1i(this.uni(F, 'b2'), 2);
-      gl.uniform1f(this.uni(F, 'aspect'), W / H);
+      gl.uniform1f(this.uni(F, 'aspect'), R.LW / R.LH);
       gl.uniform1f(this.uni(F, 'chroma'), R.chroma);
       gl.uniform1f(this.uni(F, 'flash'), R.flash);
       gl.uniform1f(this.uni(F, 'bloomA'), 0.55);
@@ -4401,11 +4556,12 @@ void main(){
       gl.uniform1f(this.uni(F, 'vig'), 0.55);
       gl.uniform1f(this.uni(F, 'scan'), GFX.level >= 2 ? 0.05 : 0);
       gl.uniform1f(this.uni(F, 'time'), time);
-      gl.uniform2f(this.uni(F, 'shake'), -R.shakeX / W, R.shakeY / H);
+      gl.uniform2f(this.uni(F, 'shake'), -R.shakeX / R.LW, R.shakeY / R.LH);
       const wv = new Float32Array(32);
       R.waves.forEach((w, i) => {
         const p = w.t / w.dur;
-        wv[i * 4] = w.x / W; wv[i * 4 + 1] = 1 - w.y / H; wv[i * 4 + 2] = w.radius * ease.outCubic(p) / H; wv[i * 4 + 3] = w.amp * (1 - p) * (1 - p);
+        const cx = R.rot ? H - w.y : w.x, cy = R.rot ? w.x : w.y;
+        wv[i * 4] = cx / R.LW; wv[i * 4 + 1] = 1 - cy / R.LH; wv[i * 4 + 2] = w.radius * ease.outCubic(p) / R.LH; wv[i * 4 + 3] = w.amp * (1 - p) * (1 - p);
       });
       gl.uniform4fv(this.uni(F, 'waves'), wv);
       gl.uniform1i(this.uni(F, 'nw'), R.waves.length);
@@ -4533,6 +4689,7 @@ const App = {
       if (s === name && this.current !== name) { el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); }
     }
     document.body.classList.toggle('in-game', name === 'game');
+    if (name !== 'game') { document.body.classList.remove('fsgame', 'fsland', 'sheet'); R.rot = false; GameView.sheetMenu = false; if (GameView.canvas) GameView.layout(); }
     if (name !== 'game') Radial.close();
     if (this.current && this.current !== name) Sound.sfx && Sound.sfx('ui');
     this.current = name;
@@ -4892,7 +5049,8 @@ const Radial = {
     let Rr = clamp(Math.max(need, Math.min(w, h) * 0.24), 54, 104);
     Rr = Math.min(Rr, h / 2 - D / 2 - 4);
     const m = Rr + D / 2 + 4;
-    const cx = clamp(pad.x / W * w, m, w - m), cy = clamp(pad.y / H * h, m, h - m);
+    const sp = GameView.worldToCss(pad.x, pad.y, w, h);
+    const cx = clamp(sp.x, m, w - m), cy = clamp(sp.y, m, h - m);
     this.el.style.left = cx + 'px'; this.el.style.top = cy + 'px';
     this.el.style.setProperty('--d', D + 'px');
     void board;
@@ -4994,6 +5152,9 @@ const GameView = {
     this.canvas = $('game');
     this.ctx = this.canvas.getContext('2d');
     Radial.el = $('radial');
+    $('btnSheet').onclick = () => this.setSheet(!this.sheetMenu);
+    $('btnSheetClose').onclick = () => { this.clearAll(); this.setSheet(false); };
+    window.addEventListener('orientationchange', () => setTimeout(() => { Radial.close(); this.resize(); }, 300));
     GFX.load();
     let rt = 0;
     window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { Radial.close(); this.resize(); }, 150); });
@@ -5001,19 +5162,20 @@ const GameView = {
     if (document.fullscreenEnabled && !standalone) {
       fs.hidden = false;
       fs.onclick = () => {
+        setTimeout(() => this.resize(), 400);
         try {
           if (document.fullscreenElement) document.exitFullscreen();
           else document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* non pris en charge */ } }, () => Toast.show('Plein écran refusé par le navigateur'));
         } catch (e) { Toast.show('Plein écran indisponible ici'); }
       };
-      document.addEventListener('fullscreenchange', () => { fs.textContent = document.fullscreenElement ? 'Quitter plein écran' : 'Plein écran'; });
+      document.addEventListener('fullscreenchange', () => { this.setLabels(); setTimeout(() => this.resize(), 200); });
     }
     this.canvas.addEventListener('pointermove', ev => { this.hover = this.toWorld(ev); });
     this.canvas.addEventListener('pointerleave', () => { this.hover = null; });
     this.canvas.addEventListener('click', ev => this.onClick(this.toWorld(ev)));
     $('dialog').onclick = () => Talk.next();
     $('btnWave').onclick = () => this.startWave();
-    $('btnSpeed').onclick = () => { this.speed = this.speed >= 5 ? 1 : this.speed + 1; $('btnSpeed').textContent = 'Vitesse x' + this.speed; };
+    $('btnSpeed').onclick = () => { this.speed = this.speed >= 5 ? 1 : this.speed + 1; this.setLabels(); };
     $('btnPause').onclick = () => this.togglePause();
     $('btnQuit').onclick = () => this.quit();
     window.addEventListener('keydown', ev => {
@@ -5036,13 +5198,14 @@ const GameView = {
 
   /* Taille réelle du plateau : l'image est calculée à la densité de l'écran (net sur mobile), dans la limite de la qualité choisie. */
   resize(force) {
+    this.layout();
     const rc = this.canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     const css = rc.width || W;
-    let k = clamp(css * dpr / W, 1, GFX.maxK);
+    let k = clamp(css * dpr / R.LW, 1, GFX.maxK);
     k = Math.round(k * 4) / 4;
-    if (k !== R.k || force || this.canvas.width !== Math.round(W * k)) {
+    if (k !== R.k || force || this.canvas.width !== Math.round(R.LW * k)) {
       R.k = k;
-      this.canvas.width = Math.round(W * k); this.canvas.height = Math.round(H * k);
+      this.canvas.width = Math.round(R.LW * k); this.canvas.height = Math.round(R.LH * k);
       if (this.battle) { this.bg = renderLevelBackground(this.battle.level, this.battle.path, k); this.padLayer = renderPadLayer(this.battle, k); }
     }
     if (GFX.s.gpu && GFX.level >= 1 && !GPU.failed) GPU.enable($('board'), this.canvas); else GPU.disable();
@@ -5063,7 +5226,7 @@ const GameView = {
     R.reset();
     Radial.close();
     this.speed = 1; this.paused = false;
-    $('btnSpeed').textContent = 'Vitesse x1'; $('btnPause').textContent = 'Pause';
+    this.setLabels();
     $('endOverlay').hidden = true;
     this.cache = {};
     $('hudLvlNum').textContent = `Monde ${b.level.world} · Niveau ${b.level.n}`;
@@ -5098,7 +5261,54 @@ const GameView = {
     Store.touch(App.slot);
   },
 
-  toWorld(ev) { const r = this.canvas.getBoundingClientRect(); return { x: (ev.clientX - r.left) / r.width * W, y: (ev.clientY - r.top) / r.height * H }; },
+  toWorld(ev) {
+    const r = this.canvas.getBoundingClientRect(), u = (ev.clientX - r.left) / r.width, v = (ev.clientY - r.top) / r.height;
+    return R.rot ? { x: v * W, y: (1 - u) * H } : { x: u * W, y: v * H };
+  },
+  worldToCss(x, y, w, h) { return R.rot ? { x: (1 - y / H) * w, y: x / W * h } : { x: x / W * w, y: y / H * h }; },
+
+  /* Téléphone : la partie occupe tout l'écran. La carte est agrandie au maximum (tournée en portrait),
+     et les informations sont placées autour, jamais par-dessus. */
+  get fsWanted() { return document.body.classList.contains('in-game') && (innerWidth <= 900 || Math.min(innerWidth, innerHeight) <= 600); },
+  layout() {
+    const fs = this.fsWanted, body = document.body, board = $('board'), info = $('infobar'), ctrl = document.querySelector('#scrGame .ctrl'), side = document.querySelector('#scrGame .side');
+    const land = fs && innerWidth > innerHeight;
+    body.classList.toggle('fsgame', fs);
+    body.classList.toggle('fsland', land);
+    if (!fs) body.classList.remove('sheet');
+    $('btnSheet').hidden = !fs;
+    this.setLabels();
+    const rot = fs && !land;
+    if (rot !== R.rot) { R.rot = rot; Overlay.key = ''; }
+    // Les bulles (dialogue, messages, prochaine vague) quittent la carte en plein écran
+    for (const id of ['nextWave', 'toast', 'dialog']) { const el = $(id); const home = fs ? info : board; if (el.parentNode !== home) home.appendChild(el); }
+    if (fs && ctrl.parentNode !== $('scrGame')) $('scrGame').appendChild(ctrl);
+    if (!fs && ctrl.parentNode !== side) side.insertBefore(ctrl, side.firstChild);
+    if (!fs) { board.style.width = board.style.height = ''; return; }
+    const cs = getComputedStyle($('scrGame')), px = v => parseFloat(v) || 0;
+    const padW = px(cs.paddingLeft) + px(cs.paddingRight), padH = px(cs.paddingTop) + px(cs.paddingBottom), gap = 4;
+    const hud = document.querySelector('#scrGame .hud').offsetHeight;
+    let bw, bh;
+    if (land) {
+      const availH = innerHeight - padH, availW = innerWidth - padW - gap - 170;
+      bw = Math.min(availH * 1.6, availW); bh = bw / 1.6;
+    } else {
+      const availW = innerWidth - padW, availH = innerHeight - padH - hud - info.offsetHeight - ctrl.offsetHeight - gap * 3;
+      bw = Math.min(availW, availH * 0.625); bh = bw / 0.625;
+    }
+    board.style.width = Math.floor(bw) + 'px'; board.style.height = Math.floor(bh) + 'px';
+  },
+  /* Libellés courts en plein écran (la place manque sur un téléphone). */
+  setLabels() {
+    const fs = document.body.classList.contains('fsgame'), full = !!document.fullscreenElement;
+    $('btnSpeed').textContent = fs ? '×' + this.speed : 'Vitesse x' + this.speed;
+    $('btnPause').textContent = this.paused ? (fs ? '▶' : 'Reprendre') : (fs ? '❚❚' : 'Pause');
+    $('btnSheet').textContent = 'Tours';
+    $('btnSoundGame').textContent = fs ? '⚙' : 'Réglages';
+    $('btnFull').textContent = fs ? (full ? '⤓' : '⛶') : (full ? 'Quitter plein écran' : 'Plein écran');
+    $('btnQuit').textContent = fs ? '✕' : 'Quitter';
+  },
+  setSheet(open) { this.sheetMenu = open; document.body.classList.toggle('sheet', document.body.classList.contains('fsgame') && (open || !$('insp').hidden)); },
   padAt(pt) {
     if (!this.battle || !pt) return null;
     const col = Math.floor(pt.x / CONFIG.tile), row = Math.floor(pt.y / CONFIG.tile);
@@ -5167,14 +5377,14 @@ const GameView = {
     const b = this.battle;
     if (!b || b.state === 'victory' || b.state === 'defeat') return;
     this.paused = !this.paused;
-    $('btnPause').textContent = this.paused ? 'Reprendre' : 'Pause';
+    this.setLabels();
   },
   quit() {
     const b = this.battle, leave = () => { this.flushStats(); this.saveRun(); Talk.clear(); App.show('map'); };
     if (b && b.state === 'wave') {
-      this.paused = true; $('btnPause').textContent = 'Reprendre';
+      this.paused = true; this.setLabels();
       Modal.open({ title: 'Quitter le niveau ?', text: `La partie reprendra au début de la vague ${b.wave}, avec tes tourelles et ton or d’avant cette vague.`,
-        actions: [{ label: 'Rester', fn: () => { this.paused = false; $('btnPause').textContent = 'Pause'; } }, { label: 'Quitter', cls: 'primary', fn: leave }] });
+        actions: [{ label: 'Rester', fn: () => { this.paused = false; this.setLabels(); } }, { label: 'Quitter', cls: 'primary', fn: leave }] });
     } else leave();
   },
 
@@ -5278,9 +5488,9 @@ const GameView = {
     }
 
     // Sur téléphone, le menu en cercle suffit : la fiche complète ne s'ouvre qu'avec « Fiche »
-    const compact = matchMedia('(max-width:900px)').matches;
+    const compact = document.body.classList.contains('fsgame') || matchMedia('(max-width:900px)').matches;
     if (compact && !this.sheetForced && !this.fuseFrom && (this.selectedTower || this.selectedPad)) html = '';
-    if (!html) { box.hidden = true; $('app').classList.remove('sheet-open'); return; }
+    if (!html) { box.hidden = true; $('app').classList.remove('sheet-open'); this.setSheet(this.sheetMenu); return; }
     box.innerHTML = html;
     box.style.setProperty('--insp', color);
     const slot = box.querySelector('[data-icon]');
@@ -5291,6 +5501,7 @@ const GameView = {
     } else slot.remove();
     box.hidden = false;
     $('app').classList.add('sheet-open');
+    this.setSheet(this.sheetMenu);
     this.bindInspector(box);
     this.updateLive();
   },
