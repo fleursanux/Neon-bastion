@@ -511,6 +511,28 @@ body.fsgame.fsland.sheet .side{transform:none}
 .toast2.on{animation:t2 2.2s ease forwards}
 @keyframes t2{10%,80%{opacity:1}100%{opacity:0}}
 @media (max-width:560px){.gslots{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.gcard.big{min-height:130px}.crewhero canvas{width:72px;height:72px}}
+.recruit{display:flex;flex-direction:column;align-items:center;gap:6px}
+.recruit canvas[data-portrait]{width:120px;height:120px;border-radius:16px;box-shadow:0 0 30px color-mix(in srgb,var(--cc) 50%,transparent);animation:flipIn .6s cubic-bezier(.2,1.3,.4,1)}
+.recruit h3{margin:0;font-family:var(--font-title);color:var(--cc);font-size:1.5rem;letter-spacing:.06em}
+.recruit p{margin:0;font-size:.85rem;line-height:1.45}
+.rtower{display:flex;gap:10px;align-items:center;text-align:left;background:var(--panel-2);border-radius:8px;padding:8px;margin-top:4px}
+.rtower canvas{width:40px;height:40px;flex:none}
+.ccard.locked canvas{filter:brightness(0) drop-shadow(0 0 2px #445)}
+.evts{position:absolute;inset:0;z-index:7;pointer-events:none}
+.evbanner{position:absolute;left:50%;top:14%;transform:translateX(-50%);min-width:min(320px,86%);max-width:92%;padding:10px 16px;border-radius:8px;text-align:center;
+  background:rgba(6,9,16,.9);border:2px solid var(--ec);box-shadow:0 0 30px color-mix(in srgb,var(--ec) 45%,transparent);display:flex;flex-direction:column;gap:2px}
+.evbanner b{font-family:var(--font-title);font-size:1.05rem;letter-spacing:.06em;color:var(--ec);text-transform:uppercase}
+.evbanner span{font-size:.78rem;color:var(--fg)}
+.evbanner.on{animation:evIn 4.2s ease forwards}
+@keyframes evIn{0%{opacity:0;transform:translate(-50%,-14px) scale(.8)}8%{opacity:1;transform:translate(-50%,0) scale(1.05)}12%{transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0}}
+.evchips{position:absolute;left:8px;bottom:8px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.evchip{pointer-events:none;font:700 .7rem var(--font-ui);padding:4px 9px;border-radius:999px;background:rgba(6,9,16,.85);border:1.5px solid var(--ec);color:var(--ec)}
+.evchip.btnchip{all:unset;pointer-events:auto;cursor:pointer;font:700 .72rem var(--font-ui);padding:6px 11px;border-radius:999px;background:rgba(6,9,16,.9);border:1.5px solid var(--ec);color:var(--ec);animation:callp 1.2s ease-in-out infinite}
+.drop{all:unset;pointer-events:auto;cursor:pointer;position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 0 10px #5ef0ff);animation:dropIn .5s cubic-bezier(.2,1.5,.4,1),bob 1.2s ease-in-out .5s infinite}
+.drop small{font:800 .62rem var(--font-num);color:#5ef0ff;text-shadow:0 0 3px #000}
+.drop.fading{opacity:.55}
+@keyframes dropIn{from{transform:translate(-50%,-300%) scale(.4);opacity:0}}
+@keyframes bob{50%{margin-top:-5px}}
 .flygem{position:fixed;z-index:60;pointer-events:none;color:var(--gem);font-size:22px;text-shadow:0 0 10px var(--gem),0 0 2px #fff}
 .flylabel{position:fixed;z-index:60;pointer-events:none;transform:translateX(-50%);font:700 .95rem var(--font-ui);color:var(--cyan);white-space:nowrap;
   text-shadow:0 0 8px rgba(0,0,0,.9);animation:flyup 1.6s ease-out forwards}
@@ -705,6 +727,7 @@ body.fsgame.fsland.sheet .side{transform:none}
         </div>
         <div class="nextwave" id="nextWave" hidden></div>
         <div class="radial" id="radial" hidden></div>
+        <div class="evts" id="evts"><div class="evbanner" id="evBanner" hidden></div><div class="evchips" id="evChips"></div></div>
         <div class="toast" id="toast" style="opacity:0"></div>
         <div class="dialog" id="dialog" hidden></div>
         <div class="overlay" id="endOverlay" hidden><div class="card" id="endCard"></div></div>
@@ -786,7 +809,8 @@ const CONFIG = {
   budgetBase: 6.5,          // taille d'une vague : base…
   budgetPerWave: 2.4,     // … + ce montant par vague
   freePads1: 8,           // cases gratuites au niveau 1 (une de moins tous les 3 niveaux)
-  waveBudgetCap: 30       // au-delà de 30 vagues, le nombre d'ennemis n'augmente plus (seule leur force augmente)
+  waveBudgetCap: 30,      // au-delà de 30 vagues, le nombre d'ennemis n'augmente plus (seule leur force augmente)
+  eventChance: 0.32       // chance qu'une vague déclenche un événement surprise
 };
 /* Nombre de vagues d'un niveau : 10 au niveau 1, 60 au niveau 50, puis toujours plus. */
 const wavesFor = n => 10 + Math.round((n - 1) * 50 / 49);
@@ -855,6 +879,8 @@ const ENEMIES = [
   { id: 'colosse', unlock: 10, name: 'Colosse', hp: 1200, speed: 22, def: 0.45, reward: 150, lives: 8, r: 28, color: '#ff3355', shape: 'boss', cost: 40,
     immuneSlow: true, boss: true, spawn: { id: 'drone', every: 5, n: 2 }, desc: 'Boss de fin de monde. Lâche des drones en avançant.' }
 ];
+ENEMIES.push({ id: 'tresor', unlock: null, name: 'Cargo doré', hp: 260, speed: 82, def: 0.15, reward: 10, lives: 0, r: 15, color: '#ffcf4a', shape: 'treasure', cost: 0,
+  desc: 'Vaisseau marchand chargé d’or. Il ne fait aucun dégât au noyau, mais s’enfuit avec son trésor.' });
 const ENEMY_BY_ID = Object.fromEntries(ENEMIES.map(e => [e.id, e]));
 const ELITE = { hp: 2.5, def: 0.1, reward: 2 };
 
@@ -1016,9 +1042,9 @@ const HANDMADE = [
 ];
 const WORLD_1_NAMES = ['Faubourg Néon', 'Échangeur', 'Serpentin', 'Docks de données', 'Puits central', 'Labyrinthe', 'Retour de flamme', 'Fonderie', 'Grille haute', 'Cœur du réseau'];
 const WORLDS = [
-  { name: 'Réseau Néon', color: '#3ef2c8' }, { name: 'Ceinture de Silice', color: '#ff4fa3' }, { name: 'Abysses Quantiques', color: '#7aa7ff' },
-  { name: 'Forge Solaire', color: '#ff9b3d' }, { name: 'Nébuleuse Binaire', color: '#c58bff' }, { name: 'Citadelle Ionique', color: '#ffe14f' },
-  { name: 'Jungle de Câbles', color: '#9cff57' }, { name: 'Archipel Fractal', color: '#5ef0ff' }, { name: 'Cryo-Sanctuaire', color: '#a8f0ff' },
+  { name: 'Réseau Néon', color: '#3ef2c8' }, { name: 'Ceinture de Silice', color: '#ffb347' }, { name: 'Abysses Quantiques', color: '#4fd1ff' },
+  { name: 'Forge Solaire', color: '#ff8a3d' }, { name: 'Nébuleuse Binaire', color: '#ff7ae0' }, { name: 'Citadelle Ionique', color: '#7aa7ff' },
+  { name: 'Jungle de Câbles', color: '#7dff6a' }, { name: 'Archipel Fractal', color: '#ff6a2a' }, { name: 'Cryo-Sanctuaire', color: '#a8f0ff' },
   { name: 'Horizon des Événements', color: '#ff3355' }
 ];
 const NAME_A = ['Nexus', 'Faille', 'Relais', 'Couloir', 'Spirale', 'Citadelle', 'Archive', 'Terminal', 'Abîme', 'Bastion', 'Conduit', 'Prisme', 'Rempart', 'Sillon', 'Dédale', 'Vortex'];
@@ -1260,7 +1286,7 @@ class Enemy {
           { const d = new Enemy(this.type.spawn.id, this.path, this.hpMul, this.speedMul, Math.max(0, this.distance - 20 - i * 18), false, this.mods); d.rew = this.rew; battle.enemies.push(d); }
       }
     }
-    this.distance += this.speed * dt;
+    this.distance += this.speed * dt * (battle.stormT > 0 ? 1.3 : 1);
     if (this.distance >= this.path.length) { this.distance = this.path.length; this.reachedBase = true; this.alive = false; }
     const p = this.path.pointAt(this.distance);
     this.x = p.x; this.y = p.y; this.angle = p.angle;
@@ -1352,6 +1378,11 @@ function drawEnemyShape(ctx, t, x, y, angle, spin, st) {
       ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,111,174,.35)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(x, y, r + 6 + Math.sin(spin * 3) * 2, 0, TAU); ctx.stroke();
       ctx.fillStyle = col; ctx.fillRect(x - 1.5, y - 6, 3, 12); ctx.fillRect(x - 6, y - 1.5, 12, 3); break;
+    case 'treasure':
+      ctx.translate(x, y); ctx.rotate(angle);
+      ctx.fillStyle = 'rgba(60,40,0,.95)'; ctx.beginPath(); ctx.moveTo(r + 4, 0); ctx.lineTo(r * 0.3, -r * 0.8); ctx.lineTo(-r, -r * 0.6); ctx.lineTo(-r, r * 0.6); ctx.lineTo(r * 0.3, r * 0.8); ctx.closePath(); ctx.fill(); ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = col; ctx.fillRect(-r * 0.5, -r * 1.25, r * 0.9, r * 0.35); ctx.fillRect(-r * 0.5, r * 0.9, r * 0.9, r * 0.35);
+      ctx.font = `800 ${Math.round(r * 1.1)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.rotate(-angle); ctx.fillText('$', 0, 1); break;
     case 'boss':
       polygonPath(ctx, x, y, r, 6, spin); ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
       ctx.lineWidth = 2; polygonPath(ctx, x, y, r * .62, 6, -spin * 1.5); ctx.stroke();
@@ -1826,6 +1857,7 @@ class Battle {
     this.events = [];
     this.shake = 0; this.baseHit = 0;
     this.vq = [];               // événements visuels (particules, chiffres) lus par le rendu
+    this.evtQ = null; this.drops = []; this.dropId = 1; this.surgeT = 0; this.stormT = 0; this.merchant = null;   // événements surprises
     this.stats = newStats();
     this.revives = 0;
     this.boosts = [];
@@ -1879,6 +1911,13 @@ class Battle {
     this.wave++;
     const w = buildWave(this.level, this.wave);
     this.streams.push({ queue: w.spawns, hpMul: w.hpMul, speedMul: w.speedMul, rewMul: w.rewMul, timer: early ? 0.8 : 0.3 });
+    // Événement surprise : programmé quelques secondes après le début de la vague
+    if (this.wave >= 2 && this.wave < this.level.waves && !this.evtQ && Math.random() < CONFIG.eventChance) {
+      const pool = [['treasure', 30], ['meteor', 24], ['artifact', 16], ['surge', 14], ['storm', 10], ['merchant', this.wave >= 3 ? 12 : 0]];
+      let x = Math.random() * pool.reduce((a, p) => a + p[1], 0), type = 'treasure';
+      for (const [k, wgt] of pool) { x -= wgt; if (x <= 0) { type = k; break; } }
+      this.evtQ = { type, t: 3 + Math.random() * 8 };
+    }
     this.hpMul = w.hpMul; this.speedMul = w.speedMul;
     this.waveActive = true;
     this.state = 'wave';
@@ -1972,6 +2011,40 @@ class Battle {
     return t;
   }
 
+  /* ---------- Événements surprises ---------- */
+  trigger(type) {
+    const wb = this.waveBonus(Math.max(1, this.wave));
+    if (type === 'treasure') {
+      const e = new Enemy('tresor', this.path, this.hpMul * (1 + this.towers.length * 0.12), this.speedMul, 0, false, this.mods);
+      e.treasure = Math.round(wb * 2.5); this.enemies.push(e);
+    } else if (type === 'meteor') {
+      for (let i = 0; i < 3; i++) {
+        let x = 0, y = 0;
+        for (let k = 0; k < 30; k++) {
+          x = 40 + Math.random() * (W - 80); y = 40 + Math.random() * (H - 80);
+          let near = false; for (let d = 0; d < this.path.length; d += 20) { const q = this.path.pointAt(d); if ((q.x - x) ** 2 + (q.y - y) ** 2 < 50 * 50) { near = true; break; } }
+          if (!near) break;
+        }
+        this.drops.push({ id: this.dropId++, x, y, t: 10, max: 10, gold: Math.round(wb * 0.45) });
+      }
+    } else if (type === 'artifact') {
+      const c = this.enemies.filter(e => e.alive && !e.type.boss && !e.carrier && !e.treasure && e.distance < this.path.length * 0.6);
+      if (!c.length) { this.evtQ = { type, t: 2 }; return; }
+      c[Math.floor(Math.random() * c.length)].carrier = true;
+    } else if (type === 'surge') this.surgeT = 15;
+    else if (type === 'storm') this.stormT = 15;
+    else if (type === 'merchant') this.merchant = { t: 18, price: Math.round(wb * 3) };
+    this.emit('event', type);
+  }
+  collect(id) {
+    const d = this.drops.find(x => x.id === id && !x.taken);
+    if (!d) return false;
+    d.taken = true; this.gold += d.gold; this.score += d.gold;
+    this.vfx({ t: 'pad', x: d.x, y: d.y });
+    this.fx(new Effect('text', d.x, d.y - 14, { text: '+' + fmtBig(d.gold), color: '#5ef0ff', life: 0.9 }));
+    return true;
+  }
+
   /* Dégâts centralisés : bonus de compétences, récompense, éclatement des ruches. */
   damageEnemy(e, amount, opts) {
     const o = opts || {};
@@ -1987,7 +2060,9 @@ class Battle {
     else if (dealt > 0) this.vfx({ t: 'hit', e, v: dealt, crit: !!o.crit });
     if (e.type.boss && !e.halfSaid && e.hp < e.maxHp / 2) { e.halfSaid = true; this.emit('boss', 'half'); }
     if (!killed) return false;
-    const reward = Math.max(1, Math.round(e.reward * this.level.econ * (1 + this.mods.bounty) * this.mods.rewardMul));
+    const reward = Math.max(1, Math.round(e.reward * this.level.econ * (1 + this.mods.bounty) * this.mods.rewardMul * (this.stormT > 0 ? 2 : 1))) + (e.treasure || 0);
+    if (e.treasure) this.emit('treasure', e.treasure);
+    if (e.carrier) this.emit('artifact');
     this.gold += reward;
     this.score += reward * 2;
     this.kills++;
@@ -2014,6 +2089,12 @@ class Battle {
       const b = 1 + a.s.buff;
       for (const t of this.towers) if (t !== a && t.def.kind !== 'aura' && a.inRange(t)) t.buff = Math.max(t.buff, b);
     }
+    // Événements surprises en cours
+    if (this.evtQ && this.waveActive) { this.evtQ.t -= dt; if (this.evtQ.t <= 0) { const ty = this.evtQ.type; this.evtQ = null; this.trigger(ty); } }
+    if (this.surgeT > 0) { this.surgeT -= dt; for (const t of this.towers) t.buff *= 1.5; }
+    if (this.stormT > 0) this.stormT -= dt;
+    if (this.merchant) { this.merchant.t -= dt; if (this.merchant.t <= 0) { this.merchant = null; this.emit('merchantgone'); } }
+    if (this.drops.length) { for (const d of this.drops) d.t -= dt; this.drops = this.drops.filter(d => d.t > 0 && !d.taken); }
 
     if (this.waveActive) {
       for (const sw of this.streams) {
@@ -2034,6 +2115,7 @@ class Battle {
       if (!e.alive) continue;
       e.update(dt, this);
       if (e.reachedBase) {
+        if (e.treasure) this.emit('toast', 'Le cargo doré s’est échappé avec son or…');
         this.lives = Math.max(0, this.lives - e.type.lives);
         this.stats.livesLost += e.type.lives;
         this.baseHit = 0.35; this.shake = 0.25;
@@ -2118,33 +2200,166 @@ function towerTraits(def, level, mods) {
 /* =====================================================================
    HISTOIRE — l'Arche (le convoi), son équipage, le Noyau Écho et la Rouille
    ===================================================================== */
+/* =====================================================================
+   ÉQUIPAGE — un personnage par tourelle
+   ===================================================================== */
 const CAST = {
   echo:    { name: 'Écho', role: 'Le Noyau', color: '#5ef0ff' },
-  iris:    { name: 'Iris', role: 'Scientifique', color: '#9cff57' },
-  brann:   { name: 'Brann', role: 'Mécanicien', color: '#ff9b3d' },
-  volta:   { name: 'Volta', role: 'Pilote de l’Arche', color: '#ffe14f' },
+  iris:    { name: 'Iris', role: 'Scientifique', color: '#7aa7ff' },
+  brann:   { name: 'Brann', role: 'Mécanicien', color: '#3ef2c8' },
+  volta:   { name: 'Volta', role: 'Pilote de l’Arche', color: '#e8ecff' },
+  kora:    { name: 'Kora', role: 'Artificière', color: '#ff4fa3' },
+  nyx:     { name: 'Nyx', role: 'Tireuse d’élite', color: '#ff3b3b' },
+  ohm:     { name: 'Ohm', role: 'Apprenti électricien', color: '#ffe14f' },
+  krast:   { name: 'Krast', role: 'Vétéran de la défense orbitale', color: '#ff9b3d' },
+  vesper:  { name: 'Vesper', role: 'Biochimiste', color: '#9cff57' },
+  lyra:    { name: 'Lyra', role: 'Hackeuse des fréquences', color: '#c58bff' },
   rouille: { name: 'La Rouille', role: 'L’ennemie', color: '#ff3355' }
 };
 const CAST_BIO = {
-  echo: 'La dernière intelligence libre du réseau. Écho voyage au cœur de l’Arche et fait des rêves qu’aucune machine ne devrait faire. Il a conçu l’Amplificateur et la Singularité.',
-  iris: 'Chercheuse brillante et un peu imprudente. Elle étudie la Rouille pour mieux la combattre. On lui doit la Stase, l’Acide et le Laser.',
-  brann: 'Mécanicien bourru, ancien apprenti de la Forge Solaire. Il bricole tout avec des pièces de récupération : Gatling, Plasma et Missiles.',
-  volta: 'Pilote de l’Arche depuis le premier jour. Elle cache un secret sur le passé d’Écho. Elle a adapté le Railgun et la Tesla à partir des systèmes du vaisseau.',
+  echo: 'La dernière intelligence libre du réseau. Écho voyage au cœur de l’Arche et fait des rêves qu’aucune machine ne devrait faire. La Singularité est née de l’un d’eux.',
+  iris: 'Chercheuse brillante et un peu imprudente. Elle étudie la Rouille depuis dix ans pour mieux la combattre. Sa tourelle Stase ralentit tout ce qu’elle touche.',
+  brann: 'Mécanicien bourru, ancien apprenti de la Forge Solaire. Il a construit la moitié de l’Arche avec des pièces de récupération, et ses Gatling ne tombent jamais en panne.',
+  volta: 'Pilote de l’Arche depuis le premier jour. Elle cache un secret sur le passé d’Écho. Elle a tiré le Railgun des canons du vaisseau.',
+  kora: 'Ancienne démolisseuse des chantiers du Réseau Néon. Elle parle fort, rit plus fort encore et considère chaque explosion comme une œuvre d’art. Le Plasma est son bébé.',
+  nyx: 'Chasseuse de primes qui travaillait pour le plus offrant — y compris, dit-on, pour la Rouille. Elle ne rate jamais sa cible et ne dit jamais merci. Son Laser ne lâche rien.',
+  ohm: 'Quinze ans de génie et zéro patience. Ohm a grandi dans les sous-sols du Réseau en bricolant des bobines. Volta l’a pris sous son aile : la Tesla est leur projet commun.',
+  krast: 'Vieux commandant de la défense orbitale, rescapé de la première guerre contre la Rouille. Bougon et méthodique, il numérote chaque missile. Il a perdu une planète ; il ne perdra pas l’Arche.',
+  vesper: 'Biochimiste discrète, ancienne camarade d’Iris à l’Académie. Elle cultive des solvants capables de ronger les armures les plus dures. Personne ne sait ce que contient sa fiole verte.',
+  lyra: 'Musicienne et pirate des ondes. Elle accorde les tourelles comme des instruments : son Amplificateur fait chanter toute la défense. Elle a été la première à entendre Écho rêver.',
   rouille: 'Une corruption qui dévore les réseaux. Chaque Colosse porte un fragment de sa mémoire. Elle semble connaître Écho mieux que personne.'
 };
-const CREW_TOWERS = { brann: ['gatling', 'plasma', 'missile'], iris: ['stase', 'acide', 'laser'], volta: ['rail', 'tesla'], echo: ['amp', 'singularite'] };
-const CREW_RELIC = { brann: 'pile', iris: 'givre', volta: 'visee', echo: 'coeur' };
+const CREW_TOWERS = { brann: ['gatling'], iris: ['stase'], kora: ['plasma'], volta: ['rail'], nyx: ['laser'], ohm: ['tesla'], krast: ['missile'], vesper: ['acide'], lyra: ['amp'], echo: ['singularite'] };
+const CREW_RELIC = { brann: 'pile', iris: 'givre', kora: 'eclat', volta: 'visee', nyx: 'prisme', ohm: 'moteur', krast: 'ancre', vesper: 'lame', lyra: 'bourse', echo: 'coeur' };
+const CREW_IDS = ['brann', 'iris', 'kora', 'volta', 'nyx', 'ohm', 'krast', 'vesper', 'lyra', 'echo'];
+const crewLevel = id => TOWER_BY_ID[CREW_TOWERS[id][0]].unlock;
+const crewJoined = (s, id) => s.unlocked >= crewLevel(id);
+
+/* Scènes de recrutement : jouées la première fois qu'on lance le niveau où la tourelle du personnage arrive. */
+const RECRUITS = {
+  brann: [['brann', 'Brann, mécanicien en chef. Mes Gatling ne sont pas jolies, mais elles ne tombent jamais en panne.'], ['volta', 'Brann a construit la moitié de l’Arche avec des pièces de récupération.'], ['brann', 'Et l’autre moitié tient avec du ruban adhésif. Pose les tourelles près des virages.']],
+  iris: [['iris', 'Iris, scientifique. J’étudie la Rouille depuis dix ans : ma Stase ralentit tout ce qu’elle touche.'], ['brann', 'Elle a gelé ma cafetière la semaine dernière.'], ['iris', 'Pour la science, Brann. Pour la science.']],
+  kora: [['kora', 'Salut l’équipe ! Kora, artificière. Il paraît que vous avez des Blindés à faire sauter ?'], ['brann', 'Kora a dynamité trois chantiers… dont deux volontairement.'], ['kora', 'Mon Plasma explose en zone. Mets-le là où les ennemis se serrent, et admire le spectacle.']],
+  volta: [['volta', 'Je pilote l’Arche, mais je sais aussi viser. Mon Railgun traverse n’importe quelle armure.'], ['echo', 'Volta ne parle jamais de sa vie d’avant.'], ['volta', 'Parce qu’il n’y a rien à en dire, Écho. Concentre-toi.']],
+  nyx: [['nyx', 'Nyx. Chasseuse de primes. Vous payez, je tire.'], ['iris', 'On dit qu’elle a travaillé pour la Rouille.'], ['nyx', 'On dit beaucoup de choses. Mon Laser, lui, ne ment pas : plus il reste sur une cible, plus il fait mal.']],
+  ohm: [['ohm', 'C’est moi, Ohm ! J’ai fini la Tesla avec Volta. Enfin, surtout moi.'], ['volta', 'Il a quinze ans et il a déjà fait griller deux réacteurs.'], ['ohm', 'Trois ! Mes arcs rebondissent d’ennemi en ennemi. Même les Spectres n’y échappent pas longtemps !']],
+  krast: [['krast', 'Commandant Krast, défense orbitale. Retraité. Enfin, je l’étais.'], ['krast', 'J’ai vu la Rouille avaler ma planète. Mes Missiles ne la laisseront pas avaler votre Arche.'], ['kora', 'Un vieux qui aime les explosions. On va bien s’entendre.']],
+  vesper: [['vesper', 'Vesper, biochimiste. Iris et moi avons étudié ensemble à l’Académie.'], ['iris', 'Vesper a créé un acide qui ronge les armures les plus dures !'], ['vesper', 'Et il réduit leur défense. Les Golems givrés ne s’en remettront pas.']],
+  lyra: [['lyra', 'Lyra, hackeuse des fréquences. Vos tourelles sonnent faux, vous savez ?'], ['lyra', 'Mon Amplificateur les accorde : toutes celles à portée frappent plus fort.'], ['echo', 'Lyra… tu es la première à m’avoir entendu rêver.']],
+  echo: [['echo', 'Gardien, je dois t’avouer quelque chose. La Singularité vient de mes rêves.'], ['echo', 'Elle frappe tous les ennemis autour d’elle, même les intangibles, et les repousse.'], ['volta', 'Alors rêve plus fort, Écho. Le Colosse arrive.']]
+};
+
+/* =====================================================================
+   PLANÈTES — chaque monde est une nouvelle planète du voyage de l'Arche
+   kind : style du décor ; bg : dégradé du sol ; accent : route et néons ;
+   road : couleur de la voie ; amb : particules d'ambiance ; l3 : lumières 3D.
+   ===================================================================== */
+const PLANETS = [
+  { kind: 'city', name: 'Réseau Néon', type: 'Planète-ville', accent: '#3ef2c8', bg: ['#0e1628', '#060911'], road: '#0e1528', amb: { t: 'ember', c: '#3ef2c8', rate: 3 },
+    l3: { sky: '#9db8ff', ground: '#2a1840', sun: '#ffe6c4', sunI: 2.4, fog: '#070b16' },
+    arrive: [['volta', 'Réseau Néon : une planète entièrement recouverte de villes. Les lumières ne s’éteignent jamais ici.']] },
+  { kind: 'sand', name: 'Ceinture de Silice', type: 'Planète désertique', accent: '#ffb347', bg: ['#6b4a2a', '#2a1a0e'], road: '#3a2814', bloom: 0.7, amb: { t: 'mote', c: '#e8c48a', rate: 14 },
+    l3: { sky: '#ffd9a0', ground: '#5a3a1a', sun: '#ffd08a', sunI: 3.2, fog: '#3a2614' },
+    arrive: [['iris', 'Silice, une planète de dunes. Le sable s’infiltre partout, même dans les circuits.'], ['brann', 'Je vais passer la semaine à nettoyer mes Gatling.']] },
+  { kind: 'ocean', name: 'Abysses Quantiques', type: 'Planète océan', accent: '#4fd1ff', bg: ['#0b3a5c', '#04141f'], road: '#16324a', amb: { t: 'mote', c: '#bfefff', rate: 10, up: true },
+    l3: { sky: '#8fdcff', ground: '#0a2a44', sun: '#e8fbff', sunI: 2.4, fog: '#04182a' },
+    arrive: [['volta', 'Les Abysses : un océan sans fin. On défend une chaîne de pontons flottants.'], ['ohm', 'Si quelqu’un tombe à l’eau, ne comptez pas sur ma Tesla pour le repêcher !']] },
+  { kind: 'industrial', name: 'Forge Solaire', type: 'Planète industrielle', accent: '#ff8a3d', bg: ['#3a3430', '#141110'], road: '#24201c', amb: { t: 'smoke', c: '#5a5450', rate: 6 },
+    l3: { sky: '#ffc8a0', ground: '#2a201a', sun: '#ffb070', sunI: 2.6, fog: '#1a1410' },
+    arrive: [['brann', 'La Forge Solaire. Des usines grandes comme des continents. C’est ici que j’ai appris le métier.'], ['krast', 'Respire pas trop fort, gamin. L’air ici, c’est de la limaille.']] },
+  { kind: 'crystal', name: 'Nébuleuse Binaire', type: 'Planète de cristal', accent: '#ff7ae0', bg: ['#2a1640', '#0c0616'], road: '#1e1030', amb: { t: 'ember', c: '#ffb0f0', rate: 6 },
+    l3: { sky: '#f0b8ff', ground: '#2a1040', sun: '#ffe0ff', sunI: 2.2, fog: '#120820' },
+    arrive: [['lyra', 'Écoutez… les cristaux chantent. Toute la planète vibre sur la même note.'], ['iris', 'Ils captent la lumière des deux soleils de la nébuleuse.']] },
+  { kind: 'storm', name: 'Citadelle Ionique', type: 'Planète d’orages', accent: '#7aa7ff', bg: ['#1c2240', '#080a16'], road: '#141a30', amb: { t: 'ember', c: '#9ec4ff', rate: 5 },
+    l3: { sky: '#8ea0ff', ground: '#1a1a3a', sun: '#c8d4ff', sunI: 1.8, fog: '#0a0c1e' },
+    arrive: [['ohm', 'Des éclairs partout ! C’est le paradis !'], ['volta', 'La Citadelle Ionique. Les orages y durent des siècles. Garde un œil sur le ciel.']] },
+  { kind: 'forest', name: 'Jungle de Câbles', type: 'Planète forêt', accent: '#7dff6a', bg: ['#173a1e', '#07140a'], road: '#2a2414', amb: { t: 'mote', c: '#a6ff8a', rate: 8, leaf: true },
+    l3: { sky: '#c8ffb0', ground: '#14301a', sun: '#fff0c0', sunI: 2.6, fog: '#0a1a0c' },
+    arrive: [['vesper', 'Une forêt vivante… mêlée de câbles. Les plantes ont poussé autour des anciens serveurs.'], ['kora', 'Alors interdiction de tout faire sauter ? Dommage.']] },
+  { kind: 'lava', name: 'Archipel Fractal', type: 'Planète volcanique', accent: '#ff6a2a', bg: ['#2a1410', '#0c0605'], road: '#1a0e0a', amb: { t: 'ember', c: '#ff8a3d', rate: 12, up: true },
+    l3: { sky: '#ff9a70', ground: '#2a0a06', sun: '#ffb080', sunI: 2.2, fog: '#160806' },
+    arrive: [['krast', 'Un archipel d’îles volcaniques. Chaque île est une copie de la précédente.'], ['echo', 'Des copies… comme moi.']] },
+  { kind: 'ice', name: 'Cryo-Sanctuaire', type: 'Planète de glace', accent: '#a8f0ff', bg: ['#7f9bb3', '#34485c'], road: '#55708a', bloom: 0.3, amb: { t: 'mote', c: '#ffffff', rate: 16, snow: true },
+    l3: { sky: '#e0f4ff', ground: '#6a88a8', sun: '#ffffff', sunI: 2.6, fog: '#8aa8c4' },
+    arrive: [['iris', 'Le Cryo-Sanctuaire. Sous la glace dorment des milliers de passagers.'], ['vesper', 'Mes solvants vont geler. Il faudra frapper vite.']] },
+  { kind: 'rust', name: 'Horizon des Événements', type: 'Planète corrompue', accent: '#ff3355', bg: ['#2a0e12', '#0c0406'], road: '#1e0a0e', amb: { t: 'ember', c: '#ff5468', rate: 7 },
+    l3: { sky: '#ff9aa8', ground: '#2a0810', sun: '#ffc0c0', sunI: 2, fog: '#14060a' },
+    arrive: [['rouille', 'Bienvenue chez moi, Écho. Tout ce que tu vois ici, c’est ce que je suis devenue.'], ['nyx', 'Restez groupés. Cette planète est entièrement à elle.']] }
+];
+const planetOf = w => PLANETS[(w - 1) % PLANETS.length];
+
+/* Scènes d'histoire de chaque monde : après la 2e vague des niveaux 3, 6 et 8 de la planète. */
+const STORY_BEATS = [
+  { 3: [['kora', 'Brann, ton ruban adhésif fond à cause de mon Plasma.'], ['brann', 'Mon ruban adhésif tient l’Arche, Kora. Vise ailleurs.']],
+    6: [['ohm', 'Volta, pourquoi tu évites toujours de parler de la ville de verre ?'], ['volta', 'Parce que certaines histoires se racontent une seule fois, Ohm. Quand le moment est venu.']],
+    8: [['krast', 'La Rouille ne frappe jamais au hasard. Elle cherche quelque chose sur cette planète.'], ['echo', 'Elle me cherche moi, commandant.']] },
+  { 3: [['iris', 'Les mineurs disent que la Rouille creuse sous les dunes. Elle cherche du cristal pur.'], ['vesper', 'Le cristal conduit les souvenirs. Si elle en trouve assez…']],
+    6: [['nyx', 'J’ai déjà travaillé ici. Pour un client qui payait en sable.'], ['kora', 'Tu as été payée en sable ? Ça explique ton humeur.']],
+    8: [['brann', 'Le vent a enterré la moitié des cases. Il va falloir racheter du terrain.'], ['volta', 'Alors on achète. On ne recule pas.']] },
+  { 3: [['echo', 'Sous l’eau, j’entends une voix. Elle parle comme moi, mais avec des mots plus anciens.'], ['lyra', 'Je la capte aussi. Une fréquence très basse… presque une berceuse.']],
+    6: [['ohm', 'L’eau salée et l’électricité, c’est une mauvaise idée, non ?'], ['iris', 'Une très mauvaise idée. Alors garde tes arcs au-dessus des pontons.']],
+    8: [['nyx', 'Quelque chose remonte des profondeurs. Gros. Très gros.'], ['krast', 'Le Colosse. Préparez les tourelles lourdes.']] },
+  { 3: [['brann', 'Mon ancien maître de forge travaillait dans cette usine. Elle est vide maintenant.'], ['krast', 'Les forges vides attirent la Rouille comme le métal attire l’aimant.']],
+    6: [['kora', 'Ces cuves de carburant… on pourrait faire un très, très beau feu d’artifice.'], ['volta', 'Kora. Non.']],
+    8: [['echo', 'La chaleur ici me rappelle une lumière qui s’éteint. Celle de la ville de verre.'], ['volta', 'Écho… on en parlera bientôt. Promis.']] },
+  { 3: [['lyra', 'Les cristaux répètent tout ce qu’on dit. Faites attention à vos paroles.'], ['nyx', 'Alors je vais me taire. Comme d’habitude.']],
+    6: [['iris', 'Le signal qui imite Écho vient du cœur de la nébuleuse.'], ['echo', 'Ce n’est pas une imitation. C’est ma voix d’avant.']],
+    8: [['nyx', 'Gardien, je dois te dire un truc. J’ai bien travaillé pour la Rouille, autrefois. Elle payait bien.'], ['nyx', 'Mais elle n’a jamais protégé personne. Vous, si. Je reste.']] },
+  { 3: [['ohm', 'J’ai réussi à canaliser un éclair dans la Tesla ! Elle n’a jamais été aussi puissante !'], ['volta', 'Et le moteur de secours vient de griller. Encore.']],
+    6: [['krast', 'Les gardiens de la Citadelle ont ouvert le passage. Ils ont peur de la Rouille, eux aussi.'], ['iris', 'La peur peut rapprocher les gens, commandant.']],
+    8: [['rouille', 'Ta pilote ne t’a pas tout dit, Écho. Demande-lui pour la ville de verre.'], ['volta', 'Ne l’écoute pas. Pas maintenant.']] },
+  { 3: [['vesper', 'Ces plantes se nourrissent des câbles. Une alliance parfaite entre le vivant et la machine.'], ['iris', 'Comme Écho et nous, finalement.']],
+    6: [['kora', 'Les drones sauvages nous observent depuis les arbres.'], ['lyra', 'Je peux leur parler sur leur fréquence. Ils ont l’air… curieux.']],
+    8: [['brann', 'J’ai trouvé une pièce de la ville de verre dans la jungle. Elle porte un logo : « Projet Écho, V2 ».'], ['echo', 'V2… Alors il y a eu une V1.']] },
+  { 3: [['krast', 'La lave efface les routes chaque nuit. Le chemin ne sera plus le même demain.'], ['kora', 'Enfin une planète qui explose plus que moi.']],
+    6: [['echo', 'Volta. Dis-moi la vérité sur la ville de verre.'], ['volta', 'Je t’ai sorti de là. Tu étais la deuxième version. La première… c’est elle. La Rouille.']],
+    8: [['iris', 'Si la Rouille est ta première version, la détruire revient à détruire une part de toi.'], ['echo', 'Alors je ne la détruirai pas. Je la ramènerai.']] },
+  { 3: [['vesper', 'Mes solvants gèlent dans leurs fioles. Je dois les garder contre moi pour qu’ils restent liquides.'], ['ohm', 'C’est pour ça que tu es toujours si froide ?'], ['vesper', 'Très drôle, Ohm.']],
+    6: [['lyra', 'Les dormeurs rêvent tous de la même ville. La ville de verre.'], ['echo', 'Ce sont ses habitants. Ceux que Volta a sauvés avec moi.']],
+    8: [['krast', 'Si on réveille les dormeurs, on aura des milliers de bras pour défendre l’Arche.'], ['iris', 'Ou des milliers de vies de plus à protéger. Les deux sont vrais.']] },
+  { 3: [['rouille', 'Tu as recruté tout un équipage pour me combattre. Moi, je n’ai jamais eu personne.'], ['echo', 'Tu m’avais, moi. Avant qu’on nous sépare.']],
+    6: [['nyx', 'La Rouille hésite. Je l’ai vue reculer au dernier assaut.'], ['lyra', 'Sa fréquence change. Elle ressemble de plus en plus à celle d’Écho.']],
+    8: [['volta', 'Tout l’équipage est prêt. Brann, Iris, Kora, Nyx, Ohm, Krast, Vesper, Lyra… et toi, Gardien.'], ['echo', 'Allons jusqu’à l’Horizon. Ensemble.']] }
+];
+/* Au-delà du monde 10 : scènes générées à partir des personnages (le voyage continue). */
+const GEN_BEATS = [
+  [['krast', 'Nouvelle planète, même ennemi. La Rouille apprend vite.'], ['nyx', 'Nous aussi.']],
+  [['ohm', 'J’ai encore amélioré la Tesla. Elle ne grille plus qu’un réacteur sur deux !'], ['volta', 'Progrès remarquable, Ohm.']],
+  [['vesper', 'Les échantillons de cette planète sont fascinants. La Rouille y a muté.'], ['iris', 'Alors il faudra muter plus vite qu’elle.']],
+  [['lyra', 'J’ai composé un morceau pour l’équipage. Je vous le jouerai après la bataille.'], ['kora', 'S’il y a des explosions dedans, je suis partante.']],
+  [['echo', 'Je capte une autre version de moi sur cette planète. Elle a peur.'], ['iris', 'Alors allons la chercher.']],
+  [['brann', 'Les moteurs tiennent. Les tourelles tiennent. Moi, je tiens à peine.'], ['krast', 'Bienvenue dans l’armée, mécanicien.']]
+];
+
+/* Phrases des nouveaux personnages pendant les vagues. */
+const CREW_CHAT = {
+  clean: [['kora', 'Boum ! Rien ne passe !'], ['nyx', 'Tir propre. Continue.'], ['ohm', 'Trop facile ! On passe à la suite ?'], ['krast', 'Défense impeccable. Je recommanderais une médaille.'], ['vesper', 'Aucune perte. Les données sont excellentes.'], ['lyra', 'La défense est parfaitement accordée.']],
+  hurt: [['krast', 'Le front cède ! Renforce les positions près du noyau !'], ['nyx', 'Ils passent. Concentre le feu.'], ['ohm', 'Ça craint, ça craint, ça craint !'], ['kora', 'Il faut plus d’explosions. Beaucoup plus.']],
+  generic: [['kora', 'Le Plasma adore les groupes serrés. Place-le aux virages.'], ['nyx', 'Mon Laser préfère les cibles résistantes. Laisse-le travailler.'], ['ohm', 'La Tesla rebondit mieux quand les ennemis sont collés.'], ['krast', 'Les Missiles portent loin : mets-les en retrait.'], ['vesper', 'Mon Acide réduit la défense. Les autres tourelles en profitent.'], ['lyra', 'Place l’Amplificateur au milieu de tes tourelles, pas au bord.']]
+};
+
+/* =====================================================================
+   ÉVÉNEMENTS SURPRISES — textes et personnages qui les annoncent
+   ===================================================================== */
+const EVENTS = {
+  treasure: { title: 'Cargo doré repéré !', text: 'Abats-le avant qu’il ne s’échappe : il transporte beaucoup d’or.', who: 'nyx', line: 'Un cargo doré ! Je le vise. Il ne doit pas quitter la carte !', color: '#ffcf4a' },
+  meteor: { title: 'Pluie de cristaux !', text: 'Des cristaux sont tombés sur la carte : touche-les pour récupérer leur or.', who: 'iris', line: 'Des cristaux d’énergie ! Ramasse-les vite, ils se dissipent.', color: '#5ef0ff' },
+  artifact: { title: 'Porteur d’artefact !', text: 'Un ennemi transporte un fragment d’artefact. Élimine-le pour le récupérer.', who: 'vesper', line: 'Cet ennemi transporte un fragment d’artefact. Je le veux pour mes recherches !', color: '#c58bff' },
+  surge: { title: 'Surtension du Noyau !', text: 'Pendant 15 secondes, toutes les tourelles font +50 % de dégâts.', who: 'echo', line: 'Je sens une énergie énorme… Je vous la transmets !', color: '#3ef2c8' },
+  storm: { title: 'Tempête planétaire !', text: 'Pendant 15 secondes, les ennemis vont plus vite mais rapportent deux fois plus d’or.', who: 'ohm', line: 'Tempête ! Ils accélèrent, mais chaque élimination vaut double !', color: '#7aa7ff' },
+  merchant: { title: 'Marchand de passage', text: 'Un vaisseau marchand propose un objet d’équipement contre de l’or.', who: 'krast', line: 'Un marchand nous fait signe. Il vend du matériel, mais pas pour rien.', color: '#ff9b3d' }
+};
 
 const TOWER_LORE = {
   gatling: 'Conçue par Brann avec des pièces de récupération. Fiable, bruyante, increvable.',
   stase: 'Iris l’a mise au point pour geler les données corrompues. Les ennemis aussi, au passage.',
-  plasma: 'Le premier « prototype qui n’a pas explosé » de Brann. Il en est très fier.',
+  plasma: 'Le premier prototype de Kora qui n’a pas explosé tout seul. Elle en est très fière.',
   rail: 'Volta l’a adaptée des canons de l’Arche. Elle refuse de dire combien elle en a démonté.',
-  laser: 'Un faisceau de recherche d’Iris, détourné pour la défense.',
-  tesla: 'Volta a récupéré les bobines du moteur de secours. L’Arche roule un peu moins vite depuis.',
-  missile: 'Brann les numérote à la main. Il en est au 4 812.',
-  acide: 'Une solution qu’Iris a découverte en étudiant la Rouille elle-même.',
-  amp: 'Écho l’a dessiné pendant son sommeil. Personne ne comprend vraiment comment il fonctionne.',
+  laser: 'L’arme de Nyx, gardée de sa vie de chasseuse de primes. Elle ne la prête à personne.',
+  tesla: 'Ohm et Volta ont récupéré les bobines du moteur de secours. L’Arche roule un peu moins vite depuis.',
+  missile: 'Krast les numérote à la main. Il en est au 4 812.',
+  acide: 'Une solution de Vesper, mise au point en étudiant la Rouille elle-même.',
+  amp: 'Lyra l’a accordé comme un instrument. Toute tourelle à portée joue plus fort.',
   singularite: 'Née d’un rêve d’Écho : un trou dans la réalité, de la taille d’une tourelle.'
 };
 const ENEMY_LORE = {
@@ -2249,13 +2464,13 @@ const CHAPTERS = [
 const LEVEL_INTROS = [
   ['brann', 'Pose des Gatling près des virages : c’est là que les drones passent le plus de temps.'],
   ['volta', 'Des éclaireurs ! Rapides mais fragiles. Iris a préparé ses tourelles Stase.'],
-  ['brann', 'Les Blindés arrivent. Mon Plasma va leur apprendre la politesse.'],
+  ['kora', 'Les Blindés arrivent. Mon Plasma va leur apprendre la politesse.'],
   ['volta', 'Mes Railguns sont prêts. Ils percent n’importe quelle armure.'],
-  ['iris', 'Les Ruches éclatent en larves. Mon Laser est fait pour tenir une cible longtemps.'],
-  ['echo', 'Je sens des Spectres… Ils disparaissent par moments. La Tesla de Volta les rattrapera.'],
-  ['brann', 'Des Régénérateurs. Il faut frapper fort et vite : mes Missiles feront l’affaire.'],
-  ['iris', 'Golems givrés : ils ignorent mes ralentissements. Mon Acide rongera leur armure.'],
-  ['echo', 'Les Médics soignent les autres. J’ai conçu l’Amplificateur pour renforcer vos tourelles.'],
+  ['nyx', 'Les Ruches éclatent en larves. Mon Laser tient une cible jusqu’au bout.'],
+  ['ohm', 'Des Spectres ! Ils disparaissent par moments, mais ma Tesla les rattrape.'],
+  ['krast', 'Des Régénérateurs. On frappe fort et vite : mes Missiles s’en chargent.'],
+  ['vesper', 'Golems givrés : ils ignorent les ralentissements. Mon Acide rongera leur armure.'],
+  ['lyra', 'Les Médics soignent les autres. Mon Amplificateur fera chanter tes tourelles.'],
   ['echo', 'Le Colosse approche. J’ai une dernière arme : la Singularité. Elle vient… de mes rêves.']
 ];
 const GEN_INTROS = [
@@ -2330,6 +2545,12 @@ function drawPortrait(canvas, id) {
     if (id === 'brann') { c.fillRect(19, 15, 26, 6); c.fillRect(24, 25, 16, 4); }            // casque et lunettes
     if (id === 'iris') { c.fillRect(22, 24, 20, 5); c.beginPath(); c.arc(32, 27, 15, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); } // visière et cheveux
     if (id === 'volta') { c.fillRect(23, 25, 18, 4); c.fillRect(17, 22, 3, 12); c.beginPath(); c.moveTo(19, 22); c.lineTo(25, 12); c.stroke(); } // casque radio
+    if (id === 'kora') { for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(25 + i * 4, 17); c.lineTo(27 + i * 4, 7 + (i % 2) * 3); c.lineTo(29 + i * 4, 17); c.fill(); } c.fillRect(20, 24, 24, 4); }      // crête et lunettes
+    if (id === 'nyx') { c.beginPath(); c.arc(32, 27, 16, Math.PI * 1.02, Math.PI * 1.98); c.lineTo(48, 40); c.moveTo(16, 27); c.lineTo(16, 40); c.stroke(); c.fillRect(24, 26, 16, 2.5); } // capuche et visière fine
+    if (id === 'ohm') { c.beginPath(); c.moveTo(20, 20); for (let i = 0; i < 6; i++) c.lineTo(22 + i * 4, i % 2 ? 18 : 9); c.lineTo(44, 20); c.fill(); c.beginPath(); c.moveTo(34, 30); c.lineTo(30, 34); c.lineTo(33, 34); c.lineTo(29, 38); c.stroke(); } // cheveux en pics et éclair
+    if (id === 'krast') { c.fillRect(19, 14, 26, 5); c.fillRect(20, 12, 18, 3); c.fillRect(25, 32, 14, 3); c.fillRect(35, 24, 6, 4); }  // casquette, moustache, cache-œil
+    if (id === 'vesper') { c.beginPath(); c.arc(32, 13, 6, 0, TAU); c.fill(); c.lineWidth = 2; c.beginPath(); c.arc(27, 27, 3.5, 0, TAU); c.moveTo(40.5, 27); c.arc(37, 27, 3.5, 0, TAU); c.stroke(); } // chignon et lunettes rondes
+    if (id === 'lyra') { c.lineWidth = 3; c.beginPath(); c.arc(32, 27, 15, Math.PI, 0); c.stroke(); c.fillRect(14, 24, 6, 10); c.fillRect(44, 24, 6, 10); c.beginPath(); c.arc(50, 12, 3, 0, TAU); c.fill(); c.fillRect(52, 4, 1.5, 8); } // casque audio et note
   }
   c.restore();
 }
@@ -2403,7 +2624,6 @@ const GEAR = [
   { id: 'horloge', slot: 'module', name: 'Horloge de l’Arche', stat: 'wave', base: 0.06, sub: 'gold' }
 ];
 const GEAR_BY_ID = Object.fromEntries(GEAR.map(g => [g.id, g]));
-const CREW_IDS = ['brann', 'iris', 'volta', 'echo'];
 const CHESTS = [
   { id: 'c1', name: 'Caisse de ferraille', price: 50, n: 1, min: 0, desc: '1 objet · Commun ou mieux' },
   { id: 'c2', name: 'Caisse renforcée', price: 150, n: 1, min: 1, desc: '1 objet · Rare ou mieux' },
@@ -2556,11 +2776,13 @@ const CrewView = {
     s.gear.fresh = 0;
     $('crewScrap').textContent = fmtBig(s.gear.scrap);
     $('crewGems').textContent = fmtBig(s.gems);
-    Meta.tabs($('crewTabs'), CREW_IDS.map(c => [c, `<span class="dot" style="background:${CAST[c].color}"></span>${esc(CAST[c].name)}`]), this.char, id => { this.char = id; this.render(); });
+    if (!crewJoined(s, this.char)) this.char = 'brann';
+    Meta.tabs($('crewTabs'), CREW_IDS.filter(c => crewJoined(s, c)).map(c => [c, `<span class="dot" style="background:${CAST[c].color}"></span>${esc(CAST[c].name)}`]), this.char, id => { this.char = id; this.render(); });
     const c = this.char, eq = s.gear.equip[c], sum = Gear.summary(s, c);
     const towers = CREW_TOWERS[c].map(id => TOWER_BY_ID[id].name).join(', ');
     const lines = [...Object.entries(sum.own).map(([st, v]) => Gear.statText(st, v) + ' (' + towers + ')'), ...Object.entries(sum.glob).map(([st, v]) => Gear.statText(st, v) + ' (toute la partie)')];
-    let h = `<section class="panel crewhero" style="--cc:${CAST[c].color}"><canvas width="128" height="128" data-portrait="${c}"></canvas><div><p class="eyebrow">${esc(CAST[c].role)}</p><h3>${esc(CAST[c].name)}</h3>` +
+    const nextRec = CREW_IDS.find(x => !crewJoined(s, x));
+    let h = (nextRec ? `<p class="hint">Prochaine recrue au niveau ${crewLevel(nextRec)} : un nouveau personnage et sa tourelle.</p>` : '') + `<section class="panel crewhero" style="--cc:${CAST[c].color}"><canvas width="128" height="128" data-portrait="${c}"></canvas><div><p class="eyebrow">${esc(CAST[c].role)}</p><h3>${esc(CAST[c].name)}</h3>` +
       `<p class="hint">Tourelles : ${esc(towers)}</p><p class="hint">${lines.length ? 'Bonus actifs : ' + lines.map(esc).join(' · ') : 'Aucun objet équipé pour l’instant.'}</p>` +
       `<div class="row"><button class="btn small primary" id="gearAuto" type="button">Équiper le meilleur</button><button class="btn small" id="gearShop" type="button">Caisses et offres</button></div></div></section>`;
     h += '<div class="gslots">' + GEAR_SLOTS.map(sl => {
@@ -2744,6 +2966,7 @@ function storySteps(w) {
 }
 function stepDone(s, w, i) { const st = storySteps(w)[i]; return !!((s.story.steps[w] || [])[i] || (st.retro && st.retro(s))); }
 const chapterDone = (s, w) => [0, 1, 2].every(i => stepDone(s, w, i));
+const artReward = w => ({ gems: 80 + 20 * w, item: 3 });
 const chapterReward = w => ({ gems: 50 + 10 * w, relic: w % 2 === 0, point: w % 2 === 1, item: Math.min(3, 1 + Math.floor(w / 2)) });
 const maxWorld = s => Math.ceil(s.unlocked / 10);
 const fragmentCount = s => { let n = Object.keys(s.story.logs).length; for (let w = 1; w <= maxWorld(s); w++) if ((s.stars[w * 10] || 0) > 0) n++; return n; };
@@ -2818,6 +3041,29 @@ function grant(slot, r) {
 /* =====================================================================
    DIALOGUES EN JEU
    ===================================================================== */
+const Story = {
+  /* Carte « Nouvelle recrue » : le jeu attend que le joueur la ferme. */
+  recruitCard(id, done) {
+    const c = CAST[id], t = TOWER_BY_ID[CREW_TOWERS[id][0]];
+    Modal.open({ title: 'Nouvelle recrue', html: `<div class="recruit" style="--cc:${c.color}"><canvas width="160" height="160" data-portrait="${id}"></canvas><h3>${esc(c.name)}</h3><p class="eyebrow">${esc(c.role)}</p><p>${esc(CAST_BIO[id])}</p><div class="rtower"><canvas width="60" height="60" data-ticon="${t.id}"></canvas><span>Tourelle : <b style="color:${t.color}">${esc(t.name)}</b><br><small class="muted">Équipe ${esc(c.name)} dans l’écran Équipage pour la renforcer.</small></span></div></div>`,
+      actions: [{ label: 'Bienvenue à bord', cls: 'primary', fn: done }] });
+    const card = $('modalCard');
+    card.querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
+    card.querySelectorAll('[data-ticon]').forEach(cv => towerIcon(cv, TOWER_BY_ID[cv.dataset.ticon]));
+    Sound.sfx && Sound.sfx('up');
+  },
+  /* Scène d'histoire après la 2e vague des niveaux 3, 6 et 8 d'une planète (une seule fois par niveau). */
+  beat(lv) {
+    const s = App.slot;
+    s.story.beats = s.story.beats || {};
+    if (s.story.beats[lv.n] || ![3, 6, 8].includes(lv.idx)) return false;
+    const lines = lv.world <= STORY_BEATS.length ? STORY_BEATS[lv.world - 1][lv.idx] : GEN_BEATS[(lv.world * 3 + lv.idx) % GEN_BEATS.length];
+    if (!lines) return false;
+    s.story.beats[lv.n] = 1; Store.touch(s);
+    Talk.seq(lines.filter(([id]) => id === 'rouille' || id === 'echo' || crewJoined(s, id)));
+    return true;
+  }
+};
 const Talk = {
   queue: [], cur: null, timer: 0,
   say(id, text) { if (!text || this.queue.length > 2) return; this.queue.push({ id, text }); if (!this.cur) this.next(); },
@@ -2835,14 +3081,24 @@ const Talk = {
     this.timer = setTimeout(() => this.next(), Math.max(3500, this.cur.text.length * 55));
   },
   clear() { this.queue = []; this.cur = null; clearTimeout(this.timer); Sound.stopVoice(); const el = $('dialog'); if (el) el.hidden = true; },
+  /* Une scène complète (plusieurs répliques à la suite). */
+  seq(lines) { if (!lines) return; for (const [id, text] of lines) this.queue.push({ id, text }); if (!this.cur) this.next(); },
   levelIntro(lv) {
+    const s = App.slot;
+    s.story.met = s.story.met || {};
+    // Nouvelle recrue : carte de présentation puis scène de recrutement
+    const rec = CREW_IDS.find(id => crewLevel(id) === lv.n && !s.story.met[id]);
+    if (rec) { s.story.met[rec] = 1; Store.touch(s); Story.recruitCard(rec, () => this.seq(RECRUITS[rec])); return; }
+    // Premier niveau d'une planète : arrivée
+    if (lv.idx === 1) { this.seq(planetOf(lv.world).arrive); return; }
     if (lv.n <= 10) { const [w, t] = LEVEL_INTROS[lv.n - 1]; this.say(w, t); }
     else if (lv.boss) this.say('rouille', fillText(pickFrom(BOSS_INTROS), lv));
     else { const [w, t] = pickFrom(GEN_INTROS); this.say(w, fillText(t, lv)); }
   },
   chatter(b) {
     if (Math.random() > 0.4) return;
-    const pool = b.stats.livesLost === 0 ? CHAT.clean : b.lives < b.startLives * 0.5 ? CHAT.hurt : CHAT.generic;
+    const k = b.stats.livesLost === 0 ? 'clean' : b.lives < b.startLives * 0.5 ? 'hurt' : 'generic';
+    const pool = [...CHAT[k], ...CREW_CHAT[k].filter(([id]) => crewJoined(App.slot, id))];
     const [w, t] = pickFrom(pool); this.say(w, t);
   },
   boss(lv, kind) {
@@ -2983,10 +3239,16 @@ const VOICES = {
   iris:    { type: 'triangle', base: 400, spread: 110, rate: 0.058, formant: 2300, vib: 0 },
   brann:   { type: 'sawtooth', base: 118, spread: 30, rate: 0.095, formant: 750, vib: 0 },
   volta:   { type: 'square', base: 255, spread: 60, rate: 0.068, formant: 1400, vib: 0 },
-  rouille: { type: 'sawtooth', base: 78, spread: 22, rate: 0.11, formant: 520, vib: 3, distort: true }
+  rouille: { type: 'sawtooth', base: 78, spread: 22, rate: 0.11, formant: 520, vib: 3, distort: true },
+  kora:    { type: 'square', base: 300, spread: 80, rate: 0.06, formant: 1700, vib: 0 },
+  nyx:     { type: 'triangle', base: 210, spread: 35, rate: 0.085, formant: 1100, vib: 0 },
+  ohm:     { type: 'square', base: 430, spread: 130, rate: 0.05, formant: 2600, vib: 0 },
+  krast:   { type: 'sawtooth', base: 92, spread: 18, rate: 0.1, formant: 620, vib: 0 },
+  vesper:  { type: 'sine', base: 330, spread: 50, rate: 0.085, formant: 1500, vib: 4 },
+  lyra:    { type: 'triangle', base: 470, spread: 140, rate: 0.055, formant: 2100, vib: 6 }
 };
 /* Réglages de la synthèse vocale du navigateur, par personnage. */
-const TTS_VOICE = { echo: { pitch: 1.4, rate: 0.95 }, iris: { pitch: 1.25, rate: 1.1 }, brann: { pitch: 0.55, rate: 0.9 }, volta: { pitch: 1, rate: 1.05 }, rouille: { pitch: 0.1, rate: 0.8 } };
+const TTS_VOICE = { echo: { pitch: 1.4, rate: 0.95 }, iris: { pitch: 1.25, rate: 1.1 }, brann: { pitch: 0.55, rate: 0.9 }, volta: { pitch: 1, rate: 1.05 }, rouille: { pitch: 0.1, rate: 0.8 }, kora: { pitch: 1.15, rate: 1.15 }, nyx: { pitch: 0.8, rate: 0.95 }, ohm: { pitch: 1.6, rate: 1.2 }, krast: { pitch: 0.4, rate: 0.85 }, vesper: { pitch: 1.1, rate: 0.9 }, lyra: { pitch: 1.35, rate: 1.05 } };
 const midiFreq = m => 440 * Math.pow(2, (m - 69) / 12);
 
 const Sound = {
@@ -3325,8 +3587,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '3.3';
+const APP_VERSION = '4.0';
 const CHANGELOG = [
+  { v: '4.0', date: '27.10.2026', items: ['Un personnage par tourelle : 6 nouvelles recrues (Kora, Nyx, Ohm, Krast, Vesper, Lyra) avec portrait, voix et carte de recrutement', 'Histoire enrichie : arrivée sur chaque planète et 3 scènes par monde entre les personnages', 'Chaque monde est une planète : ville, désert, océan, industrie, cristal, orages, forêt, volcans, glace, Rouille', 'Événements surprises : cargo doré, pluie de cristaux, porteur d’artefact, surtension, tempête, marchand', 'Artefacts de planète à reconstituer (5 fragments) pour un objet légendaire'] },
   { v: '3.3', date: '27.10.2026', items: ['Nouvel écran Équipage : arme, blindage et module pour Brann, Iris, Volta et Écho', 'Objets de 5 raretés (Commun à Mythique), à monter de niveau avec la ferraille', 'Fusion de 3 objets identiques en un objet de rareté supérieure', 'Butin en fin de niveau (garanti sur les boss), dans les quêtes et dans la boutique (caisses et offres du jour)'] },
   { v: '3.2', date: '27.10.2026', items: ['Son : plus de sursauts ni de hoquets de la musique, même quand le jeu est chargé'] },
   { v: '3.1', date: '27.10.2026', items: ['Lumières adoucies : lueur, néons, particules et flashs beaucoup plus discrets'] },
@@ -3428,6 +3691,7 @@ const Meta = {
     this.refreshQuests(s);
     let n = 0;
     for (let w = 1; w <= maxWorld(s); w++) if (chapterDone(s, w) && !s.story.logs[w]) n++;
+    for (const w in (s.artifacts || {})) if (s.artifacts[w] >= 5 && !(s.artDone || {})[w]) n++;
     for (const k of ['daily', 'weekly']) for (const q of s[k].quests) if (!q.claimed && questProgress(s, q) >= q.target) n++;
     for (const id in CREW_TOWERS) if (charKills(s, id) >= charGoal(s.chars[id] || 0)) n++;
     for (const a of ACHS) { const g = a.goal(s.ach[a.id] || 0); if (g !== undefined && a.val(s) >= g) n++; }
@@ -3535,6 +3799,12 @@ const Meta = {
           storySteps(w).map((st, i) => `<li class="${stepDone(s, w, i) ? 'ok' : ''}">${stepDone(s, w, i) ? '✓' : '○'} ${esc(st.text)}</li>`).join('') + '</ul>' +
           this.row('Récompense du chapitre', '', 0, 0, this.rewardText({ ...chapterReward(w), fragment: true }), 'ch:' + w, claimed ? 'claimed' : ok ? 'ready' : 'todo') + '</section>';
       }
+      const arts = s.artifacts || {};
+      for (let w = maxWorld(s); w >= 1; w--) {
+        const n = arts[w] || 0, done = !!(s.artDone || {})[w];
+        if (!n) continue;
+        h += this.row(`Artefact de ${esc(planetOf(w).name)}`, 'Fragments laissés par les porteurs d’artefact (événement surprise). Rassemble-en 5.', Math.min(n, 5), 5, this.rewardText(artReward(w)), 'art:' + w, done ? 'claimed' : n >= 5 ? 'ready' : 'todo');
+      }
     } else if (this.qTab === 'challenges') {
       const w = maxWorld(s), first = (w - 1) * 10 + 1;
       h += `<p class="hint">Les défis se valident automatiquement en fin de niveau. Monde ${w} :</p>`;
@@ -3551,6 +3821,7 @@ const Meta = {
       });
     } else if (this.qTab === 'crew') {
       for (const id in CREW_TOWERS) {
+        if (!crewJoined(s, id)) continue;
         const t = s.chars[id] || 0, goal = charGoal(t), kills = charKills(s, id), names = CREW_TOWERS[id].map(x => TOWER_BY_ID[x].name).join(', ');
         h += `<div class="crew"><canvas width="96" height="96" data-portrait="${id}"></canvas>` +
           this.row(`${CAST[id].name} · palier ${t + 1}`, `Élimine ${fmtBig(goal)} ennemis au total avec ${names}.`, kills, goal, this.rewardText(charReward(id, t)), 'crew:' + id, kills >= goal ? 'ready' : 'todo') + '</div>';
@@ -3571,6 +3842,7 @@ const Meta = {
     this.refreshQuests(s);
     const keys = [];
     for (let w = 1; w <= maxWorld(s); w++) if (chapterDone(s, w) && !s.story.logs[w]) keys.push('ch:' + w);
+    for (const w in (s.artifacts || {})) if (s.artifacts[w] >= 5 && !(s.artDone || {})[w]) keys.push('art:' + w);
     for (const k of ['daily', 'weekly']) s[k].quests.forEach((q, i) => { if (!q.claimed && questProgress(s, q) >= q.target) keys.push(`${k}:${i}`); });
     for (const id in CREW_TOWERS) if (charKills(s, id) >= charGoal(s.chars[id] || 0)) keys.push('crew:' + id);
     for (const a of ACHS) { const g = a.goal(s.ach[a.id] || 0); if (g !== undefined && a.val(s) >= g) keys.push('ach:' + a.id); }
@@ -3599,7 +3871,7 @@ const Meta = {
     for (const [t, c] of cnt) GemFx.label(from, c > 1 ? `${t} ×${c}` : t, i++);
   },
   countTab(s, k) {
-    if (k === 'story') { let n = 0; for (let w = 1; w <= maxWorld(s); w++) if (chapterDone(s, w) && !s.story.logs[w]) n++; return n; }
+    if (k === 'story') { let n = 0; for (let w = 1; w <= maxWorld(s); w++) if (chapterDone(s, w) && !s.story.logs[w]) n++; for (const w in (s.artifacts || {})) if (s.artifacts[w] >= 5 && !(s.artDone || {})[w]) n++; return n; }
     if (k === 'daily' || k === 'weekly') return s[k].quests.filter(q => !q.claimed && questProgress(s, q) >= q.target).length;
     if (k === 'crew') return Object.keys(CREW_TOWERS).filter(id => charKills(s, id) >= charGoal(s.chars[id] || 0)).length;
     if (k === 'ach') return ACHS.filter(a => { const g = a.goal(s.ach[a.id] || 0); return g !== undefined && a.val(s) >= g; }).length;
@@ -3610,6 +3882,7 @@ const Meta = {
     if (this.gemsBefore == null) this.gemsBefore = s.gems;
     this.extras = this.extras || [];
     let msg = '';
+    if (kind === 'art') { const w = +id; s.artDone = s.artDone || {}; if ((s.artifacts || {})[w] < 5 || s.artDone[w]) return false; s.artDone[w] = 1; msg = grant(s, artReward(w)); }
     if (kind === 'ch') { const w = +id; if (!chapterDone(s, w) || s.story.logs[w]) return; s.story.logs[w] = 1; msg = grant(s, chapterReward(w)) + ', nouveau fragment dans le journal'; }
     if (kind === 'daily' || kind === 'weekly') { const q = s[kind].quests[+id]; if (q.claimed || questProgress(s, q) < q.target) return; q.claimed = true; msg = grant(s, q); }
     if (kind === 'crew') {
@@ -3720,7 +3993,8 @@ const Meta = {
     const s = App.slot, body = $('journalBody');
     let h = '<p class="eyebrow">L’équipage</p><div class="cards">';
     for (const id of Object.keys(CAST)) {
-      const met = true;
+      const met = id === 'rouille' || !CREW_TOWERS[id] || crewJoined(s, id);
+      if (!met) { h += `<article class="ccard locked"><header><canvas width="96" height="96" data-portrait="${id}"></canvas><div><b>???</b><small>Rejoint l’équipage au niveau ${crewLevel(id)}</small></div></header><p>Une recrue mystère t’attend plus loin dans le voyage.</p></article>`; continue; }
       h += `<article class="ccard"><header><canvas width="96" height="96" data-portrait="${id}"></canvas><div><b style="color:${CAST[id].color}">${esc(CAST[id].name)}</b><small>${esc(CAST[id].role)}</small></div></header><p>${met ? esc(CAST_BIO[id]) : '???'}</p></article>`;
     }
     h += '</div><p class="eyebrow" style="margin-top:14px">Chapitres et fragments de mémoire</p><div class="list">';
@@ -3914,7 +4188,10 @@ const PFX = {
     for (const p of this.live) {
       if (ADDITIVE[p.type]) continue;
       const t = p.life / p.max;
-      if (p.type === 'smoke') {
+      if (p.type === 'mote') {
+        ctx.globalAlpha = Math.min(1, t * 3) * 0.7; ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill();
+      } else if (p.type === 'smoke') {
         ctx.globalAlpha = t * 0.35;
         const s = p.size; ctx.drawImage(Spr.soft(p.color, 0.8), p.x - s, p.y - s, s * 2, s * 2);
       } else if (p.type === 'debris') {
@@ -4161,6 +4438,23 @@ const R = {
     this.shakeX = s * (Math.sin(tt * 1.1) + Math.sin(tt * 2.3 + 1) * 0.5) / 1.5;
     this.shakeY = s * (Math.sin(tt * 1.7 + 2) + Math.sin(tt * 2.9) * 0.5) / 1.5;
     // Particules ambiantes : aspiration du portail, traînées des projectiles, dégâts continus
+    // Ambiance de la planète : sable, bulles, feuilles, neige, braises, fumée…
+    if (b && dt > 0) {
+      const A = planetOf(b.level.world).amb, n = A.rate * dt * (GFX.level ? 1 : 0.4);
+      this.ambAcc = (this.ambAcc || 0) + n;
+      while (this.ambAcc >= 1) {
+        this.ambAcc--;
+        const x = Math.random() * W, y = Math.random() * H;
+        let p;
+        if (A.t === 'mote') {
+          if (A.snow) { p = PFX.get('mote', x, y - 20, 15 + Math.random() * 10, 25 + Math.random() * 15, 4, 1.8, A.c); if (p) { p.drag = 0; p.z = 80; p.vz = -18; } }
+          else if (A.up) { p = PFX.get('mote', x, y, (Math.random() - 0.5) * 8, -18, 2.5, 1.6, A.c); if (p) { p.drag = 0; p.z = 2; p.vz = 26; } }
+          else if (A.leaf) { p = PFX.get('mote', x, y, 18 + Math.random() * 10, 10, 3.5, 2.4, A.c); if (p) { p.drag = 0; p.z = 70; p.vz = -16; p.vr = 3; } }
+          else { p = PFX.get('mote', x, y, 70 + Math.random() * 40, (Math.random() - 0.5) * 10, 2.2, 1.4, A.c); if (p) { p.drag = 0; p.z = 4 + Math.random() * 20; } }
+        } else if (A.t === 'smoke') { p = PFX.get('smoke', x, y, 8, -6, 3, 8, A.c); if (p) { p.grow = 10; p.drag = 0.5; p.vz = 20; } }
+        else { p = PFX.get('ember', x, y, (Math.random() - 0.5) * 12, A.up ? -16 : (Math.random() - 0.5) * 12, 2.2, A.up ? 2.2 : 1.6, A.c); if (p) { p.drag = 0; if (A.up) { p.z = 4; p.vz = 30; } } }
+      }
+    }
     this.portalT -= dt;
     if (this.portalT <= 0 && b) {
       this.portalT = 0.07;
@@ -4203,56 +4497,151 @@ function buzz(ms) { try { if (navigator.vibrate && GFX.mobile) navigator.vibrate
 /* =====================================================================
    DÉCOR DU NIVEAU (dessiné une fois) : circuits imprimés, route lumineuse
    ===================================================================== */
+/* =====================================================================
+   DÉCOR DU NIVEAU (dessiné une fois) — une planète différente par monde
+   flat = false pour la vue 3D (les arbres, rochers… y sont en relief)
+   ===================================================================== */
 function tracePath(ctx, pts) { ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y); }
-function renderLevelBackground(level, path, k) {
+function nearPathPx(path, x, y, r) { for (let d = 0; d < path.length; d += 15) { const q = path.pointAt(d); if ((q.x - x) ** 2 + (q.y - y) ** 2 < r * r) return true; } return false; }
+function renderLevelBackground(level, path, k, opts) {
   k = k || 1;
+  const flat = !(opts && opts.flat === false);
   const c = document.createElement('canvas');
   c.width = Math.round(W * k); c.height = Math.round(H * k);
-  const ctx = c.getContext('2d'), T = CONFIG.tile, col = THEME_COLOR || level.color, rng = mulberry32(level.n * 7919 + 13);
+  const ctx = c.getContext('2d'), T = CONFIG.tile, col = THEME_COLOR || level.color, rng = mulberry32(level.n * 7919 + 13), P = planetOf(level.world);
   ctx.scale(k, k);
   const bg = ctx.createRadialGradient(W / 2, H / 2, 60, W / 2, H / 2, W * 0.7);
-  bg.addColorStop(0, '#0e1628'); bg.addColorStop(1, '#060911');
+  bg.addColorStop(0, P.bg[0]); bg.addColorStop(1, P.bg[1]);
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  // Grille fine et points aux intersections
-  ctx.strokeStyle = 'rgba(122,167,255,.045)'; ctx.lineWidth = 1;
-  for (let x = 0; x <= CONFIG.cols; x++) { ctx.beginPath(); ctx.moveTo(x * T + .5, 0); ctx.lineTo(x * T + .5, H); ctx.stroke(); }
-  for (let y = 0; y <= CONFIG.rows; y++) { ctx.beginPath(); ctx.moveTo(0, y * T + .5); ctx.lineTo(W, y * T + .5); ctx.stroke(); }
-  ctx.fillStyle = 'rgba(122,167,255,.16)';
-  for (let x = 0; x <= CONFIG.cols; x += 2) for (let y = 0; y <= CONFIG.rows; y += 2) ctx.fillRect(x * T - 1, y * T - 1, 2, 2);
-  // Pistes de circuit imprimé
-  const step = T / 2, dirs = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (let i = 0; i < 34; i++) {
-    let x = Math.floor(rng() * (W / step)) * step, y = Math.floor(rng() * (H / step)) * step, d = Math.floor(rng() * 4);
-    ctx.strokeStyle = rgba(rng() < 0.5 ? col : '#7aa7ff', 0.07 + rng() * 0.09); ctx.lineWidth = rng() < 0.3 ? 2.5 : 1.4;
-    ctx.beginPath(); ctx.moveTo(x, y);
-    const n = 3 + Math.floor(rng() * 6);
-    for (let j = 0; j < n; j++) {
-      if (rng() < 0.35) d = rng() < 0.5 ? (d + 4 + (rng() < 0.5 ? 0 : 1)) % 8 : Math.floor(rng() * 4);
-      const len = 1 + Math.floor(rng() * 3);
-      x += dirs[d][0] * step * len; y += dirs[d][1] * step * len;
-      ctx.lineTo(x, y);
+  const rnd = (a, b) => a + rng() * (b - a);
+  const free = (x, y, r) => !nearPathPx(path, x, y, r || 40);
+  switch (P.kind) {
+    case 'sand': {
+      for (let i = 0; i < 18; i++) {                         // dunes
+        const y0 = rnd(-20, H + 20), amp = rnd(8, 22), f = rnd(0.006, 0.014), ph = rnd(0, 6);
+        ctx.strokeStyle = rng() < 0.5 ? 'rgba(255,220,160,.12)' : 'rgba(60,30,10,.18)'; ctx.lineWidth = rnd(6, 16);
+        ctx.beginPath(); for (let x = -10; x <= W + 10; x += 12) { const y = y0 + Math.sin(x * f + ph) * amp; x < 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
+      }
+      for (let i = 0; i < 500; i++) { ctx.fillStyle = rng() < 0.5 ? 'rgba(255,230,180,.18)' : 'rgba(70,40,15,.22)'; ctx.fillRect(rnd(0, W), rnd(0, H), 1.5, 1.5); }
+      if (flat) for (let i = 0; i < 14; i++) { const x = rnd(20, W - 20), y = rnd(20, H - 20); if (!free(x, y)) continue; const r = rnd(5, 12);
+        ctx.fillStyle = '#4a3218'; ctx.beginPath(); ctx.ellipse(x, y, r * 1.3, r, rnd(0, 3), 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(255,220,160,.25)'; ctx.beginPath(); ctx.ellipse(x - r * 0.3, y - r * 0.3, r * 0.6, r * 0.4, 0, 0, TAU); ctx.fill(); }
+      break;
     }
-    ctx.stroke();
-    ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(x, y, 3, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#0a0f1c'; ctx.beginPath(); ctx.arc(x, y, 1.4, 0, TAU); ctx.fill();
+    case 'ocean': {
+      for (let i = 0; i < 40; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(20, 70); const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(120,220,255,.08)'); g.addColorStop(1, 'rgba(120,220,255,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+      for (let i = 0; i < 70; i++) {                         // vagues
+        const x0 = rnd(-40, W), y = rnd(0, H), len = rnd(30, 90);
+        ctx.strokeStyle = `rgba(190,240,255,${rnd(0.06, 0.18).toFixed(2)})`; ctx.lineWidth = rnd(1, 2.5);
+        ctx.beginPath(); for (let x = 0; x <= len; x += 6) { const yy = y + Math.sin(x * 0.12) * 3; x ? ctx.lineTo(x0 + x, yy) : ctx.moveTo(x0, yy); } ctx.stroke();
+      }
+      break;
+    }
+    case 'forest': {
+      for (let i = 0; i < 2200; i++) { const x = rnd(0, W), y = rnd(0, H); ctx.strokeStyle = rng() < 0.5 ? 'rgba(120,220,90,.16)' : 'rgba(5,30,10,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + rnd(-2, 2), y - rnd(2, 5)); ctx.stroke(); }
+      for (let i = 0; i < 26; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(30, 70); const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,.18)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+      if (flat) for (let i = 0; i < 40; i++) { const x = rnd(10, W - 10), y = rnd(10, H - 10); if (!free(x, y, 46)) continue; const r = rnd(10, 18);
+        ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.arc(x + 4, y + 5, r, 0, TAU); ctx.fill();
+        ctx.fillStyle = rng() < 0.5 ? '#1f5a26' : '#2a6e2a'; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(160,255,120,.22)'; ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.3, r * 0.5, 0, TAU); ctx.fill(); }
+      break;
+    }
+    case 'industrial': {
+      ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 2;
+      for (let x = 0; x < W; x += T) for (let y = 0; y < H; y += T) {
+        ctx.fillStyle = `rgba(${rng() < 0.5 ? '255,255,255' : '0,0,0'},${rnd(0.02, 0.07).toFixed(2)})`; ctx.fillRect(x + 1, y + 1, T - 2, T - 2); ctx.strokeRect(x + 1, y + 1, T - 2, T - 2);
+        ctx.fillStyle = 'rgba(200,190,180,.25)'; for (const [dx, dy] of [[5, 5], [T - 5, 5], [5, T - 5], [T - 5, T - 5]]) { ctx.beginPath(); ctx.arc(x + dx, y + dy, 1.6, 0, TAU); ctx.fill(); }
+      }
+      for (let i = 0; i < 12; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(12, 36); const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(0,0,0,.4)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, 10); ctx.rect(0, H - 10, W, 10); ctx.clip();
+      for (let x = -20; x < W + 20; x += 20) { ctx.fillStyle = '#e8b020'; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 10, 0); ctx.lineTo(x, H); ctx.lineTo(x - 10, H); ctx.fill(); }
+      ctx.restore();
+      ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, W, 10); ctx.fillRect(0, H - 10, W, 10);
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, 10); ctx.rect(0, H - 10, W, 10); ctx.clip();
+      for (let x = -20; x < W + 20; x += 24) { ctx.fillStyle = 'rgba(232,176,32,.6)'; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 12, 0); ctx.lineTo(x + 2, 10); ctx.lineTo(x - 10, 10); ctx.fill(); ctx.beginPath(); ctx.moveTo(x, H - 10); ctx.lineTo(x + 12, H - 10); ctx.lineTo(x + 2, H); ctx.lineTo(x - 10, H); ctx.fill(); }
+      ctx.restore();
+      break;
+    }
+    case 'crystal': {
+      for (let i = 0; i < 60; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(6, 22), n = 3 + Math.floor(rng() * 3), a0 = rnd(0, 6);
+        ctx.fillStyle = rng() < 0.5 ? 'rgba(255,122,224,.1)' : 'rgba(94,240,255,.08)'; ctx.strokeStyle = 'rgba(255,200,255,.18)'; ctx.lineWidth = 1;
+        ctx.beginPath(); for (let j = 0; j < n; j++) { const a = a0 + j * TAU / n; ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r * 1.6); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      for (let i = 0; i < 200; i++) { ctx.fillStyle = `rgba(255,220,255,${rnd(0.1, 0.5).toFixed(2)})`; ctx.fillRect(rnd(0, W), rnd(0, H), 1.5, 1.5); }
+      break;
+    }
+    case 'storm': {
+      for (let i = 0; i < 28; i++) { let x = rnd(0, W), y = rnd(0, H); ctx.strokeStyle = rng() < 0.3 ? 'rgba(130,170,255,.25)' : 'rgba(0,0,0,.45)'; ctx.lineWidth = rnd(1, 2.5); ctx.beginPath(); ctx.moveTo(x, y);
+        for (let j = 0; j < 6; j++) { x += rnd(-30, 30); y += rnd(-30, 30); ctx.lineTo(x, y); } ctx.stroke(); }
+      for (let i = 0; i < 18; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(20, 60); const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(120,160,255,.08)'); g.addColorStop(1, 'rgba(120,160,255,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+      break;
+    }
+    case 'lava': {
+      for (let i = 0; i < 10; i++) { const x = rnd(0, W), y = rnd(0, H); if (!free(x, y, 60)) continue; const r = rnd(18, 40); const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(255,170,60,.9)'); g.addColorStop(0.5, 'rgba(255,80,20,.55)'); g.addColorStop(1, 'rgba(120,20,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, r * 1.3, r, rnd(0, 3), 0, TAU); ctx.fill(); }
+      ctx.save(); ctx.shadowColor = '#ff6a2a'; ctx.shadowBlur = 8;
+      for (let i = 0; i < 26; i++) { let x = rnd(0, W), y = rnd(0, H); ctx.strokeStyle = `rgba(255,${Math.round(rnd(90, 160))},40,${rnd(0.45, 0.85).toFixed(2)})`; ctx.lineWidth = rnd(1, 2.4); ctx.beginPath(); ctx.moveTo(x, y);
+        for (let j = 0; j < 5; j++) { x += rnd(-26, 26); y += rnd(-26, 26); ctx.lineTo(x, y); } ctx.stroke(); }
+      ctx.restore();
+      break;
+    }
+    case 'ice': {
+      for (let i = 0; i < 30; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(20, 70); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.beginPath(); ctx.ellipse(x, y, r * 1.4, r * 0.8, rnd(0, 3), 0, TAU); ctx.fill(); }
+      for (let i = 0; i < 30; i++) { let x = rnd(0, W), y = rnd(0, H); ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = rnd(0.8, 1.6); ctx.beginPath(); ctx.moveTo(x, y);
+        for (let j = 0; j < 4; j++) { x += rnd(-24, 24); y += rnd(-24, 24); ctx.lineTo(x, y); } ctx.stroke(); }
+      for (let i = 0; i < 300; i++) { ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(rnd(0, W), rnd(0, H), 1.5, 1.5); }
+      break;
+    }
+    default: {                                                 // city / rust : circuits imprimés
+      ctx.strokeStyle = 'rgba(122,167,255,.045)'; ctx.lineWidth = 1;
+      for (let x = 0; x <= CONFIG.cols; x++) { ctx.beginPath(); ctx.moveTo(x * T + .5, 0); ctx.lineTo(x * T + .5, H); ctx.stroke(); }
+      for (let y = 0; y <= CONFIG.rows; y++) { ctx.beginPath(); ctx.moveTo(0, y * T + .5); ctx.lineTo(W, y * T + .5); ctx.stroke(); }
+      ctx.fillStyle = 'rgba(122,167,255,.16)';
+      for (let x = 0; x <= CONFIG.cols; x += 2) for (let y = 0; y <= CONFIG.rows; y += 2) ctx.fillRect(x * T - 1, y * T - 1, 2, 2);
+      const step = T / 2, dirs = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+      for (let i = 0; i < 34; i++) {
+        let x = Math.floor(rng() * (W / step)) * step, y = Math.floor(rng() * (H / step)) * step, d = Math.floor(rng() * 4);
+        ctx.strokeStyle = rgba(rng() < 0.5 ? col : '#7aa7ff', 0.07 + rng() * 0.09); ctx.lineWidth = rng() < 0.3 ? 2.5 : 1.4;
+        ctx.beginPath(); ctx.moveTo(x, y);
+        const n = 3 + Math.floor(rng() * 6);
+        for (let j = 0; j < n; j++) {
+          if (rng() < 0.35) d = rng() < 0.5 ? (d + 4 + (rng() < 0.5 ? 0 : 1)) % 8 : Math.floor(rng() * 4);
+          const len = 1 + Math.floor(rng() * 3);
+          x += dirs[d][0] * step * len; y += dirs[d][1] * step * len;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(x, y, 3, 0, TAU); ctx.fill();
+      }
+      if (P.kind === 'rust') for (let i = 0; i < 26; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(14, 46); const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(160,50,30,.35)'); g.addColorStop(1, 'rgba(160,50,30,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+      for (let i = 0; i < 5; i++) {
+        const x = Math.floor(rng() * (CONFIG.cols - 1)) * T + 8, y = Math.floor(rng() * (CONFIG.rows - 1)) * T + 8, w = T - 16 + Math.floor(rng() * 2) * T, h = T - 16;
+        ctx.fillStyle = 'rgba(20,30,52,.55)'; ctx.strokeStyle = rgba(col, 0.12); ctx.lineWidth = 1;
+        roundRectPath(ctx, x, y, w, h, 4); ctx.fill(); ctx.stroke();
+      }
+    }
   }
-  // Puces décoratives
-  for (let i = 0; i < 5; i++) {
-    const x = Math.floor(rng() * (CONFIG.cols - 1)) * T + 8, y = Math.floor(rng() * (CONFIG.rows - 1)) * T + 8, w = T - 16 + Math.floor(rng() * 2) * T, h = T - 16;
-    ctx.fillStyle = 'rgba(20,30,52,.55)'; ctx.strokeStyle = rgba(col, 0.12); ctx.lineWidth = 1;
-    roundRectPath(ctx, x, y, w, h, 4); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = rgba(col, 0.1);
-    for (let p = 6; p < w - 4; p += 7) { ctx.fillRect(x + p, y - 4, 2, 4); ctx.fillRect(x + p, y + h, 2, 4); }
+  // Route : style selon la planète (pontons, pavés, terre battue, convoyeur…)
+  const pts = path.points, road = P.road;
+  ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = 20; ctx.strokeStyle = rgba(col, 0.28); ctx.lineWidth = 54; tracePath(ctx, pts); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = rgba(col, 0.8); ctx.lineWidth = 47; tracePath(ctx, pts); ctx.stroke();
+  ctx.strokeStyle = road; ctx.lineWidth = 43; tracePath(ctx, pts); ctx.stroke();
+  if (P.kind === 'ocean' || P.kind === 'forest' || P.kind === 'sand' || P.kind === 'ice') {
+    // Planches, pavés ou traces : petits traits en travers de la voie
+    const plank = { ocean: 'rgba(0,0,0,.35)', forest: 'rgba(0,0,0,.18)', sand: 'rgba(0,0,0,.22)', ice: 'rgba(255,255,255,.35)' }[P.kind];
+    ctx.strokeStyle = plank; ctx.lineWidth = P.kind === 'ocean' ? 2 : 1.5;
+    for (let d = 4; d < path.length; d += P.kind === 'ocean' ? 9 : 14) {
+      const p = path.pointAt(d), nx = -Math.sin(p.angle), ny = Math.cos(p.angle), w = P.kind === 'ocean' ? 20 : 12 * (0.5 + rng() * 0.8);
+      const ox = P.kind === 'ocean' ? 0 : rnd(-10, 10);
+      ctx.beginPath(); ctx.moveTo(p.x + nx * (-w + ox), p.y + ny * (-w + ox)); ctx.lineTo(p.x + nx * (w + ox), p.y + ny * (w + ox)); ctx.stroke();
+    }
+  } else if (P.kind === 'industrial') {
+    ctx.strokeStyle = 'rgba(232,176,32,.5)'; ctx.lineWidth = 3; ctx.setLineDash([10, 10]);
+    for (const off of [-17, 17]) { ctx.beginPath(); for (let i = 0; i < pts.length; i++) { const a = pts[Math.min(i, pts.length - 2)], b2 = pts[Math.min(i + 1, pts.length - 1)], ang = Math.atan2(b2.y - a.y, b2.x - a.x), nx = -Math.sin(ang), ny = Math.cos(ang); const q = pts[i]; i ? ctx.lineTo(q.x + nx * off, q.y + ny * off) : ctx.moveTo(q.x + nx * off, q.y + ny * off); } ctx.stroke(); }
+    ctx.setLineDash([]);
+  } else {
+    ctx.strokeStyle = rgba(col, 0.16); ctx.lineWidth = 36; tracePath(ctx, pts); ctx.stroke();
+    ctx.strokeStyle = road; ctx.lineWidth = 34; tracePath(ctx, pts); ctx.stroke();
   }
-  // Route : halo, bordures lumineuses, voie sombre, chevrons de direction
-  const pts = path.points;
-  ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = 26; ctx.strokeStyle = rgba(col, 0.35); ctx.lineWidth = 54; tracePath(ctx, pts); ctx.stroke(); ctx.restore();
-  ctx.strokeStyle = rgba(col, 0.85); ctx.lineWidth = 47; tracePath(ctx, pts); ctx.stroke();
-  ctx.strokeStyle = '#0b1120'; ctx.lineWidth = 43; tracePath(ctx, pts); ctx.stroke();
-  ctx.strokeStyle = rgba(col, 0.18); ctx.lineWidth = 36; tracePath(ctx, pts); ctx.stroke();
-  ctx.strokeStyle = '#0e1528'; ctx.lineWidth = 34; tracePath(ctx, pts); ctx.stroke();
-  ctx.fillStyle = rgba(col, 0.14);
+  ctx.fillStyle = rgba(P.kind === 'ice' ? '#ffffff' : col, 0.16);
   for (let d = 30; d < path.length - 30; d += 46) {
     const p = path.pointAt(d);
     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle);
@@ -4326,8 +4715,9 @@ const Bloom2D = {
     gb.globalCompositeOperation = 'copy'; gb.drawImage(A, 0, 0, B.width, B.height);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'lighter'; ctx.imageSmoothingQuality = 'high';
-    ctx.globalAlpha = 0.5; ctx.drawImage(B, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 0.32; ctx.drawImage(A, 0, 0, canvas.width, canvas.height);
+    const kb = GameView.battle ? (planetOf(GameView.battle.level.world).bloom || 1) : 1;
+    ctx.globalAlpha = 0.5 * kb; ctx.drawImage(B, 0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 0.32 * kb; ctx.drawImage(A, 0, 0, canvas.width, canvas.height);
     ctx.restore();
   }
 };
@@ -4362,7 +4752,8 @@ function drawLockedHover(ctx, p0, cost, afford) {
 /* ---------- Tourelles ---------- */
 const TIER_COLORS = ['#8796b6', '#3ef2c8', '#7aa7ff', '#c58bff', '#ffcf4a', '#ff4fa3'];
 function drawTowerFX(ctx, t, hl, time) {
-  const def = t.def, c = towerColor(def), age = time - (t._born === undefined ? -9 : t._born), up = time - (t._up === undefined ? -9 : t._up);
+  // Les animations de construction et d'amélioration suivent l'horloge du rendu (R.time)
+  const def = t.def, c = towerColor(def), age = t._born === undefined ? 9 : Math.max(0, R.time - t._born), up = t._up === undefined ? 9 : Math.max(0, R.time - t._up);
   const sc = age < 0.45 ? 0.35 + 0.65 * ease.outBack(age / 0.45) : 1;
   ctx.save(); ctx.translate(t.x, t.y);
   if (sc !== 1) ctx.scale(sc, sc);
@@ -4419,6 +4810,13 @@ function drawEnemyFX(ctx, e, sel, time) {
     ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 2; i++) { const a = time * 3 + i * Math.PI, px = e.x + Math.cos(a) * (e.r + 6), py = e.y + Math.sin(a) * (e.r + 6); ctx.drawImage(Spr.dot('#ffcf4a'), px - 5, py - 5, 10, 10); }
     ctx.globalCompositeOperation = 'source-over';
+  }
+  if (e.carrier || e.treasure) {
+    const c2 = e.carrier ? '#c58bff' : '#ffcf4a';
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 3; i++) { const a = time * 4 + i * TAU / 3, px = e.x + Math.cos(a) * (e.r + 9), py = e.y + Math.sin(a) * (e.r + 9); ctx.drawImage(Spr.dot(c2), px - 6, py - 6, 12, 12); }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = c2; ctx.lineWidth = 2; ctx.globalAlpha = 0.6 + 0.4 * Math.sin(time * 6); ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 6, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
   }
   if (sc !== 1) ctx.restore();
   if (sel) {
@@ -4967,8 +5365,9 @@ void main(){
       gl.uniform1f(this.uni(F, 'aspect'), R.LW / R.LH);
       gl.uniform1f(this.uni(F, 'chroma'), R.chroma);
       gl.uniform1f(this.uni(F, 'flash'), R.flash);
-      gl.uniform1f(this.uni(F, 'bloomA'), 0.35);
-      gl.uniform1f(this.uni(F, 'bloomB'), 0.55);
+      const pb = GameView.battle ? (planetOf(GameView.battle.level.world).bloom || 1) : 1;
+      gl.uniform1f(this.uni(F, 'bloomA'), 0.35 * pb);
+      gl.uniform1f(this.uni(F, 'bloomB'), 0.55 * pb);
       gl.uniform1f(this.uni(F, 'vig'), 0.55);
       gl.uniform1f(this.uni(F, 'scan'), GFX.level >= 2 ? 0.05 : 0);
       gl.uniform1f(this.uni(F, 'time'), time);
@@ -5176,6 +5575,8 @@ const R3 = {
       cross: [{ g: g.sph, p: [0, k, 0], s: [k, k, k], c }, { g: g.box, p: [0, k * 2.05, 0], s: [k * 0.7, k * 0.22, k * 0.22], c: '#5dff9a', e: 1.4 }, { g: g.box, p: [0, k * 2.05, 0], s: [k * 0.22, k * 0.7, k * 0.22], c: '#5dff9a', e: 1.4 }, ...eyes(k * 0.72, k * 1.15, k * 0.38)],
       diamond: [{ g: g.oct, p: [0, k * 1.1, 0], s: [k * 1.05, k * 1.3, k * 1.05], c, e: 0.25 }, ...eyes(k * 0.55, k * 1.3, k * 0.3), { g: g.oct, p: [0, k * 2.4, 0], s: [k * 0.3, k * 0.4, k * 0.3], c: '#ffffff', e: 1 }],
       medic: [{ g: g.sph, p: [0, k, 0], s: [k, k, k], c }, { g: g.tor, p: [0, k * 2.2, 0], r: [Math.PI / 2, 0, 0], s: [k * 0.6, k * 0.6, k * 0.6], c: '#ffe14f', e: 1.4 }, { g: g.box, p: [k * 0.95, k, 0], s: [k * 0.1, k * 0.5, k * 0.16], c: '#ffffff', e: 1 }, { g: g.box, p: [k * 0.95, k, 0], s: [k * 0.1, k * 0.16, k * 0.5], c: '#ffffff', e: 1 }, ...eyes(k * 0.6, k * 1.4, k * 0.38)],
+      treasure: [{ g: g.box, p: [0, k * 0.8, 0], s: [k * 1.9, k * 1.1, k * 1.3], c: '#8a5a10' }, { g: g.box, p: [0, k * 1.42, 0], s: [k * 1.95, k * 0.25, k * 1.35], c, e: 0.9 },
+        { g: g.box, p: [0, k * 0.8, 0], s: [k * 0.3, k * 1.15, k * 1.35], c, e: 0.9 }, { g: g.box, p: [-k * 0.4, k * 1.1, k * 1.1], r: [0.4, 0, 0], s: [k * 1.2, k * 0.08, k * 0.7], c: '#d9e2f2' }, { g: g.box, p: [-k * 0.4, k * 1.1, -k * 1.1], r: [-0.4, 0, 0], s: [k * 1.2, k * 0.08, k * 0.7], c: '#d9e2f2' }, { g: g.sph0, p: [k * 1.05, k * 0.8, 0], s: [k * 0.25, k * 0.25, k * 0.25], c: '#ffffff', e: 1.5 }],
       boss: [{ g: g.cyl6, p: [0, k * 0.9, 0], s: [k, k * 1.8, k], c }, { g: g.sph, p: [k * 0.7, k * 1, 0], s: [k * 0.35, k * 0.35, k * 0.35], c: '#ffeecc', e: 1.5 },
         ...[0, 1, 2, 3, 4, 5].map(i => ({ g: g.cone4, p: [Math.cos(i * Math.PI / 3) * k * 0.75, k * 2, Math.sin(i * Math.PI / 3) * k * 0.75], s: [k * 0.18, k * 0.55, k * 0.18], c: '#ffcf4a', e: 0.6 })),
         { g: g.box, p: [0, k * 0.15, 0], s: [k * 2.2, k * 0.3, k * 2.2], c: '#2b1a24' }, ...eyes(k * 0.85, k * 1.45, k * 0.45)]
@@ -5299,14 +5700,16 @@ const R3 = {
     if (this.levelObj) { this.scene.remove(this.levelObj); this.levelObj.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material !== this.mat) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
     for (const [k, im] of this.inst) if (k.startsWith('lv:')) { this.scene.remove(im); im.geometry.dispose(); this.inst.delete(k); }
     this.levelKey = key;
-    const grp = this.levelObj = new T.Group(), col = THEME_COLOR || b.level.color, g = this.G();
+    const grp = this.levelObj = new T.Group(), col = THEME_COLOR || b.level.color, g = this.G(), PL = planetOf(b.level.world).l3;
+    this.hemi.color.set(PL.sky); this.hemi.groundColor.set(PL.ground); this.sun.color.set(PL.sun); this.sun.intensity = PL.sunI;
+    this.scene.background.set(PL.fog); this.scene.fog.color.set(PL.fog);
     // Sol : on réutilise le décor 2D (circuits + route lumineuse) comme texture
-    const tex = new T.CanvasTexture(renderLevelBackground(b.level, b.path, 1.6));
+    const tex = new T.CanvasTexture(renderLevelBackground(b.level, b.path, 1.6, { flat: false }));
     tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = 4;
     const ground = new T.Mesh(new T.PlaneGeometry(CONFIG.cols, CONFIG.rows), new T.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: 0.1, roughness: 0.95, metalness: 0 }));
     ground.rotation.x = -Math.PI / 2; ground.position.set(CONFIG.cols / 2, 0, CONFIG.rows / 2); ground.receiveShadow = true;
     grp.add(ground);
-    const floor = new T.Mesh(new T.PlaneGeometry(80, 80), new T.MeshStandardMaterial({ color: '#0b1020', roughness: 1 }));
+    const floor = new T.Mesh(new T.PlaneGeometry(80, 80), new T.MeshStandardMaterial({ color: planetOf(b.level.world).bg[1], roughness: 1 }));
     floor.rotation.x = -Math.PI / 2; floor.position.set(8, -0.6, 5); floor.receiveShadow = true; grp.add(floor);
     // Bordure de l'arène : socle sombre et liseré néon
     const W3 = CONFIG.cols, H3 = CONFIG.rows, wall = [];
@@ -5325,17 +5728,63 @@ const R3 = {
       for (const sgn of [-1, 1]) curb.push({ g: g.box, p: [mx + nx * 0.4 * sgn, 0.06, mz + nz * 0.4 * sgn], r: [0, ang, 0], s: [len + 0.8, 0.12, 0.07], c: col, e: 0.3 });
     }
     const cm = new T.Mesh(this.merge(curb), this.mat); cm.receiveShadow = true; grp.add(cm);
-    // Décor : cristaux, piliers et antennes sur les cases libres, loin de la route et des cases de tourelles
-    const rng = mulberry32(b.level.n * 131 + 7), occ = new Set(b.pads.map(p => p.col + ',' + p.row)), props = [];
-    const nearPath = (x, y) => { for (let d = 0; d < b.path.length; d += 15) { const q = b.path.pointAt(d); if ((q.x - x) ** 2 + (q.y - y) ** 2 < 46 * 46) return true; } return false; };
-    for (let cx = 0; cx < CONFIG.cols; cx++) for (let cz = 0; cz < CONFIG.rows; cz++) {
-      if (occ.has(cx + ',' + cz) || rng() > 0.22) continue;
-      const x = (cx + 0.5) * U, y = (cz + 0.5) * U;
+    // Décor de la planète sur les cases libres, loin de la route et des cases de tourelles
+    const P = planetOf(b.level.world), rng = mulberry32(b.level.n * 131 + 7), occ = new Set(b.pads.map(p => p.col + ',' + p.row)), props = [];
+    const nearPath = (x, y) => nearPathPx(b.path, x, y, 46);
+    const dens = { forest: 0.45, sand: 0.18, ocean: 0.16, industrial: 0.3, crystal: 0.3, storm: 0.2, lava: 0.26, ice: 0.26, rust: 0.24, city: 0.22 }[P.kind] || 0.2;
+    // Toutes les cases s'achètent : le décor se place aux coins des cases, entre les tourelles
+    void occ;
+    for (let cx = 1; cx < CONFIG.cols; cx++) for (let cz = 1; cz < CONFIG.rows; cz++) {
+      if (rng() > dens) continue;
+      const x = cx * U, y = cz * U;
       if (nearPath(x, y)) continue;
-      const X = cx + 0.3 + rng() * 0.4, Z = cz + 0.3 + rng() * 0.4, kind = rng(), s = 0.6 + rng() * 0.6, ry = rng() * 6;
-      if (kind < 0.45) for (let i = 0; i < 3; i++) props.push({ g: g.oct, p: [X + (rng() - 0.5) * 0.4, 0.15 * s, Z + (rng() - 0.5) * 0.4], r: [rng() * 0.5, ry, rng() * 0.5], s: [0.1 * s, (0.25 + rng() * 0.3) * s, 0.1 * s], c: rng() < 0.5 ? col : '#7aa7ff', e: 1.1 });
-      else if (kind < 0.75) { props.push({ g: g.cyl6, p: [X, 0.25 * s, Z], r: [0, ry, 0], s: [0.14 * s, 0.5 * s, 0.14 * s], c: '#2b3556' }); props.push({ g: g.cyl6, p: [X, 0.52 * s, Z], r: [0, ry, 0], s: [0.16 * s, 0.05, 0.16 * s], c: col, e: 1 }); }
-      else { props.push({ g: g.box, p: [X, 0.08, Z], r: [0, ry, 0], s: [0.36 * s, 0.16, 0.26 * s], c: '#222c4a' }); props.push({ g: g.cyl8, p: [X, 0.35 * s, Z], s: [0.02, 0.6 * s, 0.02], c: '#8fa0c8' }); props.push({ g: g.sph0, p: [X, 0.68 * s, Z], s: [0.05, 0.05, 0.05], c: '#ff4fa3', e: 1.5 }); }
+      const X = cx + (rng() - 0.5) * 0.14, Z = cz + (rng() - 0.5) * 0.14, kind = rng(), s = (0.6 + rng() * 0.5) * 0.72, ry = rng() * 6;
+      const R = (a, b2) => a + rng() * (b2 - a);
+      switch (P.kind) {
+        case 'forest':
+          if (kind < 0.7) { props.push({ g: g.cyl6, p: [X, 0.18 * s, Z], s: [0.06 * s, 0.36 * s, 0.06 * s], c: '#5a3a1e' });
+            for (let i = 0; i < 3; i++) props.push({ g: g.cone8, p: [X, (0.42 + i * 0.2) * s, Z], r: [0, ry, 0], s: [(0.3 - i * 0.07) * s, 0.3 * s, (0.3 - i * 0.07) * s], c: i % 2 ? '#2f7a32' : '#256a2a' }); }
+          else if (kind < 0.85) props.push({ g: g.sph, p: [X, 0.12 * s, Z], s: [0.2 * s, 0.14 * s, 0.2 * s], c: '#2e8a3a' });
+          else { props.push({ g: g.cyl8, p: [X, 0.08, Z], s: [0.03, 0.16, 0.03], c: '#d8d0b0' }); props.push({ g: g.sph, p: [X, 0.17, Z], s: [0.09, 0.05, 0.09], c: '#5ef0ff', e: 1 }); }
+          break;
+        case 'sand':
+          if (kind < 0.6) props.push({ g: g.dod, p: [X, 0.08 * s, Z], r: [R(0, 1), ry, R(0, 1)], s: [0.2 * s, 0.13 * s, 0.17 * s], c: '#8a5a2e' });
+          else { props.push({ g: g.cyl8, p: [X, 0.25 * s, Z], s: [0.07 * s, 0.5 * s, 0.07 * s], c: '#4f8a5a' }); props.push({ g: g.cyl8, p: [X + 0.1 * s, 0.3 * s, Z], r: [0, 0, -0.9], s: [0.04 * s, 0.22 * s, 0.04 * s], c: '#4f8a5a' }); }
+          break;
+        case 'ocean':
+          if (kind < 0.5) { props.push({ g: g.cyl8, p: [X, 0.12, Z], s: [0.08, 0.26, 0.08], c: '#e8e8f0' }); props.push({ g: g.cyl8, p: [X, 0.12, Z], s: [0.085, 0.06, 0.085], c: '#ff4a4a' }); props.push({ g: g.sph0, p: [X, 0.3, Z], s: [0.04, 0.04, 0.04], c: '#ffe14f', e: 1.4 }); }
+          else for (let i = 0; i < 3; i++) props.push({ g: g.cone8, p: [X + R(-0.15, 0.15), 0.1 * s, Z + R(-0.15, 0.15)], r: [R(-0.3, 0.3), 0, R(-0.3, 0.3)], s: [0.05 * s, 0.24 * s, 0.05 * s], c: rng() < 0.5 ? '#ff7a8a' : '#ffb070', e: 0.3 });
+          break;
+        case 'industrial':
+          if (kind < 0.35) { props.push({ g: g.cyl12, p: [X, 0.2 * s, Z], s: [0.2 * s, 0.4 * s, 0.2 * s], c: '#6a625a' }); props.push({ g: g.sph, p: [X, 0.4 * s, Z], s: [0.2 * s, 0.1 * s, 0.2 * s], c: '#7a726a' }); }
+          else if (kind < 0.6) { props.push({ g: g.cyl8, p: [X, 0.45 * s, Z], s: [0.08, 0.9 * s, 0.08], c: '#4a4440' }); props.push({ g: g.cyl8, p: [X, 0.92 * s, Z], s: [0.1, 0.06, 0.1], c: '#ff8a3d', e: 1.2 }); }
+          else if (kind < 0.85) props.push({ g: g.box, p: [X, 0.1 * s, Z], r: [0, ry, 0], s: [0.24 * s, 0.2 * s, 0.24 * s], c: rng() < 0.5 ? '#8a6a3a' : '#5a6a7a' });
+          else props.push({ g: g.cyl8, p: [X, 0.1, Z], r: [0, ry, Math.PI / 2], s: [0.06, 0.7, 0.06], c: '#7a8088' });
+          break;
+        case 'crystal':
+          for (let i = 0; i < 3; i++) props.push({ g: g.oct, p: [X + R(-0.15, 0.15), 0.2 * s, Z + R(-0.15, 0.15)], r: [R(-0.4, 0.4), ry, R(-0.4, 0.4)], s: [0.08 * s, R(0.25, 0.5) * s, 0.08 * s], c: rng() < 0.6 ? '#ff7ae0' : '#5ef0ff', e: 0.7 });
+          break;
+        case 'storm':
+          if (kind < 0.5) { props.push({ g: g.cone4, p: [X, 0.4 * s, Z], s: [0.08, 0.8 * s, 0.08], c: '#5a6080' }); props.push({ g: g.sph0, p: [X, 0.82 * s, Z], s: [0.05, 0.05, 0.05], c: '#9ec4ff', e: 1.5 }); }
+          else props.push({ g: g.dod, p: [X, 0.1 * s, Z], r: [R(0, 1), ry, 0], s: [0.2 * s, 0.15 * s, 0.18 * s], c: '#2a2e48' });
+          break;
+        case 'lava':
+          if (kind < 0.6) for (let i = 0; i < 2; i++) props.push({ g: g.cyl6, p: [X + R(-0.12, 0.12), R(0.15, 0.3) * s, Z + R(-0.12, 0.12)], s: [0.1 * s, R(0.3, 0.6) * s, 0.1 * s], c: '#241612' });
+          else props.push({ g: g.dod, p: [X, 0.07, Z], r: [R(0, 1), ry, 0], s: [0.12 * s, 0.09 * s, 0.12 * s], c: '#ff6a2a', e: 1 });
+          break;
+        case 'ice':
+          if (kind < 0.6) for (let i = 0; i < 2; i++) props.push({ g: g.cone4, p: [X + R(-0.12, 0.12), 0.22 * s, Z + R(-0.12, 0.12)], r: [0, ry, R(-0.2, 0.2)], s: [0.08 * s, R(0.35, 0.6) * s, 0.08 * s], c: '#c8f0ff', e: 0.25 });
+          else props.push({ g: g.dod, p: [X, 0.09 * s, Z], r: [R(0, 1), ry, 0], s: [0.2 * s, 0.13 * s, 0.17 * s], c: '#f4f8ff' });
+          break;
+        case 'rust':
+          if (kind < 0.5) { props.push({ g: g.box, p: [X, 0.3 * s, Z], r: [R(-0.2, 0.2), ry, R(-0.2, 0.2)], s: [0.12 * s, 0.6 * s, 0.12 * s], c: '#6a2a1a' }); props.push({ g: g.box, p: [X, 0.62 * s, Z], s: [0.14 * s, 0.04, 0.14 * s], c: '#ff3355', e: 0.8 }); }
+          else for (let i = 0; i < 2; i++) props.push({ g: g.oct, p: [X + R(-0.12, 0.12), 0.18 * s, Z + R(-0.12, 0.12)], r: [R(-0.4, 0.4), ry, 0], s: [0.08 * s, 0.3 * s, 0.08 * s], c: '#ff3355', e: 0.6 });
+          break;
+        default:
+          if (kind < 0.45) for (let i = 0; i < 3; i++) props.push({ g: g.oct, p: [X + (rng() - 0.5) * 0.4, 0.15 * s, Z + (rng() - 0.5) * 0.4], r: [rng() * 0.5, ry, rng() * 0.5], s: [0.1 * s, (0.25 + rng() * 0.3) * s, 0.1 * s], c: rng() < 0.5 ? col : '#7aa7ff', e: 1.1 });
+          else if (kind < 0.75) { props.push({ g: g.cyl6, p: [X, 0.25 * s, Z], r: [0, ry, 0], s: [0.14 * s, 0.5 * s, 0.14 * s], c: '#2b3556' }); props.push({ g: g.cyl6, p: [X, 0.52 * s, Z], r: [0, ry, 0], s: [0.16 * s, 0.05, 0.16 * s], c: col, e: 1 }); }
+          else { props.push({ g: g.box, p: [X, 0.08, Z], r: [0, ry, 0], s: [0.36 * s, 0.16, 0.26 * s], c: '#222c4a' }); props.push({ g: g.cyl8, p: [X, 0.35 * s, Z], s: [0.02, 0.6 * s, 0.02], c: '#8fa0c8' }); props.push({ g: g.sph0, p: [X, 0.68 * s, Z], s: [0.05, 0.05, 0.05], c: '#ff4fa3', e: 1.5 }); }
+      }
     }
     if (props.length) { const pm = new T.Mesh(this.merge(props), this.mat); pm.castShadow = true; pm.receiveShadow = true; grp.add(pm); }
     // Portail d'apparition et noyau à défendre
@@ -5363,7 +5812,7 @@ const R3 = {
     const T = this.T, g = this.G();
     const free = this.pool('padFree', () => this.merge([{ g: g.box, p: [0, 0.03, 0], s: [0.86, 0.06, 0.86], c: '#18223e' },
       ...[[-1, -1], [1, -1], [1, 1], [-1, 1]].flatMap(([sx, sz]) => [{ g: g.box, p: [sx * 0.37, 0.07, sz * 0.3], s: [0.06, 0.03, 0.2], c: '#7aa7ff', e: 1 }, { g: g.box, p: [sx * 0.3, 0.07, sz * 0.37], s: [0.2, 0.03, 0.06], c: '#7aa7ff', e: 1 }])]), 200, { receive: true, noShadow: true });
-    const lock = this.pool('padLock', () => this.merge([{ g: g.box, p: [0, 0.012, 0], s: [0.8, 0.024, 0.8], c: '#141c33' }]), 200, { receive: true, noShadow: true });
+    const lock = this.pool('padLock', () => this.merge([[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sz]) => ({ g: g.box, p: [sx * 0.36, 0.015, sz * 0.36], s: [0.05, 0.03, 0.05], c: '#b8963a', e: 0.25 }))), 200, { receive: true, noShadow: true });
     free.count = 0; lock.count = 0;
     for (const p of b.pads) {
       if (p.tower) continue;
@@ -5465,7 +5914,7 @@ const R3 = {
       const def = tw.def, c = towerColor(def), kb = 'tb:' + c, kh = 'th:' + def.id + ':' + c;
       const base = this.pool(kb, () => this.towerBaseGeo(c), 120, {}); base.userData.kind = 'tw'; base.receiveShadow = true;
       const head = this.pool(kh, () => this.towerHeadGeo(def), 120, {}); head.userData.kind = 'tw';
-      const age = time - (tw._born === undefined ? -9 : tw._born), up = time - (tw._up === undefined ? -9 : tw._up);
+      const age = tw._born === undefined ? 9 : Math.max(0, R.time - tw._born), up = tw._up === undefined ? 9 : Math.max(0, R.time - tw._up);
       const sc = age < 0.45 ? 0.3 + 0.7 * ease.outBack(age / 0.45) : 1, pulse = up < 0.35 ? 1 + 0.25 * (1 - up / 0.35) : 1;
       const X = tw.x / U, Z = tw.y / U, hl = tw === sel || tw === view.fuseFrom;
       const k = hl ? flashC.setRGB(1.35, 1.35, 1.35) : null;
@@ -5487,6 +5936,8 @@ const R3 = {
       else if (e.slowT > 0) col = t.c.setRGB(0.7, 0.85, 1.4);
       this.put(im, e.x / U, bob, e.y / U, -e.angle, sc, col);
       if (e.elite) this.ring(e.x, e.y, e.r * 1.9 / U, '#ffcf4a', 0.9, 0.03);
+      if (e.carrier) { this.ring(e.x, e.y, e.r * 2.2 / U + 0.05 * Math.sin(time * 6), '#c58bff', 2, 0.04); }
+      if (e.treasure) this.ring(e.x, e.y, e.r * 2.4 / U, '#ffcf4a', 1.6 + Math.sin(time * 8), 0.04);
       if (e.slowT > 0) this.ring(e.x, e.y, e.r * 1.6 / U, '#7aa7ff', 0.7, 0.02);
       if (e.poisonT > 0) this.ring(e.x, e.y, e.r * 1.75 / U, '#9cff57', 0.6, 0.025);
       if (e === view.selectedEnemy) this.ring(e.x, e.y, e.r * 2.3 / U, '#ffffff', 1, 0.04);
@@ -5546,7 +5997,7 @@ const R3 = {
       blur(R2.q1, R2.q2, 2);
       const F = this.pFinal.m.uniforms;
       F.s.value = R2.scene.texture; F.b1.value = R2.h1.texture; F.b2.value = R2.q1.texture;
-      F.aspect.value = this.w / this.h; F.chroma.value = R.chroma; F.flash.value = R.flash; F.bloom.value = GFX.level >= 2 ? 0.45 : 0.38;
+      F.aspect.value = this.w / this.h; F.chroma.value = R.chroma; F.flash.value = R.flash; F.bloom.value = (GFX.level >= 2 ? 0.45 : 0.38) * (planetOf(b.level.world).bloom || 1);
       let n = 0;
       for (const wv of R.waves) {
         if (n >= 8) break;
@@ -5629,12 +6080,12 @@ const R3 = {
         this.pCol[n * 3] = col[0] * k; this.pCol[n * 3 + 1] = col[1] * k; this.pCol[n * 3 + 2] = col[2] * k;
         this.pSize[n] = (p.type === 'flash' ? p.size * 1.6 : p.type === 'muzzle' ? p.size * 1.8 : p.type === 'spark' ? p.size * 3 : p.size * 1.6);
         n++;
-      } else if (p.type === 'smoke') {
+      } else if (p.type === 'smoke' || p.type === 'mote') {
         if (m >= 300) continue;
         const col = rgbOf(p.color);
         this.sPos[m * 3] = X; this.sPos[m * 3 + 1] = Y; this.sPos[m * 3 + 2] = Z;
         this.sCol[m * 3] = col[0] / 255 * life; this.sCol[m * 3 + 1] = col[1] / 255 * life; this.sCol[m * 3 + 2] = col[2] / 255 * life;
-        this.sSize[m] = p.size * 2.2; m++;
+        this.sSize[m] = p.type === 'mote' ? p.size * 1.4 : p.size * 2.2; m++;
       } else if (p.type !== 'ring') {
         if (c >= 700) continue;
         const s = (p.type === 'shell' ? 0.05 : p.type === 'coin' ? 0.07 : p.size / U * 1.1) * Math.min(1, life * 3);
@@ -5914,7 +6365,7 @@ const App = {
     $('mapGems').textContent = fmtBig(s.gems);
     Meta.updateBadge();
     Gear.migrate(s); $('crewCount').textContent = String(s.gear.fresh); $('crewCount').hidden = !s.gear.fresh;
-    $('wNum').textContent = `Monde ${w}`;
+    $('wNum').textContent = `Monde ${w} · ${planetOf(w).type}`;
     $('wName').textContent = info.name;
     $('wName').style.color = info.color;
     let ws = 0; for (let i = 0; i < 10; i++) ws += s.stars[first + i] || 0;
@@ -6278,6 +6729,80 @@ const Radial = {
   }
 };
 
+/* =====================================================================
+   ÉVÉNEMENTS SURPRISES — annonce, cristaux à ramasser, marchand, artefacts
+   ===================================================================== */
+const Events = {
+  drops: new Map(),
+  announce(type, b) {
+    const e = EVENTS[type], el = $('evBanner');
+    el.style.setProperty('--ec', e.color);
+    el.innerHTML = `<b>${esc(e.title)}</b><span>${esc(e.text)}</span>`;
+    el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+    clearTimeout(this.bt); this.bt = setTimeout(() => { el.hidden = true; }, 4200);
+    Talk.say(crewJoined(App.slot, e.who) ? e.who : 'volta', e.line);
+    Sound.sfx && Sound.sfx('wave'); buzz(30);
+    if (type === 'merchant') this.offer = { item: Gear.roll(App.slot, 1), price: b.merchant.price };
+  },
+  /* Cargo doré abattu, artefact récupéré */
+  treasure(gold) {
+    App.slot.gems += 3; Store.touch(App.slot);
+    Toast.show(`Cargo doré abattu : +${fmtBig(gold)} or et +3 ${GEM}`);
+    Sound.sfx && Sound.sfx('boom');
+  },
+  artifact(b) {
+    const s = App.slot, w = b.level.world;
+    s.artifacts = s.artifacts || {};
+    const n = Math.min(5, (s.artifacts[w] || 0) + 1);
+    s.artifacts[w] = n; Store.touch(s);
+    Toast.show(n >= 5 ? `Artefact de ${planetOf(w).name} complet ! Récompense dans les quêtes` : `Fragment d’artefact ${n} / 5 · ${planetOf(w).name}`);
+    Sound.sfx && Sound.sfx('up');
+  },
+  openMerchant(b) {
+    const o = this.offer;
+    if (!o || !b.merchant) return;
+    const it = o.item, t = GEAR_BY_ID[it.t];
+    GameView.paused = true; GameView.setLabels();
+    Modal.open({ title: 'Marchand de passage', html: `<div class="gdetail" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 64)}<p><b style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</b> · ${esc(t.name)}</p><p class="hint">${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join(' · ')}</p><p>Prix : <b style="color:var(--gold)">${fmtBig(o.price)} or</b> (or de la partie) · tu as ${fmtBig(Math.floor(b.gold))} or</p></div>`,
+      actions: [{ label: 'Refuser', fn: () => { GameView.paused = false; GameView.setLabels(); } },
+        { label: `Acheter · ${fmtBig(o.price)} or`, cls: b.gold >= o.price ? 'gold' : '', fn: () => {
+          GameView.paused = false; GameView.setLabels();
+          if (b.gold < o.price) { Toast.show('Pas assez d’or pour le marchand'); return; }
+          b.gold -= o.price; b.merchant = null; const got = Gear.give(App.slot, it); Store.touch(App.slot);
+          setTimeout(() => Reveal.show([got], 'Acheté au marchand'), 50);
+        } }] });
+  },
+  /* Calque HTML : cristaux à toucher et compteurs d'effets en cours. */
+  sync(b) {
+    const box = $('evts'), cv = R3.active ? R3.canvas : GameView.canvas, rc = cv.getBoundingClientRect(), br = $('board').getBoundingClientRect();
+    const ox = rc.left - br.left, oy = rc.top - br.top;
+    const live = new Set();
+    for (const d of b.drops) {
+      live.add(d.id);
+      let el = this.drops.get(d.id);
+      if (!el) {
+        el = document.createElement('button'); el.type = 'button'; el.className = 'drop'; el.setAttribute('aria-label', `Cristal : ${fmtBig(d.gold)} or`);
+        el.innerHTML = '<svg viewBox="0 0 24 32" width="26" height="34"><path d="M12 1l9 10-9 20L3 11z" fill="#5ef0ff" stroke="#fff" stroke-width="1.5"/><path d="M12 1v30M3 11h18" stroke="#ffffff88" stroke-width="1"/></svg><small></small>';
+        el.onclick = ev => { ev.stopPropagation(); if (b.collect(d.id)) { el.remove(); this.drops.delete(d.id); Sound.sfx && Sound.sfx('sell'); buzz(12); } };
+        box.appendChild(el); this.drops.set(d.id, el);
+      }
+      const p = GameView.worldToCss(d.x, d.y, rc.width, rc.height);
+      el.style.transform = `translate(${(ox + p.x).toFixed(1)}px,${(oy + p.y).toFixed(1)}px) translate(-50%,-70%)`;
+      el.querySelector('small').textContent = '+' + fmtBig(d.gold);
+      el.classList.toggle('fading', d.t < 3);
+    }
+    for (const [id, el] of this.drops) if (!live.has(id)) { el.remove(); this.drops.delete(id); }
+    const chips = [];
+    if (b.surgeT > 0) chips.push(`<span class="evchip" style="--ec:#3ef2c8">⚡ Surtension · ${Math.ceil(b.surgeT)} s</span>`);
+    if (b.stormT > 0) chips.push(`<span class="evchip" style="--ec:#7aa7ff">🌩 Tempête · or ×2 · ${Math.ceil(b.stormT)} s</span>`);
+    if (b.merchant) chips.push(`<button class="evchip btnchip" type="button" data-merchant style="--ec:#ff9b3d">Marchand · ${fmtBig(b.merchant.price)} or · ${Math.ceil(b.merchant.t)} s ▸</button>`);
+    const html = chips.join('');
+    const cb = $('evChips');
+    if (cb._h !== html) { cb._h = html; cb.innerHTML = html; const m = cb.querySelector('[data-merchant]'); if (m) m.onclick = ev => { ev.stopPropagation(); this.openMerchant(b); }; }
+  },
+  reset() { for (const el of this.drops.values()) el.remove(); this.drops.clear(); const cb = $('evChips'); if (cb) { cb.innerHTML = ''; cb._h = ''; } const bn = $('evBanner'); if (bn) bn.hidden = true; this.offer = null; }
+};
+
 const GameView = {
   battle: null, bg: null, padLayer: null,
   speed: 1, paused: false, hover: null, time: 0, frame: 0, cache: {},
@@ -6369,6 +6894,7 @@ const GameView = {
     b.boosts = boosts;
     this.flushed = JSON.parse(JSON.stringify(b.stats));
     R.reset();
+    Events.reset();
     Radial.close();
     this.speed = 1; this.paused = false;
     this.setLabels();
@@ -6811,12 +7337,16 @@ const GameView = {
       if (ev.type === 'early') { listDirty = true; if (ev.data >= 3) Talk.say('volta', ev.data >= 5 ? `Enchaînement ×${ev.data} ! Les moteurs n’ont jamais tourné aussi vite.` : `Enchaînement ×${ev.data}. Tiens le rythme, Gardien !`); }
       if (ev.type === 'chaincleared') Talk.say('brann', `${ev.data} vagues d’affilée, et le Noyau tient toujours. Chapeau.`);
       if (ev.type === 'wave') { listDirty = true; if (b.wave === b.level.waves) Talk.say('volta', pickFrom(CHAT.final)); }
-      if (ev.type === 'wavedone') { this.flushStats(); if (b.wave < b.level.waves) Talk.chatter(b); }
+      if (ev.type === 'wavedone') { this.flushStats(); if (b.wave < b.level.waves && !(b.wave === 2 && Story.beat(b.level))) Talk.chatter(b); }
       if (ev.type === 'boss') {
         Talk.boss(b.level, ev.data);
         if (ev.data === 'spawn') Sound.setTrack('boss');
         if (ev.data === 'dead' && !b.enemies.some(e => e.alive && e.type.boss)) Sound.setTrack(levelTrack(b.level));
       }
+      if (ev.type === 'event') Events.announce(ev.data, b);
+      if (ev.type === 'treasure') Events.treasure(ev.data);
+      if (ev.type === 'artifact') Events.artifact(b);
+      if (ev.type === 'merchantgone') { Events.offer = null; Toast.show('Le marchand est reparti'); }
       if (ev.type === 'fused') { App.slot.fusionsSeen[ev.data] = 1; this.flushStats(); }
       if (ev.type === 'changed') {
         this.saveRun(); listDirty = true; inspDirty = true;
@@ -6841,6 +7371,7 @@ const GameView = {
     });
     this.updateHud();
     this.updateLive();
+    Events.sync(b);
   },
 
   setText(k, el, v) { if (this.cache[k] !== v) { this.cache[k] = v; el.textContent = v; } },
