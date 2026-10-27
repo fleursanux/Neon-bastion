@@ -470,6 +470,47 @@ body.fsgame.fsland .ctrl .row{flex-wrap:wrap}
 body.fsgame.fsland .ctrl .row .btn{flex:1 1 28%}
 body.fsgame.fsland .side{left:auto;top:0;width:min(340px,60vw);max-height:none;transform:translateX(105%);border-top:0;border-left:1px solid var(--line)}
 body.fsgame.fsland.sheet .side{transform:none}
+/* Équipement */
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.crewhero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;border-color:var(--cc)}
+.crewhero canvas{width:96px;height:96px;border-radius:12px;background:radial-gradient(circle,color-mix(in srgb,var(--cc) 25%,transparent),transparent 70%)}
+.crewhero h3{margin:0;font-family:var(--font-title);color:var(--cc);letter-spacing:.05em}
+.gslots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gslot{display:flex;flex-direction:column;gap:4px;min-width:0}
+.gempty{border:1px dashed var(--line);border-radius:10px;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);text-align:center;padding:8px}
+.gempty small{font-size:.66rem}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.gcard{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;padding:10px 6px 8px;border-radius:10px;min-width:0;
+  background:radial-gradient(circle at 50% 22%,color-mix(in srgb,var(--rc) 28%,transparent),transparent 62%),var(--panel-2);border:1.5px solid color-mix(in srgb,var(--rc) 70%,transparent);transition:transform .1s}
+.gcard:active{transform:scale(.96)}
+.gcard:focus-visible{outline:2px solid #fff}
+.gcard b{font-size:.74rem;line-height:1.15;overflow-wrap:anywhere}
+.gcard small{font-size:.62rem;color:var(--rc);font-weight:700}
+.gcard .gstat{font-size:.6rem;color:var(--muted);line-height:1.3}
+.gcard.big{min-height:150px}
+.gcard.r3,.gcard.r4{box-shadow:0 0 14px color-mix(in srgb,var(--rc) 35%,transparent)}
+.gcard.r4{animation:mythic 2.4s ease-in-out infinite}
+@keyframes mythic{50%{box-shadow:0 0 22px color-mix(in srgb,var(--rc) 60%,transparent)}}
+.gown{position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:50%;background:var(--cyan);color:#062019;font:800 .62rem/17px var(--font-ui)}
+.gmerge{position:absolute;top:4px;left:4px;font:800 .6rem var(--font-num);color:#1d0b33;background:var(--violet);border-radius:4px;padding:1px 4px}
+.gicon{filter:drop-shadow(0 0 6px currentColor)}
+.gdetail{display:flex;flex-direction:column;align-items:center;gap:6px}
+.reveal{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.rv{width:104px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:10px;border:1.5px solid var(--rc);
+  background:radial-gradient(circle at 50% 25%,color-mix(in srgb,var(--rc) 35%,transparent),transparent 65%),var(--panel-2);animation:flipIn .55s cubic-bezier(.2,1.3,.4,1) backwards}
+.reveal.many .rv{width:86px;padding:7px 4px}.reveal.many .rv b{font-size:.62rem}
+.rv b{font-size:.7rem;line-height:1.15}.rv small{font-size:.62rem;font-weight:700}
+.rv.r3,.rv.r4{box-shadow:0 0 22px var(--rc)}
+@keyframes flipIn{0%{transform:perspective(400px) rotateY(90deg) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+.sitem.chest .crate{width:54px;height:40px;border-radius:6px;background:linear-gradient(180deg,#6a4b2a,#3d2a17);border:2px solid #c9a24a;position:relative;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25)}
+.sitem.chest .crate::after{content:"";position:absolute;left:50%;top:40%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:2px;background:#ffcf4a}
+.sitem.chest.c1 .crate{border-color:#4fa3ff;background:linear-gradient(180deg,#2d4a7a,#16263f)}
+.sitem.chest.c2 .crate{border-color:#c58bff;background:linear-gradient(180deg,#4b2d7a,#24163f);box-shadow:0 0 16px rgba(197,139,255,.5)}
+.sitem.offer{border-color:var(--rc)}
+.toast2{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;background:rgba(17,24,41,.96);border:1px solid var(--cyan);padding:8px 16px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none}
+.toast2.on{animation:t2 2.2s ease forwards}
+@keyframes t2{10%,80%{opacity:1}100%{opacity:0}}
+@media (max-width:560px){.gslots{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.gcard.big{min-height:130px}.crewhero canvas{width:72px;height:72px}}
 .flygem{position:fixed;z-index:60;pointer-events:none;color:var(--gem);font-size:22px;text-shadow:0 0 10px var(--gem),0 0 2px #fff}
 .flylabel{position:fixed;z-index:60;pointer-events:none;transform:translateX(-50%);font:700 .95rem var(--font-ui);color:var(--cyan);white-space:nowrap;
   text-shadow:0 0 8px rgba(0,0,0,.9);animation:flyup 1.6s ease-out forwards}
@@ -540,6 +581,7 @@ body.fsgame.fsland.sheet .side{transform:none}
         <span class="stat"><span class="k">Points</span><span class="v" id="mapPts" style="color:var(--cyan)">0</span></span>
         <span class="stat"><span class="k">Gemmes</span><span class="v gem" id="mapGems">0</span></span>
         <button class="btn small primary" id="btnQuests" type="button">Quêtes<span class="count" id="questCount" hidden>0</span></button>
+        <button class="btn small" id="btnCrew" type="button">Équipage<span class="count" id="crewCount" hidden>0</span></button>
         <button class="btn small" id="btnShop" type="button">Boutique</button>
         <button class="btn small" id="btnTree" type="button">Arbre</button>
         <button class="btn small" id="btnJournal" type="button">Journal</button>
@@ -616,6 +658,20 @@ body.fsgame.fsland.sheet .side{transform:none}
     </div>
     <div class="tabs" id="shopTabs" role="tablist"></div>
     <div id="shopBody" style="display:flex;flex-direction:column;gap:8px"></div>
+  </section>
+
+  <!-- ================= ÉQUIPAGE ================= -->
+  <section class="screen" id="scrCrew" hidden>
+    <div class="topbar">
+      <div class="who"><p class="eyebrow">Armes, blindages et modules</p><h2>Équipage</h2></div>
+      <div class="row">
+        <span class="stat"><span class="k">Ferraille</span><span class="v" id="crewScrap" style="color:#c9d6ff">0</span></span>
+        <span class="stat"><span class="k">Gemmes</span><span class="v gem" id="crewGems">0</span></span>
+        <button class="btn small" id="btnCrewBack" type="button">Retour à la carte</button>
+      </div>
+    </div>
+    <div class="tabs" id="crewTabs" role="tablist"></div>
+    <div id="crewBody" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
 
   <!-- ================= JOURNAL ================= -->
@@ -937,7 +993,7 @@ function computeMods(skills) {
     gold: 0.045 * r('gold'), bounty: 0.025 * r('bounty'), wave: 0.04 * r('wave'), cheap: 0.015 * r('cheap'),
     land: 0.02 * r('land'), resale: 0.01 * r('resale'), workshop: 0.01 * r('workshop'),
     lives: r('lives'), frost: 0.02 * r('frost'), drag: 0.01 * r('drag'), breaker: 0.05 * r('breaker'), hunter: 0.04 * r('hunter'),
-    synergy: 0.01 * r('synergy'), resonance: 0.05 * r('resonance'), rewardMul: 1,
+    synergy: 0.01 * r('synergy'), resonance: 0.05 * r('resonance'), rewardMul: 1, crew: {},
     mastery: Object.fromEntries(TOWERS.map(t => [t.id, r('m_' + t.id)]))
   };
 }
@@ -1377,7 +1433,10 @@ function towerStats(def, level, mods) {
   const k = level - 1, m = mods, mast = masteryRank(def, m);
   const g = Math.pow(CONFIG.dmgGrowth, k);
   const sat = q => 1 - Math.pow(q, k);         // progression qui sature (portée, zone…)
-  const dmgMul = (1 + m.power) * (1 + 0.05 * mast) * (def.fused ? 1 + m.resonance : 1);
+  // Bonus d'équipement du personnage lié à la tourelle (pour une fusion : le meilleur des deux)
+  const cw = { power: 0, rate: 0, range: 0 };
+  if (m.crew) for (const id of def.parts || [def.id]) { const b = m.crew[id]; if (b) for (const k in cw) cw[k] = Math.max(cw[k], b[k] || 0); }
+  const dmgMul = (1 + m.power) * (1 + cw.power) * (1 + 0.05 * mast) * (def.fused ? 1 + m.resonance : 1);
   let slow = null;
   if (def.slow) {
     const f0 = Math.max(0.12, def.slow.f - 0.25 * sat(0.85));
@@ -1385,8 +1444,8 @@ function towerStats(def, level, mods) {
   }
   return {
     dmg: def.dmg * g * dmgMul,
-    range: def.range * (1 + 0.5 * sat(0.88)) * (1 + m.range) * (1 + 0.01 * Math.min(mast, 50)),
-    rate: def.rate ? def.rate * (0.5 + 0.5 * Math.pow(0.9, k)) / (1 + m.rate) : 0,
+    range: def.range * (1 + 0.5 * sat(0.88)) * (1 + m.range) * (1 + cw.range) * (1 + 0.01 * Math.min(mast, 50)),
+    rate: def.rate ? def.rate * (0.5 + 0.5 * Math.pow(0.9, k)) / ((1 + m.rate) * (1 + cw.rate)) : 0,
     splash: def.splash ? def.splash * (1 + 0.4 * sat(0.88)) : 0,
     slow,
     chains: def.chains ? Math.min(12, def.chains + Math.floor(k / 2)) : 0,
@@ -2299,6 +2358,282 @@ const relicUpCost = l => 25 * l;
 const relicSlots = slot => 1 + (slot.unlocked >= 20 ? 1 : 0) + (slot.unlocked >= 40 ? 1 : 0);
 const activeLoadout = slot => slot.loadout.filter(id => slot.relics[id]).slice(0, relicSlots(slot));
 
+/* =====================================================================
+   ÉQUIPEMENT DE L'ÉQUIPAGE
+   Chaque personnage (Brann, Iris, Volta, Écho) porte une Arme, un Blindage
+   et un Module. Arme et Blindage renforcent les tourelles de ce personnage,
+   le Module donne un bonus à toute la partie. Les objets ont une rareté
+   (Commun → Mythique), se montent de niveau avec de la ferraille, et trois
+   objets identiques fusionnent en un objet de rareté supérieure.
+   On les obtient en fin de niveau, dans les quêtes et dans la boutique.
+   ===================================================================== */
+const RARITY = [
+  { name: 'Commun', color: '#b8c2d8', mul: 1, scrap: 2, price: 30 },
+  { name: 'Rare', color: '#4fa3ff', mul: 1.6, scrap: 6, price: 90 },
+  { name: 'Épique', color: '#c58bff', mul: 2.4, scrap: 15, price: 220 },
+  { name: 'Légendaire', color: '#ffcf4a', mul: 3.6, scrap: 40, price: 600 },
+  { name: 'Mythique', color: '#ff4fa3', mul: 5.2, scrap: 100, price: 1500 }
+];
+const GEAR_SLOTS = [
+  { id: 'arme', name: 'Arme', hint: 'Renforce les tourelles du personnage' },
+  { id: 'blindage', name: 'Blindage', hint: 'Renforce les tourelles du personnage' },
+  { id: 'module', name: 'Module', hint: 'Bonus pour toute la partie' }
+];
+const SCRAP = '⚙';
+/* crew : le bonus ne s'applique qu'aux tourelles du personnage qui porte l'objet. */
+const GEAR_STATS = {
+  power: { label: 'dégâts', crew: true }, rate: { label: 'cadence de tir', crew: true }, range: { label: 'portée', crew: true },
+  hunter: { label: 'dégâts contre élites et boss' }, pen: { label: 'défense ennemie ignorée' },
+  gold: { label: 'or de départ' }, bounty: { label: 'or par élimination' }, crit: { label: 'chance de critique' },
+  lives: { label: 'vies', flat: true }, wave: { label: 'bonus de vague' }
+};
+const GEAR = [
+  { id: 'canon', slot: 'arme', name: 'Canon de récupération', stat: 'power', base: 0.04, sub: 'rate' },
+  { id: 'bobine', slot: 'arme', name: 'Bobine survoltée', stat: 'rate', base: 0.03, sub: 'power' },
+  { id: 'lentille', slot: 'arme', name: 'Lentille focale', stat: 'range', base: 0.03, sub: 'power' },
+  { id: 'percuteur', slot: 'arme', name: 'Percuteur à fusion', stat: 'power', base: 0.05, sub: 'range' },
+  { id: 'plaque', slot: 'blindage', name: 'Plaque de coque', stat: 'range', base: 0.025, sub: 'hunter' },
+  { id: 'champ', slot: 'blindage', name: 'Champ de force', stat: 'hunter', base: 0.06, sub: 'power' },
+  { id: 'carapace', slot: 'blindage', name: 'Carapace de Rouille', stat: 'pen', base: 0.02, sub: 'range' },
+  { id: 'egide', slot: 'blindage', name: 'Égide du Noyau', stat: 'power', base: 0.03, sub: 'hunter' },
+  { id: 'puce', slot: 'module', name: 'Puce de comptable', stat: 'gold', base: 0.06, sub: 'bounty' },
+  { id: 'aimant2', slot: 'module', name: 'Aimant à ferraille', stat: 'bounty', base: 0.04, sub: 'gold' },
+  { id: 'viseur', slot: 'module', name: 'Viseur tactique', stat: 'crit', base: 0.012, sub: 'hunter' },
+  { id: 'batterie', slot: 'module', name: 'Batterie de secours', stat: 'lives', base: 1, sub: 'wave' },
+  { id: 'horloge', slot: 'module', name: 'Horloge de l’Arche', stat: 'wave', base: 0.06, sub: 'gold' }
+];
+const GEAR_BY_ID = Object.fromEntries(GEAR.map(g => [g.id, g]));
+const CREW_IDS = ['brann', 'iris', 'volta', 'echo'];
+const CHESTS = [
+  { id: 'c1', name: 'Caisse de ferraille', price: 50, n: 1, min: 0, desc: '1 objet · Commun ou mieux' },
+  { id: 'c2', name: 'Caisse renforcée', price: 150, n: 1, min: 1, desc: '1 objet · Rare ou mieux' },
+  { id: 'c3', name: 'Caisse de l’Arche', price: 400, n: 1, min: 2, desc: '1 objet · Épique ou mieux' },
+  { id: 'c10', name: '10 caisses renforcées', price: 1350, n: 10, min: 1, desc: '10 objets Rare ou mieux · 10 % de réduction', tag: 'Meilleure offre' }
+];
+
+const Gear = {
+  migrate(s) {
+    s.gear = Object.assign({ items: [], equip: {}, scrap: 0, next: 1, fresh: 0, day: '', offers: [] }, s.gear || {});
+    for (const c of CREW_IDS) s.gear.equip[c] = Object.assign({ arme: null, blindage: null, module: null }, s.gear.equip[c] || {});
+  },
+  maxLevel: r => 5 + 5 * r,
+  upCost: it => Math.ceil(4 * it.l * (it.r + 1)),
+  /* Valeur d'une statistique pour un objet donné. */
+  value(it, sub) {
+    const t = GEAR_BY_ID[it.t], st = sub ? t.sub : t.stat, base = sub ? (GEAR.find(g => g.stat === st) || t).base * 0.5 : t.base;
+    const v = base * RARITY[it.r].mul * (1 + 0.12 * (it.l - 1));
+    return GEAR_STATS[st].flat ? Math.max(1, Math.round(v)) : v;
+  },
+  stats(it) {
+    const t = GEAR_BY_ID[it.t], out = [[t.stat, this.value(it, false)]];
+    if (it.r >= 2) out.push([t.sub, this.value(it, true)]);
+    return out;
+  },
+  statText(st, v) { const d = GEAR_STATS[st]; return d.flat ? `+${v} ${d.label}` : `+${pct(v)} ${d.label}`; },
+  /* Tirage d'un objet : la rareté dépend du monde atteint et d'un minimum garanti. */
+  roll(slot, min, rng) {
+    rng = rng || Math.random;
+    const w = maxWorld(slot), weights = [60, 28, 9 + w * 0.6, 2.4 + w * 0.25, 0.4 + w * 0.08];
+    let tot = 0; for (let i = min; i < 5; i++) tot += weights[i];
+    let x = rng() * tot, r = min;
+    for (let i = min; i < 5; i++) { x -= weights[i]; if (x <= 0) { r = i; break; } }
+    const t = GEAR[Math.floor(rng() * GEAR.length)];
+    return { t: t.id, r, l: 1 };
+  },
+  give(slot, it) {
+    const g = slot.gear;
+    const item = { uid: g.next++, t: it.t, r: it.r, l: it.l || 1, n: 1 };
+    g.items.push(item); g.fresh++;
+    return item;
+  },
+  label(it) { return `${RARITY[it.r].name} : ${GEAR_BY_ID[it.t].name}`; },
+  owner(slot, uid) {
+    for (const c of CREW_IDS) for (const sl of GEAR_SLOTS) if (slot.gear.equip[c][sl.id] === uid) return { c, s: sl.id };
+    return null;
+  },
+  find(slot, uid) { return slot.gear.items.find(i => i.uid === uid) || null; },
+
+  /* Bonus des objets équipés, transmis à la bataille. */
+  mods(slot) {
+    const global = {}, crew = {};
+    for (const c of CREW_IDS) {
+      const own = {};
+      for (const sl of GEAR_SLOTS) {
+        const it = this.find(slot, slot.gear.equip[c][sl.id]);
+        if (!it) continue;
+        for (const [st, v] of this.stats(it)) {
+          if (GEAR_STATS[st].crew) own[st] = (own[st] || 0) + v;
+          else global[st] = (global[st] || 0) + v;
+        }
+      }
+      for (const tid of CREW_TOWERS[c]) crew[tid] = own;
+    }
+    return { global, crew };
+  },
+  summary(slot, c) {
+    const own = {}, glob = {};
+    for (const sl of GEAR_SLOTS) {
+      const it = this.find(slot, slot.gear.equip[c][sl.id]);
+      if (!it) continue;
+      for (const [st, v] of this.stats(it)) { const o = GEAR_STATS[st].crew ? own : glob; o[st] = (o[st] || 0) + v; }
+    }
+    return { own, glob };
+  },
+
+  /* Offres du jour : trois objets précis, renouvelés chaque jour. */
+  offers(slot) {
+    const g = slot.gear, k = dayKey();
+    if (g.day !== k) {
+      const rng = mulberry32(hashStr(k + slot.id + 'gear'));
+      g.day = k; g.offers = [0, 1, 2].map(i => ({ ...this.roll(slot, i === 2 ? 2 : i, rng), sold: false }));
+    }
+    return g.offers;
+  },
+  /* Trois objets identiques (même modèle, même rareté) donnent un objet de la rareté suivante. */
+  mergeGroup(slot, it) {
+    if (it.r >= 4) return [];
+    const same = slot.gear.items.filter(x => x.t === it.t && x.r === it.r);
+    if (same.length < 3) return [];
+    same.sort((a, b) => (b.uid === it.uid) - (a.uid === it.uid) || b.l - a.l);
+    return same.slice(0, 3);
+  },
+  merge(slot, it) {
+    const grp = this.mergeGroup(slot, it);
+    if (grp.length < 3) return null;
+    const keep = grp[0], lvl = Math.max(...grp.map(x => x.l));
+    for (const x of grp.slice(1)) this.remove(slot, x.uid);
+    keep.r++; keep.l = Math.min(this.maxLevel(keep.r), lvl);
+    return keep;
+  },
+  remove(slot, uid) {
+    const o = this.owner(slot, uid);
+    if (o) slot.gear.equip[o.c][o.s] = null;
+    slot.gear.items = slot.gear.items.filter(x => x.uid !== uid);
+  },
+  recycle(slot, it) { const gain = RARITY[it.r].scrap * it.l; this.remove(slot, it.uid); slot.gear.scrap += gain; return gain; },
+  score(it) { return this.stats(it).reduce((a, [st, v]) => a + (GEAR_STATS[st].flat ? v * 0.03 : v), 0); },
+  /* Équipe automatiquement le meilleur objet libre dans chaque emplacement du personnage. */
+  autoEquip(slot, c) {
+    for (const sl of GEAR_SLOTS) {
+      const cur = this.find(slot, slot.gear.equip[c][sl.id]);
+      let best = cur, bs = cur ? this.score(cur) : -1;
+      for (const it of slot.gear.items) {
+        if (GEAR_BY_ID[it.t].slot !== sl.id || this.owner(slot, it.uid)) continue;
+        const sc = this.score(it);
+        if (sc > bs) { best = it; bs = sc; }
+      }
+      if (best && best !== cur) slot.gear.equip[c][sl.id] = best.uid;
+    }
+  }
+};
+
+/* Icône d'un objet (SVG), teintée de la couleur de rareté. */
+function gearIcon(it, size) {
+  const t = GEAR_BY_ID[it.t], c = RARITY[it.r].color, s = size || 40;
+  const shapes = {
+    arme: '<path d="M7 17h22l4-3h5v9h-5l-4-3H24l-3 10h-7l2-10H7z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><rect x="10" y="19" width="9" height="3" rx="1" fill="currentColor"/><path d="M38 18.5h3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+    blindage: '<path d="M22 6l13 5v9c0 9-6 15-13 18C15 35 9 29 9 20v-9z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M22 13v18M15 20h14" stroke="currentColor" stroke-width="2"/>',
+    module: '<rect x="11" y="11" width="22" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="17" y="17" width="10" height="10" rx="1.5" fill="currentColor"/><path d="M15 6v5M22 6v5M29 6v5M15 33v5M22 33v5M29 33v5M6 15h5M6 22h5M6 29h5M33 15h5M33 22h5M33 29h5" stroke="currentColor" stroke-width="2"/>'
+  };
+  return `<svg class="gicon" viewBox="0 0 44 44" width="${s}" height="${s}" style="color:${c}" aria-hidden="true">${shapes[t.slot]}</svg>`;
+}
+function gearCard(slot, it, opts) {
+  const t = GEAR_BY_ID[it.t], R = RARITY[it.r], o = Gear.owner(slot, it.uid), merge = Gear.mergeGroup(slot, it).length >= 3;
+  return `<button class="gcard r${it.r} ${opts && opts.big ? 'big' : ''}" type="button" data-item="${it.uid}" style="--rc:${R.color}">` +
+    gearIcon(it, opts && opts.big ? 54 : 38) +
+    `<b>${esc(t.name)}</b><small>${R.name} · niv. ${it.l}</small>` +
+    `<span class="gstat">${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join('<br>')}</span>` +
+    (o ? `<span class="gown" title="Équipé par ${esc(CAST[o.c].name)}">${esc(CAST[o.c].name[0])}</span>` : '') +
+    (merge ? '<span class="gmerge" title="Fusion possible">×3</span>' : '') + '</button>';
+}
+
+/* ---------- Écran Équipage ---------- */
+const CrewView = {
+  char: 'brann', filter: 'all',
+  render() {
+    const s = App.slot;
+    Gear.migrate(s);
+    s.gear.fresh = 0;
+    $('crewScrap').textContent = fmtBig(s.gear.scrap);
+    $('crewGems').textContent = fmtBig(s.gems);
+    Meta.tabs($('crewTabs'), CREW_IDS.map(c => [c, `<span class="dot" style="background:${CAST[c].color}"></span>${esc(CAST[c].name)}`]), this.char, id => { this.char = id; this.render(); });
+    const c = this.char, eq = s.gear.equip[c], sum = Gear.summary(s, c);
+    const towers = CREW_TOWERS[c].map(id => TOWER_BY_ID[id].name).join(', ');
+    const lines = [...Object.entries(sum.own).map(([st, v]) => Gear.statText(st, v) + ' (' + towers + ')'), ...Object.entries(sum.glob).map(([st, v]) => Gear.statText(st, v) + ' (toute la partie)')];
+    let h = `<section class="panel crewhero" style="--cc:${CAST[c].color}"><canvas width="128" height="128" data-portrait="${c}"></canvas><div><p class="eyebrow">${esc(CAST[c].role)}</p><h3>${esc(CAST[c].name)}</h3>` +
+      `<p class="hint">Tourelles : ${esc(towers)}</p><p class="hint">${lines.length ? 'Bonus actifs : ' + lines.map(esc).join(' · ') : 'Aucun objet équipé pour l’instant.'}</p>` +
+      `<div class="row"><button class="btn small primary" id="gearAuto" type="button">Équiper le meilleur</button><button class="btn small" id="gearShop" type="button">Caisses et offres</button></div></div></section>`;
+    h += '<div class="gslots">' + GEAR_SLOTS.map(sl => {
+      const it = Gear.find(s, eq[sl.id]);
+      return `<div class="gslot"><p class="eyebrow">${sl.name}</p>${it ? gearCard(s, it, { big: true }) : `<div class="gempty">Vide<small>${esc(sl.hint)}</small></div>`}</div>`;
+    }).join('') + '</div>';
+    const items = s.gear.items.filter(it => this.filter === 'all' || GEAR_BY_ID[it.t].slot === this.filter)
+      .sort((a, b) => b.r - a.r || b.l - a.l || a.t.localeCompare(b.t));
+    const commons = s.gear.items.filter(it => it.r === 0 && !Gear.owner(s, it.uid)).length;
+    h += `<section class="panel"><div class="topbar" style="gap:6px"><p class="eyebrow">Inventaire · ${s.gear.items.length} objet${s.gear.items.length > 1 ? 's' : ''}</p>` +
+      `<div class="row">${[['all', 'Tout'], ...GEAR_SLOTS.map(x => [x.id, x.name])].map(([id, l]) => `<button class="btn tiny" data-flt="${id}" aria-pressed="${this.filter === id}" type="button">${l}</button>`).join('')}` +
+      (commons ? `<button class="btn tiny" id="gearRecycleAll" type="button">Recycler les ${commons} communs libres</button>` : '') + '</div></div>' +
+      (items.length ? `<div class="ggrid">${items.map(it => gearCard(s, it)).join('')}</div>` : '<div class="empty">Aucun objet. Gagne des niveaux, termine des quêtes ou ouvre une caisse dans la boutique.</div>') +
+      '<p class="hint">Trois objets identiques (même nom, même rareté) fusionnent en un objet de la rareté suivante. Recycler un objet rapporte de la ferraille pour monter les autres de niveau.</p></section>';
+    $('crewBody').innerHTML = h;
+    const body = $('crewBody');
+    body.querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
+    body.querySelectorAll('[data-item]').forEach(bt => { bt.onclick = () => this.detail(+bt.dataset.item); });
+    body.querySelectorAll('[data-flt]').forEach(bt => { bt.onclick = () => { this.filter = bt.dataset.flt; this.render(); }; });
+    $('gearAuto').onclick = () => { Gear.autoEquip(s, c); Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); };
+    $('gearShop').onclick = () => { Meta.shopTab = 'gear'; App.show('shop'); };
+    const ra = $('gearRecycleAll');
+    if (ra) ra.onclick = () => { let gain = 0; for (const it of s.gear.items.filter(x => x.r === 0 && !Gear.owner(s, x.uid))) gain += Gear.recycle(s, it); Store.touch(s); Toast2.show(`+${gain} ${SCRAP} ferraille`); this.render(); };
+  },
+  detail(uid) {
+    const s = App.slot, it = Gear.find(s, uid);
+    if (!it) return;
+    const t = GEAR_BY_ID[it.t], o = Gear.owner(s, uid), max = Gear.maxLevel(it.r), cost = Gear.upCost(it), grp = Gear.mergeGroup(s, it);
+    const next = it.l < max ? Gear.stats({ ...it, l: it.l + 1 }) : null;
+    const html = `<div class="gdetail" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</b> · ${GEAR_SLOTS.find(x => x.id === t.slot).name} · niveau ${it.l} / ${max}</p>` +
+      `<ul class="traits" style="text-align:left">${Gear.stats(it).map(([st, v], i) => `<li>${esc(Gear.statText(st, v))}${next ? ` <span style="color:var(--cyan)">→ ${esc(Gear.statText(st, next[i][1]).split(' ')[0])}</span>` : ''}${GEAR_STATS[st].crew ? ' <span class="muted">(tourelles du porteur)</span>' : ''}</li>`).join('')}</ul>` +
+      (it.r < 2 ? '<p class="hint">Dès la rareté Épique, l’objet gagne une seconde statistique.</p>' : '') +
+      `<p class="hint">${o ? `Équipé par ${esc(CAST[o.c].name)}.` : 'Pas équipé.'} Ferraille : ${fmtBig(s.gear.scrap)} ${SCRAP}</p></div>`;
+    const acts = [];
+    const c = this.char;
+    if (!o || o.c !== c) acts.push({ label: `Équiper sur ${CAST[c].name}`, cls: 'primary', fn: () => { if (o) s.gear.equip[o.c][o.s] = null; s.gear.equip[c][t.slot] = uid; Store.touch(s); Sound.sfx && Sound.sfx('build'); this.render(); } });
+    else acts.push({ label: 'Retirer', fn: () => { s.gear.equip[o.c][o.s] = null; Store.touch(s); this.render(); } });
+    if (it.l < max) acts.push({ label: `Améliorer · ${cost} ${SCRAP}`, cls: s.gear.scrap >= cost ? 'gold' : '', fn: () => {
+      if (s.gear.scrap < cost) { Toast2.show(`Il manque ${cost - s.gear.scrap} ${SCRAP} ferraille`); return; }
+      s.gear.scrap -= cost; it.l++; Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); setTimeout(() => this.detail(uid), 30);
+    } });
+    if (grp.length >= 3) acts.push({ label: `Fusionner ×3 → ${RARITY[it.r + 1].name}`, cls: 'violet', fn: () => { const r = Gear.merge(s, it); Store.touch(s); this.render(); if (r) Reveal.show([r], 'Fusion réussie'); } });
+    acts.push({ label: `Recycler · +${RARITY[it.r].scrap * it.l} ${SCRAP}`, cls: 'danger', fn: () => {
+      const doIt = () => { const g = Gear.recycle(s, it); Store.touch(s); Toast2.show(`+${g} ${SCRAP} ferraille`); this.render(); };
+      if (it.r >= 2) setTimeout(() => Modal.open({ title: 'Recycler cet objet ?', text: `${Gear.label(it)} sera détruit contre ${RARITY[it.r].scrap * it.l} ${SCRAP}.`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] }), 30);
+      else doIt();
+    } });
+    acts.push({ label: 'Fermer' });
+    Modal.open({ title: t.name, html, actions: acts });
+  }
+};
+
+/* Message bref hors partie (le Toast du jeu vit sur le plateau). */
+const Toast2 = {
+  show(msg) {
+    let el = $('toast2');
+    if (!el) { el = document.createElement('div'); el.id = 'toast2'; el.className = 'toast2'; document.body.appendChild(el); }
+    el.textContent = msg; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  }
+};
+
+/* Ouverture de caisse : les objets se retournent un à un, avec la couleur de leur rareté. */
+const Reveal = {
+  show(items, title) {
+    const s = App.slot, best = Math.max(...items.map(i => i.r));
+    const html = `<div class="reveal ${items.length > 3 ? 'many' : ''}">${items.map((it, i) => `<div class="rv r${it.r}" style="--rc:${RARITY[it.r].color};animation-delay:${i * 140}ms">${gearIcon(it, items.length > 3 ? 34 : 52)}<b>${esc(GEAR_BY_ID[it.t].name)}</b><small style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</small></div>`).join('')}</div>`;
+    Modal.open({ title: title || 'Nouvel équipement', html, actions: [{ label: 'Voir l’équipage', fn: () => App.show('crew') }, { label: 'Continuer', cls: 'primary' }] });
+    Sound.sfx && Sound.sfx(best >= 3 ? 'boom' : 'up');
+    void s;
+  }
+};
+
+
 const PALETTES = [
   { id: 'or', name: 'Or', color: '#ffcf4a' }, { id: 'chrome', name: 'Chrome', color: '#dfe7f5' }, { id: 'sang', name: 'Sang', color: '#ff3b5c' },
   { id: 'spectre', name: 'Spectre', color: '#b9a3ff' }, { id: 'toxique', name: 'Toxique', color: '#7dff3a' }, { id: 'glace', name: 'Glace', color: '#8fe9ff' }
@@ -2336,6 +2671,10 @@ function buildMods(slot, levelN, boosts) {
   const w = Math.ceil(levelN / 10), ch = chapter(w);
   if (ch.choice && slot.choices[w]) add(ch.choice[slot.choices[w]].mods);
   for (const id of boosts || []) if (BOOST_BY_ID[id]) add(BOOST_BY_ID[id].mods);
+  // Équipement de l'équipage : bonus globaux + bonus par tourelle
+  Gear.migrate(slot);
+  const gm = Gear.mods(slot);
+  add(gm.global); m.crew = gm.crew;
   return m;
 }
 const COUNTER_KEYS = ['kills', 'elites', 'bosses', 'upgrades', 'built', 'goldSpent', 'waves', 'fusions', 'padBuys', 'earlyCalls'];
@@ -2351,6 +2690,7 @@ function metaMigrate(s) {
   s.skins = Object.assign({ owned: {}, equip: {} }, s.skins || {});
   s.themes = s.themes || { monde: 1 }; s.theme = s.theme || 'monde';
   s.boosts = s.boosts || {}; s.fusionsSeen = s.fusionsSeen || {};
+  Gear.migrate(s);
 }
 
 /* ---------- Défis de niveau (1 à 3 par niveau, façon Candy Crush) ---------- */
@@ -2404,7 +2744,7 @@ function storySteps(w) {
 }
 function stepDone(s, w, i) { const st = storySteps(w)[i]; return !!((s.story.steps[w] || [])[i] || (st.retro && st.retro(s))); }
 const chapterDone = (s, w) => [0, 1, 2].every(i => stepDone(s, w, i));
-const chapterReward = w => ({ gems: 50 + 10 * w, relic: w % 2 === 0, point: w % 2 === 1 });
+const chapterReward = w => ({ gems: 50 + 10 * w, relic: w % 2 === 0, point: w % 2 === 1, item: Math.min(3, 1 + Math.floor(w / 2)) });
 const maxWorld = s => Math.ceil(s.unlocked / 10);
 const fragmentCount = s => { let n = Object.keys(s.story.logs).length; for (let w = 1; w <= maxWorld(s); w++) if ((s.stars[w * 10] || 0) > 0) n++; return n; };
 
@@ -2432,14 +2772,14 @@ function genQuests(slot, kind) {
   const rng = mulberry32(hashStr(key + slot.id + kind));
   const pool = shuffle(QUEST_TPL.filter(t => (kind === 'daily' ? t.d : t.w) && (!t.need || t.need(slot))), rng);
   const rewards = kind === 'daily' ? [15, 20, 25] : [60, 80, 100];
-  slot[kind] = { key, quests: pool.slice(0, 3).map((t, i) => ({ type: t.type, target: (kind === 'daily' ? t.d : t.w)(slot.unlocked), base: slot.counters[t.type] || 0, gems: rewards[i], point: kind === 'weekly' && i === 2, claimed: false })) };
+  slot[kind] = { key, quests: pool.slice(0, 3).map((t, i) => ({ type: t.type, target: (kind === 'daily' ? t.d : t.w)(slot.unlocked), base: slot.counters[t.type] || 0, gems: rewards[i], point: kind === 'weekly' && i === 2, item: kind === 'daily' ? (i === 2 ? 0 : null) : (i === 0 ? 1 : i === 2 ? 2 : null), claimed: false })) };
 }
 const questProgress = (s, q) => Math.max(0, Math.min(q.target, (s.counters[q.type] || 0) - q.base));
 
 /* ---------- Quêtes de l'équipage : éliminations avec leurs tourelles, paliers infinis ---------- */
 const charGoal = t => Math.round(50 * Math.pow(3, t));
 const charKills = (s, id) => CREW_TOWERS[id].reduce((a, t) => a + (s.counters.killsBy[t] || 0), 0);
-const charReward = (id, t) => ({ gems: 15 * (t + 1), skin: t === 1, relic: t === 3 ? CREW_RELIC[id] : null, point: t >= 4 });
+const charReward = (id, t) => ({ gems: 15 * (t + 1), skin: t === 1, relic: t === 3 ? CREW_RELIC[id] : null, point: t >= 4, item: t % 2 === 0 ? Math.min(3, Math.floor(t / 2)) : null });
 
 /* ---------- Succès à paliers infinis ---------- */
 const ACHS = [
@@ -2457,7 +2797,7 @@ const ACHS = [
   { id: 'early', name: 'Sans répit', unit: 'vagues lancées en avance', val: s => s.counters.earlyCalls || 0, goal: k => Math.round(10 * Math.pow(3, k)) },
   { id: 'upgrades', name: 'Ingénieur en chef', unit: 'améliorations', val: s => s.counters.upgrades, goal: k => Math.round(100 * Math.pow(3, k)) }
 ];
-const achReward = k => ({ gems: 10 + 10 * k, point: k % 3 === 2 });
+const achReward = k => ({ gems: 10 + 10 * k, point: k % 3 === 2, item: k % 2 === 1 ? Math.min(2, Math.floor(k / 4)) : null });
 
 /* Accorde une récompense et renvoie sa description. */
 function grant(slot, r) {
@@ -2471,6 +2811,7 @@ function grant(slot, r) {
     else { slot.gems += 100; parts.push(`+100 ${GEM}`); }
   }
   if (r.skinFor) { for (const t of r.skinFor) slot.skins.owned[t + ':or'] = 1; parts.push('apparence Or pour ses tourelles'); }
+  if (r.item !== undefined && r.item !== null) { Gear.migrate(slot); const it = Gear.give(slot, Gear.roll(slot, r.item)); parts.push('objet ' + Gear.label(it)); (grant.items = grant.items || []).push(it); }
   return parts.join(', ');
 }
 
@@ -2984,8 +3325,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.3';
 const CHANGELOG = [
+  { v: '3.3', date: '27.10.2026', items: ['Nouvel écran Équipage : arme, blindage et module pour Brann, Iris, Volta et Écho', 'Objets de 5 raretés (Commun à Mythique), à monter de niveau avec la ferraille', 'Fusion de 3 objets identiques en un objet de rareté supérieure', 'Butin en fin de niveau (garanti sur les boss), dans les quêtes et dans la boutique (caisses et offres du jour)'] },
   { v: '3.2', date: '27.10.2026', items: ['Son : plus de sursauts ni de hoquets de la musique, même quand le jeu est chargé'] },
   { v: '3.1', date: '27.10.2026', items: ['Lumières adoucies : lueur, néons, particules et flashs beaucoup plus discrets'] },
   { v: '3.0', date: '27.10.2026', items: ['Nouvelle vue 3D : arène en relief vue en plongée, façon Clash Royale', 'Tourelles et ennemis en 3D style jouet (petits robots avec des yeux), ombres et lueur néon', 'Débris qui rebondissent, fumée qui monte, rayons et éclairs en volume, ondes de choc', 'Sur téléphone, la caméra se place pour remplir l’écran, en portrait comme en paysage', 'Vue 2D toujours disponible dans Réglages → Graphismes, et choisie automatiquement si l’appareil peine', 'Correction : sur ordinateur, le panneau de droite repasse à côté de la carte'] },
@@ -3110,7 +3452,13 @@ const Meta = {
     s.story.steps[w] = steps;
     if (chapterDone(s, w) && !s.story.logs[w]) lines.push(`Chapitre ${w} terminé : récupère sa récompense dans les quêtes`);
     s.gems += gems;
-    return { gems, lines };
+    // Butin d'équipement : chance selon les étoiles, garanti sur un boss
+    Gear.migrate(s);
+    const items = [], chance = 0.2 + 0.1 * b.stars + (lv.boss ? 1 : 0);
+    if (Math.random() < chance) items.push(Gear.give(s, Gear.roll(s, lv.boss ? 1 : 0)));
+    if (lv.boss && b.stars === 3) items.push(Gear.give(s, Gear.roll(s, 2)));
+    for (const it of items) lines.push(`Équipement trouvé : ${Gear.label(it)}`);
+    return { gems, lines, items };
   },
   consumeBoosts() {
     const s = App.slot, used = [];
@@ -3163,6 +3511,7 @@ const Meta = {
     if (r.relic) p.push(typeof r.relic === 'string' ? `relique ${RELIC_BY_ID[r.relic].name}` : 'une relique');
     if (r.skin) p.push('apparence Or');
     if (r.fragment) p.push('un fragment du journal');
+    if (r.item !== undefined && r.item !== null) p.push(`un objet ${RARITY[r.item].name}${r.item < 4 ? ' ou mieux' : ''}`);
     return 'Récompense : ' + p.join(' · ');
   },
 
@@ -3243,6 +3592,7 @@ const Meta = {
     this.renderQuests();
     Sound.sfx && Sound.sfx('up');
     GemFx.fly(from, $('questGems'), before, s.gems);
+    if (grant.items && grant.items.length) { const its = grant.items; grant.items = []; setTimeout(() => Reveal.show(its, its.length > 1 ? `${its.length} objets obtenus` : 'Objet obtenu'), 700); }
     const cnt = new Map();
     for (const t of extras) cnt.set(t, (cnt.get(t) || 0) + 1);
     let i = 0;
@@ -3265,11 +3615,11 @@ const Meta = {
     if (kind === 'crew') {
       const t = s.chars[id] || 0; if (charKills(s, id) < charGoal(t)) return;
       const r = charReward(id, t); s.chars[id] = t + 1;
-      msg = grant(s, { gems: r.gems, point: r.point, relic: r.relic, skinFor: r.skin ? CREW_TOWERS[id] : null });
+      msg = grant(s, { gems: r.gems, point: r.point, relic: r.relic, skinFor: r.skin ? CREW_TOWERS[id] : null, item: r.item });
     }
     if (kind === 'ach') { const a = ACHS.find(x => x.id === id), k = s.ach[id] || 0, g = a.goal(k); if (g === undefined || a.val(s) < g) return; s.ach[id] = k + 1; msg = grant(s, achReward(k)); }
     if (!msg) return false;
-    for (const part of msg.split(', ')) if (!part.includes(GEM)) this.extras.push(part);
+    for (const part of msg.split(', ')) if (!part.includes(GEM) && !part.startsWith('objet ')) this.extras.push(part);
     if (!quiet) this.finishClaim(1, document.body);
     return true;
   },
@@ -3278,7 +3628,7 @@ const Meta = {
   renderShop() {
     const s = App.slot;
     $('shopGems').textContent = fmtBig(s.gems);
-    this.tabs($('shopTabs'), [['packs', 'Gemmes'], ['boosts', 'Boosts'], ['relics', 'Reliques'], ['look', 'Apparence'], ['points', 'Points']], this.shopTab, id => { this.shopTab = id; this.renderShop(); });
+    this.tabs($('shopTabs'), [['packs', 'Gemmes'], ['gear', 'Équipement'], ['boosts', 'Boosts'], ['relics', 'Reliques'], ['look', 'Apparence'], ['points', 'Points']], this.shopTab, id => { this.shopTab = id; this.renderShop(); });
     const body = $('shopBody');
     let h = '';
     const buyBtn = (key, price, label) => `<button class="btn small ${s.gems >= price ? 'primary' : ''}" data-buy="${key}" type="button" ${s.gems >= price ? '' : 'disabled'}>${label || 'Acheter'} · ${fmtBig(price)} ${GEM}</button>`;
@@ -3286,6 +3636,13 @@ const Meta = {
       h += '<p class="hint">Prototype : le paiement est simulé, aucun argent réel n’est débité. Le vrai paiement (Stripe ou achats intégrés) se branchera ici plus tard.</p><div class="shopgrid">';
       GEM_PACKS.forEach((p, i) => { h += `<div class="sitem">${p.tag ? `<span class="badge gold">${p.tag}</span>` : ''}<b class="big gem">${fmtBig(p.gems)} ${GEM}</b><button class="btn primary" data-buy="pack:${i}" type="button">${p.price}</button></div>`; });
       h += '</div>';
+    } else if (this.shopTab === 'gear') {
+      Gear.migrate(s);
+      h += `<p class="hint">Les objets s’équipent sur l’équipage (Brann, Iris, Volta, Écho) depuis l’écran Équipage. Ferraille : ${fmtBig(s.gear.scrap)} ${SCRAP}</p><div class="shopgrid">`;
+      for (const c of CHESTS) h += `<div class="sitem chest c${c.min}">${c.tag ? `<span class="badge gold">${c.tag}</span>` : ''}<span class="crate"></span><b>${esc(c.name)}</b><small class="muted">${esc(c.desc)}</small>${buyBtn('chest:' + c.id, c.price, 'Ouvrir')}</div>`;
+      h += '</div><p class="eyebrow" style="margin-top:10px">Offres du jour · renouvelées à minuit</p><div class="shopgrid">';
+      Gear.offers(s).forEach((o, i) => { h += `<div class="sitem offer" style="--rc:${RARITY[o.r].color}">${gearIcon(o, 46)}<b>${esc(GEAR_BY_ID[o.t].name)}</b><small style="color:${RARITY[o.r].color}">${RARITY[o.r].name}</small><small class="muted">${Gear.stats({ ...o, l: 1 }).map(([st, v]) => esc(Gear.statText(st, v))).join(' · ')}</small>${o.sold ? '<span class="badge">Acheté</span>' : buyBtn('offer:' + i, RARITY[o.r].price)}</div>`; });
+      h += `</div><div class="qrow" style="margin-top:10px"><div><b>Sac de ferraille · 150 ${SCRAP}</b><p class="hint">Pour monter tes objets de niveau.</p></div>${buyBtn('scrap', 40)}</div>`;
     } else if (this.shopTab === 'boosts') {
       h += '<p class="hint">Un boost s’active avant un niveau, depuis la carte. Il est consommé au lancement du niveau.</p><div class="list">';
       for (const bo of BOOSTS) h += `<div class="qrow"><div><b>${esc(bo.name)}</b><p class="hint">${esc(bo.desc)}</p><small class="muted">En réserve : ${s.boosts[bo.id] || 0}</small></div>${buyBtn('boost:' + bo.id, bo.price)}</div>`;
@@ -3349,6 +3706,12 @@ const Meta = {
     if (kind === 'relicup') { const l = s.relics[id]; ok = l && l < RELIC_MAX && pay(relicUpCost(l)); if (ok) s.relics[id] = l + 1; }
     if (kind === 'theme') { ok = pay(THEMES.find(t => t.id === id).price); if (ok) { s.themes[id] = 1; s.theme = id; applyCosmetics(s); } }
     if (kind === 'point') { ok = pay(pointPrice(s)); if (ok) { s.bonusPoints++; s.pointsBought++; } }
+    if (kind === 'chest') {
+      const c = CHESTS.find(x => x.id === id); ok = pay(c.price);
+      if (ok) { Gear.migrate(s); const got = []; for (let i = 0; i < c.n; i++) got.push(Gear.give(s, Gear.roll(s, c.min))); Store.touch(s); this.renderShop(); Reveal.show(got, c.n > 1 ? `${c.name} ouvertes` : c.name); return; }
+    }
+    if (kind === 'offer') { const o = Gear.offers(s)[+id]; ok = o && !o.sold && pay(RARITY[o.r].price); if (ok) { o.sold = true; const it = Gear.give(s, o); Store.touch(s); this.renderShop(); Reveal.show([it], 'Offre du jour'); return; } }
+    if (kind === 'scrap') { ok = pay(40); if (ok) { Gear.migrate(s); s.gear.scrap += 150; } }
     if (ok) { Store.touch(s); this.renderShop(); }
   },
 
@@ -5449,6 +5812,8 @@ const App = {
     $('tabFusion').onclick = () => { this.codexTab = 'fusion'; this.renderCodex(); };
     $('btnQuests').onclick = () => this.show('quests');
     $('btnShop').onclick = () => this.show('shop');
+    $('btnCrew').onclick = () => this.show('crew');
+    $('btnCrewBack').onclick = () => this.show('map');
     $('btnJournal').onclick = () => this.show('journal');
     $('btnQuestsBack').onclick = $('btnShopBack').onclick = $('btnJournalBack').onclick = () => this.show('map');
     GameView.init();
@@ -5456,7 +5821,7 @@ const App = {
   },
 
   show(name) {
-    for (const s of ['menu', 'map', 'tree', 'codex', 'game', 'quests', 'shop', 'journal']) {
+    for (const s of ['menu', 'map', 'tree', 'codex', 'game', 'quests', 'shop', 'journal', 'crew']) {
       const el = $('scr' + s[0].toUpperCase() + s.slice(1));
       el.hidden = s !== name;
       if (s === name && this.current !== name) { el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); }
@@ -5475,6 +5840,7 @@ const App = {
     if (name === 'quests') Meta.renderQuests();
     if (name === 'shop') Meta.renderShop();
     if (name === 'journal') Meta.renderJournal();
+    if (name === 'crew') CrewView.render();
     window.scrollTo(0, 0);
   },
 
@@ -5547,6 +5913,7 @@ const App = {
     $('mapPts').textContent = String(pointsAvailable(s));
     $('mapGems').textContent = fmtBig(s.gems);
     Meta.updateBadge();
+    Gear.migrate(s); $('crewCount').textContent = String(s.gear.fresh); $('crewCount').hidden = !s.gear.fresh;
     $('wNum').textContent = `Monde ${w}`;
     $('wName').textContent = info.name;
     $('wName').style.color = info.color;
@@ -6387,6 +6754,7 @@ const GameView = {
         `<dl class="grid4"><div><dt>Vies</dt><dd>${b.lives} / ${b.startLives}</dd></div><div><dt>Score</dt><dd>${fmtBig(b.score)}</dd></div>` +
         `<div><dt>Éliminés</dt><dd>${fmtBig(b.kills)}</dd></div><div><dt>Gemmes</dt><dd class="gem">+${res.gems}</dd></div></dl>` +
         (res.lines.length ? `<ul class="checks" style="text-align:left">${res.lines.map(l => `<li class="ok">${esc(l)}</li>`).join('')}</ul>` : '') +
+        (res.items && res.items.length ? `<div class="reveal">${res.items.map((it, i) => `<div class="rv r${it.r}" style="--rc:${RARITY[it.r].color};animation-delay:${300 + i * 160}ms">${gearIcon(it, 40)}<b>${esc(GEAR_BY_ID[it.t].name)}</b><small style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</small></div>`).join('')}</div>` : '') +
         (firstClear && nextT ? `<p>Niveau ${lv.n + 1} débloqué · nouvelle tourelle : <b style="color:${nextT.color}">${esc(nextT.name)}</b></p>` : '') +
         (firstClear && lv.boss ? `<p>Monde ${lv.world + 1} débloqué : <b style="color:${worldInfo(lv.world + 1).color}">${esc(worldInfo(lv.world + 1).name)}</b></p>` : '') +
         (firstClear && lv.n + 1 === CONFIG.fusionLevel ? '<p style="color:var(--violet)">La fusion de tourelles est disponible au prochain niveau.</p>' : '') +
