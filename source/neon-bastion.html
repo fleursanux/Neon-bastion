@@ -420,6 +420,14 @@ body.d2 .btn.primary *{color:#1a0e04}
 .board.is3d canvas.gpu{display:none}
 .ov3d{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
 .hero3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.artpick{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.artpick label{display:flex;flex-direction:column;gap:2px;font-size:.72rem;color:var(--muted)}
+.artpick select{background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font:inherit;font-size:.8rem}
+.artthumbs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.artthumbs figure{margin:0;display:flex;flex-direction:column;align-items:center;background:rgba(0,0,0,.25);border-radius:6px;padding:2px}
+.artthumbs figcaption{font-size:.65rem;color:var(--muted)}
+.crewhero .artthumbs canvas,.artthumbs canvas{width:48px!important;height:64px!important;box-shadow:none!important;background:none!important;border:0!important;border-radius:0!important}
+.crewhero canvas#artPrev{width:100%!important;max-width:420px;height:auto!important;box-shadow:none!important}
 .n3d{position:absolute;left:0;top:0;font:700 12px var(--font-ui);white-space:nowrap;text-shadow:0 0 3px #000,0 1px 2px #000,0 0 8px rgba(0,0,0,.8);will-change:transform}
 .lv3d{position:absolute;left:0;top:0;font:700 9px var(--font-num);padding:0 3px;border:1px solid;border-radius:3px;background:rgba(6,9,16,.85)}
 .boss3d{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:min(440px,80%);padding:4px 8px 6px;border-radius:6px;background:rgba(5,8,14,.85);border:1px solid rgba(255,51,85,.7);display:grid;grid-template-columns:1fr auto;gap:2px 8px}
@@ -3883,9 +3891,9 @@ function gearCard(slot, it, opts) {
    La planche reste sur l'appareil (IndexedDB) : elle n'est jamais envoyée ni publiée.
    Format reconnu : blocs d'animation sur fond gris uni séparés par du blanc,
    16 rangées = 16 directions (rangée 0 face à l'écran, puis rotation vers la gauche),
-   les images d'une animation alignées en colonnes.
+   les images d'une animation alignées en colonnes. JPEG accepté (tolérance de couleur).
    ===================================================================== */
-const HERO_ANIM_NAMES = ['Ville · repos', 'Ville · marche', 'Repos', 'Touché', 'Marche', 'Sort spécial', 'Course', 'Coup de pied', 'Attaque 1', 'Spécial 1'];
+const HERO_ROLES = { idle: 'Repos', attack: 'Attaque', cast: 'Sort' };
 const HeroArt = {
   sets: {}, ready: false,
   db() {
@@ -3897,125 +3905,164 @@ const HeroArt = {
       } catch (e) { rej(e); }
     });
   },
-  async tx(mode, fn) { const db = await this.db(); return new Promise((res, rej) => { const t = db.transaction('sheets', mode), st = t.objectStore('sheets'); const r = fn(st); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); }); },
+  async put(id, rec) { const db = await this.db(); await new Promise((res, rej) => { const t = db.transaction('sheets', 'readwrite'); t.objectStore('sheets').put(rec, id); t.oncomplete = res; t.onerror = () => rej(t.error); }); },
+  async getRec(id) { const db = await this.db(); return new Promise((res, rej) => { const t = db.transaction('sheets', 'readonly'), r = t.objectStore('sheets').get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
   has(id) { return !!this.sets[id]; },
   /* Au démarrage : recharge les animations déjà découpées. */
   async load() {
     if (!D2 || typeof indexedDB === 'undefined') return;
     try {
       const db = await this.db();
-      const all = await new Promise((res, rej) => { const out = {}, t = db.transaction('sheets', 'readonly'), st = t.objectStore('sheets'), cur = st.openCursor();
+      const all = await new Promise((res, rej) => { const out = {}, t = db.transaction('sheets', 'readonly'), cur = t.objectStore('sheets').openCursor();
         cur.onsuccess = () => { const c = cur.result; if (c) { out[c.key] = c.value; c.continue(); } else res(out); }; cur.onerror = () => rej(cur.error); });
-      for (const id in all) this.sets[id] = await this.unpack(all[id]);
+      for (const id in all) { try { this.sets[id] = await this.unpack(all[id]); } catch (e) { /* planche illisible : ignorée */ } }
     } catch (e) { /* stockage indisponible : on garde les emblèmes */ }
     this.ready = true;
   },
   async unpack(rec) {
-    const set = { name: rec.name, blocks: rec.blocks, anims: {} };
-    for (const k in rec.anims) {
-      const a = rec.anims[k];
-      const img = await createImageBitmap(a.blob);
-      set.anims[k] = Object.assign({}, a.meta, { img });
-    }
+    const set = { name: rec.name, blocks: rec.blocks, assign: rec.assign, small: rec.small, anims: {} };
+    for (const k in rec.anims) set.anims[k] = Object.assign({}, rec.anims[k].meta, { img: await createImageBitmap(rec.anims[k].blob) });
     return set;
   },
-  async remove(id) { delete this.sets[id]; try { await this.tx('readwrite', st => st.delete(id)); } catch (e) { /* rien */ } },
+  async remove(id) {
+    delete this.sets[id];
+    try { const db = await this.db(); await new Promise(res => { const t = db.transaction('sheets', 'readwrite'); t.objectStore('sheets').delete(id); t.oncomplete = res; t.onerror = res; }); } catch (e) { /* rien */ }
+  },
   /* Import : découpe la planche, garde les animations utiles, enregistre sur l'appareil. */
-  async importFile(id, file) {
+  async importFile(id, file, assign, name) {
     const img = await createImageBitmap(file);
     const res = this.slice(img);
-    if (!res.blocks.length) throw new Error('Aucune animation reconnue sur cette image.');
-    const pick = this.choose(res.blocks);
-    const rec = { name: file.name, blocks: res.blocks.map(b => ({ name: b.name, frames: b.frames, dirs: b.dirs })), anims: {} };
-    for (const k in pick) {
-      const b = pick[k];
-      const cv = this.cleanBlock(img, b, res.bg);
+    if (!res.blocks.length) throw new Error('aucun bloc d’animation reconnu (fond gris, 16 directions)');
+    const as = assign || this.auto(res.blocks);
+    const rec = { name: name || file.name, src: file, assign: as, small: res.blocks[0].h / 16 < 50, anims: {},
+      blocks: await Promise.all(res.blocks.map(async b => ({ frames: b.frames, dirs: b.dirs, cw: Math.round(b.w / b.frames), thumb: await this.thumb(img, b, res) }))) };
+    for (const k in as) {
+      const b = res.blocks[as[k]]; if (!b) continue;
+      const cv = this.cleanBlock(img, b, res);
       const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
       rec.anims[k] = { blob, meta: { frames: b.frames, dirs: b.dirs, cw: b.w / b.frames, ch: b.h / b.dirs, ax: cv._ax, ay: cv._ay, top: cv._top } };
     }
-    await this.tx('readwrite', st => st.put(rec, id));
+    await this.put(id, rec);
     this.sets[id] = await this.unpack(rec);
     return this.sets[id];
+  },
+  /* Changer les animations choisies (repos, attaque, sort) à partir de la planche d'origine gardée. */
+  async reassign(id, role, idx) {
+    const rec = await this.getRec(id);
+    if (!rec || !rec.src) return;
+    const as = Object.assign({}, rec.assign, { [role]: idx });
+    await this.importFile(id, rec.src, as, rec.name);
   },
   /* Découpage automatique : blocs gris, 16 directions, nombre d'images par rangée. */
   slice(img) {
     const W = img.width, H = img.height, cv = document.createElement('canvas');
     cv.width = W; cv.height = H;
     const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
-    const d = g.getImageData(0, 0, W, H).data, at = (x, y) => (y * W + x) * 4;
-    const key = i => (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
-    // Couleurs dominantes : fond des blocs (gris) et séparation (claire)
+    const d = g.getImageData(0, 0, W, H).data;
+    // Couleurs dominantes (échantillon) : fond des blocs (gris) et séparation (claire)
     const cnt = new Map();
-    for (let y = 0; y < H; y += 7) for (let x = 0; x < W; x += 7) { const k = key(at(x, y)); cnt.set(k, (cnt.get(k) || 0) + 1); }
-    const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
-    const lum = k => ((k >> 16) & 255) + ((k >> 8) & 255) + (k & 255);
-    const c0 = top[0][0], c1 = top[1] ? top[1][0] : -1;
-    const bg = c1 < 0 || lum(c0) <= lum(c1) ? c0 : c1, sep = bg === c0 ? c1 : c0;
-    // Découpage récursif le long des lignes et colonnes de séparation (blanches à 90 % ou plus)
+    for (let y = 0; y < H; y += 5) for (let x = 0; x < W; x += 5) { const i = (y * W + x) * 4, k = ((d[i] >> 3) << 10) | ((d[i + 1] >> 3) << 5) | (d[i + 2] >> 3); cnt.set(k, (cnt.get(k) || 0) + 1); }
+    const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => [((k >> 10) & 31) * 8 + 4, ((k >> 5) & 31) * 8 + 4, (k & 31) * 8 + 4]);
+    const lum = c => c[0] + c[1] + c[2];
+    let bgC = top[0], sepC = top.find(c => Math.abs(lum(c) - lum(top[0])) > 60) || [255, 255, 255];
+    if (lum(sepC) < lum(bgC)) { const t = bgC; bgC = sepC; sepC = t; }
+    // Moyenne exacte de chaque couleur pour la tolérance
+    const refine = c => { let r = 0, gg = 0, b = 0, n = 0; for (let y = 0; y < H; y += 9) for (let x = 0; x < W; x += 9) { const i = (y * W + x) * 4; if (Math.abs(d[i] - c[0]) + Math.abs(d[i + 1] - c[1]) + Math.abs(d[i + 2] - c[2]) < 30) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; n++; } } return n ? [r / n, gg / n, b / n] : c; };
+    bgC = refine(bgC); sepC = refine(sepC);
+    const N = W * H, isBg = new Uint8Array(N), isSep = new Uint8Array(N);
+    for (let p = 0, i = 0; p < N; p++, i += 4) {
+      const db = Math.abs(d[i] - bgC[0]) + Math.abs(d[i + 1] - bgC[1]) + Math.abs(d[i + 2] - bgC[2]);
+      if (db < 36) isBg[p] = 1;
+      else if (Math.abs(d[i] - sepC[0]) + Math.abs(d[i + 1] - sepC[1]) + Math.abs(d[i + 2] - sepC[2]) < 36) isSep[p] = 1;
+    }
+    // Découpage récursif le long des lignes et colonnes de séparation (claires à 90 % ou plus)
     const regions = [];
     const cut = (x0, y0, x1, y1, depth) => {
-      if (x1 - x0 < 100 || y1 - y0 < 150 || depth > 12) { if (x1 - x0 >= 100 && y1 - y0 >= 150) regions.push([x0, y0, x1, y1]); return; }
-      const sepRow = y => { let n = 0, m = 0; for (let x = x0; x < x1; x += 2) { m++; if (key(at(x, y)) === sep) n++; } return n >= m * 0.9; };
-      const sepCol = x => { let n = 0, m = 0; for (let y = y0; y < y1; y += 2) { m++; if (key(at(x, y)) === sep) n++; } return n >= m * 0.9; };
+      if (x1 - x0 < 40 || y1 - y0 < 80) return;
+      const sepRow = y => { let n = 0, m = 0; for (let x = x0; x < x1; x += 2) { m++; n += isSep[y * W + x]; } return n >= m * 0.9; };
+      const sepCol = x => { let n = 0, m = 0; for (let y = y0; y < y1; y += 2) { m++; n += isSep[y * W + x]; } return n >= m * 0.9; };
       const split = (len, test, base) => { const parts = []; let st = -1; for (let i = 0; i < len; i++) { const sp = test(base + i); if (!sp && st < 0) st = i; if (sp && st >= 0) { parts.push([st, i]); st = -1; } } if (st >= 0) parts.push([st, len]); return parts; };
+      const whole = (p, len) => p.length === 1 && p[0][0] === 0 && p[0][1] === len;
       const rp = split(y1 - y0, sepRow, y0);
-      if (rp.length > 1 || (rp.length === 1 && (rp[0][0] > 0 || rp[0][1] < y1 - y0))) { for (const [a, b] of rp) cut(x0, y0 + a, x1, y0 + b, depth + 1); return; }
+      if (depth < 14 && !whole(rp, y1 - y0)) { for (const [a, b] of rp) cut(x0, y0 + a, x1, y0 + b, depth + 1); return; }
       const cp = split(x1 - x0, sepCol, x0);
-      if (cp.length > 1 || (cp.length === 1 && (cp[0][0] > 0 || cp[0][1] < x1 - x0))) { for (const [a, b] of cp) cut(x0 + a, y0, x0 + b, y1, depth + 1); return; }
+      if (depth < 14 && !whole(cp, x1 - x0)) { for (const [a, b] of cp) cut(x0 + a, y0, x0 + b, y1, depth + 1); return; }
       regions.push([x0, y0, x1, y1]);
     };
     cut(0, 0, W, H, 0);
     const blocks = [];
-    for (const [rx0, ry0, rx1, ry1] of regions) {
-      let x0 = rx0, y0 = ry0, x1 = rx1, y1 = ry1;
-      if (x1 - x0 < 120 || y1 - y0 < 200) continue;
+    for (let [x0, y0, x1, y1] of regions) {
       // Rectangle gris exact : lignes et colonnes composées en majorité de fond
-      const rowOk = y => { let n = 0, m = 0; for (let x = x0; x < x1; x += 2) { m++; if (key(at(x, y)) === bg) n++; } return n > m * 0.5; };
-      const colOk = x => { let n = 0, m = 0; for (let y = y0; y < y1; y += 2) { m++; if (key(at(x, y)) === bg) n++; } return n > m * 0.5; };
+      const rowOk = y => { let n = 0, m = 0; for (let x = x0; x < x1; x += 2) { m++; n += isBg[y * W + x]; } return n > m * 0.5; };
+      const colOk = x => { let n = 0, m = 0; for (let y = y0; y < y1; y += 2) { m++; n += isBg[y * W + x]; } return n > m * 0.5; };
       while (y0 < y1 && !rowOk(y0)) y0++; while (y1 > y0 && !rowOk(y1 - 1)) y1--;
       while (x0 < x1 && !colOk(x0)) x0++; while (x1 > x0 && !colOk(x1 - 1)) x1--;
       const w = x1 - x0, h = y1 - y0;
-      if (w < 100 || h < 200) continue;
-      const dirs = h / 16 >= 35 ? 16 : 8, chh = h / dirs;
+      if (w < 30 || h < 16 * 12) continue;
+      const dirs = 16, chh = h / dirs;
       // Nombre d'images : nombre de silhouettes le plus fréquent sur une rangée
       const counts = new Map();
       for (let r = 0; r < dirs; r++) {
         let runs = 0, inrun = false, gap = 99;
+        const ya = Math.floor(y0 + r * chh), yb = Math.floor(y0 + (r + 1) * chh);
         for (let x = x0; x < x1; x++) {
           let any = false;
-          for (let y = Math.floor(y0 + r * chh); y < Math.floor(y0 + (r + 1) * chh); y += 2) if (key(at(x, y)) !== bg) { any = true; break; }
-          if (any) { if (!inrun && gap >= 3) runs++; inrun = true; gap = 0; } else { inrun = false; gap++; }
+          for (let y = ya; y < yb; y++) if (!isBg[y * W + x] && !isSep[y * W + x]) { any = true; break; }
+          if (any) { if (!inrun && gap >= 2) runs++; inrun = true; gap = 0; } else { inrun = false; gap++; }
         }
         counts.set(runs, (counts.get(runs) || 0) + 1);
       }
       const frames = [...counts.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0];
-      if (frames < 1) continue;
-      blocks.push({ x: x0, y: y0, w, h, dirs, frames });
+      if (frames < 1 || w / frames < 8) continue;
+      // Mouvement moyen entre deux images (rangée de profil) : faible pour un repos, fort pour une attaque
+      const cw = w / frames, r = 4, ya = Math.floor(y0 + r * chh);
+      let diff = 0, tot = 0;
+      for (let f = 0; f + 1 < frames; f++) for (let yy = 0; yy < chh; yy += 2) for (let xx = 0; xx < cw; xx += 2) {
+        const p1 = (ya + yy) * W + Math.floor(x0 + f * cw + xx), p2 = (ya + yy) * W + Math.floor(x0 + (f + 1) * cw + xx);
+        const a = !isBg[p1], b = !isBg[p2]; if (a || b) { tot++; if (a !== b) diff++; }
+      }
+      blocks.push({ x: x0, y: y0, w, h, dirs, frames, motion: tot ? diff / tot : 0 });
     }
     // Ordre de lecture (lignes de blocs de haut en bas, puis de gauche à droite)
     blocks.sort((a, b) => a.y - b.y);
     const rows = [];
-    for (const b of blocks) { const r = rows.find(r => Math.abs(r[0].y - b.y) < 60); if (r) r.push(b); else rows.push([b]); }
-    const ordered = rows.flatMap(r => r.sort((a, b) => a.x - b.x));
-    ordered.forEach((b, i) => { b.name = ordered.length === HERO_ANIM_NAMES.length ? HERO_ANIM_NAMES[i] : `Animation ${i + 1}`; });
-    return { blocks: ordered, bg };
+    for (const b of blocks) { const rw = rows.find(rw => Math.abs(rw[0].y - b.y) < Math.max(20, H * 0.01)); if (rw) rw.push(b); else rows.push([b]); }
+    return { blocks: rows.flatMap(rw => rw.sort((a, b) => a.x - b.x)), bgC, isBg, W };
   },
-  /* Animations utilisées par le jeu : repos, attaque, sort. */
-  choose(blocks) {
-    if (blocks.length === HERO_ANIM_NAMES.length) return { idle: blocks[2], attack: blocks[8], cast: blocks[5] };
-    const byF = blocks.slice().sort((a, b) => b.frames - a.frames);
-    return { idle: blocks[0], attack: byF[0], cast: byF[1] || byF[0] };
+  /* Choix par défaut : repos = bloc qui bouge le moins, attaque = bloc ample et animé, sort = le suivant. */
+  auto(blocks) {
+    const idx = blocks.map((b, i) => i);
+    const cellW = b => b.w / b.frames;
+    const medW = idx.map(i => cellW(blocks[i])).sort((a, b) => a - b)[Math.floor(blocks.length / 2)];
+    const calm = idx.filter(i => blocks[i].frames >= 4 && cellW(blocks[i]) <= medW * 1.1).sort((a, b) => blocks[a].motion - blocks[b].motion);
+    const idle = calm.length ? calm[0] : 0;
+    const big = idx.filter(i => i !== idle && blocks[i].frames >= 6).sort((a, b) => (cellW(blocks[b]) * blocks[b].motion * blocks[b].frames) - (cellW(blocks[a]) * blocks[a].motion * blocks[a].frames));
+    const pref = big.filter(i => blocks[i].frames >= 14 && cellW(blocks[i]) > medW);
+    big.sort((a, b) => (pref.includes(b) ? 1 : 0) - (pref.includes(a) ? 1 : 0));
+    return { idle, attack: big[0] !== undefined ? big[0] : idle, cast: big[1] !== undefined ? big[1] : (big[0] !== undefined ? big[0] : idle) };
   },
-  /* Copie du bloc avec le fond rendu transparent ; repère des pieds (bas de la silhouette). */
-  cleanBlock(img, b, bg) {
+  /* Vignette d'un bloc (rangée de profil, première image) pour le choix manuel. */
+  async thumb(img, b, res) {
+    const cw = b.w / b.frames, ch = b.h / b.dirs, cv = document.createElement('canvas'), k = 64 / ch;
+    cv.width = Math.max(8, Math.round(cw * k)); cv.height = 64;
+    const g = cv.getContext('2d'); g.imageSmoothingEnabled = true;
+    g.drawImage(img, b.x, b.y + 4 * ch, cw, ch, 0, 0, cv.width, cv.height);
+    const id = g.getImageData(0, 0, cv.width, cv.height), d = id.data, c = res.bgC;
+    for (let i = 0; i < d.length; i += 4) { const dist = Math.abs(d[i] - c[0]) + Math.abs(d[i + 1] - c[1]) + Math.abs(d[i + 2] - c[2]); if (dist < 40) d[i + 3] = 0; else if (dist < 70) d[i + 3] = Math.round(255 * (dist - 40) / 30); }
+    g.putImageData(id, 0, 0);
+    return new Promise(r => cv.toBlob(r, 'image/png'));
+  },
+  /* Copie du bloc avec le fond rendu transparent (bords adoucis pour les JPEG) ; repère des pieds. */
+  cleanBlock(img, b, res) {
     const cv = document.createElement('canvas'); cv.width = Math.round(b.w); cv.height = Math.round(b.h);
-    const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, b.x, b.y, b.w, b.h, 0, 0, b.w, b.h);
-    const id = g.getImageData(0, 0, cv.width, cv.height), d = id.data, r = (bg >> 16) & 255, gg = (bg >> 8) & 255, bb = bg & 255;
+    const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, b.x, b.y, b.w, b.h, 0, 0, cv.width, cv.height);
+    const id = g.getImageData(0, 0, cv.width, cv.height), d = id.data, c = res.bgC;
     const ch = b.h / b.dirs;
     let feet = 0, head = ch;
     for (let y = 0; y < cv.height; y++) for (let x = 0; x < cv.width; x++) {
-      const i = (y * cv.width + x) * 4;
-      if (d[i] === r && d[i + 1] === gg && d[i + 2] === bb) { d[i + 3] = 0; continue; }
+      const i = (y * cv.width + x) * 4, dist = Math.abs(d[i] - c[0]) + Math.abs(d[i + 1] - c[1]) + Math.abs(d[i + 2] - c[2]);
+      if (dist < 36) { d[i + 3] = 0; continue; }
+      if (dist < 70) d[i + 3] = Math.round(255 * (dist - 36) / 34);
       const ly = y % ch; if (ly > feet) feet = ly; if (ly < head) head = ly;
     }
     g.putImageData(id, 0, 0);
@@ -4032,10 +4079,10 @@ const HeroArt = {
     const a = idle || atk;
     return [a, Math.floor(time * 10 + (t.x + t.y) * 0.01) % a.frames];
   },
-  /* Dessine le héros : pieds posés sur (x, y), hauteur visée hpx (en pixels de l'écran ou de la carte). */
+  /* Dessine le héros : pieds posés sur (x, y), hauteur visée hpx. */
   draw(ctx, set, t, x, y, hpx, time, angle) {
     const [a, f] = this.frameOf(set, t, time), row = this.dirRow(angle === undefined ? t.angle : angle, a.dirs);
-    const k = hpx / Math.max(20, a.ay - a.top);
+    const k = hpx / Math.max(10, a.ay - a.top);
     ctx.drawImage(a.img, f * a.cw, row * a.ch, a.cw, a.ch, x - a.ax * k, y - a.ay * k, a.cw * k, a.ch * k);
   }
 };
@@ -4059,8 +4106,10 @@ const CrewView = {
       `<div class="row"><button class="btn small primary" id="gearAuto" type="button">Équiper le meilleur</button><button class="btn small" id="gearShop" type="button">Caisses et offres</button></div>` +
       (D2 ? `<div class="row" style="align-items:center"><button class="btn small" id="artImport" type="button">${HeroArt.sets[c] ? 'Changer la planche de sprites' : 'Importer une planche de sprites'}</button>` +
         (HeroArt.sets[c] ? '<button class="btn small danger" id="artRemove" type="button">Retirer</button>' : '') + `<input type="file" id="artFile" accept="image/*" hidden></div>` +
-        `<p class="hint" id="artInfo">${HeroArt.sets[c] ? `Graphismes personnels : ${esc(HeroArt.sets[c].name)} · ${HeroArt.sets[c].blocks.length} animations (${esc(HeroArt.sets[c].blocks.map(x => x.name + ' ' + x.frames).join(', '))})` : 'Une image de planche (blocs gris, 16 directions) remplace l’emblème du héros. Elle reste sur cet appareil.'}</p>` +
-        (HeroArt.sets[c] ? '<canvas id="artPrev" width="420" height="110" style="width:100%;max-width:420px;height:auto;background:rgba(0,0,0,.25);border-radius:8px"></canvas>' : '') : '') +
+        `<p class="hint" id="artInfo">${HeroArt.sets[c] ? `Graphismes personnels : ${esc(HeroArt.sets[c].name)} · ${HeroArt.sets[c].blocks.length} animations reconnues${HeroArt.sets[c].small ? ' · image en petite taille : prends la version complète de la planche pour un rendu net' : ''}` : 'Une image de planche (blocs gris, 16 directions) remplace l’emblème du héros. Elle reste sur cet appareil.'}</p>` +
+        (HeroArt.sets[c] ? '<canvas id="artPrev" width="420" height="110" style="width:100%;max-width:420px;height:auto;background:rgba(0,0,0,.25);border-radius:8px"></canvas>' +
+          '<div class="artpick">' + Object.entries(HERO_ROLES).map(([role, label]) => `<label>${label}<select data-role="${role}">${HeroArt.sets[c].blocks.map((x, i) => `<option value="${i}" ${HeroArt.sets[c].assign[role] === i ? 'selected' : ''}>Bloc ${i + 1} · ${x.frames} images</option>`).join('')}</select></label>`).join('') + '</div>' +
+          '<div class="artthumbs">' + HeroArt.sets[c].blocks.map((x, i) => `<figure data-thumb="${i}"><canvas width="48" height="64"></canvas><figcaption>${i + 1}</figcaption></figure>`).join('') + '</div>' : '') : '') +
       `</div></section>`;
     h += '<div class="gslots">' + GEAR_SLOTS.map(sl => {
       const it = Gear.find(s, eq[sl.id]);
@@ -4090,6 +4139,12 @@ const CrewView = {
         this.render();
       };
       if ($('artRemove')) $('artRemove').onclick = async () => { await HeroArt.remove(c); this.render(); };
+      body.querySelectorAll('.artpick select').forEach(sel => { sel.onchange = async () => { $('artInfo').textContent = 'Mise à jour des animations…'; await HeroArt.reassign(c, sel.dataset.role, +sel.value); this.render(); }; });
+      if (HeroArt.sets[c]) body.querySelectorAll('[data-thumb]').forEach(async fg => {
+        const bl = HeroArt.sets[c].blocks[+fg.dataset.thumb]; if (!bl || !bl.thumb) return;
+        const im = await createImageBitmap(bl.thumb), cv = fg.querySelector('canvas'), k = Math.min(48 / im.width, 64 / im.height);
+        cv.getContext('2d').drawImage(im, (48 - im.width * k) / 2, 64 - im.height * k, im.width * k, im.height * k);
+      });
       const pv = $('artPrev');
       if (pv) {
         cancelAnimationFrame(this.artRaf);
@@ -4936,8 +4991,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '5.1';
+const APP_VERSION = '5.2';
 const CHANGELOG = [
+  { v: '5.2', date: '28.10.2026', items: ['Planches de sprites : découpage plus solide (JPEG acceptés, blocs dans n’importe quel ordre)', 'Choix automatique des animations de repos, d’attaque et de sort, modifiable à la main avec des vignettes de chaque bloc', 'Avertissement quand une planche est en petite taille'] },
   { v: '5.1', date: '28.10.2026', items: ['Mode Diablo II : import d’une planche de sprites par héros (écran Héros), découpée automatiquement en animations et 16 directions', 'Le héros importé remplace l’emblème sur la carte, en 2D comme en 3D : repos, attaque à chaque tir, orientation vers la cible', 'La planche reste sur ton appareil : elle n’est jamais envoyée ni publiée'] },
   { v: '5.0', date: '28.10.2026', items: ['Nouveau mode « Sanctuaire · Diablo II » à choisir sur l’écran d’accueil, avec ses propres sauvegardes', '5 actes et 39 zones, du Camp des Rogues au Donjon de la Pierre-Monde, puis rejouables en Cauchemar et en Enfer', '7 classes : Amazone, Barbare, Sorcière, Paladin, Nécromancien, Assassin et Druide, chacune avec ses 3 arbres et leurs compétences débloquées aux niveaux 1, 6, 12, 18, 24 et 30', 'Types de dégâts et immunités, invocations qui bloquent le chemin, sentinelles posées sur la route, malédictions et auras', 'Andarielle, Duriel, Méphisto, Diablo et ses 3 gardiens de sceaux, Baal et ses 5 lieutenants', 'Décors, monstres et emblèmes dessinés exprès pour ce mode'] },
   { v: '4.1', date: '28.10.2026', items: ['Installation : bouton « Installer maintenant » sur Android, aide spéciale pour les téléphones Honor et Huawei', 'Boutons pour copier ou envoyer l’adresse de l’application'] },
@@ -8320,7 +8376,7 @@ const Events = {
     clearTimeout(this.bt); this.bt = setTimeout(() => { el.hidden = true; }, 4200);
     Talk.say(crewJoined(App.slot, e.who) ? e.who : 'volta', e.line);
     Sound.sfx && Sound.sfx('wave'); buzz(30);
-    if (type === 'merchant') this.offer = { item: Gear.roll(App.slot, 1), price: b.merchant.price };
+    if (type === 'merchant' && b.merchant) this.offer = { item: Gear.roll(App.slot, 1), price: b.merchant.price };
   },
   /* Cargo doré abattu, artefact récupéré */
   treasure(gold) {
