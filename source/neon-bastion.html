@@ -782,6 +782,9 @@ import{Matrix3 as e,Vector2 as t,Color as n,Vector3 as i,mergeUniforms as r,Cube
 </script>
 <script>
 'use strict';
+/* Android (Chrome, Edge, Samsung…) : on garde l'invitation d'installation pour proposer un bouton « Installer » en un appui. */
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); window.NB_PROMPT = e; });
+window.addEventListener('appinstalled', () => { window.NB_PROMPT = null; try { Toast2.show('Neon Bastion est installé sur ton téléphone'); } catch (x) { /* rien */ } });
 
 /* =====================================================================
    CONFIGURATION
@@ -3587,8 +3590,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '4.0';
+const APP_VERSION = '4.1';
 const CHANGELOG = [
+  { v: '4.1', date: '28.10.2026', items: ['Installation : bouton « Installer maintenant » sur Android, aide spéciale pour les téléphones Honor et Huawei', 'Boutons pour copier ou envoyer l’adresse de l’application'] },
   { v: '4.0', date: '27.10.2026', items: ['Un personnage par tourelle : 6 nouvelles recrues (Kora, Nyx, Ohm, Krast, Vesper, Lyra) avec portrait, voix et carte de recrutement', 'Histoire enrichie : arrivée sur chaque planète et 3 scènes par monde entre les personnages', 'Chaque monde est une planète : ville, désert, océan, industrie, cristal, orages, forêt, volcans, glace, Rouille', 'Événements surprises : cargo doré, pluie de cristaux, porteur d’artefact, surtension, tempête, marchand', 'Artefacts de planète à reconstituer (5 fragments) pour un objet légendaire'] },
   { v: '3.3', date: '27.10.2026', items: ['Nouvel écran Équipage : arme, blindage et module pour Brann, Iris, Volta et Écho', 'Objets de 5 raretés (Commun à Mythique), à monter de niveau avec la ferraille', 'Fusion de 3 objets identiques en un objet de rareté supérieure', 'Butin en fin de niveau (garanti sur les boss), dans les quêtes et dans la boutique (caisses et offres du jour)'] },
   { v: '3.2', date: '27.10.2026', items: ['Son : plus de sursauts ni de hoquets de la musique, même quand le jeu est chargé'] },
@@ -3627,16 +3631,36 @@ const VersionInfo = {
   newer(a, b) { const pa = a.split('.').map(Number), pb = b.split('.').map(Number); for (let i = 0; i < 3; i++) { if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0); } return false; },
   showInstall() {
     const installedApp = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    const ua = navigator.userAgent || '', honor = /honor|huawei|HMSCore|HuaweiBrowser|HONORBrowser|EMUI|MagicOS/i.test(ua);
+    const otherBrowser = /HuaweiBrowser|HONORBrowser|HiBrowser|MiuiBrowser|OPR\/|Firefox/i.test(ua) && !/Chrome\/[\d.]+ Mobile Safari\/[\d.]+$/.test(ua);
+    const inClaude = !window.NB_APP, url = window.NB_APP ? window.NB_APP.url : 'https://fleursanux.github.io/Neon-bastion/';
     const html = '<div style="text-align:left;display:flex;flex-direction:column;gap:12px">' +
       (installedApp ? '<div><b>✓ Application installée</b><p class="hint">Tu joues déjà depuis l’application. Les étapes ci-dessous servent à l’installer sur un autre appareil.</p></div>' : '') +
-      (window.NB_APP ? `<div><b>Étape 1 · Ouvrir l’adresse du jeu</b><p class="hint">Dans Safari (iPhone) ou Chrome (Android), ouvre <b style="user-select:all;overflow-wrap:anywhere">${esc(window.NB_APP.url)}</b></p></div>`
-        : '<div><b>Étape 1 · Ouvrir le jeu dans le navigateur</b><p class="hint">Dans Claude, ouvre le menu de partage de la page du jeu et copie son lien. Colle-le dans Safari (iPhone) ou Chrome (Android).</p></div>') +
+      (window.NB_PROMPT && !installedApp ? '<div><button class="btn primary" id="btnInstallNow" type="button" style="width:100%">Installer maintenant</button><p class="hint" style="margin-top:4px">Ton navigateur propose l’installation directe : un appui suffit.</p></div>' : '') +
+      `<div><b>Étape 1 · Ouvrir l’adresse du jeu</b><p class="hint">${inClaude ? 'L’application s’installe depuis son adresse à elle (pas depuis Claude). ' : ''}Dans Safari (iPhone) ou Chrome (Android), ouvre <b style="user-select:all;overflow-wrap:anywhere">${esc(url)}</b></p>` +
+      `<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="btnCopyUrl" type="button">Copier l’adresse</button>${navigator.share ? '<button class="btn small" id="btnShareUrl" type="button">Envoyer le lien</button>' : ''}</div></div>` +
       '<div><b>iPhone · Safari</b><ul class="traits"><li>Appuie sur le bouton Partager (carré avec une flèche)</li><li>Choisis « Sur l’écran d’accueil »</li><li>Nomme-le « Neon Bastion » puis « Ajouter »</li></ul></div>' +
-      '<div><b>Android · Chrome</b><ul class="traits"><li>Appuie sur le menu ⋮ en haut à droite</li><li>Choisis « Ajouter à l’écran d’accueil » ou « Installer l’application »</li><li>Confirme avec « Ajouter »</li></ul></div>' +
-      (window.NB_APP ? '<div><b>Les mises à jour</b><p class="hint">À chaque ouverture, l’application télécharge la dernière version (elle reste jouable hors ligne avec la version déjà installée). Si une mise à jour arrive pendant que tu joues, un bandeau propose de l’appliquer. Un écran « Mise à jour installée » liste ensuite les nouveautés.</p></div>'
-        : '<div><b>Les mises à jour</b><p class="hint">L’icône ouvre toujours la dernière version publiée : rien à réinstaller. Un écran « Mise à jour installée » s’affiche quand une nouvelle version arrive.</p></div>') +
-      '<div><b>Tes sauvegardes</b><p class="hint">Chaque navigateur garde ses propres sauvegardes. Pour reprendre ta partie de Claude sur l’icône du téléphone, utilise « Exporter » ici puis « Importer un code » là-bas.</p></div></div>';
+      '<div><b>Android · Chrome</b><ul class="traits"><li>Appuie sur le menu ⋮ en haut à droite</li><li>Choisis « Installer l’application » ou « Ajouter à l’écran d’accueil »</li><li>Confirme avec « Installer » ou « Ajouter »</li></ul></div>' +
+      `<div${honor ? ' style="border:1px solid var(--gold);border-radius:8px;padding:8px"' : ''}><b>Honor et Huawei${honor ? ' · c’est ton téléphone' : ''}</b><ul class="traits">` +
+        '<li>Utilise <b>Chrome</b>, pas le navigateur Honor ou Huawei (il ne sait pas installer les applications web). S’il n’est pas installé, prends Chrome sur le Play Store, ou <b>Firefox</b> sur l’AppGallery.</li>' +
+        '<li>Si « Ajouter à l’écran d’accueil » ne fait rien : ouvre <b>Paramètres → Applications → Chrome → Autorisations</b> et active <b>« Raccourcis sur l’écran d’accueil »</b> (parfois rangé dans « Autres autorisations »). Puis recommence.</li>' +
+        '<li>Vérifie aussi <b>Paramètres → Écran d’accueil et fond d’écran</b> : si la disposition de l’écran est verrouillée, déverrouille-la.</li>' +
+        '<li>Avec Firefox : menu ⋮ → « Installer » ou « Ajouter à l’écran d’accueil ».</li>' +
+        '<li>En dernier recours, garde simplement l’adresse en favori : le jeu marche aussi dans le navigateur, avec les mêmes mises à jour.</li></ul></div>' +
+      (otherBrowser && !installedApp ? '<p class="hint" style="color:var(--gold)">Tu sembles utiliser un autre navigateur que Chrome ou Safari : l’installation peut y manquer.</p>' : '') +
+      (window.NB_APP ? '<div><b>Les mises à jour</b><p class="hint">À chaque ouverture, l’application télécharge la dernière version (elle reste jouable hors ligne avec la version déjà installée). Si une mise à jour arrive pendant que tu joues, un bandeau propose de l’appliquer.</p></div>'
+        : '<div><b>Les mises à jour</b><p class="hint">L’application installée se met à jour toute seule à chaque modification.</p></div>') +
+      '<div><b>Tes sauvegardes</b><p class="hint">Chaque navigateur garde ses propres sauvegardes. Pour reprendre ta partie sur un autre appareil, utilise « Exporter » puis « Importer un code ».</p></div></div>';
     Modal.open({ title: 'Installer sur ton téléphone', html, actions: [{ label: 'Compris', cls: 'primary' }] });
+    const now = $('btnInstallNow');
+    if (now) now.onclick = async () => {
+      const p = window.NB_PROMPT; if (!p) return;
+      try { p.prompt(); const r = await p.userChoice; if (r && r.outcome === 'accepted') { window.NB_PROMPT = null; Modal.close(); } } catch (e) { Toast2.show('Installation impossible ici : suis les étapes ci-dessous'); }
+    };
+    const cp = $('btnCopyUrl');
+    if (cp) cp.onclick = () => { try { navigator.clipboard.writeText(url).then(() => Toast2.show('Adresse copiée'), () => Toast2.show(url)); } catch (e) { Toast2.show(url); } };
+    const sh = $('btnShareUrl');
+    if (sh) sh.onclick = () => { navigator.share({ title: 'Neon Bastion', text: 'Installe Neon Bastion sur ton téléphone :', url }).catch(() => {}); };
   }
 };
 
