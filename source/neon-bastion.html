@@ -4216,23 +4216,41 @@ const TownArt = {
     const F = await this.pixels(floorFile), O = await this.pixels(objFile);
     const FT = this.floorTiles(F), objs = this.objects(O);
     if (!FT.grass.length && !FT.dirt.length) throw new Error('aucun losange de sol reconnu');
-    const K = 0.75, TW = 160 * K, TH = 80 * K, CW = 2000, CH = 1200, rng = mulberry32(act * 7919 + 3);
+    const K = 0.68, TW = 160 * K, TH = 80 * K, CW = 2000, CH = 1200, rng = mulberry32(act * 7919 + 3);
     const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
     const g = cv.getContext('2d');
-    g.fillStyle = '#0d0b09'; g.fillRect(0, 0, CW, CH);
+    g.fillStyle = '#050403'; g.fillRect(0, 0, CW, CH);
     const tileCv = t => this.cut(F, t.x, t.y, 160, 80, K);
-    const grass = FT.grass.slice(0, 40).map(tileCv), dirt = (FT.dirt.length ? FT.dirt : FT.grass).slice(0, 40).map(tileCv);
-    // Repère isométrique : centre du camp à gauche de l'écran, chemin vers la droite
-    const OX = 620, OY = 560, C = 4;                     // camp de 2C × 2C cases autour de (0, 0)
+    const grass = FT.grass.slice(0, 50).map(tileCv), dirt = (FT.dirt.length ? FT.dirt : FT.grass).slice(0, 50).map(tileCv);
+    // Grand camp rectangulaire (comme le Camp des Rogues) : 2A × 2B cases, porte sur le bord droit, feu de camp en haut
+    const A = 7, B = 5, OX = 700, OY = 610;
     const sx = (i, j) => OX + (i - j) * TW / 2, sy = (i, j) => OY + (i + j) * TH / 2;
-    const inCamp = (i, j) => i >= -C && i < C && j >= -C && j < C;
-    const road = (i, j) => (j >= -1 && j <= 0 && i >= 0) || (i >= -1 && i <= 0 && j >= -1 && j <= 1 && inCamp(i, j));
-    for (let s = -40; s <= 40; s++) for (let i = -40; i <= 40; i++) {
-      const j = s - i, x = sx(i, j), y = sy(i, j);
-      if (x < -TW || x > CW + TW || y < -TH || y > CH + TH) continue;
-      const pick = inCamp(i, j) || road(i, j) ? dirt : grass, t = pick[Math.floor(rng() * pick.length)];
+    const inCamp = (i, j) => i >= -A && i < A && j >= -B && j < B;
+    const FIRE = [-3, -3], GATE = [A - 1, -1];
+    // Chemin de terre de la porte au feu, plaques de terre irrégulières (bruit lissé)
+    const path = new Set();
+    for (let k = 0; k <= 60; k++) { const t = k / 60, pi = GATE[0] + (FIRE[0] - GATE[0]) * t, pj = GATE[1] + (FIRE[1] - GATE[1]) * t + Math.sin(t * 5) * 0.8; for (const [di, dj] of [[0, 0], [1, 0], [0, 1]]) path.add(Math.floor(pi + di * 0.6) + ',' + Math.floor(pj + dj * 0.6)); }
+    const seeds = Array.from({ length: 9 }, () => [-A + rng() * 2 * A, -B + rng() * 2 * B, 0.8 + rng() * 1.6]);
+    const isDirt = (i, j) => path.has(i + ',' + j) || Math.hypot(i - FIRE[0], j - FIRE[1]) < 2.3 || seeds.some(([a, b, r]) => Math.hypot(i - a, j - b) < r) || (i >= A - 2 && j >= -2 && j <= 1);
+    for (let sum = -30; sum <= 30; sum++) for (let i = -30; i <= 30; i++) {
+      const j = sum - i;
+      const ring = i >= -A - 2 && i < A + 2 && j >= -B - 2 && j < B + 2;
+      if (!ring) continue;
+      const x = sx(i, j), y = sy(i, j);
+      const list = inCamp(i, j) && isDirt(i, j) ? dirt : grass, t = list[Math.floor(rng() * list.length)];
       g.drawImage(t, x - TW / 2, y - TH / 2);
     }
+    // Dehors : noir, comme dans le jeu (la lumière ne dépasse pas la palissade)
+    g.save(); g.beginPath(); g.rect(0, 0, CW, CH);
+    const cornerPts = [[-A, -B], [A, -B], [A, B], [-A, B]].map(([i, j]) => [sx(i, j) - TW / 2 * 0 , sy(i, j) - TH / 2]);
+    g.moveTo(sx(-A, -B), sy(-A, -B) - TH / 2); g.lineTo(sx(A, -B) + TW / 2, sy(A, -B)); g.lineTo(sx(A, B), sy(A, B) + TH / 2); g.lineTo(sx(-A, B) - TW / 2, sy(-A, B)); g.closePath();
+    g.fillStyle = 'rgba(3,2,1,.95)'; g.fill('evenodd'); g.restore(); void cornerPts;
+    // Feu de camp : lueur, pierres et flammes
+    const fx = sx(FIRE[0], FIRE[1]), fy = sy(FIRE[0], FIRE[1]);
+    const glow = g.createRadialGradient(fx, fy, 10, fx, fy, 260); glow.addColorStop(0, 'rgba(255,170,70,.45)'); glow.addColorStop(0.4, 'rgba(255,120,40,.15)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = glow; g.fillRect(fx - 260, fy - 260, 520, 520);
+    for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; g.fillStyle = k % 2 ? '#5a5448' : '#6e665a'; g.beginPath(); g.ellipse(fx + Math.cos(a) * 30, fy + Math.sin(a) * 15, 7, 4.5, 0, 0, TAU); g.fill(); }
+    for (let k = 0; k < 9; k++) { const ox = (k - 4) * 3.2 + (rng() - 0.5) * 3, h = 12 + rng() * 14; const fg = g.createLinearGradient(fx, fy, fx, fy - h); fg.addColorStop(0, 'rgba(255,210,110,.8)'); fg.addColorStop(0.5, 'rgba(255,120,30,.45)'); fg.addColorStop(1, 'rgba(255,60,10,0)'); g.fillStyle = fg; g.beginPath(); g.moveTo(fx + ox - 4, fy); g.quadraticCurveTo(fx + ox + (rng() - 0.5) * 6, fy - h * 1.3, fx + ox + 4, fy); g.fill(); }
     // Objets à placer, triés par profondeur (bas de l'objet)
     const items = [];
     const piece = o => {
@@ -4243,45 +4261,47 @@ const TownArt = {
       return c;
     };
     const fences = objs.filter(o => o.band === 0 && o.w < 200 && o.bottom - o.top > 120);
-    // Orientation d'une pièce de palissade : son pied descend vers la gauche (/) ou vers la droite (\)
     const slope = o => { const p = o.parts[0], foot = xx => { for (let yy = p.y + p.h - 1; yy > p.y; yy--) if (O.mask[yy * O.W + xx]) return yy; return p.y; }; return foot(p.x + Math.floor(p.w * 0.2)) - foot(p.x + Math.floor(p.w * 0.8)); };
     const fL = fences.filter(o => slope(o) > 6).map(piece), fR = fences.filter(o => slope(o) < -6).map(piece);
     const props = objs.filter(o => (o.band === 1 || o.band === 2) && o.w > 50 && o.bottom - o.top > 50).map(piece);
     const trees = objs.filter(o => o.band >= 3 && o.bottom - o.top > 140).map(piece);
     const bushes = objs.filter(o => o.band >= 3 && o.bottom - o.top <= 140 && o.w > 40).map(piece);
     const put = (c, x, y) => items.push({ c, x: x - c.width / 2, y: y - c.height, z: y });
-    // Palissade : bords du camp, porte sur le bord droit (vers le chemin)
-    if (fL.length || fR.length) for (let k = -C; k < C; k++) {
-      const edges = [[k, -C, 'i'], [k, C, 'i'], [-C, k, 'j'], [C, k, 'j']];
-      for (const [i, j, axis] of edges) {
-        if (axis === 'j' && i === C && (j === -1 || j === 0)) continue;     // la porte
-        const list = axis === 'i' ? (fR.length ? fR : fL) : (fL.length ? fL : fR), c = list[Math.floor(rng() * list.length)];
-        // milieu du bord du losange de la case (i, j)
-        const x = axis === 'i' ? (sx(i, j) + sx(i + 1, j)) / 2 : (sx(i, j) + sx(i, j + 1)) / 2;
-        const y = axis === 'i' ? (sy(i, j) + sy(i + 1, j)) / 2 : (sy(i, j) + sy(i, j + 1)) / 2;
-        put(c, x, y + TH * 0.35);
-      }
+    // Palissade sur les quatre bords, porte sur le bord droit (face aux zones)
+    const wall = (list, x, y) => { if (list.length) put(list[Math.floor(rng() * list.length)], x, y + TH * 0.35); };
+    for (let i = -A; i < A; i++) {
+      wall(fR.length ? fR : fL, (sx(i, -B) + sx(i + 1, -B)) / 2, (sy(i, -B) + sy(i + 1, -B)) / 2 - TH / 2);
+      wall(fR.length ? fR : fL, (sx(i, B) + sx(i + 1, B)) / 2, (sy(i, B) + sy(i + 1, B)) / 2 - TH / 2);
     }
-    // Objets du camp sur des cases libres, loin du chemin central
-    const free = [];
-    for (let i = -C + 1; i < C - 1; i++) for (let j = -C + 1; j < C - 1; j++) if (!road(i, j) && Math.abs(i) + Math.abs(j) > 1) free.push([i, j]);
-    shuffle(free, rng);
-    props.slice(0, Math.min(props.length, 14)).forEach((c, n) => { const f = free[n % free.length]; put(c, sx(f[0], f[1]), sy(f[0], f[1]) + TH / 2); });
-    // Arbres et buissons dehors, hors du chemin
-    const out = [];
-    for (let i = -14; i <= 14; i++) for (let j = -14; j <= 14; j++) {
-      if (inCamp(i, j) || Math.abs(i) <= C + 1 && Math.abs(j) <= C + 1 || (j >= -2 && j <= 1 && i >= 0)) continue;
-      const x = sx(i, j), y = sy(i, j); if (x < -60 || x > CW + 60 || y < 40 || y > CH + 200) continue;
-      out.push([x, y]);
+    for (let j = -B; j < B; j++) {
+      wall(fL.length ? fL : fR, (sx(-A, j) + sx(-A, j + 1)) / 2, (sy(-A, j) + sy(-A, j + 1)) / 2 - TH / 2);
+      if (j !== GATE[1] && j !== GATE[1] + 1) wall(fL.length ? fL : fR, (sx(A, j) + sx(A, j + 1)) / 2, (sy(A, j) + sy(A, j + 1)) / 2 - TH / 2);
     }
-    shuffle(out, rng);
-    if (trees.length) out.slice(0, 26).forEach(([x, y]) => put(trees[Math.floor(rng() * trees.length)], x, y + TH / 2));
-    if (bushes.length) out.slice(26, 60).forEach(([x, y]) => put(bushes[Math.floor(rng() * bushes.length)], x, y + TH / 2));
+    // Chariots et caisses le long de la palissade, tentes autour du feu, hors du chemin
+    const taken = new Set();
+    const okTile = (i, j) => inCamp(i, j) && !path.has(i + ',' + j) && !taken.has(i + ',' + j) && Math.hypot(i - FIRE[0], j - FIRE[1]) > 1.6 && !(i >= A - 2 && j >= -2 && j <= 1);
+    const border = [], ring = [];
+    for (let i = -A + 1; i < A - 1; i++) for (let j = -B + 1; j < B - 1; j++) {
+      const edge = i === -A + 1 || i === A - 2 || j === -B + 1 || j === B - 2, d = Math.hypot(i - FIRE[0], j - FIRE[1]);
+      if (edge) border.push([i, j]); else if (d > 2 && d < 4.2) ring.push([i, j]);
+    }
+    shuffle(border, rng);
+    // Autour du feu : emplacements répartis régulièrement en cercle
+    ring.sort((a, b) => Math.atan2(a[1] - FIRE[1], a[0] - FIRE[0]) - Math.atan2(b[1] - FIRE[1], b[0] - FIRE[0]));
+    const ringSpread = []; for (let k = 0; k < 7; k++) { const sp = ring[Math.floor(k * ring.length / 7)]; if (sp) ringSpread.push(sp); }
+    const big = props.slice().sort((a, b) => b.width * b.height - a.width * a.height);
+    const place = (c, spots) => { const f = spots.find(([i, j]) => okTile(i, j)); if (!f) return; taken.add(f[0] + ',' + f[1]); put(c, sx(f[0], f[1]), sy(f[0], f[1]) + TH / 2); };
+    big.slice(0, 7).forEach((c, k) => place(c, [ringSpread[k], ...ring].filter(Boolean)));
+    big.slice(7, 22).forEach(c => place(c, border));
+    // Quelques arbres dans les coins du camp, buissons çà et là
+    const corners = [[-A + 1, -B + 1], [A - 2, -B + 1], [-A + 1, B - 2], [-A + 2, B - 2], [A - 2, B - 2], [-A + 1, -B + 2]];
+    if (trees.length) corners.forEach(([i, j]) => { if (okTile(i, j)) { taken.add(i + ',' + j); put(trees[Math.floor(rng() * trees.length)], sx(i, j), sy(i, j) + TH / 2); } });
+    if (bushes.length) for (let k = 0; k < 14; k++) { const i = -A + 1 + Math.floor(rng() * (2 * A - 2)), j = -B + 1 + Math.floor(rng() * (2 * B - 2)); if (okTile(i, j)) put(bushes[Math.floor(rng() * bushes.length)], sx(i, j) + (rng() - 0.5) * 30, sy(i, j) + TH / 2); }
     items.sort((a, b) => a.z - b.z);
     for (const it of items) g.drawImage(it.c, Math.round(it.x), Math.round(it.y));
-    // Vignette sombre, comme la lumière limitée de Diablo II
-    const vg = g.createRadialGradient(OX + 200, OY, 300, OX + 200, OY, 1300); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.65)');
-    g.fillStyle = vg; g.fillRect(0, 0, CW, CH);
+    // Lumière douce du feu par-dessus, vignette sur les bords
+    const lit = g.createRadialGradient(fx, fy, 40, fx, fy, 900); lit.addColorStop(0, 'rgba(255,150,60,.10)'); lit.addColorStop(1, 'rgba(0,0,0,.35)');
+    g.fillStyle = lit; g.fillRect(0, 0, CW, CH);
     const scene = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.88));
     const rec = { scene, floor: floorFile.name, objects: objFile.name, stats: { grass: FT.grass.length, dirt: FT.dirt.length, fences: fL.length + fR.length, props: props.length, trees: trees.length, bushes: bushes.length } };
     await HeroArt.put('town:' + act, rec);
@@ -5211,8 +5231,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '5.3';
+const APP_VERSION = '5.4';
 const CHANGELOG = [
+  { v: '5.4', date: '29.10.2026', items: ['Camp des Rogues recomposé comme dans le jeu : grand enclos rectangulaire, feu de camp entouré de tentes, chariots le long de la palissade, extérieur dans le noir', 'Les zones de l’acte partent de la porte du camp, sur la droite de la carte'] },
   { v: '5.3', date: '29.10.2026', items: ['Mode Diablo II : les villes ne sont plus des niveaux, elles deviennent l’écran de l’acte d’où l’on choisit sa zone (8, 8, 8, 2 et 8 zones jouables)', 'Décor de la ville en vue isométrique, composé à partir de tes planches de sol et d’objets (bouton « Décor de la ville » sur la carte)', 'Les sauvegardes du mode Diablo II sont renumérotées automatiquement'] },
   { v: '5.2', date: '28.10.2026', items: ['Planches de sprites : découpage plus solide (JPEG acceptés, blocs dans n’importe quel ordre)', 'Choix automatique des animations de repos, d’attaque et de sort, modifiable à la main avec des vignettes de chaque bloc', 'Avertissement quand une planche est en petite taille'] },
   { v: '5.1', date: '28.10.2026', items: ['Mode Diablo II : import d’une planche de sprites par héros (écran Héros), découpée automatiquement en animations et 16 directions', 'Le héros importé remplace l’emblème sur la carte, en 2D comme en 3D : repos, attaque à chaque tir, orientation vers la cible', 'La planche reste sur ton appareil : elle n’est jamais envoyée ni publiée'] },
@@ -8032,7 +8053,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const WORLD_NODES = [[90, 480], [235, 395], [170, 250], [320, 145], [470, 235], [560, 405], [705, 475], [830, 345], [720, 195], [885, 105]];
 /* Mode Diablo II : la ville occupe la gauche de la carte, les zones partent de sa porte vers la droite. */
-const D2_NODES = { 8: [[560, 390], [655, 470], [760, 430], [835, 330], [745, 245], [850, 160], [720, 105], [585, 165]], 2: [[620, 380], [830, 220]] };
+const D2_NODES = { 8: [[735, 470], [868, 420], [752, 352], [885, 300], [760, 232], [890, 180], [765, 112], [895, 62]], 2: [[760, 420], [880, 200]] };
 const worldNodes = n => n >= 6 ? WORLD_NODES.slice(0, n) : [[150, 430], [500, 250], [850, 140], [700, 450], [300, 120]].slice(0, n);
 
 const App = {
@@ -8219,7 +8240,7 @@ const App = {
     let html = `<defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` +
       `<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="${D2 ? 'rgba(216,166,74,.06)' : 'rgba(122,167,255,.07)'}"/></pattern></defs>` +
       (D2 && TownArt.urls[(w - 1) % 5 + 1] ? `<image href="${TownArt.urls[(w - 1) % 5 + 1]}" x="0" y="0" width="1000" height="600" preserveAspectRatio="xMidYMid slice"/><rect width="1000" height="600" fill="rgba(0,0,0,.12)"/>` +
-        `<text x="310" y="560" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="26" fill="#e8d8b0" stroke="#000" stroke-width="3" paint-order="stroke">${esc(planetOf(w).town)}</text>`
+        `<text x="350" y="575" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="26" fill="#e8d8b0" stroke="#000" stroke-width="3" paint-order="stroke">${esc(planetOf(w).town)}</text>`
         : `<rect width="1000" height="600" fill="${D2 ? '#120d0a' : '#0a0e18'}"/><rect width="1000" height="600" fill="url(#grid)"/>`);
     for (let i = 0; i < size - 1; i++) {
       const [x1, y1] = pos(i), [x2, y2] = pos(i + 1), open = first + i + 1 <= s.unlocked;
