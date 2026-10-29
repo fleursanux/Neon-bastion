@@ -4211,6 +4211,39 @@ const TownArt = {
     for (const A of out) if (!used.has(A) && (A.band === 0 || (!A.cutL && !A.cutR))) objs.push({ parts: [A], band: A.band, w: A.w, top: A.y, bottom: A.y + A.h });
     return objs;
   },
+  /* Ville à partir d'une image de la ville : collée telle quelle (fond noir rendu transparent), entourée des sols. */
+  async buildFromImage(act, floorFile, townFile) {
+    const F = await this.pixels(floorFile), FT = this.floorTiles(F);
+    if (!FT.grass.length && !FT.dirt.length) throw new Error('aucun losange de sol reconnu');
+    const img = await createImageBitmap(townFile), CW = 2000, CH = 1200, rng = mulberry32(act * 131 + 7);
+    const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+    const g = cv.getContext('2d');
+    // Sol de la ville tout autour (taille des cases accordée à l'agrandissement de l'image)
+    const scale = Math.min(1380 / img.width, 1080 / img.height), K = Math.max(0.35, Math.min(1, scale * 0.16));
+    const TW = 160 * K, TH = 80 * K, tile = t => this.cut(F, t.x, t.y, 160, 80, K);
+    const grass = FT.grass.slice(0, 50).map(tile), dirt = (FT.dirt.length ? FT.dirt : FT.grass).slice(0, 50).map(tile);
+    for (let y = -TH, row = 0; y < CH + TH; y += TH / 2, row++) for (let x = (row % 2 ? TW / 2 : 0) - TW; x < CW + TW; x += TW) {
+      const list = rng() < 0.7 ? grass : dirt; g.drawImage(list[Math.floor(rng() * list.length)], x - TW / 2, y - TH / 2);
+    }
+    // Image de la ville : le noir relié aux bords devient transparent (bords adoucis)
+    const W = img.width, H = img.height, tc = document.createElement('canvas'); tc.width = W; tc.height = H;
+    const tg = tc.getContext('2d', { willReadFrequently: true }); tg.drawImage(img, 0, 0);
+    const id = tg.getImageData(0, 0, W, H), d = id.data, dark = p => d[p * 4] + d[p * 4 + 1] + d[p * 4 + 2] < 60, seen = new Uint8Array(W * H), st = [];
+    for (let x = 0; x < W; x++) { st.push(x, (H - 1) * W + x); } for (let y = 0; y < H; y++) { st.push(y * W, y * W + W - 1); }
+    while (st.length) { const p = st.pop(); if (seen[p] || !dark(p)) continue; seen[p] = 1; d[p * 4 + 3] = 0; const x = p % W, y = (p / W) | 0; if (x > 0) st.push(p - 1); if (x < W - 1) st.push(p + 1); if (y > 0) st.push(p - W); if (y < H - 1) st.push(p + W); }
+    for (let p = 0; p < W * H; p++) if (!seen[p]) { const x = p % W, y = (p / W) | 0; let n = 0; for (const q of [p - 1, p + 1, p - W, p + W]) if (q >= 0 && q < W * H && seen[q]) n++; if (n && (x || y)) d[p * 4 + 3] = 150; }
+    tg.putImageData(id, 0, 0);
+    const dw = W * scale, dh = H * scale, dx = 640 - dw / 2 + 60, dy = CH / 2 - dh / 2;
+    g.save(); g.shadowColor = 'rgba(0,0,0,.7)'; g.shadowBlur = 40; g.imageSmoothingQuality = 'high'; g.drawImage(tc, dx, dy, dw, dh); g.restore();
+    const vg = g.createRadialGradient(dx + dw / 2, dy + dh / 2, Math.min(dw, dh) * 0.45, dx + dw / 2, dy + dh / 2, 1300); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.6)');
+    g.fillStyle = vg; g.fillRect(0, 0, CW, CH);
+    const scene = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.9));
+    const rec = { scene, floor: floorFile.name, objects: townFile.name, picture: true, small: W < 900, stats: { grass: FT.grass.length, dirt: FT.dirt.length, fences: 0, props: 0, trees: 0, bushes: 0 } };
+    await HeroArt.put('town:' + act, rec);
+    if (this.urls[act]) URL.revokeObjectURL(this.urls[act]);
+    this.scenes[act] = rec; this.urls[act] = URL.createObjectURL(scene);
+    return rec;
+  },
   /* Compose la ville : sol, palissade (avec une porte), objets du camp, arbres autour. */
   async build(act, floorFile, objFile) {
     const F = await this.pixels(floorFile), O = await this.pixels(objFile);
@@ -4315,14 +4348,15 @@ const TownArt = {
     Modal.open({ title: `Décor : ${town}`,
       html: `<p class="hint">Choisis les deux planches de la ville (fond magenta). Le décor est composé sur cet appareil et n’est envoyé nulle part.</p>` +
         `<label class="muted" style="font-size:.82rem">Sol de la ville<input type="file" id="tfFloor" accept="image/*"></label>` +
-        `<label class="muted" style="font-size:.82rem">Objets de la ville<input type="file" id="tfObj" accept="image/*"></label>` +
-        `<p class="hint" id="tfInfo">${rec ? `Décor actuel : ${esc(rec.floor)} + ${esc(rec.objects)} (${rec.stats.fences} palissades, ${rec.stats.props} objets, ${rec.stats.trees} arbres)` : 'Aucun décor importé pour l’instant.'}</p>`,
+        `<label class="muted" style="font-size:.82rem">Image de la ville (capture du jeu, collée telle quelle)<input type="file" id="tfPic" accept="image/*"></label>` +
+        `<label class="muted" style="font-size:.82rem">Ou : objets de la ville (composition automatique)<input type="file" id="tfObj" accept="image/*"></label>` +
+        `<p class="hint" id="tfInfo">${rec ? `Décor actuel : ${esc(rec.floor)} + ${esc(rec.objects)}${rec.picture ? (rec.small ? ' · image petite : une capture plus grande sera plus nette' : '') : ` (${rec.stats.fences} palissades, ${rec.stats.props} objets, ${rec.stats.trees} arbres)`}` : 'Aucun décor importé pour l’instant.'}</p>`,
       actions: [...(rec ? [{ label: 'Retirer', cls: 'danger', fn: async () => { await this.remove(act); done && done(); } }] : []), { label: 'Fermer' },
         { label: 'Composer le décor', cls: 'primary', keep: true, fn: async () => {
-          const f = $('tfFloor').files[0], o = $('tfObj').files[0];
-          if (!f || !o) { $('tfInfo').textContent = 'Il faut les deux planches : le sol et les objets.'; return; }
+          const f = $('tfFloor').files[0], o = $('tfObj').files[0], pic = $('tfPic').files[0];
+          if (!f || (!o && !pic)) { $('tfInfo').textContent = 'Il faut le sol, et l’image de la ville ou les objets.'; return; }
           $('tfInfo').textContent = 'Composition du décor… (quelques secondes)';
-          try { await this.build(act, f, o); Modal.close(); Toast2.show(`Décor prêt : ${town}`); done && done(); } catch (e) { $('tfInfo').textContent = 'Impossible de composer le décor : ' + (e.message || e); }
+          try { if (pic) await this.buildFromImage(act, f, pic); else await this.build(act, f, o); Modal.close(); Toast2.show(`Décor prêt : ${town}`); done && done(); } catch (e) { $('tfInfo').textContent = 'Impossible de composer le décor : ' + (e.message || e); }
         } }] });
   }
 };
@@ -5231,8 +5265,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '5.4';
+const APP_VERSION = '5.5';
 const CHANGELOG = [
+  { v: '5.5', date: '29.10.2026', items: ['Décor de la ville : une capture du jeu peut être collée telle quelle, son fond noir est retiré et les sols de la planche remplissent l’extérieur'] },
   { v: '5.4', date: '29.10.2026', items: ['Camp des Rogues recomposé comme dans le jeu : grand enclos rectangulaire, feu de camp entouré de tentes, chariots le long de la palissade, extérieur dans le noir', 'Les zones de l’acte partent de la porte du camp, sur la droite de la carte'] },
   { v: '5.3', date: '29.10.2026', items: ['Mode Diablo II : les villes ne sont plus des niveaux, elles deviennent l’écran de l’acte d’où l’on choisit sa zone (8, 8, 8, 2 et 8 zones jouables)', 'Décor de la ville en vue isométrique, composé à partir de tes planches de sol et d’objets (bouton « Décor de la ville » sur la carte)', 'Les sauvegardes du mode Diablo II sont renumérotées automatiquement'] },
   { v: '5.2', date: '28.10.2026', items: ['Planches de sprites : découpage plus solide (JPEG acceptés, blocs dans n’importe quel ordre)', 'Choix automatique des animations de repos, d’attaque et de sort, modifiable à la main avec des vignettes de chaque bloc', 'Avertissement quand une planche est en petite taille'] },
