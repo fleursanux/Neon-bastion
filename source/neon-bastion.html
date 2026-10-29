@@ -426,6 +426,8 @@ body.d2 .btn.primary *{color:#1a0e04}
 .artthumbs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .artthumbs figure{margin:0;display:flex;flex-direction:column;align-items:center;background:rgba(0,0,0,.25);border-radius:6px;padding:2px}
 .artthumbs figcaption{font-size:.65rem;color:var(--muted)}
+.worldwrap{position:relative}
+#btnTown{position:absolute;left:10px;top:10px;z-index:2;opacity:.9}
 .crewhero .artthumbs canvas,.artthumbs canvas{width:48px!important;height:64px!important;box-shadow:none!important;background:none!important;border:0!important;border-radius:0!important}
 .crewhero canvas#artPrev{width:100%!important;max-width:420px;height:auto!important;box-shadow:none!important}
 .n3d{position:absolute;left:0;top:0;font:700 12px var(--font-ui);white-space:nowrap;text-shadow:0 0 3px #000,0 1px 2px #000,0 0 8px rgba(0,0,0,.8);will-change:transform}
@@ -663,7 +665,7 @@ body.fsgame.fsland.sheet .side{transform:none}
       <button class="btn small" id="btnNextWorld" type="button" aria-label="Monde suivant">▶</button>
     </div>
     <div class="map-grid">
-      <div class="worldwrap"><svg class="world" id="world" viewBox="0 0 1000 600" role="group" aria-label="Niveaux du monde"></svg></div>
+      <div class="worldwrap"><svg class="world" id="world" viewBox="0 0 1000 600" role="group" aria-label="Niveaux du monde"></svg><button class="btn small" id="btnTown" type="button" hidden>Décor de la ville</button></div>
       <aside class="panel detail" id="detail"></aside>
     </div>
   </section>
@@ -866,9 +868,9 @@ const MODE = (() => {
   try { return localStorage.getItem('nb-mode') === 'd2' ? 'd2' : 'neon'; } catch (e) { return 'neon'; }
 })();
 const D2 = MODE === 'd2';
-const ACT_SIZES = [9, 9, 9, 3, 9];                 // nombre de zones de chaque acte (Diablo II)
+const ACT_SIZES = [8, 8, 8, 2, 8];                 // zones jouables de chaque acte (la ville de l'acte est l'écran de sélection)
 const D2_DIFFS = ['Normal', 'Cauchemar', 'Enfer']; // chaque difficulté rejoue les 5 actes
-const D2_CYCLE = ACT_SIZES.reduce((a, b) => a + b, 0);   // 39 zones par difficulté
+const D2_CYCLE = ACT_SIZES.reduce((a, b) => a + b, 0);   // 34 zones par difficulté
 const WORLD_MAX = D2 ? ACT_SIZES.length * D2_DIFFS.length : Infinity;
 const WORLD_WORD = D2 ? 'Acte' : 'Monde';
 /* Taille, premier et dernier niveau d'un monde (ou d'un acte), monde d'un niveau. */
@@ -892,7 +894,6 @@ const worldLabel = w => D2 ? `Acte ${roman((w - 1) % 5 + 1)}${w > 5 ? ' · ' + D
 const wavesFor = n => {
   if (!D2) return 10 + Math.round((n - 1) * 50 / 49);
   const base = (n - 1) % D2_CYCLE + 1, diff = Math.floor((n - 1) / D2_CYCLE), w = worldOf(n), idx = n - worldFirst(w) + 1;
-  if (idx === 1) return 6 + diff * 2;               // la ville : courte, pour l'histoire et la nouvelle recrue
   return 10 + Math.round((base - 1) * 0.55) + diff * 5 + (idx === worldSize(w) ? 3 : 0);
 };
 /* Multiplicateur de PV d'une vague w (indépendant du niveau). */
@@ -982,7 +983,7 @@ const D2_TOWERS = [
         { lv: 18, name: 'Météore', fx: { splash: 20, dmg: 1.2 } }, { lv: 18, name: 'Enchanter', fx: { buff: 0.1 } },
         { lv: 24, name: 'Hydre', fx: { multi: 2 } }, { lv: 30, name: 'Maîtrise du feu', fx: { mastery: true, dmg: 1.3 } }] }
     ] },
-  { id: 'paladin', unlock: 5, name: 'Paladin', role: 'Auras, marteaux', kind: 'bullet', elem: 'magie', cost: 110, range: 120, rate: 0.9, dmg: 18, speed: 600, color: '#ffd36b',
+  { id: 'paladin', unlock: 4, name: 'Paladin', role: 'Auras, marteaux', kind: 'bullet', elem: 'magie', cost: 110, range: 120, rate: 0.9, dmg: 18, speed: 600, color: '#ffd36b',
     desc: 'Champion de la Lumière : marteaux bénis, auras qui brûlent les démons ou qui renforcent les autres tours.',
     specs: [
       { name: 'Aptitudes de combat', short: 'Combat', kind: 'rail', elem: 'physique', base: { dmg: 28, rate: 0.85, range: 96 }, skills: [
@@ -1003,7 +1004,7 @@ const D2_TOWERS = [
         { lv: 18, name: 'Vigueur', fx: { gbuff: 0.06 } }, { lv: 24, name: 'Méditation', fx: { rbuff: 0.06 } }, { lv: 24, name: 'Rédemption', fx: { bounty: 0.15 } },
         { lv: 30, name: 'Salut', fx: { buff: 0.15, rbuff: 0.05 } }] }
     ] },
-  { id: 'necro', unlock: 7, name: 'Nécromancien', role: 'Invocations, os, malédictions', kind: 'bullet', elem: 'magie', cost: 120, range: 135, rate: 0.9, dmg: 15, speed: 540, color: '#7ee0a0',
+  { id: 'necro', unlock: 6, name: 'Nécromancien', role: 'Invocations, os, malédictions', kind: 'bullet', elem: 'magie', cost: 120, range: 135, rate: 0.9, dmg: 15, speed: 540, color: '#7ee0a0',
     desc: 'Maître de la mort : une armée de squelettes qui bloque le chemin, des lances d’os ou des malédictions.',
     specs: [
       { name: 'Invocations', short: 'Invocations', kind: 'bullet', elem: 'magie', base: { dmg: 10, summon: { key: 'skel', n: 2, hp: 5, dmg: 0.6, look: 'skel' } }, skills: [
@@ -1026,7 +1027,7 @@ const D2_TOWERS = [
         { lv: 18, name: 'Confusion', fx: { slowAura: 0.75 } }, { lv: 18, name: 'Balance de vie', fx: { heal: 1 } },
         { lv: 24, name: 'Attraction', fx: { range: 1.15, curse: 0.07 } }, { lv: 30, name: 'Moindre résistance', fx: { lowRes: true } }] }
     ] },
-  { id: 'assassin', unlock: 10, name: 'Assassin', role: 'Arts martiaux, pièges', kind: 'rail', elem: 'physique', cost: 130, range: 100, rate: 0.7, dmg: 30, color: '#ff6b8a',
+  { id: 'assassin', unlock: 9, name: 'Assassin', role: 'Arts martiaux, pièges', kind: 'rail', elem: 'physique', cost: 130, range: 100, rate: 0.7, dmg: 30, color: '#ff6b8a',
     desc: 'Tueuse de mages : griffes en mêlée, disciplines de l’ombre ou sentinelles posées sur le chemin.',
     specs: [
       { name: 'Arts martiaux', short: 'Arts martiaux', kind: 'rail', elem: 'physique', base: {}, skills: [
@@ -1049,7 +1050,7 @@ const D2_TOWERS = [
         { lv: 24, name: 'Sillage d’enfer', fx: { splash: 20, dmg: 1.15 } }, { lv: 24, name: 'Sentinelle mortelle', fx: { corpse: 0.3 } },
         { lv: 30, name: 'Volée de lames', fx: { trapN: 1, rate: 0.85 } }] }
     ] },
-  { id: 'druide', unlock: 19, name: 'Druide', role: 'Métamorphose, nature, éléments', kind: 'bullet', elem: 'feu', cost: 140, range: 140, rate: 1.3, dmg: 30, speed: 420, splash: 30, color: '#8fd16a',
+  { id: 'druide', unlock: 17, name: 'Druide', role: 'Métamorphose, nature, éléments', kind: 'bullet', elem: 'feu', cost: 140, range: 140, rate: 1.3, dmg: 30, speed: 420, splash: 30, color: '#8fd16a',
     desc: 'Gardien des forêts de Scosglen : loup ou ours en mêlée, meute d’animaux, ou tempêtes de feu et de vent.',
     specs: [
       { name: 'Métamorphose', short: 'Métamorphose', kind: 'rail', elem: 'physique', base: { dmg: 36, range: 96, rate: 0.8, splash: 0 }, skills: [
@@ -1083,26 +1084,26 @@ const D2_ENEMIES = [
   { id: 'chaman', unlock: 5, acts: [1, 3], name: 'Chaman déchu', hp: 64, speed: 48, def: 0.05, reward: 13, lives: 1, r: 12, color: '#ff8a3d', shape: 'imp', cost: 3.2, imm: { feu: 1 }, heal: { r: 90, hps: 0.03 }, desc: 'Soigne les démons qui l’entourent. Immunisé au feu.' },
   { id: 'brute', unlock: 6, acts: [1, 5], name: 'Brute', hp: 210, speed: 30, def: 0.35, reward: 16, lives: 2, r: 17, color: '#b08a5a', shape: 'beast', cost: 4, desc: 'Masse de muscles à forte défense. Les dégâts élémentaires l’ignorent.' },
   { id: 'spectre', unlock: 7, acts: [1, 2, 5], name: 'Spectre', hp: 62, speed: 74, def: 0.2, reward: 10, lives: 1, r: 12, color: '#bcd0ff', shape: 'ghost', cost: 2.6, undead: true, phase: { every: 4, dur: 1.4 }, desc: 'Âme errante : intangible par moments. Seuls la zone, les ondes et les tirs magiques le touchent alors.' },
-  { id: 'momie', unlock: 11, acts: [2], name: 'Momie', hp: 140, speed: 40, def: 0.2, reward: 14, lives: 1, r: 14, color: '#d8c08a', shape: 'mummy', cost: 3.5, undead: true, regen: 0.02, imm: { poison: 1 }, desc: 'Se reconstitue en continu. Immunisée au poison.' },
-  { id: 'sauterelle', unlock: 12, acts: [2], name: 'Nuée de sauterelles', hp: 18, speed: 125, def: 0, reward: 3, lives: 1, r: 8, color: '#d8c060', shape: 'swarm', cost: 0.7, fly: true, desc: 'Essaim volant très rapide.' },
-  { id: 'ver', unlock: 13, acts: [2], name: 'Ver des sables', hp: 100, speed: 40, def: 0.1, reward: 9, lives: 1, r: 15, color: '#e0b878', shape: 'worm', cost: 3, split: { id: 'larve', n: 4 }, desc: 'Libère des larves en mourant.' },
+  { id: 'momie', unlock: 10, acts: [2], name: 'Momie', hp: 140, speed: 40, def: 0.2, reward: 14, lives: 1, r: 14, color: '#d8c08a', shape: 'mummy', cost: 3.5, undead: true, regen: 0.02, imm: { poison: 1 }, desc: 'Se reconstitue en continu. Immunisée au poison.' },
+  { id: 'sauterelle', unlock: 11, acts: [2], name: 'Nuée de sauterelles', hp: 18, speed: 125, def: 0, reward: 3, lives: 1, r: 8, color: '#d8c060', shape: 'swarm', cost: 0.7, fly: true, desc: 'Essaim volant très rapide.' },
+  { id: 'ver', unlock: 12, acts: [2], name: 'Ver des sables', hp: 100, speed: 40, def: 0.1, reward: 9, lives: 1, r: 15, color: '#e0b878', shape: 'worm', cost: 3, split: { id: 'larve', n: 4 }, desc: 'Libère des larves en mourant.' },
   { id: 'larve', unlock: null, acts: [], name: 'Larve', hp: 14, speed: 95, def: 0, reward: 2, lives: 1, r: 6, color: '#f0d49a', shape: 'circle', cost: 0, desc: 'Libérée par un Ver des sables.' },
-  { id: 'scarabee', unlock: 15, acts: [2, 3], name: 'Scarabée électrique', hp: 96, speed: 50, def: 0.3, shield: 50, reward: 12, lives: 1, r: 13, color: '#5aa8e0', shape: 'beetle', cost: 3, imm: { foudre: 1 }, desc: 'Carapace qui absorbe les premiers coups. Immunisé à la foudre.' },
-  { id: 'ecorcheur', unlock: 20, acts: [3], name: 'Écorcheur', hp: 40, speed: 92, def: 0.05, reward: 5, lives: 1, r: 9, color: '#c95ab0', shape: 'imp', cost: 1, desc: 'Petit démon de la jungle, rapide et nombreux.' },
-  { id: 'araignee', unlock: 21, acts: [3], name: 'Araignée géante', hp: 110, speed: 58, def: 0.15, reward: 12, lives: 1, r: 14, color: '#8a6ab8', shape: 'spider', cost: 3, imm: { poison: 1 }, desc: 'Immunisée au poison.' },
-  { id: 'zelote', unlock: 24, acts: [3], name: 'Zélote de Zakarum', hp: 90, speed: 52, def: 0.1, shield: 90, reward: 14, lives: 1, r: 13, color: '#f0d090', shape: 'priest', cost: 3.5, desc: 'Fanatique protégé par une barrière de foi.' },
-  { id: 'chevalier', unlock: 29, acts: [4], name: 'Chevalier de la Mort', hp: 230, speed: 42, def: 0.4, reward: 18, lives: 2, r: 16, color: '#8a9ab0', shape: 'knight', cost: 4.5, undead: true, imm: { physique: 1 }, desc: 'Armure maudite : immunisé aux dégâts physiques.' },
-  { id: 'chauvefeu', unlock: 29, acts: [4], name: 'Chauve-souris de feu', hp: 40, speed: 115, def: 0, reward: 6, lives: 1, r: 10, color: '#ff6a2a', shape: 'bat', cost: 1, fly: true, imm: { feu: 1 }, desc: 'Volante et immunisée au feu.' },
-  { id: 'seigneur', unlock: 30, acts: [4, 5], name: 'Seigneur des fosses', hp: 300, speed: 34, def: 0.3, reward: 22, lives: 3, r: 19, color: '#c0302a', shape: 'demon', cost: 6, imm: { feu: 1 }, desc: 'Grand démon des Enfers. Immunisé au feu.' },
-  { id: 'harpie', unlock: 32, acts: [5], name: 'Tentatrice', hp: 70, speed: 96, def: 0.1, reward: 9, lives: 1, r: 11, color: '#ff7ab0', shape: 'bat', cost: 2, fly: true, desc: 'Démone ailée qui survole les défenses.' },
-  { id: 'abominable', unlock: 33, acts: [5], name: 'Abominable', hp: 300, speed: 32, def: 0.3, reward: 20, lives: 2, r: 18, color: '#cfeaff', shape: 'beast', cost: 5, immuneSlow: true, imm: { froid: 1 }, desc: 'Bête des glaces : insensible aux ralentissements, immunisée au froid.' },
-  { id: 'sbire', unlock: 35, acts: [5], name: 'Sbire de la destruction', hp: 260, speed: 40, def: 0.35, reward: 18, lives: 2, r: 16, color: '#9a7a5a', shape: 'demon', cost: 4.5, desc: 'Soldat de l’armée de Baal.' },
+  { id: 'scarabee', unlock: 14, acts: [2, 3], name: 'Scarabée électrique', hp: 96, speed: 50, def: 0.3, shield: 50, reward: 12, lives: 1, r: 13, color: '#5aa8e0', shape: 'beetle', cost: 3, imm: { foudre: 1 }, desc: 'Carapace qui absorbe les premiers coups. Immunisé à la foudre.' },
+  { id: 'ecorcheur', unlock: 18, acts: [3], name: 'Écorcheur', hp: 40, speed: 92, def: 0.05, reward: 5, lives: 1, r: 9, color: '#c95ab0', shape: 'imp', cost: 1, desc: 'Petit démon de la jungle, rapide et nombreux.' },
+  { id: 'araignee', unlock: 19, acts: [3], name: 'Araignée géante', hp: 110, speed: 58, def: 0.15, reward: 12, lives: 1, r: 14, color: '#8a6ab8', shape: 'spider', cost: 3, imm: { poison: 1 }, desc: 'Immunisée au poison.' },
+  { id: 'zelote', unlock: 22, acts: [3], name: 'Zélote de Zakarum', hp: 90, speed: 52, def: 0.1, shield: 90, reward: 14, lives: 1, r: 13, color: '#f0d090', shape: 'priest', cost: 3.5, desc: 'Fanatique protégé par une barrière de foi.' },
+  { id: 'chevalier', unlock: 25, acts: [4], name: 'Chevalier de la Mort', hp: 230, speed: 42, def: 0.4, reward: 18, lives: 2, r: 16, color: '#8a9ab0', shape: 'knight', cost: 4.5, undead: true, imm: { physique: 1 }, desc: 'Armure maudite : immunisé aux dégâts physiques.' },
+  { id: 'chauvefeu', unlock: 25, acts: [4], name: 'Chauve-souris de feu', hp: 40, speed: 115, def: 0, reward: 6, lives: 1, r: 10, color: '#ff6a2a', shape: 'bat', cost: 1, fly: true, imm: { feu: 1 }, desc: 'Volante et immunisée au feu.' },
+  { id: 'seigneur', unlock: 26, acts: [4, 5], name: 'Seigneur des fosses', hp: 300, speed: 34, def: 0.3, reward: 22, lives: 3, r: 19, color: '#c0302a', shape: 'demon', cost: 6, imm: { feu: 1 }, desc: 'Grand démon des Enfers. Immunisé au feu.' },
+  { id: 'harpie', unlock: 28, acts: [5], name: 'Tentatrice', hp: 70, speed: 96, def: 0.1, reward: 9, lives: 1, r: 11, color: '#ff7ab0', shape: 'bat', cost: 2, fly: true, desc: 'Démone ailée qui survole les défenses.' },
+  { id: 'abominable', unlock: 29, acts: [5], name: 'Abominable', hp: 300, speed: 32, def: 0.3, reward: 20, lives: 2, r: 18, color: '#cfeaff', shape: 'beast', cost: 5, immuneSlow: true, imm: { froid: 1 }, desc: 'Bête des glaces : insensible aux ralentissements, immunisée au froid.' },
+  { id: 'sbire', unlock: 31, acts: [5], name: 'Sbire de la destruction', hp: 260, speed: 40, def: 0.35, reward: 18, lives: 2, r: 16, color: '#9a7a5a', shape: 'demon', cost: 4.5, desc: 'Soldat de l’armée de Baal.' },
   // ---- Boss d'acte (formes originales de grands démons, couleurs propres à chacun) ----
-  { id: 'andarielle', unlock: 9, acts: [], name: 'Andarielle', hp: 1500, speed: 24, def: 0.3, reward: 160, lives: 8, r: 28, color: '#d0509a', shape: 'archdemon', cost: 40, immuneSlow: true, boss: true, imm: { poison: 1 }, spawn: { id: 'squelette', every: 5, n: 2 }, desc: 'Vierge de l’Angoisse. Immunisée au poison, elle relève des squelettes.' },
-  { id: 'duriel', unlock: 18, acts: [], name: 'Duriel', hp: 2400, speed: 30, def: 0.45, reward: 220, lives: 10, r: 30, color: '#e0b060', shape: 'archdemon', cost: 50, immuneSlow: true, boss: true, regen: 0.004, desc: 'Seigneur de la Douleur. Énorme défense, insensible aux ralentissements.' },
-  { id: 'mephisto', unlock: 27, acts: [], name: 'Méphisto', hp: 2800, speed: 26, def: 0.3, reward: 260, lives: 10, r: 30, color: '#5a80e0', shape: 'archdemon', cost: 60, immuneSlow: true, boss: true, imm: { foudre: 1 }, spawn: { id: 'zelote', every: 6, n: 2 }, desc: 'Seigneur de la Haine. Immunisé à la foudre, il appelle ses zélotes.' },
-  { id: 'diablo', unlock: 30, acts: [], name: 'Diablo', hp: 3800, speed: 26, def: 0.4, reward: 320, lives: 12, r: 32, color: '#e0402a', shape: 'archdemon', cost: 70, immuneSlow: true, boss: true, imm: { feu: 1 }, spawn: { id: 'seigneur', every: 9, n: 1 }, desc: 'Seigneur de la Terreur. Immunisé au feu.' },
-  { id: 'baal', unlock: 39, acts: [], name: 'Baal', hp: 4600, speed: 26, def: 0.4, reward: 380, lives: 14, r: 32, color: '#9a6ae0', shape: 'archdemon', cost: 80, immuneSlow: true, boss: true, imm: { froid: 1 }, spawn: { id: 'sbire', every: 7, n: 2 }, desc: 'Seigneur de la Destruction. Immunisé au froid, il lève l’armée des Enfers.' },
+  { id: 'andarielle', unlock: 8, acts: [], name: 'Andarielle', hp: 1500, speed: 24, def: 0.3, reward: 160, lives: 8, r: 28, color: '#d0509a', shape: 'archdemon', cost: 40, immuneSlow: true, boss: true, imm: { poison: 1 }, spawn: { id: 'squelette', every: 5, n: 2 }, desc: 'Vierge de l’Angoisse. Immunisée au poison, elle relève des squelettes.' },
+  { id: 'duriel', unlock: 16, acts: [], name: 'Duriel', hp: 2400, speed: 30, def: 0.45, reward: 220, lives: 10, r: 30, color: '#e0b060', shape: 'archdemon', cost: 50, immuneSlow: true, boss: true, regen: 0.004, desc: 'Seigneur de la Douleur. Énorme défense, insensible aux ralentissements.' },
+  { id: 'mephisto', unlock: 24, acts: [], name: 'Méphisto', hp: 2800, speed: 26, def: 0.3, reward: 260, lives: 10, r: 30, color: '#5a80e0', shape: 'archdemon', cost: 60, immuneSlow: true, boss: true, imm: { foudre: 1 }, spawn: { id: 'zelote', every: 6, n: 2 }, desc: 'Seigneur de la Haine. Immunisé à la foudre, il appelle ses zélotes.' },
+  { id: 'diablo', unlock: 26, acts: [], name: 'Diablo', hp: 3800, speed: 26, def: 0.4, reward: 320, lives: 12, r: 32, color: '#e0402a', shape: 'archdemon', cost: 70, immuneSlow: true, boss: true, imm: { feu: 1 }, spawn: { id: 'seigneur', every: 9, n: 1 }, desc: 'Seigneur de la Terreur. Immunisé au feu.' },
+  { id: 'baal', unlock: 34, acts: [], name: 'Baal', hp: 4600, speed: 26, def: 0.4, reward: 380, lives: 14, r: 32, color: '#9a6ae0', shape: 'archdemon', cost: 80, immuneSlow: true, boss: true, imm: { froid: 1 }, spawn: { id: 'sbire', every: 7, n: 2 }, desc: 'Seigneur de la Destruction. Immunisé au froid, il lève l’armée des Enfers.' },
   // ---- Monstres uniques des sceaux de Diablo et des vagues de Baal ----
   { id: 'vizir', unlock: null, acts: [], name: 'Grand Vizir du Chaos', hp: 700, speed: 58, def: 0.2, reward: 70, lives: 4, r: 18, color: '#ff9a3a', shape: 'demon', cost: 0, unique: true, imm: { feu: 1 }, phase: { every: 5, dur: 1 }, desc: 'Gardien du premier sceau. Disparaît par moments.' },
   { id: 'seis', unlock: null, acts: [], name: 'Seigneur de Seis', hp: 950, speed: 40, def: 0.35, reward: 80, lives: 4, r: 19, color: '#b0b8d0', shape: 'knight', cost: 0, unique: true, undead: true, spawn: { id: 'chevalier', every: 6, n: 1 }, desc: 'Gardien du deuxième sceau. Appelle des chevaliers.' },
@@ -1187,7 +1188,8 @@ const D2_ACTS = [
     ['Chemin des Anciens', 'summit', ['tyrael', 'Le sommet d’Arreat. Les Anciens jugent ceux qui veulent passer.']],
     ['Donjon de la Pierre-Monde, niveau 2', 'worldstone', ['baal', 'La Pierre-Monde sera à moi. Mes lieutenants s’occuperont de toi.']]] }
 ];
-const D2_ACT_THEME = D2_ACTS.map(a => Object.assign({}, D2_THEMES[a.zones[1][1]], { name: a.name, type: a.type, arrive: null }));
+for (const a of D2_ACTS) a.town = a.zones.shift();      // la ville n'est pas un niveau : c'est l'écran de l'acte
+const D2_ACT_THEME = D2_ACTS.map(a => Object.assign({}, D2_THEMES[a.zones[0][1]], { name: a.name, type: a.type, arrive: null, town: a.town[0] }));
 
 /* Monstres uniques : vagues des sceaux (Acte IV) et lieutenants de Baal (Acte V). Part de la longueur du niveau. */
 const D2_UNIQUES = {
@@ -1199,7 +1201,7 @@ const D2_UNIQUES = {
 function d2Level(n) {
   const world = worldOf(n), first = worldFirst(world), idx = n - first + 1, size = worldSize(world);
   const act = D2_ACTS[(world - 1) % 5], z = act.zones[idx - 1], diff = Math.floor((n - 1) / D2_CYCLE), base = (n - 1) % D2_CYCLE + 1;
-  const boss = idx === size, town = idx === 1;
+  const boss = idx === size, town = false;
   const h10 = 1 + CONFIG.lvlHpWorld1 * 9;
   const hp = n <= 10 ? 1 + CONFIG.lvlHpWorld1 * (n - 1) : h10 * Math.pow(CONFIG.lvlHpGrowth, n - 10);
   const econ = n <= 10 ? 1 : Math.pow(hp / h10, CONFIG.econExp);
@@ -1213,7 +1215,7 @@ function d2Level(n) {
     hpScale: hp,
     econ,
     waves: wavesFor(n),
-    gold: Math.round((CONFIG.startGold + CONFIG.startGoldStep * Math.min(n - 1, 9)) * econ) + (town ? 60 : 0),
+    gold: Math.round((CONFIG.startGold + CONFIG.startGoldStep * Math.min(n - 1, 9)) * econ),
     freePads: n <= 10 ? CONFIG.freePads1 - Math.floor((n - 1) / 3) : Math.max(4, CONFIG.freePads1 - 2 - Math.floor((world - 2) / 2)),
     elite: n <= 10 ? 0 : Math.min(0.06 * (world - 1), 0.5),
     speedBonus: n <= 10 ? 1 : Math.min(1 + 0.006 * (n - 10), 1.3),
@@ -4087,6 +4089,224 @@ const HeroArt = {
   }
 };
 
+/* =====================================================================
+   DÉCOR DES VILLES (mode Diablo II) — composé à partir de planches importées par le joueur
+   (sol : losanges 160×80 sur fond magenta ; objets : pièces de murs sur fond magenta, rangées séparées de blanc).
+   La scène composée reste sur l'appareil (IndexedDB) : rien n'est envoyé ni publié.
+   ===================================================================== */
+const TownArt = {
+  scenes: {}, urls: {},
+  async load() {
+    if (!D2 || typeof indexedDB === 'undefined') return;
+    for (let a = 1; a <= 5; a++) {
+      try { const rec = await HeroArt.getRec('town:' + a); if (rec && rec.scene) { this.scenes[a] = rec; this.urls[a] = URL.createObjectURL(rec.scene); } } catch (e) { /* rien */ }
+    }
+  },
+  async remove(a) {
+    delete this.scenes[a]; if (this.urls[a]) URL.revokeObjectURL(this.urls[a]); delete this.urls[a];
+    try { const db = await HeroArt.db(); await new Promise(res => { const t = db.transaction('sheets', 'readwrite'); t.objectStore('sheets').delete('town:' + a); t.oncomplete = res; t.onerror = res; }); } catch (e) { /* rien */ }
+  },
+  /* Lit une image en pixels, avec masque des pixels utiles (ni magenta ni blanc). */
+  async pixels(file) {
+    const img = await createImageBitmap(file), W = img.width, H = img.height, cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, W, H).data, N = W * H, mask = new Uint8Array(N), white = new Uint8Array(N);
+    for (let p = 0, i = 0; p < N; p++, i += 4) {
+      const r = d[i], gg = d[i + 1], b = d[i + 2];
+      if (d[i + 3] < 20 || (r > 200 && gg < 80 && b > 200)) continue;
+      if (r > 238 && gg > 238 && b > 238) { white[p] = 1; continue; }
+      mask[p] = 1;
+    }
+    return { img, W, H, d, mask, white };
+  },
+  /* Copie d'un rectangle avec le magenta (et le blanc) rendus transparents. */
+  cut(P, x, y, w, h, scale) {
+    const src = document.createElement('canvas'); src.width = w; src.height = h;
+    const g = src.getContext('2d'); const id = g.createImageData(w, h), o = id.data;
+    for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) {
+      const p = (y + yy) * P.W + x + xx, i = p * 4, j = (yy * w + xx) * 4;
+      if (!P.mask[p]) continue;
+      o[j] = P.d[i]; o[j + 1] = P.d[i + 1]; o[j + 2] = P.d[i + 2]; o[j + 3] = 255;
+    }
+    g.putImageData(id, 0, 0);
+    if (!scale || scale === 1) return src;
+    const out = document.createElement('canvas'); out.width = Math.max(1, Math.round(w * scale)); out.height = Math.max(1, Math.round(h * scale));
+    const og = out.getContext('2d'); og.imageSmoothingQuality = 'high'; og.drawImage(src, 0, 0, out.width, out.height);
+    return out;
+  },
+  /* Sol : losanges de 160×80 rangés en grille ; classés en herbe ou en terre selon leur couleur. */
+  floorTiles(P) {
+    const tiles = [];
+    for (let r = 0; r + 80 <= P.H + 1; r += 80) for (let c = 0; c + 160 <= P.W; c += 160) {
+      let full = true, R = 0, G = 0, B = 0, n = 0;
+      for (const [dx, dy] of [[80, 40], [40, 40], [120, 40], [80, 20], [80, 60]]) { const p = Math.min(P.H - 1, r + dy) * P.W + c + dx; if (!P.mask[p]) full = false; }
+      if (!full) continue;
+      for (let yy = 25; yy < 55; yy += 3) for (let xx = 50; xx < 110; xx += 3) { const i = (Math.min(P.H - 1, r + yy) * P.W + c + xx) * 4; R += P.d[i]; G += P.d[i + 1]; B += P.d[i + 2]; n++; }
+      R /= n; G /= n; B /= n;
+      const sat = Math.max(R, G, B) - Math.min(R, G, B);
+      if (R + G + B > 165) continue;                   // morceaux de toile de tente (beaucoup plus clairs que le sol) : ignorés
+      tiles.push({ x: c, y: r, green: G - (R + B) / 2, lum: R + G + B });
+    }
+    tiles.sort((a, b) => b.green - a.green);
+    const k = Math.max(1, Math.floor(tiles.length * 0.4));
+    return { grass: tiles.slice(0, k), dirt: tiles.slice(k) };
+  },
+  /* Objets : bandes séparées par des lignes blanches, puis pièces (composantes connexes). */
+  objects(P) {
+    const W = P.W, H = P.H, bands = [];
+    let st = -1;
+    for (let y = 0; y < H; y++) {
+      let w = 0; for (let x = 0; x < W; x += 4) w += P.white[y * W + x];
+      const sep = w > (W / 4) * 0.6;
+      if (!sep && st < 0) st = y; if (sep && st >= 0) { if (y - st > 40) bands.push([st, y]); st = -1; }
+    }
+    if (st >= 0 && H - st > 40) bands.push([st, H]);
+    const S = 3, GW = Math.ceil(W / S), GH = Math.ceil(H / S), cell = new Uint8Array(GW * GH);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (P.mask[y * W + x]) cell[((y / S) | 0) * GW + ((x / S) | 0)] = 1;
+    // Dilatation d'une cellule pour réunir les feuillages
+    const dil = new Uint8Array(GW * GH);
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (cell[y * GW + x]) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const X = x + dx, Y = y + dy; if (X >= 0 && Y >= 0 && X < GW && Y < GH) dil[Y * GW + X] = 1; }
+    const lab = new Int32Array(GW * GH).fill(-1), pieces = [];
+    for (let i = 0; i < dil.length; i++) {
+      if (!dil[i] || lab[i] >= 0) continue;
+      const stack = [i], b = { x0: 1e9, y0: 1e9, x1: -1, y1: -1, n: 0 }; lab[i] = pieces.length;
+      while (stack.length) {
+        const j = stack.pop(), x = j % GW, y = (j / GW) | 0;
+        if (cell[j]) { b.n++; if (x < b.x0) b.x0 = x; if (y < b.y0) b.y0 = y; if (x > b.x1) b.x1 = x; if (y > b.y1) b.y1 = y; }
+        if (x > 0 && dil[j - 1] && lab[j - 1] < 0) { lab[j - 1] = lab[i]; stack.push(j - 1); }
+        if (x < GW - 1 && dil[j + 1] && lab[j + 1] < 0) { lab[j + 1] = lab[i]; stack.push(j + 1); }
+        if (y > 0 && dil[j - GW] && lab[j - GW] < 0) { lab[j - GW] = lab[i]; stack.push(j - GW); }
+        if (y < GH - 1 && dil[j + GW] && lab[j + GW] < 0) { lab[j + GW] = lab[i]; stack.push(j + GW); }
+      }
+      pieces.push(b);
+    }
+    const out = [];
+    for (const b of pieces) {
+      if (b.n < 40) continue;
+      const x = b.x0 * S, y = b.y0 * S, w = Math.min(W - x, (b.x1 - b.x0 + 1) * S), h = Math.min(H - y, (b.y1 - b.y0 + 1) * S);
+      if (w < 20 || h < 16) continue;
+      const band = bands.findIndex(([a, z]) => y + h / 2 >= a && y + h / 2 < z);
+      // Bord coupé net (moitié d'objet) : colonne de bord très remplie
+      const edge = xx => { let n = 0; for (let yy = y; yy < y + h; yy++) n += P.mask[yy * W + xx]; return n / h; };
+      const lx = Math.min(W - 1, x + 1), rx = Math.max(0, x + w - 2);
+      out.push({ x, y, w, h, band, n: b.n, cutL: edge(lx) > 0.28, cutR: edge(rx) > 0.28 });
+    }
+    // Réunit les moitiés : un bord droit coupé avec le bord gauche coupé le plus ressemblant de la même bande
+    const prof = (o, xx) => { const a = []; for (let yy = o.y; yy < o.y + o.h; yy++) a.push(yy); return a.filter(yy => P.mask[yy * W + xx]); };
+    const used = new Set(), objs = [];
+    for (const A of out) {
+      if (used.has(A) || !A.cutR || A.band === 0) continue;
+      const ra = new Set(prof(A, Math.max(0, A.x + A.w - 2)));
+      let best = null, bs = 0;
+      for (const B of out) {
+        if (B === A || used.has(B) || !B.cutL || B.band !== A.band) continue;
+        const lb = prof(B, Math.min(W - 1, B.x + 1));
+        let inter = 0; for (const yy of lb) if (ra.has(yy)) inter++;
+        const sc = inter / Math.max(1, Math.max(ra.size, lb.length));
+        if (sc > bs) { bs = sc; best = B; }
+      }
+      if (best && bs > 0.55) { used.add(A); used.add(best); objs.push({ parts: [A, best], band: A.band, w: A.w + best.w, top: Math.min(A.y, best.y), bottom: Math.max(A.y + A.h, best.y + best.h) }); }
+    }
+    for (const A of out) if (!used.has(A) && (A.band === 0 || (!A.cutL && !A.cutR))) objs.push({ parts: [A], band: A.band, w: A.w, top: A.y, bottom: A.y + A.h });
+    return objs;
+  },
+  /* Compose la ville : sol, palissade (avec une porte), objets du camp, arbres autour. */
+  async build(act, floorFile, objFile) {
+    const F = await this.pixels(floorFile), O = await this.pixels(objFile);
+    const FT = this.floorTiles(F), objs = this.objects(O);
+    if (!FT.grass.length && !FT.dirt.length) throw new Error('aucun losange de sol reconnu');
+    const K = 0.75, TW = 160 * K, TH = 80 * K, CW = 2000, CH = 1200, rng = mulberry32(act * 7919 + 3);
+    const cv = document.createElement('canvas'); cv.width = CW; cv.height = CH;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#0d0b09'; g.fillRect(0, 0, CW, CH);
+    const tileCv = t => this.cut(F, t.x, t.y, 160, 80, K);
+    const grass = FT.grass.slice(0, 40).map(tileCv), dirt = (FT.dirt.length ? FT.dirt : FT.grass).slice(0, 40).map(tileCv);
+    // Repère isométrique : centre du camp à gauche de l'écran, chemin vers la droite
+    const OX = 620, OY = 560, C = 4;                     // camp de 2C × 2C cases autour de (0, 0)
+    const sx = (i, j) => OX + (i - j) * TW / 2, sy = (i, j) => OY + (i + j) * TH / 2;
+    const inCamp = (i, j) => i >= -C && i < C && j >= -C && j < C;
+    const road = (i, j) => (j >= -1 && j <= 0 && i >= 0) || (i >= -1 && i <= 0 && j >= -1 && j <= 1 && inCamp(i, j));
+    for (let s = -40; s <= 40; s++) for (let i = -40; i <= 40; i++) {
+      const j = s - i, x = sx(i, j), y = sy(i, j);
+      if (x < -TW || x > CW + TW || y < -TH || y > CH + TH) continue;
+      const pick = inCamp(i, j) || road(i, j) ? dirt : grass, t = pick[Math.floor(rng() * pick.length)];
+      g.drawImage(t, x - TW / 2, y - TH / 2);
+    }
+    // Objets à placer, triés par profondeur (bas de l'objet)
+    const items = [];
+    const piece = o => {
+      const c = document.createElement('canvas'), w = Math.round(o.w * K), h = Math.round((o.bottom - o.top) * K);
+      c.width = Math.max(1, w); c.height = Math.max(1, h);
+      const cg = c.getContext('2d'); let ox = 0;
+      for (const p of o.parts) { cg.drawImage(this.cut(O, p.x, p.y, p.w, p.h, K), Math.round(ox * K), Math.round((p.y - o.top) * K)); ox += p.w; }
+      return c;
+    };
+    const fences = objs.filter(o => o.band === 0 && o.w < 200 && o.bottom - o.top > 120);
+    // Orientation d'une pièce de palissade : son pied descend vers la gauche (/) ou vers la droite (\)
+    const slope = o => { const p = o.parts[0], foot = xx => { for (let yy = p.y + p.h - 1; yy > p.y; yy--) if (O.mask[yy * O.W + xx]) return yy; return p.y; }; return foot(p.x + Math.floor(p.w * 0.2)) - foot(p.x + Math.floor(p.w * 0.8)); };
+    const fL = fences.filter(o => slope(o) > 6).map(piece), fR = fences.filter(o => slope(o) < -6).map(piece);
+    const props = objs.filter(o => (o.band === 1 || o.band === 2) && o.w > 50 && o.bottom - o.top > 50).map(piece);
+    const trees = objs.filter(o => o.band >= 3 && o.bottom - o.top > 140).map(piece);
+    const bushes = objs.filter(o => o.band >= 3 && o.bottom - o.top <= 140 && o.w > 40).map(piece);
+    const put = (c, x, y) => items.push({ c, x: x - c.width / 2, y: y - c.height, z: y });
+    // Palissade : bords du camp, porte sur le bord droit (vers le chemin)
+    if (fL.length || fR.length) for (let k = -C; k < C; k++) {
+      const edges = [[k, -C, 'i'], [k, C, 'i'], [-C, k, 'j'], [C, k, 'j']];
+      for (const [i, j, axis] of edges) {
+        if (axis === 'j' && i === C && (j === -1 || j === 0)) continue;     // la porte
+        const list = axis === 'i' ? (fR.length ? fR : fL) : (fL.length ? fL : fR), c = list[Math.floor(rng() * list.length)];
+        // milieu du bord du losange de la case (i, j)
+        const x = axis === 'i' ? (sx(i, j) + sx(i + 1, j)) / 2 : (sx(i, j) + sx(i, j + 1)) / 2;
+        const y = axis === 'i' ? (sy(i, j) + sy(i + 1, j)) / 2 : (sy(i, j) + sy(i, j + 1)) / 2;
+        put(c, x, y + TH * 0.35);
+      }
+    }
+    // Objets du camp sur des cases libres, loin du chemin central
+    const free = [];
+    for (let i = -C + 1; i < C - 1; i++) for (let j = -C + 1; j < C - 1; j++) if (!road(i, j) && Math.abs(i) + Math.abs(j) > 1) free.push([i, j]);
+    shuffle(free, rng);
+    props.slice(0, Math.min(props.length, 14)).forEach((c, n) => { const f = free[n % free.length]; put(c, sx(f[0], f[1]), sy(f[0], f[1]) + TH / 2); });
+    // Arbres et buissons dehors, hors du chemin
+    const out = [];
+    for (let i = -14; i <= 14; i++) for (let j = -14; j <= 14; j++) {
+      if (inCamp(i, j) || Math.abs(i) <= C + 1 && Math.abs(j) <= C + 1 || (j >= -2 && j <= 1 && i >= 0)) continue;
+      const x = sx(i, j), y = sy(i, j); if (x < -60 || x > CW + 60 || y < 40 || y > CH + 200) continue;
+      out.push([x, y]);
+    }
+    shuffle(out, rng);
+    if (trees.length) out.slice(0, 26).forEach(([x, y]) => put(trees[Math.floor(rng() * trees.length)], x, y + TH / 2));
+    if (bushes.length) out.slice(26, 60).forEach(([x, y]) => put(bushes[Math.floor(rng() * bushes.length)], x, y + TH / 2));
+    items.sort((a, b) => a.z - b.z);
+    for (const it of items) g.drawImage(it.c, Math.round(it.x), Math.round(it.y));
+    // Vignette sombre, comme la lumière limitée de Diablo II
+    const vg = g.createRadialGradient(OX + 200, OY, 300, OX + 200, OY, 1300); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.65)');
+    g.fillStyle = vg; g.fillRect(0, 0, CW, CH);
+    const scene = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.88));
+    const rec = { scene, floor: floorFile.name, objects: objFile.name, stats: { grass: FT.grass.length, dirt: FT.dirt.length, fences: fL.length + fR.length, props: props.length, trees: trees.length, bushes: bushes.length } };
+    await HeroArt.put('town:' + act, rec);
+    if (this.urls[act]) URL.revokeObjectURL(this.urls[act]);
+    this.scenes[act] = rec; this.urls[act] = URL.createObjectURL(scene);
+    return rec;
+  },
+  /* Fenêtre d'import des deux planches de la ville de l'acte. */
+  dialog(act, done) {
+    const town = D2_ACTS[act - 1].town[0], rec = this.scenes[act];
+    Modal.open({ title: `Décor : ${town}`,
+      html: `<p class="hint">Choisis les deux planches de la ville (fond magenta). Le décor est composé sur cet appareil et n’est envoyé nulle part.</p>` +
+        `<label class="muted" style="font-size:.82rem">Sol de la ville<input type="file" id="tfFloor" accept="image/*"></label>` +
+        `<label class="muted" style="font-size:.82rem">Objets de la ville<input type="file" id="tfObj" accept="image/*"></label>` +
+        `<p class="hint" id="tfInfo">${rec ? `Décor actuel : ${esc(rec.floor)} + ${esc(rec.objects)} (${rec.stats.fences} palissades, ${rec.stats.props} objets, ${rec.stats.trees} arbres)` : 'Aucun décor importé pour l’instant.'}</p>`,
+      actions: [...(rec ? [{ label: 'Retirer', cls: 'danger', fn: async () => { await this.remove(act); done && done(); } }] : []), { label: 'Fermer' },
+        { label: 'Composer le décor', cls: 'primary', keep: true, fn: async () => {
+          const f = $('tfFloor').files[0], o = $('tfObj').files[0];
+          if (!f || !o) { $('tfInfo').textContent = 'Il faut les deux planches : le sol et les objets.'; return; }
+          $('tfInfo').textContent = 'Composition du décor… (quelques secondes)';
+          try { await this.build(act, f, o); Modal.close(); Toast2.show(`Décor prêt : ${town}`); done && done(); } catch (e) { $('tfInfo').textContent = 'Impossible de composer le décor : ' + (e.message || e); }
+        } }] });
+  }
+};
+
 const CrewView = {
   char: CREW_IDS[0], filter: 'all',
   render() {
@@ -4991,8 +5211,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '5.2';
+const APP_VERSION = '5.3';
 const CHANGELOG = [
+  { v: '5.3', date: '29.10.2026', items: ['Mode Diablo II : les villes ne sont plus des niveaux, elles deviennent l’écran de l’acte d’où l’on choisit sa zone (8, 8, 8, 2 et 8 zones jouables)', 'Décor de la ville en vue isométrique, composé à partir de tes planches de sol et d’objets (bouton « Décor de la ville » sur la carte)', 'Les sauvegardes du mode Diablo II sont renumérotées automatiquement'] },
   { v: '5.2', date: '28.10.2026', items: ['Planches de sprites : découpage plus solide (JPEG acceptés, blocs dans n’importe quel ordre)', 'Choix automatique des animations de repos, d’attaque et de sort, modifiable à la main avec des vignettes de chaque bloc', 'Avertissement quand une planche est en petite taille'] },
   { v: '5.1', date: '28.10.2026', items: ['Mode Diablo II : import d’une planche de sprites par héros (écran Héros), découpée automatiquement en animations et 16 directions', 'Le héros importé remplace l’emblème sur la carte, en 2D comme en 3D : repos, attaque à chaque tir, orientation vers la cible', 'La planche reste sur ton appareil : elle n’est jamais envoyée ni publiée'] },
   { v: '5.0', date: '28.10.2026', items: ['Nouveau mode « Sanctuaire · Diablo II » à choisir sur l’écran d’accueil, avec ses propres sauvegardes', '5 actes et 39 zones, du Camp des Rogues au Donjon de la Pierre-Monde, puis rejouables en Cauchemar et en Enfer', '7 classes : Amazone, Barbare, Sorcière, Paladin, Nécromancien, Assassin et Druide, chacune avec ses 3 arbres et leurs compétences débloquées aux niveaux 1, 6, 12, 18, 24 et 30', 'Types de dégâts et immunités, invocations qui bloquent le chemin, sentinelles posées sur la route, malédictions et auras', 'Andarielle, Duriel, Méphisto, Diablo et ses 3 gardiens de sceaux, Baal et ses 5 lieutenants', 'Décors, monstres et emblèmes dessinés exprès pour ce mode'] },
@@ -7747,12 +7968,31 @@ function enemyIcon(canvas, t, elite) {
 /* =====================================================================
    SAUVEGARDES (navigateur) — nombre illimité
    ===================================================================== */
+/* Mode Diablo II, v5.3 : les villes ne sont plus des niveaux (9-9-9-3-9 → 8-8-8-2-8). Renumérote une ancienne sauvegarde. */
+function d2OldToNew(n) {
+  const OLD = [9, 9, 9, 3, 9], cyc = 39, d = Math.floor((n - 1) / cyc); let b = (n - 1) % cyc + 1, a = 0;
+  while (b > OLD[a]) { b -= OLD[a]; a++; }
+  if (b === 1) return null;                         // c'était la ville
+  let first = 1; for (let i = 0; i < a; i++) first += ACT_SIZES[i];
+  return d * D2_CYCLE + first + b - 2;
+}
+function d2MigrateSlot(s) {
+  const remap = o => { const out = {}; for (const k in o || {}) { const m = d2OldToNew(+k); if (m) out[m] = o[k]; } return out; };
+  if (s.unlocked > 1 || Object.keys(s.stars || {}).length) {
+    s.stars = remap(s.stars); s.best = remap(s.best); s.challenges = remap(s.challenges);
+    if (s.story && s.story.beats) s.story.beats = remap(s.story.beats);
+    let u = s.unlocked || 1; while (u > 1 && u < 200 && !d2OldToNew(u)) u++; s.unlocked = Math.max(1, d2OldToNew(u) || 1);
+    s.run = null;
+  }
+  s.d2v = 2;
+}
 const Store = {
   key: D2 ? 'neonBastion.d2.saves.v1' : 'neonBastion.saves.v1',   // le mode Diablo II a ses propres sauvegardes
   ok: true,
   data: { slots: [] },
   migrate(s) {
     s.stars = s.stars || {}; s.best = s.best || {}; s.skills = s.skills || {};
+    if (D2 && s.d2v !== 2) d2MigrateSlot(s);
     s.unlocked = Math.max(1, Math.floor(s.unlocked || 1));
     if (s.run && s.run.v !== 2) s.run = null;
     metaMigrate(s);
@@ -7791,6 +8031,8 @@ const pointsAvailable = slot => totalStars(slot) + (slot.bonusPoints || 0) - poi
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const WORLD_NODES = [[90, 480], [235, 395], [170, 250], [320, 145], [470, 235], [560, 405], [705, 475], [830, 345], [720, 195], [885, 105]];
+/* Mode Diablo II : la ville occupe la gauche de la carte, les zones partent de sa porte vers la droite. */
+const D2_NODES = { 8: [[560, 390], [655, 470], [760, 430], [835, 330], [745, 245], [850, 160], [720, 105], [585, 165]], 2: [[620, 380], [830, 220]] };
 const worldNodes = n => n >= 6 ? WORLD_NODES.slice(0, n) : [[150, 430], [500, 250], [850, 140], [700, 450], [300, 120]].slice(0, n);
 
 const App = {
@@ -7827,6 +8069,7 @@ const App = {
     });
     if (D2) {
       HeroArt.load().then(() => { if (this.current === 'crew') CrewView.render(); });
+      TownArt.load().then(() => { if (this.current === 'map') this.renderMap(); });
       document.body.classList.add('d2');
       document.title = 'Sanctuaire · Neon Bastion';
       const hero = document.querySelector('#scrMenu .hero');
@@ -7963,18 +8206,21 @@ const App = {
     $('mapGems').textContent = fmtBig(s.gems);
     Meta.updateBadge();
     Gear.migrate(s); $('crewCount').textContent = String(s.gear.fresh); $('crewCount').hidden = !s.gear.fresh;
-    $('wNum').textContent = `${worldLabel(w)} · ${planetOf(w).type}`;
-    $('wName').textContent = info.name;
+    $('wNum').textContent = D2 ? `${worldLabel(w)} · ${info.name}` : `${worldLabel(w)} · ${planetOf(w).type}`;
+    $('wName').textContent = D2 ? planetOf(w).town : info.name;
     $('wName').style.color = info.color;
     let ws = 0; for (let i = 0; i < size; i++) ws += s.stars[first + i] || 0;
     $('wStars').textContent = `★ ${ws} / ${size * 3} · niveaux ${first} à ${first + size - 1}`;
     $('btnPrevWorld').disabled = w <= 1;
     $('btnNextWorld').disabled = first + size > s.unlocked || w >= WORLD_MAX;
-    const flip = w % 2 === 0;
-    const nodes = worldNodes(size), pos = i => { const [x, y] = nodes[i]; return [flip ? 1000 - x : x, y]; };
+    const flip = !D2 && w % 2 === 0;
+    if (D2) { const bt = $('btnTown'); bt.hidden = false; bt.textContent = TownArt.urls[(w - 1) % 5 + 1] ? 'Décor de la ville ✓' : 'Décor de la ville'; bt.onclick = () => TownArt.dialog((w - 1) % 5 + 1, () => this.renderMap()); }
+    const nodes = D2 ? D2_NODES[size] : worldNodes(size), pos = i => { const [x, y] = nodes[i]; return [flip ? 1000 - x : x, y]; };
     let html = `<defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` +
       `<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="${D2 ? 'rgba(216,166,74,.06)' : 'rgba(122,167,255,.07)'}"/></pattern></defs>` +
-      `<rect width="1000" height="600" fill="${D2 ? '#120d0a' : '#0a0e18'}"/><rect width="1000" height="600" fill="url(#grid)"/>`;
+      (D2 && TownArt.urls[(w - 1) % 5 + 1] ? `<image href="${TownArt.urls[(w - 1) % 5 + 1]}" x="0" y="0" width="1000" height="600" preserveAspectRatio="xMidYMid slice"/><rect width="1000" height="600" fill="rgba(0,0,0,.12)"/>` +
+        `<text x="310" y="560" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="26" fill="#e8d8b0" stroke="#000" stroke-width="3" paint-order="stroke">${esc(planetOf(w).town)}</text>`
+        : `<rect width="1000" height="600" fill="${D2 ? '#120d0a' : '#0a0e18'}"/><rect width="1000" height="600" fill="url(#grid)"/>`);
     for (let i = 0; i < size - 1; i++) {
       const [x1, y1] = pos(i), [x2, y2] = pos(i + 1), open = first + i + 1 <= s.unlocked;
       html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${open ? info.color : '#24314f'}" stroke-width="${open ? 4 : 3}" ${open ? 'filter="url(#glow)"' : 'stroke-dasharray="8 8"'} stroke-linecap="round"/>`;
@@ -8032,7 +8278,6 @@ const App = {
       (lv.boss && !D2 ? `<p class="hint">Vague finale : ${1 + Math.floor((lv.world - 1) / 3)} Colosse${lv.world > 3 ? 's' : ''}.</p>` : '') +
       (lv.boss && D2 ? `<p class="hint">Vague finale : <b style="color:${ENEMY_BY_ID[lv.bossId].color}">${esc(ENEMY_BY_ID[lv.bossId].name)}</b> (${esc(enemyAbilities(ENEMY_BY_ID[lv.bossId]).filter(x => x.startsWith('Immunisé')).join(' ') || 'aucune immunité')}).` +
         (D2_UNIQUES[lv.bossId] ? ` Monstres uniques en chemin : ${D2_UNIQUES[lv.bossId].map(([, id]) => esc(ENEMY_BY_ID[id].name)).join(', ')}.` : '') + '</p>' : '') +
-      (D2 && lv.town ? '<p class="hint">Ville : niveau court, idéal pour découvrir le nouveau héros.</p>' : '') +
       Meta.detailExtras(lv) +
       `<p class="hint">★ victoire · ★★ 50 % des vies conservées · ★★★ 90 % des vies conservées. Chaque nouvelle étoile = 1 point d’amélioration.</p>` +
       (run ? `<button class="btn primary" id="btnResume" type="button">Reprendre · vague ${run.wave + 1} / ${lv.waves}</button>` : '') +
