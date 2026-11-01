@@ -24,6 +24,11 @@
   --font-num:"JetBrains Mono",ui-monospace,Menlo,monospace;
   color-scheme:dark;
 }
+/* Téléphone : pas de zoom au double appui, pas de sélection ni de menu « Copier » sur les appuis longs (sauf dans les champs de saisie) */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{min-height:100%}
@@ -1251,6 +1256,14 @@ const MODE = (() => {
   try { return localStorage.getItem('nb-mode') === 'd2' ? 'd2' : 'neon'; } catch (e) { return 'neon'; }
 })();
 const D2 = MODE === 'd2';
+/* Pas de zoom ni de menu système pendant le jeu (le double appui est déjà bloqué par touch-action, sans perdre les appuis rapides). */
+(() => {
+  document.addEventListener('dblclick', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); }, { passive: false });
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
+  document.addEventListener('contextmenu', e => { if (!e.target.closest('input,textarea')) e.preventDefault(); });
+  document.addEventListener('selectstart', e => { if (!e.target.closest('input,textarea,[contenteditable]')) e.preventDefault(); });
+})();
+
 if (!D2) document.documentElement.classList.add('da');
 const ACT_SIZES = [8, 8, 8, 2, 8];                 // zones jouables de chaque acte (la ville de l'acte est l'écran de sélection)
 const D2_DIFFS = ['Normal', 'Cauchemar', 'Enfer']; // chaque difficulté rejoue les 5 actes
@@ -7523,8 +7536,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.0';
+const APP_VERSION = '7.0.1';
 const CHANGELOG = [
+  { v: '7.0.1', date: '01.11.2026', items: ['Téléphone : plus de zoom quand on touche deux fois vite, plus de sélection de texte ni de menu « Copier » sur un appui long'] },
   { v: '7.0', date: '01.11.2026', items: ['Nouvelle organisation des menus : barre du haut (profil, étoiles, points, gemmes) et barre d’onglets en bas (Boutique, Équipage, Campagne, Collection, Événements)', 'Écran Campagne : chaque monde est une île 3D flottante qui tourne au doigt, gros bouton Jouer, choix des niveaux, plongée vers l’île au lancement et envol d’une île à l’autre entre les mondes', 'L’équipage en figurines 3D : portraits dans toute l’interface, personnage animé sur son socle dans l’écran Équipage', 'Annonces du jour, connexion quotidienne sur 7 jours avec grand prix, page des nouveautés', 'Menus, boutique et mini-jeux redessinés en style jouet : panneaux bombés, gros boutons, bannières illustrées, personnages et décors plus soignés'] },
   { v: '6.3.1', date: '01.11.2026', items: ['Téléphone : le panneau d’informations ne s’écrase plus dans la console (boutons de fusion et fiche de tourelle de nouveau visibles)', 'Fusion : les tourelles de l’Arsenal gardent leurs effets (tirs multiples, vulnérabilité, cadence, réfraction, distance minimale) et les fusions entre auras ne donnent plus de valeurs invalides'] },
   { v: '6.3', date: '01.11.2026', items: ['Interface de bord : le panneau de droite devient la console tactique de l’Arche (métal vissé, écrans enfoncés, diodes d’état, modules numérotés)', 'Instruments du haut : vies, or et vague mis en avant avec leur diode, score et gemmes en retrait', 'Tourelles en cartouches avec leur touche de raccourci ; prix en rouge quand l’or manque', 'Bouton de vague en vraie touche : cyan pour lancer, ambre pour appeler en avance', 'Messages de l’équipage en transmissions, aide repliée sous « Commandes »'] },
