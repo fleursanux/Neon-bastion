@@ -5637,7 +5637,11 @@ const DIVE_DRAW = function (g) {
   g.fillStyle = this.o2 < 15 ? '#ff5468' : '#5ef0ff'; roundRectPath(g, 13, 13, 164 * this.o2 / 60, 12, 6); g.fill();
   TZ.text(g, `O₂ ${Math.ceil(this.o2)} s · ${Math.round(this.y / 10)} m`, 14, 42, 14, '#ffffff', 'left');
   if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t); TZ.text(g, this.banner.text, 180, 300, 24, '#ffe45a'); g.globalAlpha = 1; }
-  if (this.t < 6) { TZ.text(g, 'Maintiens le doigt pour nager', 180, 600, 13); TZ.text(g, 'Touche brièvement pour lancer le harpon', 180, 622, 13); }
+  if (this.t < 6) { TZ.text(g, 'Maintiens le doigt pour nager', 180, 582, 13); TZ.text(g, 'Touche brièvement pour lancer le harpon', 180, 602, 13); TZ.text(g, 'Remonte au ponton pour garder ta prise', 180, 622, 13, '#ffe45a'); }
+  // Rappel du chemin de retour : flèche vers la surface avec la distance
+  if (this.maxY > 160) { const m = Math.round(this.y / 10), low = this.o2 < 15, a = 0.6 + 0.4 * Math.sin(this.t * (low ? 10 : 3));
+    g.globalAlpha = a; g.fillStyle = low ? '#ff5468' : '#ffe45a'; g.strokeStyle = TZ.O; g.lineWidth = 3; g.beginPath(); g.moveTo(330, 60); g.lineTo(346, 80); g.lineTo(336, 80); g.lineTo(336, 96); g.lineTo(324, 96); g.lineTo(324, 80); g.lineTo(314, 80); g.closePath(); g.fill(); g.stroke();
+    TZ.text(g, low ? 'Remonte !' : `${m} m`, 330, 110, 12, low ? '#ff5468' : '#ffffff'); g.globalAlpha = 1; }
 };
 
 const RUN_DRAW = function (g) {
@@ -6031,7 +6035,7 @@ const FISH = [
 const Dive = {
   id: 'dive', title: 'Plongée des Abysses', W: 360, H: 640, DEPTH: 2000, quitLabel: 'Remonter',
   init() {
-    Object.assign(this, { paused: false, t: 0, x: 180, y: 60, o2: 60, cam: 0, bag: [], harp: null, cd: 0, fish: [], fx: [], current: (Math.random() - 0.5) * 50, ended: false, sting: 0 });
+    Object.assign(this, { maxY: 60, paused: false, t: 0, x: 180, y: 60, o2: 60, cam: 0, bag: [], harp: null, cd: 0, fish: [], fx: [], current: (Math.random() - 0.5) * 50, ended: false, sting: 0 });
     for (let i = 0; i < 46; i++) this.addFish(80 + Math.random() * (this.DEPTH - 120));
     this.banner = { text: this.current > 10 ? 'Courant vers la droite' : this.current < -10 ? 'Courant vers la gauche' : 'Eaux calmes', t: 2 };
   },
@@ -6056,6 +6060,9 @@ const Dive = {
     if (d > 2 && (P.down || kx || ky)) { this.x += dx / d * Math.min(sp * dt, d); this.y += dy / d * Math.min(sp * dt, d); this.face = dx; }
     this.x += this.current * dt * 0.4;
     this.x = clamp(this.x, 12, 348); this.y = clamp(this.y, 30, this.DEPTH - 20);
+    this.maxY = Math.max(this.maxY, this.y);
+    // Retour au ponton : la plongée se termine et toute la prise est gardée
+    if (this.maxY > 160 && this.y < 50) { Sound.sfx && Sound.sfx('up'); Minigames.finish(this.result(false)); return; }
     this.cam += (clamp(this.y - 260, 0, this.DEPTH - 640) - this.cam) * Math.min(1, dt * 4);
     this.cd -= dt;
     const shoot = (ax, ay) => { if (this.harp || this.cd > 0) return; const a = Math.atan2(ay - this.y, ax - this.x); this.harp = { x: this.x, y: this.y, vx: Math.cos(a) * 320, vy: Math.sin(a) * 320, life: 0.55 }; this.cd = 0.5; Sound.sfx && Sound.sfx('ui'); };
@@ -6172,6 +6179,10 @@ const Dig = {
   bonus: lvl => ({ gems: 10 + 5 * lvl, picks: 3 }),
   board(s) {
     const m = Minigames.data(s);
+    // Grilles sauvegardées par une ancienne version : on complète ce qui manque, et une grille finie laisse place à la suivante
+    if (m.dig && (!Array.isArray(m.dig.items) || !Array.isArray(m.dig.open))) m.dig = null;
+    if (m.dig && !Array.isArray(m.dig.earned)) m.dig.earned = [];
+    if (m.dig && (m.dig.done || m.dig.items.every(i => i.got))) m.dig = this.make((m.dig.lvl || 0) + 1);
     if (!m.dig) m.dig = this.make(1);
     return m.dig;
   },
@@ -7536,8 +7547,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.0.1';
+const APP_VERSION = '7.0.2';
 const CHANGELOG = [
+  { v: '7.0.2', date: '01.11.2026', items: ['Fouille de la Rouille : les grilles commencées avant la v6.1 bloquaient au moment de dégager un objet ; elles sont réparées et les objets sont bien donnés', 'Plongée des Abysses : remonter jusqu’au ponton termine la plongée en gardant toute la prise, avec une flèche qui indique la surface'] },
   { v: '7.0.1', date: '01.11.2026', items: ['Téléphone : plus de zoom quand on touche deux fois vite, plus de sélection de texte ni de menu « Copier » sur un appui long'] },
   { v: '7.0', date: '01.11.2026', items: ['Nouvelle organisation des menus : barre du haut (profil, étoiles, points, gemmes) et barre d’onglets en bas (Boutique, Équipage, Campagne, Collection, Événements)', 'Écran Campagne : chaque monde est une île 3D flottante qui tourne au doigt, gros bouton Jouer, choix des niveaux, plongée vers l’île au lancement et envol d’une île à l’autre entre les mondes', 'L’équipage en figurines 3D : portraits dans toute l’interface, personnage animé sur son socle dans l’écran Équipage', 'Annonces du jour, connexion quotidienne sur 7 jours avec grand prix, page des nouveautés', 'Menus, boutique et mini-jeux redessinés en style jouet : panneaux bombés, gros boutons, bannières illustrées, personnages et décors plus soignés'] },
   { v: '6.3.1', date: '01.11.2026', items: ['Téléphone : le panneau d’informations ne s’écrase plus dans la console (boutons de fusion et fiche de tourelle de nouveau visibles)', 'Fusion : les tourelles de l’Arsenal gardent leurs effets (tirs multiples, vulnérabilité, cadence, réfraction, distance minimale) et les fusions entre auras ne donnent plus de valeurs invalides'] },
