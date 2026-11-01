@@ -451,6 +451,9 @@ body.mg-on{overflow:hidden}
 .mgrew{font-size:.85rem;color:var(--muted);margin:6px 0}
 .mgtk{margin-left:6px;letter-spacing:2px}
 .mgdigbg{z-index:29}
+.bump{display:inline-block;animation:vbump .22s ease-out}@keyframes vbump{40%{transform:scale(1.18);color:#fff2c0}}
+.hurt{display:inline-block;animation:vhurt .4s ease-out}@keyframes vhurt{20%,60%{transform:translateX(-3px);color:#fff}40%,80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.bump,.hurt{animation:none}}
 .mgwallet{display:flex;gap:10px;flex-wrap:wrap;font-weight:700}.mgwallet span{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
 .mggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:10px}
 .mggain{font-size:1.05rem}.mggain b{color:var(--gem)}
@@ -1912,10 +1915,12 @@ function drawEnemyShape(ctx, t, x, y, angle, spin, st) {
   if (st.slowed) { ctx.strokeStyle = 'rgba(122,167,255,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r + 4, 0, TAU); ctx.stroke(); }
   if (st.poisoned) { ctx.strokeStyle = 'rgba(156,255,87,.7)'; ctx.lineWidth = 2; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(x, y, r + 9, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
   if (!NO_GLOW) { ctx.shadowColor = t.color; ctx.shadowBlur = 10; }
-  ctx.fillStyle = 'rgba(10,14,24,.9)'; ctx.strokeStyle = col; ctx.lineWidth = 2.5;
+  const mat = NO_GLOW && !D2;
+  ctx.fillStyle = mat ? enemyMat(ctx, t, x, y, r, st.flash) : 'rgba(10,14,24,.9)'; ctx.strokeStyle = col; ctx.lineWidth = 2.5;
   switch (t.shape) {
     case 'arrow':
       ctx.translate(x, y); ctx.rotate(angle);
+      if (mat) ctx.fillStyle = enemyMat(ctx, t, 0, 0, r, st.flash);
       ctx.beginPath(); ctx.moveTo(r + 3, 0); ctx.lineTo(-r, -r * .85); ctx.lineTo(-r * .45, 0); ctx.lineTo(-r, r * .85); ctx.closePath();
       ctx.fill(); ctx.stroke(); break;
     case 'hex':
@@ -6382,8 +6387,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '6.1';
+const APP_VERSION = '6.2';
 const CHANGELOG = [
+  { v: '6.2', date: '01.11.2026', items: ['Nouvelle direction artistique 2D « La lumière contre la Rouille » : sol en métal mat et usé propre à chaque planète, chemin en tranchée, pénombre que seules tes tourelles éclairent', 'La Rouille laisse des traces : coulures sur le chemin, flaques à chaque élimination, brûlures des explosions et givre des tourelles de gel, qui s’effacent lentement', 'Ennemis en matière rouillée avec ombre au sol, tourelles en métal avec ombres portées, faille d’entrée en métal fondu, noyau toujours cyan', 'Étalonnage des couleurs par planète, grain discret, image qui se désature quand les vies baissent', 'Nombres de dégâts regroupés par ennemi, or qui saute quand il augmente, vies qui tremblent quand on en perd'] },
   { v: '6.1', date: '01.11.2026', items: ['Quatre nouveaux mini-jeux dans Événements : Percée (portes à calcul), Code du Coffre (combinaison de couleurs), Triage (tuiles par trois) et Chute de Plasma (billes)', 'Fouille : chaque objet caché affiche ce qu’il rapporte, barre de progression, fenêtre « Trouvé ! » et récapitulatif de fin de grille', 'Pioches, billes et tickets achetables avec des gemmes, dans la Fouille, dans la Chute de Plasma et dans l’onglet Événements de la boutique', 'Les victoires donnent aussi des billes (2, ou 3 avec 3 étoiles)'] },
   { v: '6.0', date: '01.11.2026', items: ['Événements : trois mini-jeux à part du tower defense (Expédition de l’Arche, Plongée des Abysses, Fouille de la Rouille), avec tickets quotidiens et pioches gagnées en jouant', 'Arsenal : 10 nouvelles tourelles (mortier, cryo, flamme, essaim, prisme, orage, mines, nanites, diapason, éclipse), choix de 10 tourelles max avant chaque niveau et 3 présélections favorites', 'Pluie de météores : les cristaux affichent ce qu’ils rapportent (or ou gemmes)', 'Équipage : toucher une case d’équipement filtre l’inventaire sur ce type d’objet', 'Les annonces d’événements s’affichent dans le panneau d’informations, plus sur la carte'] },
   { v: '5.5', date: '29.10.2026', items: ['Décor de la ville : une capture du jeu peut être collée telle quelle, son fond noir est retiré et les sols de la planche remplissent l’extérieur'] },
@@ -7169,6 +7175,7 @@ const R = {
         case 'shot': this.onShot(ev); break;
         case 'impact':
           if (ev.splash > 0) {
+            if (!D2) { Stain.scorch(ev.x, ev.y, ev.splash * 0.7); Light2D.flash(ev.x, ev.y, ev.splash * 1.8, '#ffb070', 0.3, 1); }
             this.burst('flash', ev.x, ev.y, 1, ev.color, { speed: 0, size: ev.splash * 0.9, life: 0.22 });
             this.burst('ember', ev.x, ev.y, 12, ev.color, { speed: 240, size: 4, life: 0.5 });
             this.burst('smoke', ev.x, ev.y, 4, '#3a4766', { speed: 50, size: 10, life: 0.9, grow: 18, drag: 2 });
@@ -7181,12 +7188,14 @@ const R = {
           break;
         case 'hit': {
           const e = ev.e;
+          if (!D2 && !ev.crit) { e._dmg = (e._dmg || 0) + ev.v; break; }   // regroupés par ennemi (voir update)
           if (ev.crit) Nums.add(e.x, e.y, e.r + 4, fmtBig(Math.round(ev.v)) + '!', '#ff4fa3', 18);
           else if (ev.v >= e.maxHp * 0.04 || Nums.list.length < 30) Nums.add(e.x, e.y, e.r + 4, fmtBig(Math.max(1, Math.round(ev.v))), '#e4ecfb', 12 + Math.min(4, Math.log10(ev.v + 1)));
           break;
         }
         case 'kill': {
           const big = ev.boss ? 3 : ev.elite ? 1.6 : 1;
+          if (!D2) { Stain.splat(ev.x, ev.y, ev.r * (ev.boss ? 1.6 : 1), ev.boss || ev.elite); Light2D.flash(ev.x, ev.y, 50 * Math.sqrt(big), '#ff8a3d', 0.28, 0.8); }
           this.burst('debris', ev.x, ev.y, Math.round(7 * big), ev.color, { speed: 170 * Math.sqrt(big), size: 3 + big, life: 0.75, drag: 3.5 });
           this.burst('ember', ev.x, ev.y, Math.round(6 * big), ev.color, { speed: 140, size: 3.5, life: 0.5 });
           this.burst('flash', ev.x, ev.y, 1, ev.color, { speed: 0, size: ev.r * 2.6 * big, life: 0.25 });
@@ -7202,6 +7211,7 @@ const R = {
           break;
         }
         case 'leak':
+          if (!D2) { Stain.splat(ev.x, ev.y, 16, true); Light2D.flash(ev.x, ev.y, 160, '#ff3355', 0.5, 1); }
           this.flash = 1; this.chroma = Math.max(this.chroma, 0.8); this.shake(0.5);
           this.burst('spark', ev.x, ev.y, 16, '#ff5468', { speed: 320, size: 2, life: 0.35 });
           Sound.sfx && Sound.sfx('alarm');
@@ -7209,11 +7219,13 @@ const R = {
           break;
         case 'pulse':
           ev.tw._atk = this.time;
+          if (!D2) { if (ev.tw.s.slow || /cryo|stase/.test(ev.tw.def.id)) Stain.frost(ev.tw.x, ev.tw.y, ev.tw.range * 0.8); Light2D.flash(ev.tw.x, ev.tw.y, ev.tw.range, towerColor(ev.tw.def), 0.35, 0.8); }
           this.wave(ev.tw.x, ev.tw.y, ev.tw.range * 1.1, 0.02, 0.55);
           this.burst('ember', ev.tw.x, ev.tw.y, 14, ev.tw.def.color, { speed: 260, size: 3, life: 0.45 });
           this.shake(0.06);
           break;
         case 'build':
+          if (ev.tw && !D2) { this.burst('smoke', ev.tw.x, ev.tw.y + 8, 9, '#4a505c', { speed: 110, size: 9, life: 0.8, grow: 16, drag: 3.5 }); Light2D.flash(ev.tw.x, ev.tw.y, 120, towerColor(ev.tw.def), 0.6, 1); this.shake(0.07); }
           if (ev.tw) { ev.tw._born = this.time; this.burst('spark', ev.tw.x, ev.tw.y, 14, towerColor(ev.tw.def), { speed: 200, size: 1.8, life: 0.3 }); }
           Sound.sfx && Sound.sfx('build'); buzz(12);
           break;
@@ -7254,6 +7266,7 @@ const R = {
     const mx = tw.x + Math.cos(a) * 22, my = tw.y - 2 + Math.sin(a) * 22;
     const m = PFX.get('muzzle', mx, my, 0, 0, def.kind === 'rail' ? 0.12 : 0.07, def.kind === 'rail' ? 26 : 14, c);
     if (m) m.ang = a;
+    if (!D2) Light2D.flash(mx, my, def.kind === 'rail' ? 90 : 38, c, def.kind === 'rail' ? 0.16 : 0.07, 0.8);
     this.burst('spark', mx, my, def.kind === 'rail' ? 8 : 3, c, { angle: a, spread: 0.5, speed: 320, size: 1.6, life: 0.14 });
     if (vis === 'gatling' && Math.random() < 0.8) this.burst('shell', tw.x, tw.y, 1, '#ffcf4a', { angle: a + Math.PI / 2 + (Math.random() - 0.5) * 0.6, spread: 0.3, speed: 90, life: 0.6, drag: 4 });
     if (vis === 'missile' || vis === 'plasma') this.burst('smoke', mx, my, 2, '#3a4766', { angle: a + Math.PI, spread: 1.2, speed: 40, size: 6, life: 0.6, grow: 12, drag: 2 });
@@ -7281,7 +7294,7 @@ const R = {
     // Particules ambiantes : aspiration du portail, traînées des projectiles, dégâts continus
     // Ambiance de la planète : sable, bulles, feuilles, neige, braises, fumée…
     if (b && dt > 0) {
-      const A = levelPlanet(b.level).amb, n = A.rate * dt * (GFX.level ? 1 : 0.4);
+      const A = (!D2 && AMB_N[levelPlanet(b.level).kind]) || levelPlanet(b.level).amb, n = A.rate * dt * (GFX.level ? 1 : 0.4);
       this.ambAcc = (this.ambAcc || 0) + n;
       while (this.ambAcc >= 1) {
         this.ambAcc--;
@@ -7300,7 +7313,7 @@ const R = {
     if (this.portalT <= 0 && b) {
       this.portalT = 0.07;
       const en = b.path.entry(), a = Math.random() * TAU, r = 30 + Math.random() * 16;
-      const p = PFX.get('ember', en.x + Math.cos(a) * r, en.y + Math.sin(a) * r, -Math.cos(a) * r * 2.2, -Math.sin(a) * r * 2.2, 0.45, 2.2, '#ff4fa3');
+      const p = PFX.get('ember', en.x + Math.cos(a) * r, en.y + Math.sin(a) * r, -Math.cos(a) * r * 2.2, -Math.sin(a) * r * 2.2, 0.45, D2 ? 2.2 : 1.6, D2 ? '#ff4fa3' : '#ff7a2e');
       if (p) p.drag = 0;
     }
     if (b) {
@@ -7308,8 +7321,10 @@ const R = {
         const vis = p.def.visual || p.def.id;
         if ((vis === 'missile' || p.splash > 0) && Math.random() < dt * 40) this.burst('smoke', p.x, p.y, 1, p.def.kind === 'bullet' && vis === 'missile' ? '#5a6688' : rgbHexMix(p.def.color), { speed: 15, size: 4, life: 0.5, grow: 10, drag: 2 });
       }
+      if (!D2) { Stain.update(dt, b); Light2D.update(dt); }
       for (const e of b.enemies) {
         e._age = (e._age || 0) + dt;
+        if (e._dmg > 0) { e._dmgT = (e._dmgT || 0) + dt; if (e._dmgT >= 0.45 || !e.alive) { Nums.add(e.x, e.y, e.r + 4, fmtBig(Math.max(1, Math.round(e._dmg))), '#d8e0ee', 11 + Math.min(5, Math.log10(e._dmg + 1))); e._dmg = 0; e._dmgT = 0; } }
         if (e.dotAcc > 0) {
           e._dotT = (e._dotT || 0) + dt;
           if (e._dotT >= 0.5) { Nums.add(e.x, e.y, e.r + 4, fmtBig(Math.max(1, Math.round(e.dotAcc))), e.poisonT > 0 ? '#9cff57' : '#ffb3b3', 11); e.dotAcc = 0; e._dotT = 0; }
@@ -7347,6 +7362,7 @@ function nearPathPx(path, x, y, r) { for (let d = 0; d < path.length; d += 15) {
 function renderLevelBackground(level, path, k, opts) {
   k = k || 1;
   const flat = !(opts && opts.flat === false);
+  if (!D2 && flat) return renderNeonGround(level, path, k);
   const c = document.createElement('canvas');
   c.width = Math.round(W * k); c.height = Math.round(H * k);
   const ctx = c.getContext('2d'), T = CONFIG.tile, col = THEME_COLOR || level.color, rng = mulberry32(level.n * 7919 + 13), P = levelPlanet(level);
@@ -7494,6 +7510,7 @@ function renderLevelBackground(level, path, k, opts) {
 
 /* Calque des cases (libres bien visibles, à acheter discrètes), redessiné après chaque changement. */
 function renderPadLayer(b, k) {
+  if (!D2) return renderPadLayerN(b, k);
   k = k || 1;
   const c = document.createElement('canvas');
   c.width = Math.round(W * k); c.height = Math.round(H * k);
@@ -7595,14 +7612,15 @@ const TIER_COLORS = ['#8796b6', '#3ef2c8', '#7aa7ff', '#c58bff', '#ffcf4a', '#ff
 function drawTowerFX(ctx, t, hl, time) {
   // Les animations de construction et d'amélioration suivent l'horloge du rendu (R.time)
   const def = t.def, c = towerColor(def), age = t._born === undefined ? 9 : Math.max(0, R.time - t._born), up = t._up === undefined ? 9 : Math.max(0, R.time - t._up);
-  const sc = age < 0.45 ? 0.35 + 0.65 * ease.outBack(age / 0.45) : 1;
+  const sc = !D2 ? (age < 0.3 ? 1.4 - 0.4 * ease.outCubic(age / 0.3) : 1) : age < 0.45 ? 0.35 + 0.65 * ease.outBack(age / 0.45) : 1;
   const art = D2 && HeroArt.sets[def.id];
   ctx.save(); ctx.translate(t.x, t.y);
   if (sc !== 1) ctx.scale(sc, sc);
   if (art) {
     ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(0, 12, 17, 7, 0, 0, TAU); ctx.fill();
     ctx.strokeStyle = c; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(0, 12, 21, 9, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
-  } else ctx.drawImage(Spr.towerBase(def), -32, -32, 64, 64);
+  } else if (!D2) ctx.drawImage(Spr.towerBaseN(def), -36, -36, 72, 72);
+  else ctx.drawImage(Spr.towerBase(def), -32, -32, 64, 64);
   if (hl) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; roundRectPath(ctx, -25, -25, 50, 50, 9); ctx.stroke(); }
   // Paliers de niveau : un losange tous les 10 niveaux
   const tiers = Math.min(5, Math.floor(t.level / 10));
@@ -7617,7 +7635,13 @@ function drawTowerFX(ctx, t, hl, time) {
     ctx.beginPath(); ctx.arc(0, -2, 19, time * 2 + Math.PI, time * 2 + Math.PI + 1.4); ctx.stroke();
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
-  if (!art) {
+  if (!art && !D2) {
+    ctx.save(); ctx.translate(3, 2.5); ctx.rotate(t.angle); ctx.translate(-t.recoil * 3.5, 0); ctx.globalAlpha = 0.5;
+    ctx.drawImage(Spr.towerHeadShadow(def), -36, -36, 72, 72); ctx.restore();
+    ctx.save(); ctx.translate(0, -2); ctx.rotate(t.angle); ctx.translate(-t.recoil * 3.5, 0);
+    ctx.drawImage(Spr.towerHeadN(def), -36, -36, 72, 72);
+    ctx.restore();
+  } else if (!art) {
     ctx.save(); ctx.translate(0, -2); ctx.rotate(t.angle); ctx.translate(-t.recoil * 3.5, 0);
     ctx.drawImage(Spr.towerHead(def), -36, -36, 72, 72);
     ctx.restore();
@@ -7669,12 +7693,18 @@ function drawMinions(ctx, b, time) {
 }
 function drawEnemyFX(ctx, e, sel, time) {
   const t = e.type, age = e._age || 0, sc = age < 0.3 ? 0.2 + 0.8 * ease.outBack(age / 0.3) : 1;
+  if (!D2) {
+    // Matière : ombre de contact au sol (lumière du haut à gauche) ; seuls les boss rougeoient, comme une menace
+    if (!e.phased) { ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(e.x + 3, e.y + 5, e.r * 1.05, e.r * 0.8, 0, 0, TAU); ctx.fill(); }
+    if (t.boss) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.28 + 0.12 * Math.sin(time * 4); const g = e.r * 3; ctx.drawImage(Spr.soft('#ff5a1a'), e.x - g, e.y - g, g * 2, g * 2); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  } else {
   // Halo lumineux sous l'ennemi
   ctx.globalCompositeOperation = 'lighter';
   ctx.globalAlpha = e.phased ? 0.12 : (t.boss ? 0.55 + 0.15 * Math.sin(time * 4) : 0.4);
   const g = e.r * (t.boss ? 3.4 : 2.5);
   ctx.drawImage(Spr.soft(t.color), e.x - g, e.y - g, g * 2, g * 2);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   if (sc !== 1) { ctx.save(); ctx.translate(e.x, e.y); ctx.scale(sc, sc); ctx.translate(-e.x, -e.y); }
   drawEnemyShape(ctx, t, e.x, e.y, e.angle, e.spin, {
     flash: e.hitFlash > 0, phased: e.phased, slowed: e.slowT > 0, poisoned: e.poisonT > 0, shield: e.shield > 0, elite: e.elite || t.unique
@@ -7857,7 +7887,7 @@ function drawPortal(ctx, b, time) {
   ctx.restore();
 }
 function drawCore(ctx, b, time) {
-  const be = b.path.end, hit = b.baseHit > 0, col = hit ? '#ff5468' : (THEME_COLOR || b.level.color), pulse = 0.5 + 0.5 * Math.sin(time * 4);
+  const be = b.path.end, hit = b.baseHit > 0, col = hit ? '#ff5468' : D2 ? (THEME_COLOR || b.level.color) : '#5ef0ff', pulse = 0.5 + 0.5 * Math.sin(time * 4);
   ctx.save();
   ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.6 + pulse * 0.3;
   ctx.drawImage(Spr.soft(col), be.x - 52, be.y - 52, 104, 104);
@@ -7921,6 +7951,395 @@ function drawPathFlow(ctx, b, time) {
 }
 
 /* =====================================================================
+   DIRECTION ARTISTIQUE 2D (mode normal) — « La lumière contre la Rouille »
+   · Le décor est mat, sombre et usé : il ne brille jamais.
+   · Seul le camp du joueur émet de la lumière froide (tourelles, tirs, noyau) :
+     construire, c'est repousser l'obscurité.
+   · La Rouille est de la matière chaude : elle salit le chemin, coule, s'écaille.
+   · Lumière principale venue du haut à gauche : ombres portées en bas à droite.
+   ===================================================================== */
+function mixHex(a, b, t) { const A = rgbOf(a), B = rgbOf(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
+const DA = {
+  _noise: null,
+  /* Bruit de valeur sur plusieurs octaves, raccordable (sert à la crasse, aux taches, au grain). */
+  noise() {
+    if (this._noise) return this._noise;
+    const n = 256, c = document.createElement('canvas'); c.width = c.height = n;
+    const g = c.getContext('2d'), img = g.createImageData(n, n), rng = mulberry32(4242);
+    const oct = [[4, 0.42], [8, 0.26], [16, 0.16], [32, 0.1], [64, 0.06]].map(([s, w]) => ({ s, w, v: Array.from({ length: s * s }, () => rng()) }));
+    const sm = t => t * t * (3 - 2 * t);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      let v = 0;
+      for (const o of oct) {
+        const fx = x / n * o.s, fy = y / n * o.s, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = sm(fx - x0), ty = sm(fy - y0);
+        const at = (i, j) => o.v[((j % o.s + o.s) % o.s) * o.s + ((i % o.s + o.s) % o.s)];
+        const a = at(x0, y0) + (at(x0 + 1, y0) - at(x0, y0)) * tx, b = at(x0, y0 + 1) + (at(x0 + 1, y0 + 1) - at(x0, y0 + 1)) * tx;
+        v += (a + (b - a) * ty) * o.w;
+      }
+      const i = (y * n + x) * 4, g8 = Math.round(clamp(v, 0, 1) * 255);
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = g8; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    return this._noise = c;
+  },
+  /* Recouvre la zone (0,0,W,H) avec le bruit, à l'échelle s. */
+  tile(ctx, s, ox, oy) {
+    const N = this.noise(), z = 256 * s;
+    for (let x = -(ox || 0) % z - z; x < W; x += z) for (let y = -(oy || 0) % z - z; y < H; y += z) ctx.drawImage(N, x, y, z, z);
+  },
+  /* Tache irrégulière (rouille, huile, brûlure). */
+  blob(g, x, y, r, rng, pts) {
+    pts = pts || 9; g.beginPath();
+    for (let i = 0; i <= pts; i++) { const a = i / pts * TAU, rr = r * (0.62 + rng() * 0.5); i ? g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr) : g.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+    g.closePath(); g.fill();
+  }
+};
+
+/* Matières du sol, par planète : couleurs ternes, jamais lumineuses (sauf la lave). */
+const GROUND = {
+  city: { base: '#161c26', plates: 1, road: '#0e121a', curb: '#2a3242', paint: '#c9a24a', grime: 0.5, cables: 1 },
+  sand: { base: '#3e3122', plates: 1, buried: '#8a6c46', road: '#2a2117', curb: '#56442e', paint: '#e2c58a', grime: 0.35 },
+  ocean: { base: '#08161f', water: 1, road: '#3a2a1c', curb: '#22180f', paint: null, grime: 0.3, planks: 1 },
+  industrial: { base: '#25201c', plates: 1, road: '#181411', curb: '#3a322a', paint: '#e8b020', grime: 0.6, hazard: 1, cables: 1 },
+  crystal: { base: '#18121f', rock: '#2a2036', shards: 1, road: '#120d18', curb: '#2c2238', paint: '#b48ad6', grime: 0.4 },
+  storm: { base: '#131821', slate: 1, puddles: 1, road: '#0f131a', curb: '#262d3a', paint: '#9ec4ff', grime: 0.45 },
+  forest: { base: '#121c15', moss: '#1f3320', trees: 1, road: '#262016', curb: '#352c1e', paint: null, grime: 0.45, cables: 1 },
+  lava: { base: '#141010', basalt: 1, cracks: 1, road: '#1a1210', curb: '#2c201b', paint: '#ff8a3d', grime: 0.5 },
+  ice: { base: '#6f8498', snow: 1, road: '#4d6074', curb: '#94a8bb', paint: '#eef8ff', grime: 0.18 },
+  rust: { base: '#1f110d', plates: 1, corroded: 1, road: '#150a07', curb: '#36190f', paint: '#d8582a', grime: 0.6, cables: 1 }
+};
+const RUST = { dark: '#3a1608', mid: '#7a3412', hot: '#b5541c', flake: '#c86a2a' };
+
+function renderNeonGround(level, path, k) {
+  k = k || 1;
+  const c = document.createElement('canvas');
+  c.width = Math.round(W * k); c.height = Math.round(H * k);
+  const ctx = c.getContext('2d'), T = CONFIG.tile, P = levelPlanet(level), G = GROUND[P.kind] || GROUND.city;
+  const rng = mulberry32(level.n * 7919 + 13), rnd = (a, b) => a + rng() * (b - a);
+  const pts = path.points, near = (x, y, r) => nearPathPx(path, x, y, r);
+  ctx.scale(k, k); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // 1. Matière de base et marbrures
+  ctx.fillStyle = G.base; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.55; DA.tile(ctx, 1.6, level.n * 37, level.n * 11);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
+  // 2. Structure propre à la planète
+  if (G.plates) {
+    for (let y = 0; y < H; y += T) for (let x = 0; x < W;) {
+      const w = (rng() < 0.3 && x + 2 * T <= W) ? 2 * T : T;
+      ctx.fillStyle = rng() < 0.5 ? `rgba(255,255,255,${rnd(0, 0.035).toFixed(3)})` : `rgba(0,0,0,${rnd(0.02, 0.12).toFixed(3)})`;
+      ctx.fillRect(x, y, w, T);
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x + w - 1.5, y, 1.5, T); ctx.fillRect(x, y + T - 1.5, w, 1.5);
+      ctx.fillStyle = 'rgba(255,255,255,.055)'; ctx.fillRect(x, y, w - 1.5, 1); ctx.fillRect(x, y, 1, T - 1.5);
+      for (const [dx, dy] of [[5, 5], [w - 6, 5], [5, T - 6], [w - 6, T - 6]]) if (rng() < 0.7) {
+        ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(x + dx + 0.6, y + dy + 0.8, 1.7, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.beginPath(); ctx.arc(x + dx - 0.3, y + dy - 0.4, 1.1, 0, TAU); ctx.fill();
+      }
+      x += w;
+    }
+    for (let i = 0; i < 160; i++) { const x = rnd(0, W), y = rnd(0, H), a = rnd(0, TAU), l = rnd(3, 16); ctx.strokeStyle = `rgba(255,255,255,${rnd(0.03, 0.08).toFixed(3)})`; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke(); }
+  }
+  if (G.buried) {                                         // le sable recouvre les plaques
+    for (let i = 0; i < 46; i++) { const x = rnd(-40, W + 40), y = rnd(-20, H + 20), r = rnd(30, 110), g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rgba(G.buried, rnd(0.45, 0.8))); g.addColorStop(1, rgba(G.buried, 0)); ctx.fillStyle = g; ctx.save(); ctx.translate(x, y); ctx.scale(1.8, 0.7); ctx.translate(-x, -y); ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore(); }
+    for (let i = 0; i < 26; i++) { const y0 = rnd(0, H), amp = rnd(3, 8), f = rnd(0.02, 0.04), ph = rnd(0, 6); ctx.strokeStyle = i % 2 ? 'rgba(255,230,190,.07)' : 'rgba(40,24,10,.14)'; ctx.lineWidth = rnd(1.5, 3);
+      ctx.beginPath(); for (let x = rnd(-50, W / 2); x <= W; x += 10) ctx.lineTo(x, y0 + Math.sin(x * f + ph) * amp); ctx.stroke(); }
+  }
+  if (G.water) {
+    for (let i = 0; i < 90; i++) { const x = rnd(0, W), y = rnd(0, H), l = rnd(10, 40); ctx.strokeStyle = `rgba(150,200,220,${rnd(0.03, 0.08).toFixed(3)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + l / 2, y - 2, x + l, y); ctx.stroke(); }
+    for (let i = 0; i < 12; i++) { const x = rnd(0, W), y = rnd(0, H); if (near(x, y, 50)) continue; ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x + 2, y + 3, 14, 4); ctx.fillStyle = '#3a2a1c'; ctx.fillRect(x, y, 14, 4); }
+  }
+  if (G.slate) {
+    for (let i = 0; i < 70; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(18, 40); ctx.fillStyle = `rgba(${rng() < 0.5 ? '255,255,255' : '0,0,0'},${rnd(0.02, 0.08).toFixed(3)})`;
+      ctx.beginPath(); const n = 5 + Math.floor(rng() * 3); for (let j = 0; j < n; j++) { const a = j / n * TAU + rnd(-0.2, 0.2); ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.8); } ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+  if (G.puddles) for (let i = 0; i < 9; i++) { const x = rnd(30, W - 30), y = rnd(30, H - 30), r = rnd(14, 34); ctx.fillStyle = 'rgba(4,8,14,.5)'; ctx.beginPath(); ctx.ellipse(x, y, r * 1.4, r * 0.7, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(140,170,220,.12)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(x - 2, y - 1, r * 1.3, r * 0.6, 0, Math.PI * 1.1, Math.PI * 1.7); ctx.stroke(); }
+  if (G.shards) {
+    for (let i = 0; i < 40; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(20, 50); ctx.fillStyle = rgba(G.rock, rnd(0.4, 0.8)); ctx.beginPath(); const n = 5; for (let j = 0; j < n; j++) { const a = j / n * TAU + rnd(-0.3, 0.3); ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 1; ctx.stroke(); }
+    for (let i = 0; i < 26; i++) { const x = rnd(10, W - 10), y = rnd(10, H - 10); if (near(x, y, 46)) continue;
+      for (let j = 0; j < 3; j++) { const h = rnd(10, 24), w = rnd(4, 8), a = rnd(-0.9, 0.9) - Math.PI / 2, bx = x + rnd(-8, 8), by = y + rnd(-4, 4);
+        ctx.save(); ctx.translate(bx, by); ctx.rotate(a + Math.PI / 2);
+        ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.moveTo(-w + 3, 3); ctx.lineTo(3, -h + 6); ctx.lineTo(w + 3, 3); ctx.fill();
+        ctx.fillStyle = '#7e5f9c'; ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(0, -h); ctx.lineTo(0, 0); ctx.fill();
+        ctx.fillStyle = '#3b2852'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -h); ctx.lineTo(w, 0); ctx.fill();
+        ctx.fillStyle = 'rgba(255,230,255,.35)'; ctx.fillRect(-1.5, -h + 3, 1, h * 0.4);
+        ctx.restore(); } }
+  }
+  if (G.moss) for (let i = 0; i < 70; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(10, 40); ctx.fillStyle = rgba(G.moss, rnd(0.3, 0.7)); DA.blob(ctx, x, y, r, rng, 11); }
+  if (G.trees) for (let i = 0; i < 34; i++) { const x = rnd(10, W - 10), y = rnd(10, H - 10); if (near(x, y, 50)) continue; const r = rnd(12, 20);
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; DA.blob(ctx, x + 6, y + 8, r, rng, 10);
+    ctx.fillStyle = rng() < 0.5 ? '#1c3a20' : '#244424'; DA.blob(ctx, x, y, r, rng, 10);
+    ctx.fillStyle = 'rgba(170,220,140,.12)'; DA.blob(ctx, x - r * 0.3, y - r * 0.35, r * 0.5, rng, 8); }
+  if (G.basalt) {
+    for (let i = 0; i < 110; i++) { const x = rnd(0, W), y = rnd(0, H), r = rnd(10, 22); ctx.fillStyle = `rgba(${rng() < 0.5 ? '255,255,255' : '0,0,0'},${rnd(0.02, 0.07).toFixed(3)})`; polygonPath(ctx, x, y, r, 6, rnd(0, 1)); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+  if (G.cracks) {                                          // la lave est la seule matière qui éclaire le sol
+    for (let i = 0; i < 22; i++) { let x = rnd(0, W), y = rnd(0, H); const line = [[x, y]]; for (let j = 0; j < 6; j++) { x += rnd(-26, 26); y += rnd(-26, 26); line.push([x, y]); }
+      for (const [w, col] of [[5, 'rgba(255,60,10,.22)'], [2, 'rgba(255,120,40,.75)'], [0.8, 'rgba(255,220,150,.9)']]) { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); line.forEach(([a, b], j) => j ? ctx.lineTo(a, b) : ctx.moveTo(a, b)); ctx.stroke(); } }
+  }
+  if (G.snow) {
+    for (let i = 0; i < 40; i++) { const x = rnd(-30, W), y = rnd(0, H), r = rnd(30, 90), g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(240,248,255,.35)'); g.addColorStop(1, 'rgba(240,248,255,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+    for (let i = 0; i < 24; i++) { let x = rnd(0, W), y = rnd(0, H); ctx.strokeStyle = 'rgba(60,90,120,.35)'; ctx.lineWidth = rnd(0.6, 1.4); ctx.beginPath(); ctx.moveTo(x, y); for (let j = 0; j < 4; j++) { x += rnd(-20, 20); y += rnd(-20, 20); ctx.lineTo(x, y); } ctx.stroke(); }
+  }
+  if (G.corroded) {                                         // planète de la Rouille : tout est rongé
+    for (let i = 0; i < 60; i++) { const x = rnd(0, W), y = rnd(0, H); ctx.fillStyle = rgba(rng() < 0.6 ? RUST.mid : RUST.dark, rnd(0.15, 0.4)); DA.blob(ctx, x, y, rnd(8, 40), rng, 12); }
+    for (let i = 0; i < 400; i++) { ctx.fillStyle = rgba(RUST.flake, rnd(0.1, 0.4)); ctx.fillRect(rnd(0, W), rnd(0, H), 1.5, 1.5); }
+  }
+  if (G.hazard) {
+    ctx.save(); ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.rect(0, 0, W, 9); ctx.rect(0, H - 9, W, 9); ctx.clip();
+    for (let x = -20; x < W + 20; x += 24) { ctx.fillStyle = '#b8901c'; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 12, 0); ctx.lineTo(x + 2, H); ctx.lineTo(x - 10, H); ctx.fill(); }
+    ctx.restore();
+  }
+  if (G.cables) for (let i = 0; i < 4; i++) {               // câbles qui courent au sol, avec reflet du dessus
+    const edge = Math.floor(rng() * 4), sx = edge === 0 ? -10 : edge === 1 ? W + 10 : rnd(0, W), sy = edge === 2 ? -10 : edge === 3 ? H + 10 : rnd(0, H);
+    const ex = rnd(80, W - 80), ey = rnd(60, H - 60), mx = (sx + ex) / 2 + rnd(-80, 80), my = (sy + ey) / 2 + rnd(-80, 80);
+    for (const [w, col, o] of [[7, 'rgba(0,0,0,.45)', 3], [5, '#0c0f14', 0], [1.2, 'rgba(255,255,255,.1)', -1.4]]) { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(sx + o, sy + o); ctx.quadraticCurveTo(mx + o, my + o, ex + o, ey + o); ctx.stroke(); }
+    ctx.fillStyle = '#1a1f28'; ctx.fillRect(ex - 5, ey - 4, 10, 8); ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(ex - 5, ey - 4, 10, 1);
+  }
+
+  // 3. Histoire racontée par le sol : la Rouille a déjà forcé le passage
+  for (let d = 0; d < path.length; d += 26) {
+    const p = path.pointAt(d), f = d / path.length;
+    if (rng() < 0.55) { const nx = -Math.sin(p.angle), ny = Math.cos(p.angle), side = rng() < 0.5 ? -1 : 1, o = rnd(24, 34) * side;
+      ctx.fillStyle = rgba(RUST.mid, rnd(0.12, 0.26) * (0.5 + f)); ctx.save(); ctx.translate(p.x + nx * o, p.y + ny * o); ctx.rotate(Math.atan2(ny * side, nx * side)); ctx.beginPath(); ctx.ellipse(rnd(2, 8), 0, rnd(6, 16), rnd(2, 4), 0, 0, TAU); ctx.fill(); ctx.restore(); }
+  }
+  for (let i = 0; i < 14; i++) { const x = rnd(20, W - 20), y = rnd(20, H - 20); if (!near(x, y, 70)) continue; ctx.fillStyle = `rgba(0,0,0,${rnd(0.15, 0.3).toFixed(2)})`; DA.blob(ctx, x, y, rnd(6, 16), rng, 10); }
+  for (let i = 0; i < 5; i++) { const p = path.pointAt(rnd(80, path.length - 80)), r = rnd(18, 30), g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, 'rgba(0,0,0,.45)'); g.addColorStop(0.6, 'rgba(20,10,5,.2)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
+
+  // 4. Le chemin : une tranchée en creux, bordée d'un rebord éclairé par le haut
+  ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.lineWidth = 70; tracePath(ctx, pts); ctx.stroke();
+  ctx.save(); ctx.translate(2, 3); ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 52; tracePath(ctx, pts); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = G.curb; ctx.lineWidth = 52; tracePath(ctx, pts); ctx.stroke();
+  ctx.save(); ctx.translate(-1, -1.5); ctx.strokeStyle = 'rgba(255,255,255,.09)'; ctx.lineWidth = 51; tracePath(ctx, pts); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = G.curb; ctx.lineWidth = 49; tracePath(ctx, pts); ctx.stroke();
+  ctx.strokeStyle = mixHex(G.road, '#000000', 0.45); ctx.lineWidth = 43; tracePath(ctx, pts); ctx.stroke();
+  ctx.save(); ctx.translate(1.5, 2); ctx.strokeStyle = G.road; ctx.lineWidth = 41; tracePath(ctx, pts); ctx.stroke(); ctx.restore();
+  // Crasse et usure du sol de la tranchée
+  const m = document.createElement('canvas'); m.width = c.width; m.height = c.height;
+  const mg = m.getContext('2d'); mg.scale(k, k); mg.lineCap = 'round'; mg.lineJoin = 'round';
+  mg.strokeStyle = '#fff'; mg.lineWidth = 42; tracePath(mg, pts); mg.stroke();
+  mg.globalCompositeOperation = 'source-in'; DA.tile(mg, 0.9, 91, 17);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.6; ctx.drawImage(m, 0, 0); ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.035)'; ctx.lineWidth = 16; tracePath(ctx, pts); ctx.stroke();
+  if (G.planks) {
+    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1.4;
+    for (let d = 3; d < path.length; d += 9) { const p = path.pointAt(d), nx = -Math.sin(p.angle), ny = Math.cos(p.angle); ctx.beginPath(); ctx.moveTo(p.x - nx * 21, p.y - ny * 21); ctx.lineTo(p.x + nx * 21, p.y + ny * 21); ctx.stroke(); }
+  }
+  // Joints de dilatation et peinture de sol usée (indique le sens de marche)
+  for (let d = 60; d < path.length - 20; d += 120) { const p = path.pointAt(d), nx = -Math.sin(p.angle), ny = Math.cos(p.angle); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(p.x - nx * 20, p.y - ny * 20); ctx.lineTo(p.x + nx * 20, p.y + ny * 20); ctx.stroke(); }
+  if (G.paint) for (let d = 40; d < path.length - 40; d += 92) {
+    if (rng() < 0.3) continue;
+    const p = path.pointAt(d);
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); ctx.fillStyle = rgba(G.paint, rnd(0.1, 0.24));
+    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-5, -11); ctx.lineTo(-1, 0); ctx.lineTo(-5, 11); ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.6)'; for (let j = 0; j < 6; j++) ctx.fillRect(rnd(-6, 8), rnd(-10, 10), rnd(1, 3), rnd(1, 3));
+    ctx.restore();
+  }
+  // Brèche d'entrée : la Rouille a rongé le métal en éventail
+  const en = path.entry();
+  for (let i = 0; i < 26; i++) { const a = rnd(0, TAU), r = rnd(4, 60) * rnd(0.4, 1); ctx.fillStyle = rgba(rng() < 0.5 ? RUST.mid : RUST.dark, rnd(0.2, 0.45) * (1 - r / 70)); DA.blob(ctx, en.x + Math.cos(a) * r, en.y + Math.sin(a) * r, rnd(4, 14), rng, 9); }
+  // Plateforme du noyau : métal propre, entretenu par l'équipage
+  const be = path.end;
+  ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(be.x + 3, be.y + 4, 40, 0, TAU); ctx.fill();
+  const pg = ctx.createLinearGradient(be.x - 38, be.y - 38, be.x + 38, be.y + 38); pg.addColorStop(0, '#3a4456'); pg.addColorStop(1, '#151b26');
+  ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(be.x, be.y, 38, 0, TAU); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 2; ctx.stroke();
+  for (let i = 0; i < 8; i++) { const a = i * TAU / 8; ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(be.x + Math.cos(a) * 32, be.y + Math.sin(a) * 32, 1.8, 0, TAU); ctx.fill(); }
+
+  // 5. Crasse générale (assombrit sans jamais éclaircir)
+  ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = G.grime; DA.tile(ctx, 0.7, level.n * 13, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  return c;
+}
+
+/* Emplacements : alvéoles creusées dans la plaque. Libre = petite diode froide (on peut construire).
+   À acheter = plaque soudée et rongée par la Rouille (il faut la dégager). */
+function renderPadLayerN(b, k) {
+  k = k || 1;
+  const c = document.createElement('canvas');
+  c.width = Math.round(W * k); c.height = Math.round(H * k);
+  const ctx = c.getContext('2d');
+  ctx.scale(k, k);
+  for (const p of b.pads) {
+    if (p.tower) continue;
+    const s = 24, rng = mulberry32(Math.round(p.x * 31 + p.y * 7));
+    if (p.locked) {
+      // Plaque soudée par-dessus l'alvéole : presque fondue dans le sol, quelques points de rouille aux rivets
+      ctx.fillStyle = 'rgba(255,255,255,.025)'; roundRectPath(ctx, p.x - s, p.y - s, s * 2, s * 2, 5); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x - s, p.y + s - 3); ctx.lineTo(p.x - s, p.y - s); ctx.lineTo(p.x + s - 3, p.y - s); ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.moveTo(p.x + s, p.y - s + 3); ctx.lineTo(p.x + s, p.y + s); ctx.lineTo(p.x - s + 3, p.y + s); ctx.stroke();
+      for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        if (rng() < 0.45) { ctx.fillStyle = rgba(RUST.mid, 0.22); DA.blob(ctx, p.x + dx * (s - 6) + 1, p.y + dy * (s - 6) + 3, 3 + rng() * 3, rng, 6); }
+        ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(p.x + dx * (s - 6), p.y + dy * (s - 6), 1.6, 0, TAU); ctx.fill();
+      }
+      continue;
+    }
+    ctx.fillStyle = 'rgba(0,0,0,.42)'; roundRectPath(ctx, p.x - s, p.y - s, s * 2, s * 2, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(p.x - s + 1, p.y + s - 4); ctx.lineTo(p.x - s + 1, p.y - s + 1); ctx.lineTo(p.x + s - 4, p.y - s + 1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p.x - s + 4, p.y + s - 0.5); ctx.lineTo(p.x + s - 0.5, p.y + s - 0.5); ctx.lineTo(p.x + s - 0.5, p.y - s + 4); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.04)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, TAU); ctx.stroke();
+    for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.arc(p.x + dx * (s - 6), p.y + dy * (s - 6), 1.8, 0, TAU); ctx.fill(); }
+  }
+  return c;
+}
+
+/* Diodes des emplacements libres : la seule lumière du décor, pour dire « ici on peut construire ». */
+function drawPadLeds(ctx, b, time) {
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of b.pads) {
+    if (p.tower || p.locked) continue;
+    const a = 0.55 + 0.25 * Math.sin(time * 2 + p.x * 0.05);
+    ctx.globalAlpha = a * 0.5; ctx.drawImage(Spr.soft('#5ef0ff'), p.x - 12, p.y - 12, 24, 24);
+    ctx.globalAlpha = a; ctx.fillStyle = '#9ff7ff'; ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+
+/* Traces laissées pendant la partie : coulures de Rouille, flaques, brûlures, givre. Elles s'effacent lentement. */
+const Stain = {
+  c: null, g: null, b: null, fade: 0, S: 0.5,
+  ensure(b) {
+    if (this.b === b && this.c) return;
+    this.b = b;
+    if (!this.c) { this.c = document.createElement('canvas'); this.g = this.c.getContext('2d'); }
+    this.c.width = Math.round(W * this.S); this.c.height = Math.round(H * this.S);
+    this.g.setTransform(this.S, 0, 0, this.S, 0, 0);
+    this.rng = mulberry32(99);
+  },
+  blob(x, y, r, col, a) { const g = this.g; g.fillStyle = rgba(col, a); DA.blob(g, x, y, r, this.rng, 8); },
+  update(dt, b) {
+    if (D2 || !this.c || this.b !== b || !dt) return;
+    for (const e of b.enemies) {
+      if (!e.alive || e.phased) continue;
+      e._st = (e._st || 0) - dt;
+      if (e._st > 0) continue;
+      e._st = 0.14 + Math.random() * 0.1;
+      this.blob(e.x + (Math.random() - 0.5) * e.r, e.y + (Math.random() - 0.5) * e.r, e.r * (0.35 + Math.random() * 0.3), RUST.mid, 0.05);
+    }
+    this.fade += dt;
+    if (this.fade > 0.5) { this.fade = 0; const g = this.g; g.globalCompositeOperation = 'destination-out'; g.fillStyle = 'rgba(0,0,0,.03)'; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over'; }
+  },
+  splat(x, y, r, big) {
+    if (D2 || !this.c) return;
+    const n = big ? 14 : 6;
+    for (let i = 0; i < n; i++) { const a = Math.random() * TAU, d = Math.random() * r * 1.4; this.blob(x + Math.cos(a) * d, y + Math.sin(a) * d, r * (0.25 + Math.random() * 0.45), Math.random() < 0.5 ? RUST.dark : RUST.mid, 0.3); }
+    this.blob(x, y, r * 0.8, RUST.dark, 0.35);
+    for (let i = 0; i < 6; i++) { const a = Math.random() * TAU, d = r * (1 + Math.random()); this.g.fillStyle = rgba(RUST.hot, 0.35); this.g.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, 2, 2); }
+  },
+  scorch(x, y, r) {
+    if (D2 || !this.c) return;
+    const g = this.g, gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, 'rgba(0,0,0,.55)'); gr.addColorStop(0.5, 'rgba(15,8,4,.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+  },
+  frost(x, y, r) {
+    if (D2 || !this.c) return;
+    const g = this.g, gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, 'rgba(200,236,255,.22)'); gr.addColorStop(1, 'rgba(200,236,255,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+  },
+  draw(ctx) { if (this.c) ctx.drawImage(this.c, 0, 0, W, H); }
+};
+
+/* Couche de lumière : la carte est plongée dans la pénombre, les tourelles et les tirs la repoussent.
+   Calculée à un quart de la résolution (coût très faible), puis étirée. */
+const Light2D = {
+  c: null, g: null, list: [], S: 0.25,
+  flash(x, y, r, col, life, a) { if (D2 || this.list.length > 48) return; this.list.push({ x, y, r, col, life, max: life, a: a || 1 }); },
+  update(dt) { for (const l of this.list) l.life -= dt; this.list = this.list.filter(l => l.life > 0); },
+  dark(P) { return P.kind === 'ice' ? 0.36 : P.kind === 'lava' ? 0.55 : 0.64; },
+  draw(ctx, b, time) {
+    if (!this.c) { this.c = document.createElement('canvas'); this.g = this.c.getContext('2d'); }
+    const S = this.S, w = Math.round(W * S), h = Math.round(H * S), g = this.g;
+    if (this.c.width !== w) { this.c.width = w; this.c.height = h; }
+    const P = levelPlanet(b.level), hole = Spr.get('lighthole', 64, (q, h) => { const gr = q.createRadialGradient(h, h, 0, h, h, h); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.35, 'rgba(0,0,0,.88)'); gr.addColorStop(0.7, 'rgba(0,0,0,.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); q.fillStyle = gr; q.fillRect(0, 0, h * 2, h * 2); });
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = `rgba(2,4,9,${this.dark(P)})`; g.fillRect(0, 0, w, h);
+    g.setTransform(S, 0, 0, S, 0, 0); g.globalCompositeOperation = 'destination-out';
+    const cut = (x, y, r, a) => { g.globalAlpha = Math.min(1, a); g.drawImage(hole, x - r, y - r, r * 2, r * 2); };
+    for (const t of b.towers) cut(t.x, t.y, 90 + Math.min(80, t.range * 0.35), 1);
+    const be = b.path.end; cut(be.x, be.y, 150 + Math.sin(time * 2) * 6, 1);
+    const en = b.path.entry(); cut(en.x, en.y, 80, 0.6);
+    for (const p of b.projectiles) cut(p.x, p.y, p.splash > 0 ? 50 : 26, 0.5);
+    for (const l of this.list) cut(l.x, l.y, l.r, l.a * l.life / l.max);
+    for (const t of b.towers) if (t.def.kind === 'beam' && t.beamTarget && t.beamTarget.alive) cut(t.beamTarget.x, t.beamTarget.y, 40, 0.7);
+    g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    ctx.drawImage(this.c, 0, 0, W, H);
+    // Teinte colorée de chaque source, très légère : le sol prend la couleur de la lumière qui l'éclaire
+    ctx.globalCompositeOperation = 'lighter';
+    for (const t of b.towers) { const r = 60 + Math.min(50, t.range * 0.25); ctx.globalAlpha = 0.09; ctx.drawImage(Spr.soft(towerColor(t.def)), t.x - r, t.y - r, r * 2, r * 2); }
+    for (const l of this.list) { if (!l.col) continue; ctx.globalAlpha = 0.3 * l.a * l.life / l.max; ctx.drawImage(Spr.soft(l.col), l.x - l.r * 0.7, l.y - l.r * 0.7, l.r * 1.4, l.r * 1.4); }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
+};
+
+/* Faille d'entrée de la Rouille : un trou sombre au bord de métal fondu (lumière chaude, pas de néon rose). */
+function drawRiftN(ctx, b, time) {
+  const en = b.path.entry(), pulse = 0.5 + 0.5 * Math.sin(time * 3);
+  ctx.save(); ctx.translate(en.x, en.y); ctx.rotate(en.angle);
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.25 + pulse * 0.15; ctx.drawImage(Spr.soft('#ff5a1a'), -50, -50, 100, 100);
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  ctx.fillStyle = '#060302'; ctx.beginPath();
+  for (let i = 0; i <= 16; i++) { const a = i / 16 * TAU, r = 1 + 0.12 * Math.sin(a * 3 + time * 1.5) + 0.08 * Math.sin(a * 7 - time); ctx.lineTo(Math.cos(a) * 11 * r, Math.sin(a) * 28 * r); }
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = `rgba(255,${Math.round(110 + pulse * 60)},40,${0.65 + pulse * 0.3})`; ctx.lineWidth = 2.2; ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,40,10,.8)'; ctx.lineWidth = 4; ctx.globalCompositeOperation = 'destination-over'; ctx.stroke();
+  ctx.restore();
+}
+
+/* Matière des ennemis : métal rouillé éclairé par le haut à gauche, liseré à la couleur du type. */
+function enemyMat(ctx, t, x, y, r, flash) {
+  if (!t._mat) t._mat = [mixHex(t.color, '#b88a66', 0.42), mixHex(t.color, '#4a220e', 0.62), mixHex(t.color, '#0e0604', 0.86)];
+  const m = t._mat, g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.45, r * 0.1, x, y, r * 1.15);
+  if (flash) { g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, m[0]); g.addColorStop(1, m[1]); }
+  else { g.addColorStop(0, m[0]); g.addColorStop(0.45, m[1]); g.addColorStop(1, m[2]); }
+  return g;
+}
+
+/* Sprites de tourelles « matière » : socle en métal mat éclairé du haut à gauche, ombre portée,
+   une seule diode à la couleur de la tourelle. La tête garde ses accents de couleur, sans halo. */
+Object.assign(Spr, {
+  towerBaseN(def) {
+    const c = towerColor(def);
+    return this.get(`tbn|${def.id}|${c}|${def.fused ? def.color2 : ''}`, 72, (g, h) => {
+      g.fillStyle = 'rgba(0,0,0,.5)'; roundRectPath(g, h - 21, h - 19, 46, 46, 9); g.fill();
+      g.fillStyle = 'rgba(0,0,0,.25)'; roundRectPath(g, h - 20, h - 17, 48, 48, 10); g.fill();
+      const gr = g.createLinearGradient(h - 23, h - 23, h + 23, h + 23);
+      gr.addColorStop(0, '#46526a'); gr.addColorStop(0.45, '#262f40'); gr.addColorStop(1, '#121822');
+      g.fillStyle = gr; roundRectPath(g, h - 23, h - 23, 46, 46, 8); g.fill();
+      g.lineWidth = 1.5; g.strokeStyle = 'rgba(255,255,255,.2)';
+      g.beginPath(); g.moveTo(h - 22, h + 14); g.lineTo(h - 22, h - 15); g.quadraticCurveTo(h - 22, h - 22, h - 15, h - 22); g.lineTo(h + 14, h - 22); g.stroke();
+      g.strokeStyle = 'rgba(0,0,0,.65)';
+      g.beginPath(); g.moveTo(h + 22, h - 14); g.lineTo(h + 22, h + 15); g.quadraticCurveTo(h + 22, h + 22, h + 15, h + 22); g.lineTo(h - 14, h + 22); g.stroke();
+      g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.arc(h, h - 2, 16, 0, TAU); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 1; g.beginPath(); g.arc(h, h - 2, 16, 0.2 * Math.PI, 1.1 * Math.PI); g.stroke();
+      for (const [dx, dy] of [[-17, -17], [17, -17], [17, 17], [-17, 17]]) {
+        g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.arc(h + dx + 0.5, h + dy + 0.7, 2, 0, TAU); g.fill();
+        g.fillStyle = '#5a667e'; g.beginPath(); g.arc(h + dx, h + dy, 1.5, 0, TAU); g.fill();
+      }
+      const rng = mulberry32(def.id.length * 977 + def.id.charCodeAt(0));
+      for (let i = 0; i < 6; i++) { const x = h + (rng() - 0.5) * 40, y = h + (rng() - 0.5) * 40, a = rng() * TAU, l = 2 + rng() * 6; g.strokeStyle = 'rgba(255,255,255,.07)'; g.lineWidth = 0.6; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }
+      g.fillStyle = '#05070b'; g.fillRect(h - 8, h + 16, 16, 4);
+      g.save(); g.shadowColor = c; g.shadowBlur = 5; g.fillStyle = c; g.fillRect(h - 6.5, h + 17, 13, 2); g.restore();
+      if (def.fused) { g.strokeStyle = def.color2; g.lineWidth = 1.5; g.setLineDash([4, 3]); g.beginPath(); g.arc(h, h - 2, 19, 0, TAU); g.stroke(); g.setLineDash([]); }
+    });
+  },
+  towerHeadN(def) {
+    const c = towerColor(def);
+    return this.get(`thn|${def.id}|${c}`, 72, (g, h) => { g.translate(h, h); drawTowerHead(g, def, 0, false); });
+  },
+  towerHeadShadow(def) {
+    return this.get(`ths|${def.id}`, 72, (g, h) => {
+      g.translate(h, h); drawTowerHead(g, def, 0, false);
+      g.setTransform(this.RES, 0, 0, this.RES, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#000'; g.fillRect(0, 0, 72, 72);
+    });
+  }
+});
+const AMB_N = { city: { t: 'mote', c: '#6f7c92', rate: 5 }, storm: { t: 'mote', c: '#5f6f8c', rate: 7 }, rust: { t: 'mote', c: '#8a4320', rate: 8 }, crystal: { t: 'mote', c: '#9a84b4', rate: 4 } };
+const GRADE_N = { city: '#3a5a8a', sand: '#8a6a3a', ocean: '#2a6a8a', industrial: '#8a5a3a', crystal: '#6a3a8a', storm: '#3a4a8a', forest: '#3a6a4a', lava: '#8a3a2a', ice: '#6a8aa8', rust: '#8a2a22' };
+
+/* =====================================================================
    RENDU D'UNE IMAGE DE LA PARTIE
    ===================================================================== */
 function renderBattle(ctx, b, view) {
@@ -7932,8 +8351,9 @@ function renderBattle(ctx, b, view) {
   ctx.save();
   if (!gpu && (R.shakeX || R.shakeY)) ctx.translate(R.shakeX, R.shakeY);
   ctx.drawImage(view.bg, 0, 0, W, H);
-  drawPathFlow(ctx, b, time);
+  if (D2) drawPathFlow(ctx, b, time); else { Stain.ensure(b); Stain.draw(ctx); }
   ctx.drawImage(view.padLayer, 0, 0, W, H);
+  if (!D2) { Light2D.draw(ctx, b, time); drawPadLeds(ctx, b, time); }
   const hoverPad = view.hoverPad;
 
   if (view.selectedType) {
@@ -7950,7 +8370,7 @@ function renderBattle(ctx, b, view) {
     roundRectPath(ctx, p.x - 27, p.y - 27, 54, 54, 9); ctx.stroke(); ctx.setLineDash([]);
   }
 
-  drawPortal(ctx, b, time);
+  if (D2) drawPortal(ctx, b, time); else drawRiftN(ctx, b, time);
   drawCore(ctx, b, time);
 
   // Liens d'amplification
@@ -8049,7 +8469,7 @@ void main(){
 }`,
   FS_FINAL: `#version 300 es
 precision highp float; in vec2 uv; uniform sampler2D s, b1, b2;
-uniform float aspect, chroma, flash, bloomA, bloomB, vig, scan, time; uniform vec2 shake, res;
+uniform float aspect, chroma, flash, bloomA, bloomB, vig, scan, time, da, sat, grain, danger; uniform vec3 tint; uniform vec2 shake, res;
 uniform vec4 waves[8]; uniform int nw; out vec4 o;
 void main(){
   vec2 u = uv + shake;
@@ -8069,6 +8489,16 @@ void main(){
   col *= mix(1.0, v, vig);
   col *= 1.0 - scan * (0.5 + 0.5 * sin(gl_FragCoord.y * 2.2));
   col += vec3(0.9, 0.08, 0.18) * flash * (1.0 - v) * 0.8;
+  if (da > 0.5) {
+    // Étalonnage : ombres teintées par la planète, couleurs ternes dans le sombre, franches dans la lumière
+    float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
+    float sh = 1.0 - smoothstep(0.0, 0.45, l);
+    col = mix(col, col * 0.65 + tint * l * 1.3, sh * 0.4);
+    col = mix(vec3(l), col, mix(sat, 1.08, smoothstep(0.3, 0.75, l)));
+    col = mix(col, vec3(l * 1.2, l * 0.5, l * 0.45), danger * (0.25 + 0.12 * sin(time * 4.0)));
+    float n = fract(sin(dot(floor(gl_FragCoord.xy / 1.5) + fract(time * 7.0) * 61.0, vec2(12.9898, 78.233))) * 43758.5453);
+    col += (n - 0.5) * grain * (1.0 - l * 0.6);
+  }
   col = col / (1.0 + max(col - 1.0, 0.0) * 0.5);
   o = vec4(col, 1.0);
 }`,
@@ -8227,7 +8657,7 @@ void main(){
       // 3. Lueur : extraction des zones claires puis flou sur deux tailles
       this.pass(this.pBright, this.h1, this.scene.t);
       gl.uniform2f(this.uni(this.pBright, 'px'), 1 / this.w, 1 / this.h);
-      gl.uniform1f(this.uni(this.pBright, 'th'), 0.5);
+      gl.uniform1f(this.uni(this.pBright, 'th'), D2 ? 0.5 : 0.6);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       this.blur(this.h1, this.h2, 1);
       this.pass(this.pCopy, this.q1, this.h1.t); gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -8255,6 +8685,12 @@ void main(){
       });
       gl.uniform4fv(this.uni(F, 'waves'), wv);
       gl.uniform1i(this.uni(F, 'nw'), R.waves.length);
+      const bt = GameView.battle, gk = bt ? levelPlanet(bt.level).kind : 'city', tc = rgbOf(GRADE_N[gk] || '#3a5a8a');
+      gl.uniform1f(this.uni(F, 'da'), D2 ? 0 : 1);
+      gl.uniform3f(this.uni(F, 'tint'), tc[0] / 255, tc[1] / 255, tc[2] / 255);
+      gl.uniform1f(this.uni(F, 'sat'), 0.7);
+      gl.uniform1f(this.uni(F, 'grain'), 0.045);
+      gl.uniform1f(this.uni(F, 'danger'), bt && bt.startLives ? clamp((0.5 - bt.lives / bt.startLives) * 2, 0, 1) : 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindVertexArray(null);
@@ -10478,6 +10914,10 @@ const GameView = {
   setText(k, el, v) { if (this.cache[k] !== v) { this.cache[k] = v; el.textContent = v; } },
   updateHud() {
     const b = this.battle;
+    // Ressenti : l'or « saute » quand il augmente, les vies tremblent quand on en perd
+    const g0 = this._g0, l0 = this._l0; this._g0 = Math.floor(b.gold); this._l0 = b.lives;
+    if (!D2 && g0 !== undefined && this._g0 > g0) for (const id of ['hudGold', 'miniGold']) { const el = $(id); if (el && !el.classList.contains('bump')) { el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 220); } }
+    if (!D2 && l0 !== undefined && b.lives < l0) for (const id of ['hudLives', 'miniLives']) { const el = $(id); if (el) { el.classList.remove('hurt'); void el.offsetWidth; el.classList.add('hurt'); } }
     this.setText('l', $('hudLives'), `${b.lives}`);
     this.setText('g', $('hudGold'), fmtBig(Math.floor(b.gold)));
     this.setText('w', $('hudWave'), `${b.wave} / ${b.level.waves}`);
