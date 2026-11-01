@@ -426,6 +426,46 @@ body.d2 .btn.primary *{color:#1a0e04}
 .artthumbs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .artthumbs figure{margin:0;display:flex;flex-direction:column;align-items:center;background:rgba(0,0,0,.25);border-radius:6px;padding:2px}
 .artthumbs figcaption{font-size:.65rem;color:var(--muted)}
+.gslot{cursor:pointer;border-radius:10px;transition:box-shadow .15s}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-top:6px}
+.ltile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font:inherit;cursor:pointer;text-align:center}
+.ltile canvas{width:44px;height:44px}
+.ltile b{font-size:.74rem}
+.ltile small{font-size:.62rem;color:var(--muted)}
+.ltile.on{border-color:var(--tc);box-shadow:0 0 0 1px var(--tc) inset,0 0 12px color-mix(in srgb,var(--tc) 35%,transparent)}
+.ltile.locked{opacity:.35;cursor:default}
+.lpresets{display:flex;flex-wrap:wrap;gap:6px}
+#modalCard.wide{max-width:min(760px,96vw)}
+.mg{position:fixed;inset:0;z-index:28;background:#05070d;display:flex;flex-direction:column;align-items:center}
+.mg .mgbar{width:100%;height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;box-sizing:border-box;border-bottom:1px solid var(--line);background:rgba(10,14,24,.95)}
+.mg .mgbar b{white-space:nowrap}@media (max-width:520px){.mg .mgbar b{display:none}}
+.mg .mgbar span{flex:1;font:600 .8rem var(--font-ui);color:var(--muted);text-align:center}
+.mg canvas{touch-action:none;display:block;user-select:none;-webkit-user-select:none}
+.mgover{position:absolute;inset:46px 0 0 0;display:flex;align-items:center;justify-content:center;background:rgba(5,7,13,.75);padding:16px;box-sizing:border-box}
+.mgend{max-width:420px;width:100%;text-align:center}
+.mgpick{display:flex;flex-direction:column;gap:8px;margin-top:10px;text-align:left}
+body.mg-on{overflow:hidden}
+.mgcard{border-left:3px solid var(--mc)}
+.mghead{display:flex;gap:12px;align-items:flex-start}.mghead canvas{width:72px;height:72px;border-radius:10px;flex:none;background:var(--panel-2)}
+.mghead h3{margin:2px 0 4px;color:var(--mc)}
+.mgrew{font-size:.85rem;color:var(--muted);margin:6px 0}
+.mgtk{margin-left:6px;letter-spacing:2px}
+.mgdigbg{z-index:29}
+.mgdig{max-width:460px;width:100%}
+.dgrid{display:grid;gap:4px;margin:10px 0}
+.dcell{all:unset;box-sizing:border-box;aspect-ratio:1;border-radius:6px;cursor:pointer;background:linear-gradient(145deg,#5a4630,#3a2c1c);border:1px solid #6d5538;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.dcell:hover:not(.open){filter:brightness(1.2)}
+.dcell.open{background:#141b2c;border-color:#24314f;cursor:default;box-shadow:none}
+.dcell.item{background:color-mix(in srgb,var(--ic) 30%,#141b2c);border-color:var(--ic);color:var(--ic)}
+.dcell.got{box-shadow:0 0 10px var(--ic)}
+.dleg{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.82rem}
+.dleg li{display:flex;align-items:center;gap:5px;color:var(--muted)}.dleg li.ok{color:var(--fg);text-decoration:line-through}
+.dleg .sw{width:10px;height:10px;border-radius:2px;background:var(--ic)}
+#arsName{background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:inherit}
+.gslot:hover,.gslot:focus-visible{box-shadow:0 0 0 1px var(--cyan) inset}
+.gslot.on{box-shadow:0 0 0 2px var(--cyan) inset}
+.gslot .gfl{color:var(--cyan);font-weight:600;letter-spacing:.04em;text-transform:none}
+.gempty .gfl{display:block;margin-top:4px;color:var(--cyan)}
 .worldwrap{position:relative}
 #btnTown{position:absolute;left:10px;top:10px;z-index:2;opacity:.9}
 .crewhero .artthumbs canvas,.artthumbs canvas{width:48px!important;height:64px!important;box-shadow:none!important;background:none!important;border:0!important;border-radius:0!important}
@@ -569,10 +609,21 @@ body.fsgame.fsland.sheet .side{transform:none}
 .evbanner.on{animation:evIn 4.2s ease forwards}
 @keyframes evIn{0%{opacity:0;transform:translate(-50%,-14px) scale(.8)}8%{opacity:1;transform:translate(-50%,0) scale(1.05)}12%{transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0}}
 .evchips{position:absolute;left:8px;bottom:8px;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+/* Hors de la carte : panneau latéral (ordinateur) ou barre d'info (téléphone) */
+.evpanel .evbanner,.infobar .evbanner{position:static;transform:none;min-width:0;max-width:none;margin:0;animation:none;opacity:1}
+.evpanel .evchips,.infobar .evchips{position:static;flex-direction:row;flex-wrap:wrap}
+.evpanel{border-color:var(--ec,var(--line))}
+body.fsgame .infobar .evbanner{padding:4px 8px;text-align:left;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+body.fsgame .infobar .evbanner b{font-size:.72rem}
+body.fsgame .infobar .evbanner span{font-size:.66rem}
+body.fsgame .infobar .evchips{margin-top:2px}
 .evchip{pointer-events:none;font:700 .7rem var(--font-ui);padding:4px 9px;border-radius:999px;background:rgba(6,9,16,.85);border:1.5px solid var(--ec);color:var(--ec)}
 .evchip.btnchip{all:unset;pointer-events:auto;cursor:pointer;font:700 .72rem var(--font-ui);padding:6px 11px;border-radius:999px;background:rgba(6,9,16,.9);border:1.5px solid var(--ec);color:var(--ec);animation:callp 1.2s ease-in-out infinite}
 .drop{all:unset;pointer-events:auto;cursor:pointer;position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 0 10px #5ef0ff);animation:dropIn .5s cubic-bezier(.2,1.5,.4,1),bob 1.2s ease-in-out .5s infinite}
-.drop small{font:800 .62rem var(--font-num);color:#5ef0ff;text-shadow:0 0 3px #000}
+.drop{filter:drop-shadow(0 0 10px #ffcf4a)}
+.drop.gem{filter:drop-shadow(0 0 12px #5ef0ff)}
+.drop small{font:800 .62rem var(--font-num);color:#ffcf4a;text-shadow:0 0 3px #000;background:rgba(6,9,16,.75);padding:1px 5px;border-radius:999px;white-space:nowrap}
+.drop.gem small{color:#7ad7ff}
 .drop.fading{opacity:.55}
 @keyframes dropIn{from{transform:translate(-50%,-300%) scale(.4);opacity:0}}
 @keyframes bob{50%{margin-top:-5px}}
@@ -651,6 +702,8 @@ body.fsgame.fsland.sheet .side{transform:none}
         <span class="stat"><span class="k">Gemmes</span><span class="v gem" id="mapGems">0</span></span>
         <button class="btn small primary" id="btnQuests" type="button">Quêtes<span class="count" id="questCount" hidden>0</span></button>
         <button class="btn small" id="btnCrew" type="button">Équipage<span class="count" id="crewCount" hidden>0</span></button>
+        <button class="btn small" id="btnArsenal" type="button">Arsenal</button>
+        <button class="btn small violet" id="btnEvents" type="button">Événements<span class="count" id="evCount" hidden>0</span></button>
         <button class="btn small" id="btnShop" type="button">Boutique</button>
         <button class="btn small" id="btnTree" type="button">Arbre</button>
         <button class="btn small" id="btnJournal" type="button">Journal</button>
@@ -752,6 +805,23 @@ body.fsgame.fsland.sheet .side{transform:none}
     <div id="journalBody" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
 
+  <section class="screen" id="scrArsenal" hidden>
+    <div class="topbar">
+      <div class="who"><p class="eyebrow">Tes équipes favorites</p><h2>Arsenal</h2></div>
+      <button class="btn small" id="btnArsenalBack" type="button">Retour à la carte</button>
+    </div>
+    <div class="row" id="arsTabs"></div>
+    <div id="arsBody" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <section class="screen" id="scrEvents" hidden>
+    <div class="topbar">
+      <div class="who"><p class="eyebrow">Activités spéciales · <span class="gem" id="mgGems">0</span> ◆</p><h2>Événements</h2></div>
+      <button class="btn small" id="btnEventsBack" type="button">Retour à la carte</button>
+    </div>
+    <div id="mgBody" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
   <!-- ================= PARTIE ================= -->
   <section class="screen" id="scrGame" hidden>
     <header class="hud">
@@ -793,6 +863,7 @@ body.fsgame.fsland.sheet .side{transform:none}
           </div>
         </section>
         <button class="btn small sheetclose" id="btnSheetClose" type="button">Fermer ✕</button>
+        <section class="panel evpanel" id="evPanel" hidden aria-live="polite"><p class="eyebrow">Événement en cours</p></section>
         <section class="panel insp" id="insp" hidden aria-live="polite"></section>
         <section class="panel">
           <p class="eyebrow">Tourelles</p>
@@ -808,6 +879,8 @@ body.fsgame.fsland.sheet .side{transform:none}
   </section>
 </div>
 
+<div class="mg" id="mg" hidden></div>
+<div class="modal-bg mgdigbg" id="mgDig" hidden></div>
 <div class="modal-bg" id="modal" hidden><div class="card" id="modalCard"></div></div>
 <div class="cine" id="cine" hidden role="dialog" aria-label="Introduction du chapitre"></div>
 <button class="btn gold sound-gate" id="soundGate" type="button">Activer le son</button>
@@ -1278,6 +1351,28 @@ const TOWERS = D2 ? D2_TOWERS : [
     color: '#c58bff', desc: 'Ne tire pas. Augmente les dégâts de toutes les tourelles à portée.' },
   { id: 'singularite', unlock: 10, name: 'Singularité', role: 'Contrôle', kind: 'pulse', cost: 300, range: 130, rate: 3, dmg: 55, pull: 45,
     slow: { f: 0.3, d: 1 }, seesPhased: true, color: '#5ef0ff', desc: 'Onde qui frappe tous les ennemis à portée, même intangibles, et les repousse.' }
+,
+  // ---- Tourelles avancées : une nouvelle pour chaque membre de l'équipage, après le monde 1 ----
+  { id: 'mortier', unlock: 12, name: 'Mortier', role: 'Artillerie', kind: 'bullet', cost: 220, range: 250, rate: 2.6, dmg: 95, speed: 260, splash: 95, minRange: 80,
+    color: '#c9a86a', desc: 'Obus très lents à énorme zone. Ne peut pas viser les ennemis trop proches (moins de 80 px).' },
+  { id: 'cryo', unlock: 14, name: 'Cryo-canon', role: 'Gel de zone', kind: 'pulse', cost: 190, range: 110, rate: 1.4, dmg: 8, slow: { f: 0.35, d: 1.3 },
+    color: '#9fe8ff', desc: 'Onde glaciale qui ralentit fortement tous les ennemis autour d’elle.' },
+  { id: 'flamme', unlock: 17, name: 'Lance-flammes', role: 'Brûlure', kind: 'bullet', cost: 200, range: 100, rate: 0.12, dmg: 3, speed: 520, splash: 28, poison: { dps: 14, d: 2 },
+    color: '#ff6a2a', desc: 'Jet de flammes continu à courte portée : brûle tout le groupe devant elle.' },
+  { id: 'essaim', unlock: 20, name: 'Essaim de drones', role: 'Multi-cibles', kind: 'bullet', cost: 230, range: 205, rate: 0.6, dmg: 16, speed: 560, multi: 2,
+    color: '#e8ecff', desc: 'Trois drones tirent chacun sur une cible différente.' },
+  { id: 'prisme', unlock: 23, name: 'Prisme', role: 'Réfraction', kind: 'rail', cost: 260, range: 195, rate: 1.7, dmg: 70, chainHit: 2,
+    color: '#ff5f8f', desc: 'Rayon instantané qui se réfracte sur deux ennemis proches de la cible.' },
+  { id: 'orage', unlock: 27, name: 'Bobine d’orage', role: 'Orage', kind: 'chain', cost: 260, range: 105, rate: 1.5, dmg: 18, chains: 8, chainRange: 70,
+    color: '#fff27a', desc: 'Éclair qui saute entre huit ennemis très proches les uns des autres.' },
+  { id: 'mines', unlock: 31, name: 'Poseur de mines', role: 'Pièges', kind: 'trap', cost: 240, range: 140, rate: 0.6, dmg: 110, splash: 60, trap: { n: 3, charges: 1 },
+    color: '#ffa94d', desc: 'Pose trois mines sur le chemin. Chacune explose une fois quand un ennemi passe, puis une nouvelle est posée.' },
+  { id: 'nanites', unlock: 36, name: 'Nanites', role: 'Vulnérabilité', kind: 'aura', cost: 280, range: 120, rate: 0, dmg: 0, curse: 0.15,
+    color: '#7dff9a', desc: 'Ne tire pas. Les ennemis à portée subissent plus de dégâts de toutes les tourelles.' },
+  { id: 'diapason', unlock: 42, name: 'Diapason', role: 'Cadence', kind: 'aura', cost: 300, range: 115, rate: 0, dmg: 0, rbuff: 0.15,
+    color: '#ffb3ff', desc: 'Ne tire pas. Les tourelles à portée tirent plus vite.' },
+  { id: 'eclipse', unlock: 48, name: 'Éclipse', role: 'Frappe absolue', kind: 'pulse', cost: 420, range: 150, rate: 5, dmg: 260, seesPhased: true,
+    color: '#b38bff', desc: 'Onde dévastatrice toutes les 5 s, qui touche aussi les intangibles.' }
 ];
 const TOWER_BY_ID = Object.fromEntries(TOWERS.map(t => [t.id, t]));
 
@@ -1314,6 +1409,7 @@ if (!D2) ENEMIES.push({ id: 'tresor', unlock: null, name: 'Cargo doré', hp: 260
   desc: 'Vaisseau marchand chargé d’or. Il ne fait aucun dégât au noyau, mais s’enfuit avec son trésor.' });
 const ENEMY_BY_ID = Object.fromEntries(ENEMIES.map(e => [e.id, e]));
 const ELITE = { hp: 2.5, def: 0.1, reward: 2 };
+const GEM_CHAR = '◆';
 
 /* Description lisible des capacités spéciales d'un ennemi. */
 function enemyAbilities(t) {
@@ -2023,6 +2119,15 @@ function towerStats(def, level, mods) {
     pierce: !!def.pierce, sees: !!def.seesPhased
   };
   if (D2) d2Stats(out, def, level, m, k, sat);
+  else {
+    // Effets des tourelles avancées (mode néon)
+    out.multi = def.multi ? def.multi + Math.floor(k / 10) : 0;
+    out.curse = def.curse ? Math.min(0.8, def.curse * (1 + 0.04 * k)) : 0;
+    out.rbuff = def.rbuff ? Math.min(0.8, def.rbuff * (1 + 0.05 * k)) : 0;
+    out.trap = def.trap ? { n: def.trap.n + Math.floor(k / 10), charges: def.trap.charges } : null;
+    if (def.chainHit) out.chainHit = Math.min(8, def.chainHit + Math.floor(k / 5));
+    out.minRange = def.minRange || 0;
+  }
   return out;
 }
 /* Effets des compétences de Diablo II débloquées au niveau de la tourelle (dans l'ordre de l'arbre). */
@@ -2129,7 +2234,7 @@ class Tower {
     for (const e of enemies) {
       if (!this.canTarget(e)) continue;
       const d2 = dist2(e.x, e.y, this.x, this.y);
-      if (d2 > r2) continue;
+      if (d2 > r2 || (this.s.minRange && d2 < this.s.minRange * this.s.minRange)) continue;
       let score;
       if (this.mode === 'close') score = -d2;
       else if (this.mode === 'strong') score = e.hp + e.shield;
@@ -2186,7 +2291,7 @@ class Tower {
     if (this.cooldown > 0) this.cooldown -= dt * (this.rb || 1);
     if (this.recoil > 0) this.recoil = Math.max(0, this.recoil - dt * 6);
     const kind = this.def.kind;
-    if (D2 && (this.s.summons || this.s.trap)) battle.tickSummons(this, dt);
+    if (this.s.summons || this.s.trap) battle.tickSummons(this, dt);
     if (kind === 'aura' || kind === 'trap') { this.angle += dt * 0.8; return; }
 
     if (kind === 'pulse') {
@@ -2310,6 +2415,42 @@ function drawTowerHead(ctx, def, back, glow) {
       ctx.beginPath(); ctx.arc(0, 0, 13, 0, TAU); ctx.fill(); ctx.stroke();
       ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 8, 0, TAU * .75); ctx.stroke();
       ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, TAU); ctx.fill(); break;
+    // ---- Tourelles avancées ----
+    case 'mortier':   // tube court et large, incliné
+      ctx.fillStyle = c; roundRectPath(ctx, 2 - back, -7, 18, 14, 4); ctx.fill();
+      ctx.fillStyle = '#0a0e18'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#05070d'; ctx.beginPath(); ctx.arc(18 - back, 0, 4.5, 0, TAU); ctx.fill(); break;
+    case 'cryo':      // flocon dans un hexagone
+      polygonPath(ctx, 0, 0, 13, 6, 0); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = c; ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 9, Math.sin(a) * 9); ctx.lineTo(-Math.cos(a) * 9, -Math.sin(a) * 9); ctx.stroke(); } break;
+    case 'flamme':    // buse évasée et réservoir
+      ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(6 - back, -3); ctx.lineTo(20 - back, -6); ctx.lineTo(20 - back, 6); ctx.lineTo(6 - back, 3); ctx.fill();
+      ctx.fillStyle = '#0a0e18'; roundRectPath(ctx, -11, -9, 18, 18, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c; ctx.beginPath(); ctx.arc(-2, 0, 3.5, 0, TAU); ctx.fill(); break;
+    case 'essaim':    // trois petits drones en triangle
+      ctx.beginPath(); ctx.arc(0, 0, 8, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c;
+      for (let i = 0; i < 3; i++) { const a = i * TAU / 3; ctx.beginPath(); ctx.arc(Math.cos(a) * 13, Math.sin(a) * 13, 4, 0, TAU); ctx.fill(); } break;
+    case 'prisme':    // prisme triangulaire
+      ctx.beginPath(); ctx.moveTo(14 - back, 0); ctx.lineTo(-9, -11); ctx.lineTo(-9, 11); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c; ctx.globalAlpha *= 0.7; ctx.beginPath(); ctx.moveTo(8 - back, 0); ctx.lineTo(-4, -5); ctx.lineTo(-4, 5); ctx.fill(); ctx.globalAlpha = 1; break;
+    case 'orage':     // bobine à anneaux et pointes
+      ctx.beginPath(); ctx.arc(0, 0, 11, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, TAU); ctx.stroke();
+      ctx.fillStyle = c; for (let i = 0; i < 6; i++) { const a = i * TAU / 6; ctx.fillRect(Math.cos(a) * 13 - 1.5, Math.sin(a) * 13 - 1.5, 3, 3); } break;
+    case 'mines':     // caisse de mines
+      roundRectPath(ctx, -12, -10, 24, 20, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c; for (const [mx, my] of [[-5, -3], [5, -3], [0, 4]]) { ctx.beginPath(); ctx.arc(mx, my, 3.2, 0, TAU); ctx.fill(); } break;
+    case 'nanites':   // nuée de points autour d'un noyau
+      ctx.beginPath(); ctx.arc(0, 0, 9, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c; for (let i = 0; i < 10; i++) { const a = i * 2.4, r = 6 + (i % 3) * 3.5; ctx.fillRect(Math.cos(a) * r - 1, Math.sin(a) * r - 1, 2, 2); } break;
+    case 'diapason':  // fourche à deux branches
+      ctx.beginPath(); ctx.arc(0, 0, 10, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c; ctx.fillRect(-1.5, -2, 3, 12); ctx.fillRect(-7, -12, 3, 12); ctx.fillRect(4, -12, 3, 12); ctx.fillRect(-7, -3, 14, 3); break;
+    case 'eclipse':   // disque noir et couronne
+      ctx.fillStyle = c; ctx.globalAlpha *= 0.5; ctx.beginPath(); ctx.arc(0, 0, 15, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, TAU); ctx.fill(); ctx.stroke(); break;
     // ---- Mode Diablo II : emblèmes des classes (dessins originaux) ----
     case 'amazone':   // arc tendu et flèche
       ctx.beginPath(); ctx.arc(0, 0, 11, 0, TAU); ctx.fill(); ctx.stroke();
@@ -2524,7 +2665,7 @@ class Battle {
   fx(effect) { if (this.effects.length < 400) this.effects.push(effect); }
   vfx(o) { if (this.vq.length < 600) this.vq.push(o); }
 
-  get availableTowers() { return TOWERS.filter(t => t.unlock <= this.level.n); }
+  get availableTowers() { return TOWERS.filter(t => t.unlock <= this.level.n && (!this.allowed || this.allowed.includes(t.id))); }
   get canFuseHere() { return this.level.n >= CONFIG.fusionLevel; }
   get padCost() { return Math.max(1, Math.round(CONFIG.padBase * this.level.econ * Math.pow(CONFIG.padGrowth, this.padsBought) * (1 - this.mods.land))); }
   towerCost(def) { return towerCost(def, this.mods); }
@@ -2537,7 +2678,7 @@ class Battle {
       score: this.score, kills: this.kills, padsBought: this.padsBought,
       unlocked: this.pads.filter(p => !p.locked).map(p => p.i),
       towers: this.towers.map(t => ({ p: t.pad.i, id: t.id, lv: t.level, spent: t.spent, mode: t.mode, kills: t.kills, sp: t.spec })),
-      stats: JSON.parse(JSON.stringify(this.stats)), boosts: this.boosts
+      stats: JSON.parse(JSON.stringify(this.stats)), boosts: this.boosts, allowed: this.allowed || null
     };
   }
   restore(s) {
@@ -2546,6 +2687,7 @@ class Battle {
     if (s.stats) this.stats = Object.assign(newStats(), JSON.parse(JSON.stringify(s.stats)));
     this.clearedUpTo = s.wave;
     this.boosts = s.boosts || [];
+    this.allowed = s.allowed || null;
     for (const p of this.pads) p.locked = true;
     for (const i of s.unlocked || []) if (this.pads[i]) this.pads[i].locked = false;
     for (const t of s.towers || []) {
@@ -2596,7 +2738,7 @@ class Battle {
   }
   build(pad, id) {
     const def = TOWER_BY_ID[id];
-    if (!def || pad.locked || pad.tower || def.unlock > this.level.n) return false;
+    if (!def || pad.locked || pad.tower || def.unlock > this.level.n || (this.allowed && !this.allowed.includes(id))) return false;
     const cost = this.towerCost(def);
     if (this.gold < cost) { this.emit('toast', 'Pas assez d’or'); return false; }
     this.gold -= cost;
@@ -2645,6 +2787,7 @@ class Battle {
     if (a === b) return 'Choisis une autre tourelle';
     if (a.def.fused || b.def.fused) return 'Une tourelle fusionnée ne peut plus fusionner';
     if (a.def.id === b.def.id) return 'Fusionne deux tourelles de types différents';
+    if (a.def.kind === 'trap' || b.def.kind === 'trap') return 'Le Poseur de mines ne peut pas fusionner';
     return null;
   }
   fusionPreview(a, b) {
@@ -2724,7 +2867,7 @@ class Battle {
       if (m.cd > 0) continue;
       if (m.trap) {
         // Sentinelle : tire sur l'ennemi le plus proche, puis s'use
-        let best = null, bd = 85 * 85;
+        let best = null, bd = (D2 ? 85 : 30) * (D2 ? 85 : 30);
         for (const e of this.enemies) { if (!t.canTarget(e)) continue; const d2 = dist2(e.x, e.y, m.x, m.y); if (d2 < bd) { bd = d2; best = e; } }
         if (!best) { m.cd = 0.15; continue; }
         const s = t.s;
@@ -2736,12 +2879,12 @@ class Battle {
             for (const e of this.enemies) { if (!t.canTarget(e) || seen.has(e)) continue; const d2 = dist2(e.x, e.y, cur.x, cur.y); if (d2 <= nd) { nd = d2; next = e; } }
             cur = next;
           }
-          this.fx(new Effect('bolt', 0, 0, { points: pts, color: ELEM[s.elem].color, life: 0.18 }));
+          this.fx(new Effect('bolt', 0, 0, { points: pts, color: s.elem ? ELEM[s.elem].color : t.def.color, life: 0.18 }));
         } else {
-          this.fx(new Effect('line', m.x, m.y, { x2: best.x, y2: best.y, color: ELEM[s.elem].color, life: 0.2 }));
+          if (s.elem) this.fx(new Effect('line', m.x, m.y, { x2: best.x, y2: best.y, color: ELEM[s.elem].color, life: 0.2 }));
           t.hit(this, best, t.damage, { primary: true });
         }
-        this.vfx({ t: 'impact', x: best.x, y: best.y, color: ELEM[s.elem].color, splash: s.splash || 0 });
+        this.vfx({ t: 'impact', x: best.x, y: best.y, color: s.elem ? ELEM[s.elem].color : t.def.color, splash: s.splash || 0 });
         m.cd = Math.max(0.2, s.rate || 1);
         if (--m.charges <= 0) this.killMinion(m, true);
         continue;
@@ -2812,14 +2955,17 @@ class Battle {
       const e = new Enemy('tresor', this.path, this.hpMul * (1 + this.towers.length * 0.12), this.speedMul, 0, false, this.mods);
       e.treasure = Math.round(wb * 2.5); this.enemies.push(e);
     } else if (type === 'meteor') {
+      // Deux cristaux d'or (or de la partie) et un cristal bleu (gemmes gardées) ; jamais sur le chemin ni sur une tourelle
       for (let i = 0; i < 3; i++) {
         let x = 0, y = 0;
-        for (let k = 0; k < 30; k++) {
+        for (let k = 0; k < 60; k++) {
           x = 40 + Math.random() * (W - 80); y = 40 + Math.random() * (H - 80);
-          let near = false; for (let d = 0; d < this.path.length; d += 20) { const q = this.path.pointAt(d); if ((q.x - x) ** 2 + (q.y - y) ** 2 < 50 * 50) { near = true; break; } }
+          let near = this.towers.some(t => (t.x - x) ** 2 + (t.y - y) ** 2 < 45 * 45) || this.drops.some(o => (o.x - x) ** 2 + (o.y - y) ** 2 < 70 * 70);
+          if (!near) for (let d = 0; d < this.path.length; d += 20) { const q = this.path.pointAt(d); if ((q.x - x) ** 2 + (q.y - y) ** 2 < 50 * 50) { near = true; break; } }
           if (!near) break;
         }
-        this.drops.push({ id: this.dropId++, x, y, t: 10, max: 10, gold: Math.round(wb * 0.45) });
+        const gem = i === 2;
+        this.drops.push({ id: this.dropId++, x, y, t: 10, max: 10, gold: gem ? 0 : Math.round(wb * 0.45), gems: gem ? 1 + Math.min(4, Math.floor(this.level.world / 3)) : 0 });
       }
     } else if (type === 'artifact') {
       const c = this.enemies.filter(e => e.alive && !e.type.boss && !e.carrier && !e.treasure && e.distance < this.path.length * 0.6);
@@ -2835,7 +2981,8 @@ class Battle {
     if (!d) return false;
     d.taken = true; this.gold += d.gold; this.score += d.gold;
     this.vfx({ t: 'pad', x: d.x, y: d.y });
-    this.fx(new Effect('text', d.x, d.y - 14, { text: '+' + fmtBig(d.gold), color: '#5ef0ff', life: 0.9 }));
+    if (d.gems) { this.gemsFound = (this.gemsFound || 0) + d.gems; this.emit('gems', d.gems); }
+    this.fx(new Effect('text', d.x, d.y - 14, { text: d.gems ? `+${d.gems} ${GEM_CHAR}` : `+${fmtBig(d.gold)} or`, color: d.gems ? '#7ad7ff' : '#ffcf4a', life: 1.1 }));
     return true;
   }
 
@@ -2850,8 +2997,8 @@ class Battle {
     if (D2) {
       const el = o.elem || (o.source && o.source.s ? o.source.s.elem : null);
       if (el && immuneTo(e, el)) { dmg *= e.lowResT || (o.source && o.source.s && o.source.s.mastery) ? IMM_BROKEN : IMM_FACTOR; if (!o.dot && Math.random() < 0.08) this.vfx({ t: 'imm', e }); }
-      if (e.curse) dmg *= 1 + e.curse;
     }
+    if (e.curse) dmg *= 1 + e.curse;
     const before = e.hp + e.shield;
     const killed = e.takeDamage(dmg, o);
     const dealt = before - e.hp - e.shield;
@@ -2889,7 +3036,7 @@ class Battle {
       const b = 1 + (as.buff || 0), rb = 1 + (as.rbuff || 0), gb = 1 + (as.gbuff || 0), r2 = (a.s.range) ** 2;
       for (const t of this.towers) if (t !== a && t.def.kind !== 'aura' && dist2(t.x, t.y, a.x, a.y) <= r2) { t.buff = Math.max(t.buff, b); t.rb = Math.max(t.rb, rb); t.gb = Math.max(t.gb, gb); }
     }
-    if (D2) this.updateAuras();
+    this.updateAuras();
     // Événements surprises en cours
     if (this.evtQ && this.waveActive) { this.evtQ.t -= dt; if (this.evtQ.t <= 0) { const ty = this.evtQ.type; this.evtQ = null; this.trigger(ty); } }
     if (this.surgeT > 0) { this.surgeT -= dt; for (const t of this.towers) t.buff *= 1.5; }
@@ -2928,7 +3075,7 @@ class Battle {
     }
 
     for (const t of this.towers) t.update(dt, this);
-    if (D2) this.updateMinions(dt);
+    if (this.minions.length) this.updateMinions(dt);
     for (const p of this.projectiles) p.update(dt, this);
     this.projectiles = this.projectiles.filter(p => p.alive);
     this.enemies = this.enemies.filter(e => e.alive);
@@ -3000,6 +3147,13 @@ function towerTraits(def, level, mods) {
   if (def.seesPhased) t.push('<b>Détection</b> : vise les ennemis intangibles');
   if (mods.crit) t.push(`<b>Critique</b> : ${pct(mods.crit)} de chance, ×${fmt(2 + mods.critdmg)}`);
   if (D2) d2Traits(def, s, t);
+  else {
+    if (s.multi) t.push(`<b>Tirs multiples</b> : ${s.multi} cible${s.multi > 1 ? 's' : ''} de plus`);
+    if (s.curse) t.push(`<b>Vulnérabilité</b> : les ennemis à portée subissent +${pct(s.curse)} de dégâts`);
+    if (s.rbuff) t.push(`<b>Cadence</b> : +${pct(s.rbuff)} aux tourelles à portée`);
+    if (s.trap) t.push(`<b>Mines</b> : ${s.trap.n} mines sur le chemin, une explosion chacune`);
+    if (s.minRange) t.push(`<b>Angle mort</b> : ne vise pas à moins de ${s.minRange} px`);
+  }
   return t;
 }
 /* Mode Diablo II : effets lisibles des compétences actives. */
@@ -3178,7 +3332,7 @@ const D2_BOSS_LINES = {
 };
 const D2_EVENTS = {
   treasure: { title: 'Gobelin au trésor !', text: 'Abats-le avant qu’il ne s’échappe : il transporte beaucoup d’or.', who: 'amazone', line: 'Un gobelin chargé d’or ! Ne le laisse pas filer !', color: '#ffcf4a' },
-  meteor: { title: 'Tas d’or !', text: 'Des pièces d’or sont tombées sur la carte : touche-les pour les ramasser.', who: 'charsi', line: 'De l’or par terre ! Ramasse-le avant qu’il ne disparaisse.', color: '#ffcf4a' },
+  meteor: { title: 'Tas d’or !', text: 'Touche les cristaux avant qu’ils ne disparaissent : les dorés donnent l’or indiqué, le bleu donne des gemmes.', who: 'charsi', line: 'De l’or par terre, et un joyau bleu ! Ramasse-les avant qu’ils ne disparaissent.', color: '#ffcf4a' },
   artifact: { title: 'Porteur de parchemin !', text: 'Un monstre transporte un fragment de parchemin horadrique. Élimine-le pour le récupérer.', who: 'caine', line: 'Ce monstre porte un parchemin horadrique ! Je dois le lire.', color: '#c58bff' },
   surge: { title: 'Sanctuaire de combat !', text: 'Pendant 15 secondes, toutes les tours font +50 % de dégâts.', who: 'tyrael', line: 'Un sanctuaire de combat ! Sa puissance coule dans vos armes.', color: '#ffd36b' },
   storm: { title: 'Sanctuaire de cupidité !', text: 'Pendant 15 secondes, les monstres vont plus vite mais rapportent deux fois plus d’or.', who: 'barbare', line: 'Ils accélèrent ! Mais chaque tête vaut le double !', color: '#ff9b3d' },
@@ -3336,7 +3490,7 @@ const CAST_BIO = D2 ? D2_BIO : {
   lyra: 'Musicienne et pirate des ondes. Elle accorde les tourelles comme des instruments : son Amplificateur fait chanter toute la défense. Elle a été la première à entendre Écho rêver.',
   rouille: 'Une corruption qui dévore les réseaux. Chaque Colosse porte un fragment de sa mémoire. Elle semble connaître Écho mieux que personne.'
 };
-const CREW_TOWERS = D2 ? D2_CREW_TOWERS : { brann: ['gatling'], iris: ['stase'], kora: ['plasma'], volta: ['rail'], nyx: ['laser'], ohm: ['tesla'], krast: ['missile'], vesper: ['acide'], lyra: ['amp'], echo: ['singularite'] };
+const CREW_TOWERS = D2 ? D2_CREW_TOWERS : { brann: ['gatling', 'mortier'], iris: ['stase', 'cryo'], kora: ['plasma', 'flamme'], volta: ['rail', 'essaim'], nyx: ['laser', 'prisme'], ohm: ['tesla', 'orage'], krast: ['missile', 'mines'], vesper: ['acide', 'nanites'], lyra: ['amp', 'diapason'], echo: ['singularite', 'eclipse'] };
 const CREW_RELIC = D2 ? D2_CREW_RELIC : { brann: 'pile', iris: 'givre', kora: 'eclat', volta: 'visee', nyx: 'prisme', ohm: 'moteur', krast: 'ancre', vesper: 'lame', lyra: 'bourse', echo: 'coeur' };
 const CREW_IDS = D2 ? D2_CREW_IDS : ['brann', 'iris', 'kora', 'volta', 'nyx', 'ohm', 'krast', 'vesper', 'lyra', 'echo'];
 const crewLevel = id => TOWER_BY_ID[CREW_TOWERS[id][0]].unlock;
@@ -3452,7 +3606,7 @@ const CREW_CHAT = D2 ? D2_CREW_CHAT : {
    ===================================================================== */
 const EVENTS = D2 ? D2_EVENTS : {
   treasure: { title: 'Cargo doré repéré !', text: 'Abats-le avant qu’il ne s’échappe : il transporte beaucoup d’or.', who: 'nyx', line: 'Un cargo doré ! Je le vise. Il ne doit pas quitter la carte !', color: '#ffcf4a' },
-  meteor: { title: 'Pluie de cristaux !', text: 'Des cristaux sont tombés sur la carte : touche-les pour récupérer leur or.', who: 'iris', line: 'Des cristaux d’énergie ! Ramasse-les vite, ils se dissipent.', color: '#5ef0ff' },
+  meteor: { title: 'Pluie de cristaux !', text: 'Touche les cristaux avant qu’ils ne fondent : les dorés donnent l’or indiqué, le bleu donne des gemmes.', who: 'iris', line: 'Des cristaux ! Les dorés pour l’or de la partie, le bleu pour des gemmes. Vite, ils se dissipent.', color: '#5ef0ff' },
   artifact: { title: 'Porteur d’artefact !', text: 'Un ennemi transporte un fragment d’artefact. Élimine-le pour le récupérer.', who: 'vesper', line: 'Cet ennemi transporte un fragment d’artefact. Je le veux pour mes recherches !', color: '#c58bff' },
   surge: { title: 'Surtension du Noyau !', text: 'Pendant 15 secondes, toutes les tourelles font +50 % de dégâts.', who: 'echo', line: 'Je sens une énergie énorme… Je vous la transmets !', color: '#3ef2c8' },
   storm: { title: 'Tempête planétaire !', text: 'Pendant 15 secondes, les ennemis vont plus vite mais rapportent deux fois plus d’or.', who: 'ohm', line: 'Tempête ! Ils accélèrent, mais chaque élimination vaut double !', color: '#7aa7ff' },
@@ -3469,7 +3623,17 @@ const TOWER_LORE = D2 ? D2_TOWER_LORE : {
   missile: 'Krast les numérote à la main. Il en est au 4 812.',
   acide: 'Une solution de Vesper, mise au point en étudiant la Rouille elle-même.',
   amp: 'Lyra l’a accordé comme un instrument. Toute tourelle à portée joue plus fort.',
-  singularite: 'Née d’un rêve d’Écho : un trou dans la réalité, de la taille d’une tourelle.'
+  singularite: 'Née d’un rêve d’Écho : un trou dans la réalité, de la taille d’une tourelle.',
+  mortier: 'Brann l’a soudé à partir d’un canon de la Forge Solaire. Il faut viser large.',
+  cryo: 'Iris a poussé la Stase jusqu’au zéro absolu. Elle porte des gants, maintenant.',
+  flamme: 'Kora appelle ça « la tourelle qui réchauffe l’ambiance ».',
+  essaim: 'Volta pilote trois drones en même temps. Personne ne sait comment.',
+  prisme: 'Nyx a taillé ce prisme dans un cristal de la Nébuleuse Binaire.',
+  orage: 'Ohm a mis un orage en bouteille. La bouteille tient. Pour l’instant.',
+  mines: 'Krast les pose en comptant ses pas. Il n’en a jamais oublié une.',
+  nanites: 'Des milliards de machines minuscules qui rongent les armures de l’intérieur.',
+  diapason: 'Lyra a accordé l’Arche entière sur la même note. Tout tire en rythme.',
+  eclipse: 'Le dernier rêve d’Écho : une nuit totale qui ne dure qu’une seconde.'
 };
 const ENEMY_LORE = D2 ? D2_ENEMY_LORE : {
   drone: 'Les premiers programmes corrompus par la Rouille. Autrefois, ils livraient des colis.',
@@ -4361,6 +4525,529 @@ const TownArt = {
   }
 };
 
+/* =====================================================================
+   ARSENAL — au-delà de 10 tourelles débloquées, on en choisit 10 avant chaque niveau.
+   Trois préréglages favoris se préparent dans l'écran Arsenal.
+   ===================================================================== */
+const LOADOUT_MAX = 10;
+/* =====================================================================
+   ÉVÉNEMENTS — mini-jeux à part du tower defense (tickets quotidiens, paliers de récompenses)
+   · Expédition de l'Arche : tir automatique et améliorations à choisir (façon Archero)
+   · Plongée des Abysses : harpon, oxygène et courants (façon Dave the Diver)
+   · Fouille de la Rouille : grille à creuser avec des pioches gagnées en jouant (façon événements « fouille »)
+   ===================================================================== */
+const MG_TICKETS = 3;
+const Minigames = {
+  data(s) {
+    s.mg = s.mg || { day: '', tickets: { exp: MG_TICKETS, dive: MG_TICKETS }, picks: 3, best: { exp: 0, dive: 0 }, dig: null, stats: { exp: 0, dive: 0, dig: 0 } };
+    if (s.mg.day !== dayKey()) { s.mg.day = dayKey(); s.mg.tickets = { exp: MG_TICKETS, dive: MG_TICKETS }; s.mg.picks += 2; }
+    return s.mg;
+  },
+  /* Pioches gagnées en tower defense : 1 par victoire, 1 de plus avec 3 étoiles. */
+  earnPicks(s, stars) { const m = this.data(s), n = 1 + (stars === 3 ? 1 : 0); m.picks += n; return n; },
+  renderHub() {
+    const s = App.slot, m = this.data(s);
+    $('mgGems').textContent = fmtBig(s.gems);
+    const card = (id, title, who, desc, play, extra) => `<section class="panel mgcard" style="--mc:${CAST[who].color}"><div class="mghead"><canvas width="72" height="72" data-portrait="${who}"></canvas>` +
+      `<div><p class="eyebrow">${esc(CAST[who].name)} propose</p><h3>${title}</h3><p class="hint">${desc}</p></div></div>${extra}<div class="row">${play}</div></section>`;
+    const tk = id => `<span class="mgtk">${'🎟'.repeat(m.tickets[id])}${'·'.repeat(MG_TICKETS - m.tickets[id])}</span>`;
+    $('mgBody').innerHTML =
+      '<p class="hint">Trois activités à part, pour souffler entre deux batailles. Les tickets reviennent chaque jour ; les pioches se gagnent en remportant des niveaux (une de plus avec 3 étoiles).</p>' +
+      card('exp', 'Expédition de l’Arche', 'volta', 'Pilote l’Arche à travers 10 secteurs de Rouille. Ton vaisseau tire seul : esquive, et choisis une amélioration après chaque secteur.',
+        `<button class="btn primary" data-play="exp" type="button" ${m.tickets.exp ? '' : 'disabled'}>Partir ${tk('exp')}</button>`,
+        `<p class="mgrew">Record : secteur <b>${m.best.exp}</b> / 10 · Récompense : 4 ${GEM} par secteur, un objet au secteur 5, un objet rare et +30 ${GEM} au secteur 10</p>`) +
+      card('dive', 'Plongée des Abysses', 'iris', 'Plonge sous les pontons de l’océan quantique. Harponne les poissons de données avant de manquer d’oxygène. Plus c’est profond, plus ça rapporte.',
+        `<button class="btn primary" data-play="dive" type="button" ${m.tickets.dive ? '' : 'disabled'}>Plonger ${tk('dive')}</button>`,
+        `<p class="mgrew">Record : <b>${m.best.dive}</b> points de prise · 1 ${GEM} pour 6 points, un objet pour chaque lanterne dorée</p>`) +
+      card('dig', 'Fouille de la Rouille', 'brann', 'Creuse les décombres d’un vieux hangar. Chaque coup de pioche dégage une case ; dégage un objet en entier pour l’emporter.',
+        `<button class="btn primary" data-play="dig" type="button">Creuser · ⛏ ${m.picks}</button>`,
+        `<p class="mgrew">Pièces, batteries, caisses d’équipement et reliques. Tout trouver sur une grille rapporte un bonus et ouvre une grille plus riche.</p>`);
+    const body = $('mgBody');
+    body.querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
+    body.querySelectorAll('[data-play]').forEach(bt => { bt.onclick = () => this.start(bt.dataset.play); });
+  },
+  start(id) {
+    const s = App.slot, m = this.data(s);
+    if (id === 'dig') { Dig.open(); return; }
+    if (!m.tickets[id]) return;
+    m.tickets[id]--; Store.touch(s);
+    const game = id === 'exp' ? Expedition : Dive;
+    this.run(game);
+  },
+  /* ---------- Cadre commun : plein écran, toile, contrôles au doigt et à la souris ---------- */
+  run(game) {
+    const el = $('mg');
+    el.innerHTML = `<div class="mgbar"><b>${esc(game.title)}</b><span id="mgInfo"></span><button class="btn small" id="mgQuit" type="button">${game.quitLabel || 'Abandonner'}</button></div><canvas id="mgCv"></canvas><div class="mgover" id="mgOver" hidden></div>`;
+    el.hidden = false;
+    document.body.classList.add('mg-on');
+    const cv = $('mgCv'), ctx = cv.getContext('2d');
+    const LW = game.W, LH = game.H;
+    const fit = () => {
+      const bw = innerWidth, bh = innerHeight - 46, k = Math.min(bw / LW, bh / LH), dpr = Math.min(2, devicePixelRatio || 1);
+      cv.style.width = LW * k + 'px'; cv.style.height = LH * k + 'px';
+      cv.width = Math.round(LW * k * dpr); cv.height = Math.round(LH * k * dpr);
+      this.k = k * dpr;
+    };
+    fit(); window.addEventListener('resize', fit);
+    const P = this.ptr = { down: false, x: LW / 2, y: LH * 0.8, t0: 0, moved: 0, tap: null };
+    const pos = ev => { const r = cv.getBoundingClientRect(); return [(ev.clientX - r.left) / r.width * LW, (ev.clientY - r.top) / r.height * LH]; };
+    cv.onpointerdown = ev => { cv.setPointerCapture(ev.pointerId); [P.x, P.y] = pos(ev); P.sx = P.x; P.sy = P.y; P.down = true; P.t0 = performance.now(); P.moved = 0; };
+    cv.onpointermove = ev => { const [x, y] = pos(ev); if (P.down) P.moved += Math.hypot(x - P.x, y - P.y); P.x = x; P.y = y; };
+    cv.onpointerup = ev => { const [x, y] = pos(ev); if (P.down && performance.now() - P.t0 < 260 && P.moved < 14) P.tap = [x, y]; P.down = false; };
+    const keys = this.keys = {};
+    const kd = ev => { keys[ev.key] = true; }, ku = ev => { keys[ev.key] = false; };
+    window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+    let last = performance.now(), stop = false;
+    const end = () => { stop = true; window.removeEventListener('resize', fit); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); };
+    this.finish = result => {
+      if (stop) return;
+      end();
+      const rew = game.reward(result), s = App.slot, m = this.data(s);
+      const msg = grant(s, rew.grant);
+      if (rew.best !== undefined) m.best[game.id] = Math.max(m.best[game.id] || 0, rew.best);
+      m.stats[game.id] = (m.stats[game.id] || 0) + 1;
+      Store.touch(s);
+      const ov = $('mgOver');
+      ov.hidden = false;
+      ov.innerHTML = `<div class="card mgend"><h2>${esc(rew.title)}</h2><p>${esc(rew.text)}</p><p class="gem">${msg ? 'Récompense : ' + esc(msg) : 'Pas de récompense cette fois.'}</p><div class="row"><button class="btn primary" id="mgClose" type="button">Retour aux événements</button></div></div>`;
+      if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; setTimeout(() => Reveal.show(items, game.title), 300); }
+      $('mgClose').onclick = () => this.close();
+      Sound.sfx && Sound.sfx('up');
+    };
+    $('mgQuit').onclick = () => game.quit ? game.quit() : this.finish(game.result());
+    game.init();
+    const loop = now => {
+      if (stop || el.hidden) return;
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (!game.paused) game.update(dt, P, keys);
+      P.tap = null;
+      ctx.setTransform(this.k, 0, 0, this.k, 0, 0);
+      game.draw(ctx);
+      $('mgInfo').textContent = game.info();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  },
+  close() {
+    const el = $('mg'); el.hidden = true; el.innerHTML = ''; document.body.classList.remove('mg-on');
+    App.show('events');
+  },
+  /* Choix d'une carte parmi trois (améliorations), par-dessus la partie. */
+  choose(title, opts, fn) {
+    const ov = $('mgOver');
+    ov.hidden = false;
+    ov.innerHTML = `<div class="card mgend"><h2>${esc(title)}</h2><div class="mgpick">${opts.map((o, i) => `<button class="choice" data-i="${i}" type="button"><b>${esc(o.name)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div></div>`;
+    ov.querySelectorAll('[data-i]').forEach(bt => { bt.onclick = () => { ov.hidden = true; ov.innerHTML = ''; fn(opts[+bt.dataset.i]); }; });
+  }
+};
+
+/* ---------- Expédition de l'Arche ---------- */
+const EXP_UPGRADES = [
+  { id: 'multi', name: 'Tir double', desc: '+1 projectile par salve', max: 4, fx: g => { g.multi++; } },
+  { id: 'rate', name: 'Cadence', desc: 'Tire 25 % plus vite', max: 5, fx: g => { g.rate *= 0.8; } },
+  { id: 'dmg', name: 'Puissance', desc: '+35 % de dégâts', max: 6, fx: g => { g.dmg *= 1.35; } },
+  { id: 'pierce', name: 'Perforation', desc: 'Les tirs traversent un ennemi de plus', max: 3, fx: g => { g.pierce++; } },
+  { id: 'orb', name: 'Drone orbital', desc: 'Un drone tourne autour de l’Arche et blesse au contact', max: 3, fx: g => { g.orbs++; } },
+  { id: 'hp', name: 'Coque renforcée', desc: '+1 point de coque et soin complet', max: 4, fx: g => { g.maxHp++; g.hp = g.maxHp; } },
+  { id: 'spd', name: 'Propulseurs', desc: 'Déplacement 20 % plus rapide', max: 3, fx: g => { g.speed *= 1.2; } },
+  { id: 'side', name: 'Tirs latéraux', desc: 'Deux tirs en diagonale à chaque salve', max: 1, fx: g => { g.side = true; } }
+];
+const Expedition = {
+  id: 'exp', title: 'Expédition de l’Arche', W: 360, H: 640,
+  init() {
+    Object.assign(this, { paused: false, wave: 0, cleared: 0, kills: 0, t: 0, x: 180, y: 560, hp: 3, maxHp: 3, rate: 0.42, cd: 0, dmg: 10, multi: 1, pierce: 0, orbs: 0, side: false,
+      speed: 230, inv: 0, en: [], shots: [], eshots: [], fx: [], ups: {}, spawnQ: [], stars: Array.from({ length: 60 }, () => [Math.random() * 360, Math.random() * 640, 0.3 + Math.random()]) });
+    this.nextWave();
+  },
+  nextWave() {
+    this.wave++;
+    const w = this.wave, boss = w === 5 || w === 10, q = [];
+    if (boss) q.push({ type: 'boss', delay: 1 });
+    const n = boss ? 4 + w : 5 + w * 2;
+    for (let i = 0; i < n; i++) {
+      const r = Math.random(), type = w >= 3 && r < 0.18 ? 'tank' : w >= 2 && r < 0.42 ? 'shooter' : r < 0.7 ? 'zig' : 'drone';
+      q.push({ type, delay: 0.45 + Math.random() * 0.5 });
+    }
+    this.spawnQ = q; this.spawnT = 1.2;
+    this.banner = { text: boss ? `Secteur ${w} · Colosse !` : `Secteur ${w}`, t: 1.6 };
+  },
+  spawn(type) {
+    const w = this.wave, hpk = 1 + 0.32 * (w - 1);
+    const base = { drone: [14, 70, 9, '#ffcf4a'], zig: [12, 85, 9, '#ff8a3d'], shooter: [22, 55, 11, '#ff4fa3'], tank: [70, 38, 16, '#b06bff'], boss: [520, 30, 34, '#ff3355'] }[type];
+    this.en.push({ type, x: 30 + Math.random() * 300, y: -30, hp: base[0] * hpk, max: base[0] * hpk, sp: base[1], r: base[2], c: base[3], ph: Math.random() * 6, fire: 1 + Math.random() * 1.5 });
+  },
+  update(dt, P, keys) {
+    this.t += dt;
+    for (const s of this.stars) { s[1] += s[2] * 60 * dt; if (s[1] > 640) { s[1] = 0; s[0] = Math.random() * 360; } }
+    if (this.banner) { this.banner.t -= dt; if (this.banner.t <= 0) this.banner = null; }
+    // Déplacement : vers le doigt (pendant l'appui) ou au clavier
+    let tx = this.x, ty = this.y;
+    if (P.down) { tx = P.x; ty = P.y - 40; }
+    const kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.q || keys.a ? 1 : 0), ky = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.z || keys.w ? 1 : 0);
+    if (kx || ky) { tx = this.x + kx * 100; ty = this.y + ky * 100; }
+    const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy), step = this.speed * dt;
+    if (d > 1) { this.x += dx / d * Math.min(step, d); this.y += dy / d * Math.min(step, d); }
+    this.x = clamp(this.x, 16, 344); this.y = clamp(this.y, 260, 620);
+    // Apparitions
+    if (this.spawnQ.length) { this.spawnT -= dt; if (this.spawnT <= 0) { const s = this.spawnQ.shift(); this.spawn(s.type); this.spawnT = s.delay; } }
+    // Tir automatique vers l'ennemi le plus proche
+    this.cd -= dt;
+    if (this.cd <= 0 && this.en.length) {
+      this.cd = this.rate;
+      let tgt = null, bd = 1e9; for (const e of this.en) { const dd = (e.x - this.x) ** 2 + (e.y - this.y) ** 2; if (dd < bd && e.y > -10) { bd = dd; tgt = e; } }
+      const base = tgt ? Math.atan2(tgt.y - this.y, tgt.x - this.x) : -Math.PI / 2;
+      for (let i = 0; i < this.multi; i++) { const a = base + (i - (this.multi - 1) / 2) * 0.14; this.shots.push({ x: this.x, y: this.y - 14, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, p: this.pierce, hit: new Set() }); }
+      if (this.side) for (const a of [-Math.PI / 2 - 0.6, -Math.PI / 2 + 0.6]) this.shots.push({ x: this.x, y: this.y - 10, vx: Math.cos(a) * 480, vy: Math.sin(a) * 480, p: 0, hit: new Set() });
+    }
+    for (const s of this.shots) { s.x += s.vx * dt; s.y += s.vy * dt; }
+    // Ennemis
+    for (const e of this.en) {
+      e.ph += dt;
+      if (e.type === 'zig') { e.y += e.sp * dt; e.x += Math.sin(e.ph * 3) * 90 * dt; }
+      else if (e.type === 'shooter' || e.type === 'boss') { const stopY = e.type === 'boss' ? 110 : 140 + (e.r * 7) % 60; if (e.y < stopY) e.y += e.sp * dt * 1.6; else e.x += Math.sin(e.ph) * 40 * dt; }
+      else e.y += e.sp * dt;
+      e.x = clamp(e.x, 12, 348);
+      if (e.type === 'shooter' || e.type === 'boss') {
+        e.fire -= dt;
+        if (e.fire <= 0 && e.y > 40) {
+          if (e.type === 'boss') { const n = 10, off = e.ph; for (let i = 0; i < n; i++) { const a = off + i * TAU / n; this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140 }); } e.fire = 1.6; }
+          else { const a = Math.atan2(this.y - e.y, this.x - e.x); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170 }); e.fire = 1.8 + Math.random(); }
+        }
+      }
+      if (e.y > 680) { e.dead = true; this.hurt(); }
+    }
+    // Drones orbitaux
+    for (let i = 0; i < this.orbs; i++) {
+      const a = this.t * 3 + i * TAU / this.orbs, ox = this.x + Math.cos(a) * 40, oy = this.y + Math.sin(a) * 40;
+      for (const e of this.en) if ((e.x - ox) ** 2 + (e.y - oy) ** 2 < (e.r + 7) ** 2) this.damage(e, this.dmg * 2.2 * dt);
+    }
+    // Collisions des tirs
+    for (const s of this.shots) for (const e of this.en) {
+      if (e.dead || s.dead || s.hit.has(e)) continue;
+      if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 < (e.r + 4) ** 2) { s.hit.add(e); this.damage(e, this.dmg); if (s.p-- <= 0) s.dead = true; }
+    }
+    for (const s of this.eshots) { s.x += s.vx * dt; s.y += s.vy * dt; if ((s.x - this.x) ** 2 + (s.y - this.y) ** 2 < 13 * 13) { s.dead = true; this.hurt(); } }
+    for (const e of this.en) if (!e.dead && (e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (e.r + 10) ** 2) { if (e.type !== 'boss') e.dead = true; this.hurt(); }
+    for (const f of this.fx) f.t -= dt;
+    this.fx = this.fx.filter(f => f.t > 0);
+    this.shots = this.shots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -20 && s.x < 380);
+    this.eshots = this.eshots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -20 && s.x < 380);
+    this.en = this.en.filter(e => !e.dead);
+    if (this.inv > 0) this.inv -= dt;
+    if (this.hp <= 0) { Minigames.finish(this.result()); return; }
+    // Secteur terminé : amélioration à choisir
+    if (!this.spawnQ.length && !this.en.length) {
+      this.cleared = this.wave;
+      if (this.wave >= 10) { Minigames.finish(this.result()); return; }
+      this.paused = true;
+      const pool = EXP_UPGRADES.filter(u => (this.ups[u.id] || 0) < u.max);
+      shuffle(pool, Math.random);
+      Minigames.choose(`Secteur ${this.wave} nettoyé · choisis une amélioration`, pool.slice(0, 3), u => { u.fx(this); this.ups[u.id] = (this.ups[u.id] || 0) + 1; this.eshots = []; this.paused = false; this.nextWave(); });
+    }
+  },
+  damage(e, v) {
+    if (e.dead) return;
+    e.hp -= v;
+    if (e.hp <= 0) { e.dead = true; this.kills++; this.fx.push({ x: e.x, y: e.y, c: e.c, r: e.r, t: 0.35 }); Sound.sfx && Sound.sfx(e.type === 'boss' ? 'boom' : 'build'); }
+  },
+  hurt() { if (this.inv > 0) return; this.hp--; this.inv = 1.2; buzz(60); Sound.sfx && Sound.sfx('alarm'); },
+  draw(g) {
+    g.fillStyle = '#05070d'; g.fillRect(0, 0, 360, 640);
+    for (const [x, y, z] of this.stars) { g.fillStyle = `rgba(228,236,251,${0.2 + z * 0.4})`; g.fillRect(x, y, z * 1.6, z * 1.6); }
+    for (const e of this.en) {
+      g.save(); g.translate(e.x, e.y); g.shadowColor = e.c; g.shadowBlur = 10;
+      g.fillStyle = '#0a0e18'; g.strokeStyle = e.c; g.lineWidth = 2.5;
+      if (e.type === 'boss') { polygonPath(g, 0, 0, e.r, 6, e.ph * 0.5); } else if (e.type === 'tank') polygonPath(g, 0, 0, e.r, 6, 0); else if (e.type === 'shooter') polygonPath(g, 0, 0, e.r, 4, Math.PI / 4); else { g.beginPath(); g.arc(0, 0, e.r, 0, TAU); }
+      g.fill(); g.stroke(); g.shadowBlur = 0;
+      g.fillStyle = e.c; g.beginPath(); g.arc(0, 0, e.r * 0.35, 0, TAU); g.fill();
+      if (e.max > 20) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(-e.r, -e.r - 8, e.r * 2, 3); g.fillStyle = e.c; g.fillRect(-e.r, -e.r - 8, e.r * 2 * Math.max(0, e.hp / e.max), 3); }
+      g.restore();
+    }
+    g.fillStyle = '#5ef0ff'; for (const s of this.shots) { g.fillRect(s.x - 1.5, s.y - 5, 3, 10); }
+    g.fillStyle = '#ff5468'; for (const s of this.eshots) { g.beginPath(); g.arc(s.x, s.y, 4, 0, TAU); g.fill(); }
+    for (const f of this.fx) { g.globalAlpha = f.t / 0.35; g.strokeStyle = f.c; g.lineWidth = 3; g.beginPath(); g.arc(f.x, f.y, f.r * (2 - f.t / 0.35), 0, TAU); g.stroke(); g.globalAlpha = 1; }
+    for (let i = 0; i < this.orbs; i++) { const a = this.t * 3 + i * TAU / this.orbs; g.fillStyle = '#3ef2c8'; g.beginPath(); g.arc(this.x + Math.cos(a) * 40, this.y + Math.sin(a) * 40, 5, 0, TAU); g.fill(); }
+    // L'Arche
+    if (!(this.inv > 0 && Math.floor(this.t * 12) % 2)) {
+      g.save(); g.translate(this.x, this.y);
+      g.fillStyle = 'rgba(94,240,255,.35)'; g.beginPath(); g.moveTo(-5, 14); g.lineTo(0, 26 + Math.random() * 8); g.lineTo(5, 14); g.fill();
+      g.fillStyle = '#111829'; g.strokeStyle = '#e4ecfb'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(0, -18); g.lineTo(13, 12); g.lineTo(0, 7); g.lineTo(-13, 12); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#5ef0ff'; g.beginPath(); g.arc(0, 0, 3.5, 0, TAU); g.fill();
+      g.restore();
+    }
+    for (let i = 0; i < this.maxHp; i++) { g.fillStyle = i < this.hp ? '#ff5468' : '#24314f'; g.fillRect(10 + i * 16, 10, 12, 12); }
+    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t * 2); g.fillStyle = '#e4ecfb'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); g.globalAlpha = 1; }
+  },
+  info() { return `Secteur ${this.wave} / 10 · ${this.kills} détruits`; },
+  result() { return { cleared: this.cleared, kills: this.kills }; },
+  reward(r) {
+    const c = r.cleared, gr = { gems: 4 * c + Math.floor(r.kills / 15) };
+    if (c >= 10) { gr.gems += 30; gr.item = 2; } else if (c >= 5) gr.item = c >= 8 ? 1 : 0;
+    return { best: c, grant: gr, title: c >= 10 ? 'Expédition réussie !' : 'Fin de l’expédition', text: `Secteurs franchis : ${c} / 10 · ennemis détruits : ${r.kills}.` };
+  }
+};
+
+/* ---------- Plongée des Abysses ---------- */
+const FISH = [
+  { id: 'pixel', name: 'Poisson-pixel', depth: [0, 900], hp: 1, val: 2, sp: 40, r: 9, c: '#ffcf4a', w: 10 },
+  { id: 'raie', name: 'Raie de données', depth: [300, 1500], hp: 2, val: 6, sp: 70, r: 14, c: '#4fd1ff', w: 6, shy: true },
+  { id: 'meduse', name: 'Méduse électrique', depth: [400, 2000], hp: 99, val: 0, sp: 18, r: 13, c: '#ff7ae0', w: 4, hazard: true },
+  { id: 'anguille', name: 'Anguille quantique', depth: [900, 2000], hp: 3, val: 14, sp: 95, r: 12, c: '#7dff6a', w: 5, shy: true },
+  { id: 'lanterne', name: 'Lanterne dorée', depth: [1400, 2000], hp: 4, val: 45, sp: 55, r: 15, c: '#ffd700', w: 1.2, rare: true }
+];
+const Dive = {
+  id: 'dive', title: 'Plongée des Abysses', W: 360, H: 640, DEPTH: 2000, quitLabel: 'Remonter',
+  init() {
+    Object.assign(this, { paused: false, t: 0, x: 180, y: 60, o2: 60, cam: 0, bag: [], harp: null, cd: 0, fish: [], fx: [], current: (Math.random() - 0.5) * 50, ended: false, sting: 0 });
+    for (let i = 0; i < 46; i++) this.addFish(80 + Math.random() * (this.DEPTH - 120));
+    this.banner = { text: this.current > 10 ? 'Courant vers la droite' : this.current < -10 ? 'Courant vers la gauche' : 'Eaux calmes', t: 2 };
+  },
+  addFish(y) {
+    const ok = FISH.filter(f => y >= f.depth[0] && y <= f.depth[1]), tot = ok.reduce((a, f) => a + f.w, 0);
+    let r = Math.random() * tot, f = ok[0];
+    for (const o of ok) { r -= o.w; if (r <= 0) { f = o; break; } }
+    this.fish.push({ f, x: 20 + Math.random() * 320, y, hp: f.hp, dir: Math.random() < 0.5 ? -1 : 1, ph: Math.random() * 6 });
+  },
+  update(dt, P, keys) {
+    this.t += dt;
+    if (this.banner) { this.banner.t -= dt; if (this.banner.t <= 0) this.banner = null; }
+    // Oxygène : plus on descend, plus il part vite
+    this.o2 -= dt * (1 + this.y / this.DEPTH * 0.8);
+    if (this.o2 <= 0) { this.o2 = 0; Minigames.finish(this.result(true)); return; }
+    // Nage vers le doigt (appui maintenu) ; un toucher bref lance le harpon
+    let tx = this.x, ty = this.y;
+    if (P.down) { tx = P.x; ty = P.y + this.cam; }
+    const kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.q || keys.a ? 1 : 0), ky = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.z || keys.w ? 1 : 0);
+    if (kx || ky) { tx = this.x + kx * 100; ty = this.y + ky * 100; }
+    const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy), sp = 120;
+    if (d > 2 && (P.down || kx || ky)) { this.x += dx / d * Math.min(sp * dt, d); this.y += dy / d * Math.min(sp * dt, d); this.face = dx; }
+    this.x += this.current * dt * 0.4;
+    this.x = clamp(this.x, 12, 348); this.y = clamp(this.y, 30, this.DEPTH - 20);
+    this.cam += (clamp(this.y - 260, 0, this.DEPTH - 640) - this.cam) * Math.min(1, dt * 4);
+    this.cd -= dt;
+    const shoot = (ax, ay) => { if (this.harp || this.cd > 0) return; const a = Math.atan2(ay - this.y, ax - this.x); this.harp = { x: this.x, y: this.y, vx: Math.cos(a) * 320, vy: Math.sin(a) * 320, life: 0.55 }; this.cd = 0.5; Sound.sfx && Sound.sfx('ui'); };
+    if (P.tap) shoot(P.tap[0], P.tap[1] + this.cam);
+    if (keys[' ']) { keys[' '] = false; shoot(this.x + (this.face || 1) * 100, this.y); }
+    // Harpon
+    const h = this.harp;
+    if (h) {
+      h.x += h.vx * dt; h.y += h.vy * dt; h.life -= dt;
+      for (const f of this.fish) {
+        if (f.f.hazard || f.dead) continue;
+        if ((f.x - h.x) ** 2 + (f.y - h.y) ** 2 < (f.f.r + 4) ** 2) {
+          f.hp--; h.life = 0; f.flee = 1.2;
+          if (f.hp <= 0) { f.dead = true; this.bag.push(f.f); this.fx.push({ x: f.x, y: f.y, t: 0.8, text: `+${f.f.val}`, c: f.f.c }); Sound.sfx && Sound.sfx(f.f.rare ? 'up' : 'sell'); }
+          else this.fx.push({ x: f.x, y: f.y, t: 0.5, text: `${f.hp}`, c: '#ffffff' });
+          break;
+        }
+      }
+      if (h.life <= 0) this.harp = null;
+    }
+    // Poissons : flânent, fuient le plongeur s'ils sont farouches ; méduses qui piquent
+    for (const f of this.fish) {
+      if (f.dead) continue;
+      f.ph += dt;
+      const dd = Math.hypot(f.x - this.x, f.y - this.y);
+      let vx = f.dir * f.f.sp * 0.5, vy = Math.sin(f.ph * 1.3) * 12;
+      if ((f.f.shy && dd < 90) || f.flee > 0) { vx = (f.x - this.x) / (dd || 1) * f.f.sp * 1.5; vy = (f.y - this.y) / (dd || 1) * f.f.sp; f.flee = (f.flee || 0) - dt; }
+      f.x += (vx + this.current * 0.6) * dt; f.y += vy * dt;
+      if (f.x < 10 || f.x > 350) { f.dir *= -1; f.x = clamp(f.x, 10, 350); }
+      f.y = clamp(f.y, f.f.depth[0] + 20, f.f.depth[1]);
+      if (f.f.hazard && dd < f.f.r + 10 && this.sting <= 0) { this.o2 -= 6; this.sting = 1.5; this.fx.push({ x: this.x, y: this.y - 20, t: 0.9, text: '−6 s d’oxygène', c: '#ff7ae0' }); buzz(50); Sound.sfx && Sound.sfx('alarm'); }
+    }
+    if (this.sting > 0) this.sting -= dt;
+    this.fish = this.fish.filter(f => !f.dead);
+    while (this.fish.length < 40) this.addFish(80 + Math.random() * (this.DEPTH - 120));
+    for (const f of this.fx) { f.t -= dt; f.y -= 20 * dt; }
+    this.fx = this.fx.filter(f => f.t > 0);
+  },
+  draw(g) {
+    const cam = this.cam, depthK = clamp(this.y / this.DEPTH, 0, 1);
+    const sky = g.createLinearGradient(0, 0, 0, 640);
+    sky.addColorStop(0, `rgb(${Math.round(16 - 12 * depthK)},${Math.round(70 - 55 * depthK)},${Math.round(110 - 80 * depthK)})`); sky.addColorStop(1, `rgb(${Math.round(6 - 4 * depthK)},${Math.round(30 - 24 * depthK)},${Math.round(50 - 38 * depthK)})`);
+    g.fillStyle = sky; g.fillRect(0, 0, 360, 640);
+    g.save(); g.translate(0, -cam);
+    // Rayons de lumière près de la surface, bulles, fond
+    if (cam < 400) { g.globalAlpha = 0.08 * (1 - cam / 400); g.fillStyle = '#bfefff'; for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(40 + i * 70, 0); g.lineTo(80 + i * 70 + Math.sin(this.t + i) * 10, 600); g.lineTo(60 + i * 70, 600); g.fill(); } g.globalAlpha = 1; }
+    g.fillStyle = '#0c2a3a'; g.fillRect(0, this.DEPTH - 10, 360, 40);
+    for (let i = 0; i < 12; i++) { const bx = (i * 73 + this.t * 8) % 360, by = (this.DEPTH - ((this.t * 40 + i * 170) % this.DEPTH)); g.strokeStyle = 'rgba(191,239,255,.35)'; g.beginPath(); g.arc(bx, by, 2 + (i % 3), 0, TAU); g.stroke(); }
+    // Pontons en surface
+    g.fillStyle = '#3a2814'; for (let i = 0; i < 4; i++) g.fillRect(i * 100 - 10, 0, 70, 14);
+    for (const f of this.fish) {
+      if (f.y < cam - 30 || f.y > cam + 670) continue;
+      g.save(); g.translate(f.x, f.y);
+      if (f.f.hazard) {
+        g.globalAlpha = 0.8; g.fillStyle = f.f.c; g.beginPath(); g.arc(0, 0, f.f.r, Math.PI, 0); g.fill();
+        g.strokeStyle = f.f.c; g.lineWidth = 1.5; for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(k * 4, 0); g.quadraticCurveTo(k * 4 + Math.sin(f.ph * 3 + k) * 4, 10, k * 4, 20); g.stroke(); }
+      } else {
+        const dir = (f.flee > 0 ? (f.x - this.x) : f.dir) < 0 ? -1 : 1;
+        g.scale(dir, 1); g.shadowColor = f.f.c; g.shadowBlur = f.f.rare ? 14 : 6;
+        g.fillStyle = f.f.c; g.beginPath(); g.ellipse(0, 0, f.f.r, f.f.r * 0.55, 0, 0, TAU); g.fill();
+        g.beginPath(); g.moveTo(-f.f.r * 0.8, 0); g.lineTo(-f.f.r * 1.5, -f.f.r * 0.5); g.lineTo(-f.f.r * 1.5, f.f.r * 0.5); g.fill();
+        g.shadowBlur = 0; g.fillStyle = '#05070d'; g.beginPath(); g.arc(f.f.r * 0.5, -2, 2, 0, TAU); g.fill();
+      }
+      g.restore();
+    }
+    if (this.harp) { g.strokeStyle = '#e4ecfb'; g.lineWidth = 2; g.beginPath(); g.moveTo(this.x, this.y); g.lineTo(this.harp.x, this.harp.y); g.stroke(); }
+    // Plongeur
+    g.save(); g.translate(this.x, this.y); if ((this.face || 1) < 0) g.scale(-1, 1);
+    g.fillStyle = '#ff9b3d'; g.beginPath(); g.ellipse(0, 0, 14, 7, 0, 0, TAU); g.fill();
+    g.fillStyle = '#e4ecfb'; g.beginPath(); g.arc(12, -2, 6, 0, TAU); g.fill();
+    g.fillStyle = '#5ef0ff'; g.fillRect(12, -5, 5, 4);
+    g.fillStyle = '#56658f'; g.fillRect(-10, -11, 14, 5);
+    g.restore();
+    for (const f of this.fx) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.font = '700 13px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText(f.text, f.x, f.y); g.globalAlpha = 1; }
+    g.restore();
+    // Jauge d'oxygène et profondeur
+    g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(10, 10, 160, 10); g.fillStyle = this.o2 < 15 ? '#ff5468' : '#5ef0ff'; g.fillRect(10, 10, 160 * this.o2 / 60, 10);
+    g.fillStyle = '#e4ecfb'; g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'left'; g.fillText(`O₂ ${Math.ceil(this.o2)} s · ${Math.round(this.y / 10)} m`, 10, 34);
+    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t); g.font = '800 20px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); g.globalAlpha = 1; }
+    if (this.t < 6) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.8)'; g.fillText('Maintiens le doigt pour nager', 180, 604); g.fillText('Touche brièvement pour lancer le harpon', 180, 622); }
+  },
+  value() { return this.bag.reduce((a, f) => a + f.val, 0); },
+  info() { return `Prise : ${this.bag.length} poissons · ${this.value()} pts`; },
+  quit() { Minigames.finish(this.result(false)); },
+  result(drowned) { return { drowned, value: drowned ? Math.floor(this.value() / 2) : this.value(), rare: this.bag.filter(f => f.rare).length, n: this.bag.length }; },
+  reward(r) {
+    const gr = { gems: Math.floor(r.value / 6) };
+    if (r.rare) gr.item = Math.min(3, r.rare);
+    return { best: r.value, grant: gr, title: r.drowned ? 'À court d’oxygène !' : 'Belle plongée !', text: r.drowned ? `Iris t’a remonté à temps, mais la moitié de la prise a filé. Valeur gardée : ${r.value} points.` : `${r.n} poissons rapportés, pour ${r.value} points.${r.rare ? ` Dont ${r.rare} lanterne${r.rare > 1 ? 's' : ''} dorée${r.rare > 1 ? 's' : ''} !` : ''}` };
+  }
+};
+
+/* ---------- Fouille de la Rouille : grille à dégager ---------- */
+const DIG_ITEMS = [
+  { id: 'piece', name: 'Pièce de cuivre', w: 1, h: 1, c: '#ffb347', rew: () => ({ gems: 4 }) },
+  { id: 'batterie', name: 'Batterie', w: 2, h: 1, c: '#5ef0ff', rew: () => ({ gems: 10 }) },
+  { id: 'caisse', name: 'Caisse d’équipement', w: 2, h: 2, c: '#c58bff', rew: lvl => ({ item: Math.min(3, Math.floor(lvl / 2)) }) },
+  { id: 'relique', name: 'Relique de l’Arche', w: 3, h: 1, c: '#ffcf4a', rew: () => ({ gems: 25 }) },
+  { id: 'coeur', name: 'Cœur de Rouille', w: 2, h: 3, c: '#ff3355', rew: lvl => ({ gems: 20, item: Math.min(4, 1 + Math.floor(lvl / 2)) }) }
+];
+const Dig = {
+  COLS: 7, ROWS: 6,
+  board(s) {
+    const m = Minigames.data(s);
+    if (!m.dig || m.dig.done) {
+      const lvl = m.dig ? m.dig.lvl + 1 : 1, items = [], occ = new Set();
+      const wanted = ['piece', 'piece', 'batterie', 'caisse', lvl >= 2 ? 'relique' : 'batterie', ...(lvl >= 3 ? ['coeur'] : [])];
+      for (const id of wanted) {
+        const t = DIG_ITEMS.find(x => x.id === id);
+        for (let k = 0; k < 200; k++) {
+          const rot = Math.random() < 0.5, w = rot ? t.h : t.w, h = rot ? t.w : t.h, x = Math.floor(Math.random() * (this.COLS - w + 1)), y = Math.floor(Math.random() * (this.ROWS - h + 1));
+          const cells = []; for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) cells.push((x + i) + ',' + (y + j));
+          if (cells.some(c => occ.has(c))) continue;
+          cells.forEach(c => occ.add(c)); items.push({ id, x, y, w, h, got: false }); break;
+        }
+      }
+      m.dig = { lvl, items, open: [], done: false };
+    }
+    return m.dig;
+  },
+  open() {
+    const s = App.slot;
+    this.board(s);
+    this.render();
+    $('mgDig').hidden = false;
+  },
+  render() {
+    const s = App.slot, m = Minigames.data(s), b = this.board(s), open = new Set(b.open);
+    let cells = '';
+    for (let y = 0; y < this.ROWS; y++) for (let x = 0; x < this.COLS; x++) {
+      const key = x + ',' + y, it = b.items.find(i => x >= i.x && x < i.x + i.w && y >= i.y && y < i.y + i.h), o = open.has(key);
+      const t = it ? DIG_ITEMS.find(d => d.id === it.id) : null;
+      cells += `<button class="dcell${o ? ' open' : ''}${o && it ? ' item' : ''}${it && it.got ? ' got' : ''}" data-k="${key}" type="button" ${o ? 'disabled' : ''} style="${o && t ? `--ic:${t.c}` : ''}" aria-label="${o ? (t ? t.name : 'vide') : 'décombres'}">${o && t ? '◆' : ''}</button>`;
+    }
+    const legend = b.items.map(i => { const t = DIG_ITEMS.find(d => d.id === i.id); return `<li class="${i.got ? 'ok' : ''}" style="--ic:${t.c}"><span class="sw"></span>${esc(t.name)} <small>${i.w}×${i.h}</small></li>`; }).join('');
+    $('mgDig').innerHTML = `<div class="card mgdig"><div class="topbar"><div><p class="eyebrow">Fouille de la Rouille · grille ${b.lvl}</p><h2 style="margin:0">⛏ ${m.picks} pioche${m.picks > 1 ? 's' : ''}</h2></div><button class="btn small" id="digClose" type="button">Fermer</button></div>` +
+      `<div class="dgrid" style="grid-template-columns:repeat(${this.COLS},1fr)">${cells}</div><ul class="dleg">${legend}</ul>` +
+      `<p class="hint">${m.picks ? 'Touche une case pour creuser. Un objet dégagé en entier est à toi.' : 'Plus de pioches : gagne des niveaux pour en obtenir (une par victoire, une de plus avec 3 étoiles), et deux de plus chaque jour.'}</p></div>`;
+    $('digClose').onclick = () => { $('mgDig').hidden = true; Minigames.renderHub(); };
+    $('mgDig').querySelectorAll('.dcell:not(.open)').forEach(bt => { bt.onclick = () => this.dig(bt.dataset.k); });
+  },
+  dig(key) {
+    const s = App.slot, m = Minigames.data(s), b = this.board(s);
+    if (m.picks <= 0 || b.open.includes(key)) { if (m.picks <= 0) Toast2.show('Plus de pioches : gagne des niveaux pour en obtenir'); return; }
+    m.picks--; b.open.push(key);
+    Sound.sfx && Sound.sfx('build'); buzz(10);
+    const open = new Set(b.open), found = [];
+    for (const it of b.items) {
+      if (it.got) continue;
+      let all = true; for (let i = 0; i < it.w; i++) for (let j = 0; j < it.h; j++) if (!open.has((it.x + i) + ',' + (it.y + j))) all = false;
+      if (all) { it.got = true; found.push(it); }
+    }
+    let msg = '';
+    for (const it of found) { const t = DIG_ITEMS.find(d => d.id === it.id); msg += (msg ? ' · ' : '') + `${t.name} : ` + grant(s, t.rew(b.lvl)); }
+    if (b.items.every(i => i.got)) { b.done = true; msg += (msg ? ' · ' : '') + 'Grille complète : ' + grant(s, { gems: 10 + 5 * b.lvl }); }
+    Store.touch(s);
+    this.render();
+    if (msg) { Toast2.show(msg); Sound.sfx && Sound.sfx('up'); if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; Reveal.show(items, 'Fouille de la Rouille'); } }
+  }
+};
+
+const Loadout = {
+  tab: 0,
+  data(s) {
+    s.arsenal = s.arsenal || { presets: [0, 1, 2].map(i => ({ name: `Préréglage ${i + 1}`, ids: [] })), last: [] };
+    return s.arsenal;
+  },
+  unlocked: (s, n) => TOWERS.filter(t => t.unlock <= (n || s.unlocked)),
+  needed: (s, n) => !D2 && TOWERS.filter(t => t.unlock <= n).length > LOADOUT_MAX,
+  /* Sélection par défaut : la dernière utilisée, complétée par les plus récentes. */
+  initial(s, n) {
+    const avail = this.unlocked(s, n).map(t => t.id), a = this.data(s);
+    const keep = (a.last || []).filter(id => avail.includes(id));
+    for (const id of avail.slice().reverse()) if (keep.length < LOADOUT_MAX && !keep.includes(id)) keep.push(id);
+    return keep.slice(0, LOADOUT_MAX);
+  },
+  grid(s, n, sel) {
+    return '<div class="lgrid">' + TOWERS.map(t => {
+      const lock = t.unlock > n, on = sel.includes(t.id);
+      return `<button class="ltile${on ? ' on' : ''}${lock ? ' locked' : ''}" data-t="${t.id}" type="button" ${lock ? 'disabled' : ''} style="--tc:${t.color}" aria-pressed="${on}">` +
+        `<canvas width="56" height="56" data-ticon="${t.id}"></canvas><b>${esc(t.name)}</b><small>${lock ? `Niveau ${t.unlock}` : esc(t.role) + ' · ' + t.cost}</small></button>`;
+    }).join('') + '</div>';
+  },
+  bindGrid(root, sel, onChange) {
+    root.querySelectorAll('[data-ticon]').forEach(cv => towerIcon(cv, TOWER_BY_ID[cv.dataset.ticon]));
+    root.querySelectorAll('.ltile[data-t]').forEach(bt => { bt.onclick = () => {
+      const id = bt.dataset.t, i = sel.indexOf(id);
+      if (i >= 0) sel.splice(i, 1); else if (sel.length < LOADOUT_MAX) sel.push(id); else { Toast2.show(`${LOADOUT_MAX} tourelles au maximum : retire-en une d’abord`); return; }
+      bt.classList.toggle('on', sel.includes(id)); bt.setAttribute('aria-pressed', String(sel.includes(id)));
+      onChange();
+    }; });
+  },
+  /* Fenêtre de choix avant de lancer un niveau. */
+  pick(levelN, done) {
+    const s = App.slot, a = this.data(s), sel = this.initial(s, levelN);
+    const render = () => {
+      Modal.open({ title: `Tourelles pour le niveau ${levelN}`,
+        html: `<p class="hint">Choisis jusqu’à ${LOADOUT_MAX} tourelles pour cette partie. <b id="lcount">${sel.length} / ${LOADOUT_MAX}</b></p>` +
+          `<div class="lpresets">${a.presets.map((p, i) => `<button class="btn tiny" data-load="${i}" type="button" ${p.ids.length ? '' : 'disabled'}>${esc(p.name)} (${p.ids.length})</button>`).join('')}</div>` +
+          this.grid(s, levelN, sel),
+        actions: [{ label: 'Annuler' }, { label: 'Jouer', cls: 'primary', fn: () => { if (!sel.length) return; a.last = sel.slice(); Store.touch(s); done(sel.slice()); } }] });
+      const card = $('modalCard');
+      card.classList.add('wide');
+      const upd = () => { $('lcount').textContent = `${sel.length} / ${LOADOUT_MAX}`; };
+      this.bindGrid(card, sel, upd);
+      card.querySelectorAll('[data-load]').forEach(bt => { bt.onclick = () => { const ids = a.presets[+bt.dataset.load].ids.filter(id => TOWER_BY_ID[id] && TOWER_BY_ID[id].unlock <= levelN); sel.length = 0; sel.push(...ids.slice(0, LOADOUT_MAX)); render(); }; });
+    };
+    render();
+  },
+  /* Écran Arsenal : préparer trois préréglages favoris. */
+  render() {
+    const s = App.slot, a = this.data(s), p = a.presets[this.tab], n = s.unlocked;
+    const total = this.unlocked(s).length;
+    Meta.tabs($('arsTabs'), a.presets.map((x, i) => [String(i), `${esc(x.name)} · ${x.ids.length}`]), String(this.tab), id => { this.tab = +id; this.render(); });
+    $('arsBody').innerHTML =
+      `<section class="panel"><p class="hint">${total > LOADOUT_MAX ? `Tu as débloqué ${total} tourelles. Avant chaque niveau, tu en choisis ${LOADOUT_MAX} : prépare ici tes équipes favorites, puis charge-les d’un geste au lancement.` : `Dès que tu auras plus de ${LOADOUT_MAX} tourelles (nouvelles tourelles à partir du niveau 12), tu choisiras ${LOADOUT_MAX} tourelles avant chaque niveau.`}</p>` +
+      `<div class="row" style="align-items:center"><label class="muted" style="font-size:.8rem">Nom <input type="text" id="arsName" maxlength="20" value="${esc(p.name)}"></label><b id="arsCount">${p.ids.length} / ${LOADOUT_MAX}</b>` +
+      `<button class="btn small" id="arsClear" type="button">Vider</button></div>` + this.grid(s, n, p.ids) + '</section>';
+    const body = $('arsBody');
+    this.bindGrid(body, p.ids, () => { $('arsCount').textContent = `${p.ids.length} / ${LOADOUT_MAX}`; Store.touch(s); Meta.tabs($('arsTabs'), a.presets.map((x, i) => [String(i), `${esc(x.name)} · ${x.ids.length}`]), String(this.tab), id => { this.tab = +id; this.render(); }); });
+    $('arsName').onchange = ev => { p.name = ev.target.value.trim() || `Préréglage ${this.tab + 1}`; Store.touch(s); this.render(); };
+    $('arsClear').onclick = () => { p.ids.length = 0; Store.touch(s); this.render(); };
+  }
+};
 const CrewView = {
   char: CREW_IDS[0], filter: 'all',
   render() {
@@ -4387,12 +5074,12 @@ const CrewView = {
       `</div></section>`;
     h += '<div class="gslots">' + GEAR_SLOTS.map(sl => {
       const it = Gear.find(s, eq[sl.id]);
-      return `<div class="gslot"><p class="eyebrow">${sl.name}</p>${it ? gearCard(s, it, { big: true }) : `<div class="gempty">Vide<small>${esc(sl.hint)}</small></div>`}</div>`;
+      return `<div class="gslot${this.filter === sl.id ? ' on' : ''}" data-slot="${sl.id}" role="button" tabindex="0" aria-label="Voir les objets : ${esc(sl.name)}"><p class="eyebrow">${sl.name} <span class="gfl">${this.filter === sl.id ? '· filtré' : '· voir les objets ▾'}</span></p>${it ? gearCard(s, it, { big: true }) : `<div class="gempty">Vide<small>${esc(sl.hint)}</small><small class="gfl">Touche pour voir tes objets de ce type</small></div>`}</div>`;
     }).join('') + '</div>';
     const items = s.gear.items.filter(it => this.filter === 'all' || GEAR_BY_ID[it.t].slot === this.filter)
       .sort((a, b) => b.r - a.r || b.l - a.l || a.t.localeCompare(b.t));
     const commons = s.gear.items.filter(it => it.r === 0 && !Gear.owner(s, it.uid)).length;
-    h += `<section class="panel"><div class="topbar" style="gap:6px"><p class="eyebrow">Inventaire · ${s.gear.items.length} objet${s.gear.items.length > 1 ? 's' : ''}</p>` +
+    h += `<section class="panel" id="crewInv"><div class="topbar" style="gap:6px"><p class="eyebrow">Inventaire · ${this.filter === 'all' ? `${s.gear.items.length} objet${s.gear.items.length > 1 ? 's' : ''}` : `${items.length} × ${esc(GEAR_SLOTS.find(x => x.id === this.filter).name)}`}</p>` +
       `<div class="row">${[['all', 'Tout'], ...GEAR_SLOTS.map(x => [x.id, x.name])].map(([id, l]) => `<button class="btn tiny" data-flt="${id}" aria-pressed="${this.filter === id}" type="button">${l}</button>`).join('')}` +
       (commons ? `<button class="btn tiny" id="gearRecycleAll" type="button">Recycler les ${commons} communs libres</button>` : '') + '</div></div>' +
       (items.length ? `<div class="ggrid">${items.map(it => gearCard(s, it)).join('')}</div>` : '<div class="empty">Aucun objet. Gagne des niveaux, termine des quêtes ou ouvre une caisse dans la boutique.</div>') +
@@ -4402,6 +5089,11 @@ const CrewView = {
     body.querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
     body.querySelectorAll('[data-item]').forEach(bt => { bt.onclick = () => this.detail(+bt.dataset.item); });
     body.querySelectorAll('[data-flt]').forEach(bt => { bt.onclick = () => { this.filter = bt.dataset.flt; this.render(); }; });
+    // Toucher une case d'équipement montre seulement les objets de ce type
+    body.querySelectorAll('[data-slot]').forEach(sl => {
+      const go = ev => { if (ev.target.closest('[data-item]')) return; this.filter = this.filter === sl.dataset.slot ? 'all' : sl.dataset.slot; this.render(); const inv = $('crewInv'); if (inv) inv.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+      sl.onclick = go; sl.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(ev); } };
+    });
     $('gearAuto').onclick = () => { Gear.autoEquip(s, c); Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); };
     $('gearShop').onclick = () => { Meta.shopTab = 'gear'; App.show('shop'); };
     if (D2) {
@@ -5265,8 +5957,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '5.5';
+const APP_VERSION = '6.0';
 const CHANGELOG = [
+  { v: '6.0', date: '01.11.2026', items: ['Événements : trois mini-jeux à part du tower defense (Expédition de l’Arche, Plongée des Abysses, Fouille de la Rouille), avec tickets quotidiens et pioches gagnées en jouant', 'Arsenal : 10 nouvelles tourelles (mortier, cryo, flamme, essaim, prisme, orage, mines, nanites, diapason, éclipse), choix de 10 tourelles max avant chaque niveau et 3 présélections favorites', 'Pluie de météores : les cristaux affichent ce qu’ils rapportent (or ou gemmes)', 'Équipage : toucher une case d’équipement filtre l’inventaire sur ce type d’objet', 'Les annonces d’événements s’affichent dans le panneau d’informations, plus sur la carte'] },
   { v: '5.5', date: '29.10.2026', items: ['Décor de la ville : une capture du jeu peut être collée telle quelle, son fond noir est retiré et les sols de la planche remplissent l’extérieur'] },
   { v: '5.4', date: '29.10.2026', items: ['Camp des Rogues recomposé comme dans le jeu : grand enclos rectangulaire, feu de camp entouré de tentes, chariots le long de la palissade, extérieur dans le noir', 'Les zones de l’acte partent de la porte du camp, sur la droite de la carte'] },
   { v: '5.3', date: '29.10.2026', items: ['Mode Diablo II : les villes ne sont plus des niveaux, elles deviennent l’écran de l’acte d’où l’on choisit sa zone (8, 8, 8, 2 et 8 zones jouables)', 'Décor de la ville en vue isométrique, composé à partir de tes planches de sol et d’objets (bouton « Décor de la ville » sur la carte)', 'Les sauvegardes du mode Diablo II sont renumérotées automatiquement'] },
@@ -5405,6 +6098,7 @@ const Meta = {
   updateBadge() {
     const n = this.claimables(App.slot), el = $('questCount');
     el.textContent = String(n); el.hidden = !n;
+    if (!D2 && App.slot) { const m = Minigames.data(App.slot), e = $('evCount'), k = m.tickets.exp + m.tickets.dive + (m.picks > 0 ? 1 : 0); e.textContent = String(k); e.hidden = !k; }
   },
 
   /* Résultats d'une victoire : défis, étapes d'histoire, fragments. */
@@ -7307,6 +8001,18 @@ const R3 = {
       singularite: [{ g: g.cyl12, p: [0, 0.08, 0], s: [0.24, 0.14, 0.24], c: D }, { g: g.sph, p: [0, 0.34, 0], s: [0.15, 0.15, 0.15], c: '#05060a' },
         { g: g.tor, p: [0, 0.34, 0], r: [Z, 0.4, 0], s: [0.26, 0.26, 0.26], c: c, e: 1.4 }, { g: g.tor, p: [0, 0.34, 0], r: [Z - 0.9, 0, 0.5], s: [0.21, 0.21, 0.21], c: c, e: 1 }]
     };
+    Object.assign(P, {
+      mortier: [{ g: g.cyl12, p: [0, 0.14, 0], s: [0.24, 0.24, 0.24], c: D }, { g: g.cyl12, p: [0.22, 0.26, 0], r: [0, 0, Z * 0.6], s: [0.12, 0.34, 0.12], c: L }, { g: g.cyl12, p: [0.34, 0.36, 0], r: [0, 0, Z * 0.6], s: [0.09, 0.04, 0.09], c: c, e: 0.8 }],
+      cryo: [{ g: g.cyl6, p: [0, 0.1, 0], s: [0.24, 0.18, 0.24], c: L }, ...[0, 1, 2].map(i => ({ g: g.box, p: [0, 0.34, 0], r: [0, i * Math.PI / 3, 0], s: [0.5, 0.04, 0.05], c: c, e: 1 })), { g: g.oct, p: [0, 0.34, 0], s: [0.1, 0.12, 0.1], c: '#ffffff', e: 1 }],
+      flamme: [{ g: g.box, p: [-0.04, 0.16, 0], s: [0.28, 0.24, 0.3], c: M }, { g: g.cone8, p: [0.3, 0.17, 0], r: [0, 0, Z], s: [0.1, 0.3, 0.1], c: L }, { g: g.sph0, p: [0.46, 0.17, 0], s: [0.07, 0.07, 0.07], c: c, e: 1.4 }, { g: g.cyl8, p: [-0.12, 0.34, 0], s: [0.09, 0.14, 0.09], c: c, e: 0.6 }],
+      essaim: [{ g: g.cyl8, p: [0, 0.1, 0], s: [0.18, 0.16, 0.18], c: D }, ...[0, 1, 2].map(i => ({ g: g.sph, p: [Math.cos(i * 2.1) * 0.22, 0.36, Math.sin(i * 2.1) * 0.22], s: [0.08, 0.05, 0.08], c: c, e: 1 }))],
+      prisme: [{ g: g.cyl6, p: [0, 0.1, 0], s: [0.22, 0.16, 0.22], c: D }, { g: g.cone4, p: [0.04, 0.38, 0], s: [0.18, 0.32, 0.18], c: c, e: 0.9 }],
+      orage: [{ g: g.cyl8, p: [0, 0.1, 0], s: [0.22, 0.18, 0.22], c: D }, ...[0.24, 0.36].map(y => ({ g: g.tor, p: [0, y, 0], r: [Z, 0, 0], s: [0.2, 0.2, 0.2], c: '#c9a24a' })), { g: g.sph, p: [0, 0.5, 0], s: [0.1, 0.1, 0.1], c: c, e: 1.5 }],
+      mines: [{ g: g.box, p: [0, 0.14, 0], s: [0.42, 0.22, 0.36], c: M }, ...[[-0.1, -0.08], [0.1, -0.08], [0, 0.1]].map(([x, z]) => ({ g: g.sph0, p: [x, 0.28, z], s: [0.07, 0.05, 0.07], c: c, e: 1 }))],
+      nanites: [{ g: g.sph, p: [0, 0.3, 0], s: [0.14, 0.14, 0.14], c: c, e: 1 }, ...[0, 1, 2, 3, 4, 5].map(i => ({ g: g.sph0, p: [Math.cos(i) * 0.25, 0.2 + (i % 3) * 0.08, Math.sin(i) * 0.25], s: [0.035, 0.035, 0.035], c: c, e: 1.2 }))],
+      diapason: [{ g: g.cyl8, p: [0, 0.1, 0], s: [0.2, 0.16, 0.2], c: D }, { g: g.box, p: [0, 0.3, 0.08], s: [0.05, 0.36, 0.04], c: c, e: 0.9 }, { g: g.box, p: [0, 0.3, -0.08], s: [0.05, 0.36, 0.04], c: c, e: 0.9 }],
+      eclipse: [{ g: g.cyl12, p: [0, 0.08, 0], s: [0.24, 0.14, 0.24], c: D }, { g: g.sph, p: [0, 0.38, 0], s: [0.16, 0.16, 0.16], c: '#05060a' }, { g: g.tor, p: [0, 0.38, 0], r: [Z, 0, 0], s: [0.22, 0.22, 0.22], c: c, e: 1.6 }]
+    });
     if (D2) {
       const W = '#6a4e30', S = '#c8c0b0', B = '#d8d0b8';
       Object.assign(P, {
@@ -8162,6 +8868,11 @@ const App = {
     $('btnShop').onclick = () => this.show('shop');
     $('btnCrew').onclick = () => this.show('crew');
     $('btnCrewBack').onclick = () => this.show('map');
+    $('btnArsenal').onclick = () => this.show('arsenal');
+    $('btnArsenalBack').onclick = () => this.show('map');
+    $('btnEvents').onclick = () => this.show('events');
+    $('btnEventsBack').onclick = () => this.show('map');
+    if (D2) { $('btnArsenal').hidden = true; $('btnEvents').hidden = true; }
     $('btnJournal').onclick = () => this.show('journal');
     $('btnQuestsBack').onclick = $('btnShopBack').onclick = $('btnJournalBack').onclick = () => this.show('map');
     GameView.init();
@@ -8169,7 +8880,7 @@ const App = {
   },
 
   show(name) {
-    for (const s of ['menu', 'map', 'tree', 'codex', 'game', 'quests', 'shop', 'journal', 'crew']) {
+    for (const s of ['menu', 'map', 'tree', 'codex', 'game', 'quests', 'shop', 'journal', 'crew', 'arsenal', 'events']) {
       const el = $('scr' + s[0].toUpperCase() + s.slice(1));
       el.hidden = s !== name;
       if (s === name && this.current !== name) { el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); }
@@ -8189,6 +8900,8 @@ const App = {
     if (name === 'shop') Meta.renderShop();
     if (name === 'journal') Meta.renderJournal();
     if (name === 'crew') CrewView.render();
+    if (name === 'arsenal') Loadout.render();
+    if (name === 'events') Minigames.renderHub();
     window.scrollTo(0, 0);
   },
 
@@ -8488,6 +9201,7 @@ function towerCard(def, locked, mods) {
 const Modal = {
   open({ title, text, html, actions }) {
     const c = $('modalCard');
+    c.classList.remove('wide');
     c.innerHTML = `<h2 style="font-size:1.3rem">${esc(title)}</h2>${text ? `<p>${esc(text)}</p>` : ''}${html || ''}<div class="row"></div>`;
     const row = c.querySelector('.row');
     for (const a of actions) {
@@ -8674,7 +9388,8 @@ const Events = {
     el.style.setProperty('--ec', e.color);
     el.innerHTML = `<b>${esc(e.title)}</b><span>${esc(e.text)}</span>`;
     el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-    clearTimeout(this.bt); this.bt = setTimeout(() => { el.hidden = true; }, 4200);
+    clearTimeout(this.bt); this.bt = setTimeout(() => { el.hidden = true; this.panel(); }, 6500);
+    this.panel();
     Talk.say(crewJoined(App.slot, e.who) ? e.who : 'volta', e.line);
     Sound.sfx && Sound.sfx('wave'); buzz(30);
     if (type === 'merchant' && b.merchant) this.offer = { item: Gear.roll(App.slot, 1), price: b.merchant.price };
@@ -8716,14 +9431,15 @@ const Events = {
       live.add(d.id);
       let el = this.drops.get(d.id);
       if (!el) {
-        el = document.createElement('button'); el.type = 'button'; el.className = 'drop'; el.setAttribute('aria-label', `Cristal : ${fmtBig(d.gold)} or`);
-        el.innerHTML = '<svg viewBox="0 0 24 32" width="26" height="34"><path d="M12 1l9 10-9 20L3 11z" fill="#5ef0ff" stroke="#fff" stroke-width="1.5"/><path d="M12 1v30M3 11h18" stroke="#ffffff88" stroke-width="1"/></svg><small></small>';
-        el.onclick = ev => { ev.stopPropagation(); if (b.collect(d.id)) { el.remove(); this.drops.delete(d.id); Sound.sfx && Sound.sfx('sell'); buzz(12); } };
+        const col = d.gems ? '#5ef0ff' : '#ffcf4a';
+        el = document.createElement('button'); el.type = 'button'; el.className = 'drop' + (d.gems ? ' gem' : ''); el.setAttribute('aria-label', d.gems ? `Cristal bleu : ${d.gems} gemmes` : `Cristal d’or : ${fmtBig(d.gold)} or`);
+        el.innerHTML = `<svg viewBox="0 0 24 32" width="26" height="34"><path d="M12 1l9 10-9 20L3 11z" fill="${col}" stroke="#fff" stroke-width="1.5"/><path d="M12 1v30M3 11h18" stroke="#ffffff88" stroke-width="1"/></svg><small></small>`;
+        el.onclick = ev => { ev.stopPropagation(); if (b.collect(d.id)) { el.remove(); this.drops.delete(d.id); Sound.sfx && Sound.sfx(d.gems ? 'up' : 'sell'); buzz(12); } };
         box.appendChild(el); this.drops.set(d.id, el);
       }
       const p = GameView.worldToCss(d.x, d.y, rc.width, rc.height);
       el.style.transform = `translate(${(ox + p.x).toFixed(1)}px,${(oy + p.y).toFixed(1)}px) translate(-50%,-70%)`;
-      el.querySelector('small').textContent = '+' + fmtBig(d.gold);
+      el.querySelector('small').textContent = d.gems ? `+${d.gems} ${GEM}` : `+${fmtBig(d.gold)} or`;
       el.classList.toggle('fading', d.t < 3);
     }
     for (const [id, el] of this.drops) if (!live.has(id)) { el.remove(); this.drops.delete(id); }
@@ -8733,8 +9449,10 @@ const Events = {
     if (b.merchant) chips.push(`<button class="evchip btnchip" type="button" data-merchant style="--ec:#ff9b3d">Marchand · ${fmtBig(b.merchant.price)} or · ${Math.ceil(b.merchant.t)} s ▸</button>`);
     const html = chips.join('');
     const cb = $('evChips');
-    if (cb._h !== html) { cb._h = html; cb.innerHTML = html; const m = cb.querySelector('[data-merchant]'); if (m) m.onclick = ev => { ev.stopPropagation(); this.openMerchant(b); }; }
+    if (cb._h !== html) { cb._h = html; cb.innerHTML = html; const m = cb.querySelector('[data-merchant]'); if (m) m.onclick = ev => { ev.stopPropagation(); this.openMerchant(b); }; this.panel(); }
   },
+  /* Le panneau d'événement n'apparaît que s'il a quelque chose à montrer. */
+  panel() { const p = $('evPanel'); if (!p) return; const on = !$('evBanner').hidden || !!$('evChips').innerHTML; if (p.hidden === on) p.hidden = !on; },
   reset() { for (const el of this.drops.values()) el.remove(); this.drops.clear(); const cb = $('evChips'); if (cb) { cb.innerHTML = ''; cb._h = ''; } const bn = $('evBanner'); if (bn) bn.hidden = true; this.offer = null; }
 };
 
@@ -8817,15 +9535,18 @@ const GameView = {
     if (GPU.active && GPU.canvas) GPU.canvas.hidden = false;
   },
 
-  start(levelN, snapshot) {
+  start(levelN, snapshot, picked) {
     const slot = App.slot, world = worldOf(levelN);
+    // Plus de 10 tourelles débloquées : choix de l'équipe avant de jouer
+    if (!snapshot && !picked && Loadout.needed(slot, levelN)) { Loadout.pick(levelN, ids => this.start(levelN, null, ids)); return; }
     // Premier passage dans un monde : cinématique et choix du chapitre d'abord
-    if (!slot.story.seen[world]) { Cine.play(world, () => this.start(levelN, snapshot)); return; }
+    if (!slot.story.seen[world]) { Cine.play(world, () => this.start(levelN, snapshot, picked)); return; }
     Talk.clear();
     const boosts = snapshot ? (snapshot.boosts || []) : Meta.consumeBoosts();
     const mods = buildMods(slot, levelN, boosts);
     this.battle = new Battle(levelN, mods, snapshot);
     const b = this.battle;
+    if (picked) b.allowed = picked.slice();
     b.boosts = boosts;
     this.flushed = JSON.parse(JSON.stringify(b.stats));
     R.reset();
@@ -8890,6 +9611,9 @@ const GameView = {
     if (rot !== R.rot) { R.rot = rot; Overlay.key = ''; }
     // Les bulles (dialogue, messages, prochaine vague) quittent la carte en plein écran
     for (const id of ['nextWave', 'toast', 'dialog']) { const el = $(id); const home = fs ? info : board; if (el.parentNode !== home) home.appendChild(el); }
+    // Annonces et compteurs d'événements : jamais par-dessus les tourelles (panneau à droite, ou barre d'info sur téléphone)
+    for (const id of ['evBanner', 'evChips']) { const el = $(id); const home = fs ? info : $('evPanel'); if (el.parentNode !== home) home.appendChild(el); }
+    Events.panel();
     if (fs && ctrl.parentNode !== $('scrGame')) $('scrGame').appendChild(ctrl);
     if (!fs && ctrl.parentNode !== side) side.insertBefore(ctrl, side.firstChild);
     if (!fs) { board.style.width = board.style.height = ''; return; }
@@ -9207,6 +9931,7 @@ const GameView = {
       slot.counters.wins++;
       if (st === 3) slot.counters.threeStars++;
       const res = Meta.onVictory(b);
+      if (!D2) { const np = Minigames.earnPicks(slot, st); res.lines.push(`+${np} pioche${np > 1 ? 's' : ''} pour la Fouille de la Rouille (Événements)`); }
       if (lv.boss && !prev) res.lines.push(`Nouveau fragment de mémoire : « ${chapter(lv.world).fragment.title} » (voir le journal)`);
       Store.touch(slot);
       const avail = pointsAvailable(slot), ready = Meta.claimables(slot);
@@ -9286,6 +10011,7 @@ const GameView = {
       }
       if (ev.type === 'event') Events.announce(ev.data, b);
       if (ev.type === 'treasure') Events.treasure(ev.data);
+      if (ev.type === 'gems') { App.slot.gems += ev.data; Store.touch(App.slot); $('hudGems').textContent = fmtBig(App.slot.gems); Toast.show(`Cristal bleu : +${ev.data} ${GEM}`); }
       if (ev.type === 'artifact') Events.artifact(b);
       if (ev.type === 'merchantgone') { Events.offer = null; Toast.show('Le marchand est reparti'); }
       if (ev.type === 'fused') { App.slot.fusionsSeen[ev.data] = 1; this.flushStats(); }
