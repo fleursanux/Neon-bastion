@@ -593,6 +593,7 @@ html.da #modalCard>h2{margin:0 -20px 4px;padding:12px 16px;border-radius:18px 18
 .hres.pts i{background:radial-gradient(circle at 35% 30%,#b8fff0,#2bc8a0);color:#064a3a}
 .hres.gem i{background:radial-gradient(circle at 35% 30%,#c8f4ff,#2aa0e8);color:#063a6a}
 button.hres{cursor:pointer}
+.hgear{all:unset;cursor:pointer;flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;color:#fff;background:linear-gradient(180deg,#6a72f0,#434ac4);border:2px solid var(--toyedge);box-shadow:0 3px 0 var(--toyedge)}
 .hres .plus{width:18px;height:18px;border-radius:5px;background:linear-gradient(180deg,var(--go1),var(--go2));display:grid;place-items:center;font-size:.9rem;margin-left:2px}
 @media (max-width:520px){.hres.pts{display:none}.hname i{width:70px}.hres{padding-right:6px;font-size:.85rem}}
 /* ---------- Barre d'onglets ---------- */
@@ -610,8 +611,8 @@ button.hres{cursor:pointer}
 @media (min-width:900px){.hubnav{left:50%;right:auto;transform:translateX(-50%);width:640px;border:3px solid var(--toyedge);border-bottom:0;border-radius:22px 22px 0 0}}
 /* ---------- Écran Campagne ---------- */
 html.da body.hub #scrMap>.topbar,html.da body.hub #scrMap>.worldnav,html.da body.hub #scrMap>.map-grid{display:none}
-.camp{position:relative;display:grid;grid-template-columns:76px minmax(0,1fr) 76px;grid-template-rows:auto auto minmax(260px,1fr) auto auto;grid-template-areas:"bn bn bn" "ls ti rs" "ls is rs" "lv lv lv" "pl pl pl";gap:8px;
-  min-height:calc(100dvh - 76px - 96px - 32px);border-radius:24px;padding:10px;overflow:hidden;
+.camp{position:relative;display:grid;grid-template-columns:76px minmax(0,1fr) 76px;grid-template-rows:auto auto minmax(0,1fr) auto auto;grid-template-areas:"bn bn bn" "ti ti ti" "ls is rs" "lv lv lv" "pl pl pl";gap:8px;box-sizing:border-box;
+  height:calc(100dvh - 76px - 96px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:340px;border-radius:24px;padding:10px;overflow:hidden;
   background:radial-gradient(ellipse at 50% 35%,color-mix(in srgb,var(--sky1) 85%,#fff) 0%,var(--sky1) 35%,var(--sky2) 100%);border:3px solid var(--toyedge);box-shadow:inset 0 3px 0 var(--toyhi),0 5px 0 var(--toyedge)}
 .camp::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.18) 0 2px,transparent 3px),radial-gradient(circle at 70% 25%,rgba(255,255,255,.14) 0 1.5px,transparent 2.5px),radial-gradient(circle at 85% 60%,rgba(255,255,255,.12) 0 2px,transparent 3px);background-size:180px 160px}
 .cbanner{all:unset;grid-area:bn;cursor:pointer;position:relative;display:flex;align-items:center;gap:10px;justify-self:center;width:min(520px,100%);height:58px;border-radius:16px;overflow:hidden;
@@ -621,18 +622,18 @@ html.da body.hub #scrMap>.topbar,html.da body.hub #scrMap>.worldnav,html.da body
 .reddot{position:absolute;top:4px;right:6px;width:18px;height:18px;border-radius:50%;background:#ff3344;border:2px solid #fff;box-shadow:0 2px 0 var(--toyedge)}
 .reddot::after{content:"!";display:block;font:400 .72rem/14px var(--font-toy);color:#fff;text-align:center}
 .camp>*{min-width:0}
-.cside{display:flex;flex-direction:column;gap:8px;z-index:2}.cside.l{grid-area:ls}.cside.r{grid-area:rs}
+.cside{display:flex;flex-direction:column;justify-content:flex-start;gap:10px;padding-top:4px;z-index:2;min-height:0}.cside.l{grid-area:ls}.cside.r{grid-area:rs}
 .cside button{all:unset;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:14px;background:linear-gradient(180deg,rgba(40,44,140,.85),rgba(24,26,90,.85));border:2px solid var(--toyedge);box-shadow:0 3px 0 var(--toyedge)}
 .cside span{font-size:1.5rem;line-height:1.1;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
 .cside b{font:400 .68rem var(--font-toy);color:#fff;text-shadow:0 1px 0 var(--toyedge)}
-.ctitle{grid-area:ti;display:flex;align-items:center;gap:10px;justify-content:center;z-index:2;text-align:left}
+.ctitle{grid-area:ti;display:flex;align-items:center;gap:10px;justify-content:center;z-index:2;text-align:left;min-width:0}.ctitle>div{min-width:0}
 .cnum{width:52px;height:58px;display:grid;place-items:center;font:400 1.7rem var(--font-toy);color:#fff;text-shadow:0 2px 0 var(--toyedge);flex:none;
   background:linear-gradient(180deg,#6a8aff,#3a4ac8);clip-path:polygon(50% 0,100% 18%,100% 70%,50% 100%,0 70%,0 18%);filter:drop-shadow(0 3px 0 var(--toyedge))}
 .ctitle b{display:block;font:400 clamp(1.3rem,4.6vw,2rem) var(--font-toy);color:#fff;text-shadow:0 3px 0 var(--toyedge),2px 0 0 var(--toyedge),-2px 0 0 var(--toyedge),0 -2px 0 var(--toyedge)}
-.ctitle small{font:400 .9rem var(--font-toy);color:#ffe45a;text-shadow:0 2px 0 var(--toyedge)}
-.cisle{grid-area:is;position:relative;min-height:260px}
+.ctitle small{display:block;font:400 .9rem var(--font-toy);color:#ffe45a;text-shadow:0 2px 0 var(--toyedge);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cisle{grid-area:is;position:relative;min-height:0}
 .cisle canvas.isle{position:absolute;inset:-20px -90px;width:calc(100% + 180px);height:calc(100% + 40px);touch-action:pan-y;cursor:grab}
-.carrow{all:unset;cursor:pointer;position:absolute;top:6%;z-index:3;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:1.1rem;color:#fff;
+.carrow{all:unset;cursor:pointer;position:absolute;top:50%;margin-top:-21px;z-index:3;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:1.1rem;color:#fff;
   background:linear-gradient(180deg,#6a72f0,#434ac4);border:3px solid var(--toyedge);box-shadow:0 3px 0 var(--toyedge)}
 .carrow.l{left:0}.carrow.r{right:0}
 html.da body.hub .sound-gate{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}
@@ -646,7 +647,7 @@ html.da body.hub [id$="Back"]{display:none}.carrow:disabled{opacity:.35;cursor:d
 .clv.sel{background:linear-gradient(180deg,var(--cta1),var(--cta2));transform:translateY(-4px)}.clv.sel b{color:var(--ctatx);text-shadow:0 1px 0 rgba(255,255,255,.6)}
 .clv.next{animation:hbp 1.4s ease-in-out infinite}
 .clv.lock{background:#2a2c5a;cursor:default;box-shadow:0 4px 0 var(--toyedge)}
-.cplay{grid-area:pl;display:flex;gap:10px;align-items:center;justify-content:center;z-index:2;padding-bottom:6px}
+.cplay{grid-area:pl;display:flex;gap:10px;align-items:center;justify-content:center;z-index:2;padding-bottom:8px}
 .bigbtn{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(360px,70vw);height:78px;border-radius:22px;
   background:linear-gradient(180deg,#fff27a,var(--cta1) 30%,var(--cta2));border:4px solid var(--toyedge);box-shadow:inset 0 4px 0 rgba(255,255,255,.6),inset 0 -6px 0 rgba(160,80,0,.35),0 7px 0 var(--toyedge),0 12px 24px rgba(0,0,0,.35);transition:transform .08s}
 .bigbtn b{font:400 2.1rem/1 var(--font-toy);color:var(--ctatx);text-shadow:0 2px 0 rgba(255,255,255,.55)}
@@ -659,7 +660,15 @@ html.da body.hub [id$="Back"]{display:none}.carrow:disabled{opacity:.35;cursor:d
 .csheetin>.btn{align-self:flex-end}
 .csheetin #detail{position:static;width:auto}
 .isleflash{position:fixed;inset:0;z-index:29;background:radial-gradient(circle,#fff,#bff6ff);opacity:0;pointer-events:none}
-@media (max-width:520px){.camp{grid-template-columns:58px minmax(0,1fr) 58px;padding:6px;gap:6px}.cside b{font-size:.58rem}.cside span{font-size:1.25rem}.cnum{width:42px;height:48px;font-size:1.4rem}}
+@media (max-width:520px){.camp{grid-template-columns:60px minmax(0,1fr) 60px;padding:8px 6px;gap:6px}.cside b{font-size:.6rem}.cside span{font-size:1.3rem}.cnum{width:42px;height:48px;font-size:1.4rem}.carrow{width:36px;height:36px;margin-top:-18px;font-size:.95rem}}
+/* Écrans courts : tout tient sans défiler */
+@media (max-height:760px){.camp{gap:5px;padding-top:6px}.cbanner{height:46px}.cbart,.cbart canvas{width:46px;height:46px}.cbtxt b{font-size:1rem}.cbtxt small{font-size:.7rem}
+  .cnum{width:36px;height:42px;font-size:1.2rem}.ctitle b{font-size:clamp(1.1rem,4.4vw,1.6rem)}.ctitle small{font-size:.78rem}
+  .cside{gap:6px}.cside button{padding:4px 2px}.cside span{font-size:1.15rem}
+  .clevels{padding:4px 4px 6px}.clv{width:46px;height:50px}.clv b{font-size:1rem}
+  .bigbtn{height:64px}.bigbtn b{font-size:1.75rem}.cinfo{width:46px;height:46px;font-size:1.4rem}}
+@media (max-height:570px){.cbanner{height:40px}.cbart,.cbart canvas{width:40px;height:40px}.cbtxt small{display:none}.ctitle small{display:none}
+  .cside b{display:none}.cside button{padding:6px 2px}.clv{height:44px}.bigbtn{height:56px}.bigbtn b{font-size:1.5rem}.bigbtn small{font-size:.7rem}}
 @media (prefers-reduced-motion:reduce){.bigbtn,.clv.next,.hbadge{animation:none}}
 /* ---------- Fenêtres d'accueil ---------- */
 /* ---------- Équipage : figurine sur socle ---------- */
@@ -5188,11 +5197,12 @@ const Hub = {
       `<header class="hubtop" id="hubTop" hidden><button class="hprof" id="hubProf" type="button" aria-label="Profil et sauvegardes"><canvas width="96" height="96" data-portrait="echo"></canvas>` +
       `<span class="hlv" id="hubLv">1</span><span class="hname"><b id="hubName">Gardien</b><i><em id="hubXp"></em></i></span></button>` +
       `<span class="hres star"><i>★</i><b id="hubStars">0</b></span><span class="hres pts"><i>◇</i><b id="hubPts">0</b></span>` +
-      `<button class="hres gem" id="hubGems" type="button" aria-label="Acheter des gemmes"><i>◆</i><b id="hubGemsV">0</b><span class="plus">+</span></button></header>` +
+      `<button class="hres gem" id="hubGems" type="button" aria-label="Acheter des gemmes"><i>◆</i><b id="hubGemsV">0</b><span class="plus">+</span></button><button class="hgear" id="hubGear" type="button" aria-label="Réglages">⚙</button></header>` +
       `<nav class="hubnav" id="hubNav" hidden>${HUB_TABS.map(t => `<button type="button" data-tab="${t.id}"><span class="hicon" data-icon="${t.icon}"></span><b>${t.label}</b><span class="hbadge" hidden>!</span></button>`).join('')}</nav>`);
     $('hubNav').querySelectorAll('[data-tab]').forEach(b => { b.onclick = () => { if (App.current !== b.dataset.tab || b.dataset.tab === 'map') { Sound.sfx && Sound.sfx('ui'); App.show(b.dataset.tab); } }; });
     $('hubGems').onclick = () => { Meta.shopTab = 'packs'; App.show('shop'); };
     $('hubProf').onclick = () => App.show('menu');
+    $('hubGear').onclick = () => { Sound.sfx && Sound.sfx('ui'); $('btnSoundMap').click(); };
     $('hubTop').querySelectorAll('[data-portrait]').forEach(c => { c._keep = true; drawPortrait(c, c.dataset.portrait); });
     this.drawIcons();
   },
@@ -5398,7 +5408,7 @@ function renderCamp() {
     scr.insertAdjacentHTML('beforeend', `<div class="camp" id="camp">
       <button class="cbanner" id="campBanner" type="button"></button>
       <div class="cside l"><button type="button" data-go="quests"><span>📜</span><b>Quêtes</b><i class="reddot" id="cdQ" hidden></i></button><button type="button" data-go="tree"><span>🌳</span><b>Arbre</b><i class="reddot" id="cdT" hidden></i></button><button type="button" data-go="arsenal"><span>🛡</span><b>Arsenal</b></button></div>
-      <div class="cside r"><button type="button" data-go="journal"><span>📖</span><b>Journal</b></button><button type="button" data-go="settings"><span>⚙</span><b>Réglages</b></button><button type="button" data-go="login"><span>📅</span><b>Connexion</b><i class="reddot" id="cdL" hidden></i></button><button type="button" data-go="news"><span>📣</span><b>Annonces</b></button></div>
+      <div class="cside r"><button type="button" data-go="login"><span>📅</span><b>Connexion</b><i class="reddot" id="cdL" hidden></i></button><button type="button" data-go="news"><span>📣</span><b>Annonces</b></button><button type="button" data-go="journal"><span>📖</span><b>Journal</b></button></div>
       <div class="ctitle"><span class="cnum" id="cNum">1</span><div><b id="cName"></b><small id="cBest"></small></div></div>
       <div class="cisle" id="campIsle"><button class="carrow l" id="cPrev" type="button" aria-label="Monde précédent">◀</button><button class="carrow r" id="cNext" type="button" aria-label="Monde suivant">▶</button></div>
       <div class="clevels" id="cLevels"></div>
@@ -5423,7 +5433,7 @@ function renderCamp() {
   $('cNum').textContent = String(w);
   $('cName').textContent = worldInfo(w).name;
   let done = 0, ws = 0; for (let i = 0; i < size; i++) { if (s.stars[first + i]) done++; ws += s.stars[first + i] || 0; }
-  $('cBest').innerHTML = `${esc(P.type)}<br>Niveaux ${done}/${size} · ★ ${ws}/${size * 3}`;
+  $('cBest').textContent = `${P.type} · Niveaux ${done}/${size} · ★ ${ws}/${size * 3}`;
   $('cPrev').disabled = w <= 1;
   $('cNext').disabled = first + size > s.unlocked || w >= WORLD_MAX;
   let lv = '';
@@ -7547,7 +7557,7 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.0.2';
+const APP_VERSION = '7.0.3';
 const CHANGELOG = [
   { v: '7.0.2', date: '01.11.2026', items: ['Fouille de la Rouille : les grilles commencées avant la v6.1 bloquaient au moment de dégager un objet ; elles sont réparées et les objets sont bien donnés', 'Plongée des Abysses : remonter jusqu’au ponton termine la plongée en gardant toute la prise, avec une flèche qui indique la surface'] },
   { v: '7.0.1', date: '01.11.2026', items: ['Téléphone : plus de zoom quand on touche deux fois vite, plus de sélection de texte ni de menu « Copier » sur un appui long'] },
