@@ -4,6 +4,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Orbitron:wght@700;800;900&family=Cinzel:wght@600;700;900&family=Lilita+One&display=swap">
 <style>
+/* Zones protégées du téléphone (heure, batterie, encoche, barre d'accueil) */
+:root{--sat:env(safe-area-inset-top,0px);--sar:env(safe-area-inset-right,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px)}
 /* Layout : application à écrans (menu → carte des mondes → partie / arbre / codex).
    Néons sur bleu nuit, un seul thème sombre assumé. */
 :root{
@@ -33,7 +35,7 @@ canvas,img,svg{-webkit-user-drag:none;-webkit-touch-callout:none}
 [hidden]{display:none!important}
 html,body{min-height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-ui);
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px}
+  padding-left:max(16px,var(--sal));padding-right:max(16px,var(--sar));padding-block:16px}
 .app{max-width:1260px;margin:0 auto}
 .screen{display:flex;flex-direction:column;gap:12px}
 h1,h2,h3{text-wrap:balance}
@@ -218,7 +220,7 @@ input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline
 /* ---------- Fenêtres ---------- */
 .overlay{position:absolute;inset:0;z-index:8;background:rgba(6,9,16,.86);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
 .modal-bg{position:fixed;inset:0;z-index:30;background:rgba(6,9,16,.8);display:flex;align-items:center;justify-content:center;
-  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  padding:max(16px,var(--sat)) max(16px,var(--sar)) max(16px,var(--sab)) max(16px,var(--sal))}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;width:min(390px,100%);display:flex;flex-direction:column;gap:12px;text-align:center;max-height:100%;overflow:auto}
 .card h2{margin:0;font-size:1.9rem;letter-spacing:.08em;text-transform:uppercase}
 .card p{margin:0;color:var(--muted)}
@@ -231,7 +233,7 @@ input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline
 .bigstars .on{color:var(--gold);text-shadow:0 0 16px rgba(255,207,74,.6)}
 
 /* ---------- Son ---------- */
-.sound-gate{position:fixed;z-index:45;right:max(16px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.sound-gate{position:fixed;z-index:45;right:max(16px,calc(var(--sar) + 16px));bottom:calc(var(--sab) + 16px);box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .sound{display:flex;flex-direction:column;gap:6px;text-align:left}
 .sound label{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted)}
 .sound label b{font-family:var(--font-num);color:var(--fg)}
@@ -250,7 +252,7 @@ input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline
 @media (max-width:600px){.dialog{left:6px;bottom:6px;max-width:78%;padding:4px 8px;gap:6px;opacity:.92}.dialog canvas{width:26px;height:26px}.dialog b{font-size:.66rem}.dialog p{font-size:.7rem;line-height:1.25}}
 @media (max-width:600px){.hud .stats{gap:4px}.hud .stat{min-width:0;padding:4px 7px}.hud .stat .v{font-size:.9rem}.hud .stat .k{font-size:.56rem}}
 .cine{position:fixed;inset:0;z-index:40;background:#05070d;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
-  padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  padding:max(24px,var(--sat)) max(16px,var(--sar)) max(24px,var(--sab)) max(16px,var(--sal))}
 .cine .bgc{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cine .chap{position:relative;text-align:center;display:flex;flex-direction:column;gap:6px}
 .cine .chap h2{margin:0;font-size:clamp(1.8rem,5vw,3rem);letter-spacing:.06em;text-transform:uppercase;text-shadow:0 0 24px currentColor}
@@ -441,12 +443,14 @@ body.d2 .btn.primary *{color:#1a0e04}
 .ltile.locked{opacity:.35;cursor:default}
 .lpresets{display:flex;flex-wrap:wrap;gap:6px}
 #modalCard.wide{max-width:min(760px,96vw)}
-.mg{position:fixed;inset:0;z-index:28;background:#05070d;display:flex;flex-direction:column;align-items:center}
+.mg{position:fixed;inset:0;z-index:28;background:#05070d;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;padding:0 var(--sar) var(--sab) var(--sal)}
+.mg canvas{margin:auto 0}
+.mg .mgbar{height:calc(46px + var(--sat))!important;padding-top:var(--sat)!important;margin:0 calc(-1 * var(--sar)) 0 calc(-1 * var(--sal));width:calc(100% + var(--sal) + var(--sar))!important;padding-left:calc(12px + var(--sal))!important;padding-right:calc(12px + var(--sar))!important}
 .mg .mgbar{width:100%;height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;box-sizing:border-box;border-bottom:1px solid var(--line);background:rgba(10,14,24,.95)}
 .mg .mgbar b{white-space:nowrap}@media (max-width:520px){.mg .mgbar b{display:none}}
 .mg .mgbar span{flex:1;font:600 .8rem var(--font-ui);color:var(--muted);text-align:center}
 .mg canvas{touch-action:none;display:block;user-select:none;-webkit-user-select:none}
-.mgover{position:absolute;inset:46px 0 0 0;display:flex;align-items:center;justify-content:center;background:rgba(5,7,13,.75);padding:16px;box-sizing:border-box}
+.mgover{position:absolute;inset:calc(46px + var(--sat)) var(--sar) var(--sab) var(--sal);display:flex;align-items:center;justify-content:center;background:rgba(5,7,13,.75);padding:16px;box-sizing:border-box}
 .mgend{max-width:420px;width:100%;text-align:center}
 .mgpick{display:flex;flex-direction:column;gap:8px;margin-top:10px;text-align:left}
 body.mg-on{overflow:hidden}
@@ -554,7 +558,7 @@ html.da body.fsgame #scrGame .stat:nth-child(5){display:none}
    gros boutons jaunes, titres épais contournés, barre d'onglets en bas.
    ===================================================================== */
 html.da{--toy1:#3d43b4;--toy2:#2a2e8c;--toyedge:#141650;--toyhi:rgba(255,255,255,.22);--cta1:#ffe45a;--cta2:#ffad1c;--ctatx:#5a2c00;--go1:#9be85a;--go2:#3fae22;--font-toy:"Lilita One","Chakra Petch",system-ui,sans-serif}
-html.da body.hub{padding-top:calc(76px + env(safe-area-inset-top,0px));padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+html.da body.hub{padding-top:calc(76px + var(--sat));padding-bottom:calc(96px + var(--sab))}
 html.da body.hub .bgfx{background:radial-gradient(ellipse at 50% 0%,#4a4fc8 0%,#2a2e8c 40%,#171a5a 100%)}
 html.da body.hub .bgfx::before,html.da body.hub .bgfx::after{display:none}
 /* Textes épais contournés */
@@ -578,7 +582,7 @@ html.da #modal{background:rgba(12,14,48,.78);backdrop-filter:blur(2px)}
 html.da #modalCard{background:linear-gradient(180deg,#4248b8,#2c3090);border:4px solid var(--toyedge);border-radius:22px;box-shadow:inset 0 4px 0 var(--toyhi),0 8px 0 var(--toyedge),0 30px 80px rgba(0,0,0,.6);padding-top:0}
 html.da #modalCard>h2{margin:0 -20px 4px;padding:12px 16px;border-radius:18px 18px 0 0;background:linear-gradient(180deg,#5ac8ff,#2a8ae0);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18)}
 /* ---------- Barre du haut ---------- */
-.hubtop{position:fixed;left:0;right:0;top:0;z-index:25;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 8px max(10px,env(safe-area-inset-left,0px));
+.hubtop{position:fixed;left:0;right:0;top:0;z-index:25;display:flex;align-items:center;gap:8px;padding:calc(8px + var(--sat)) max(10px,var(--sar)) 8px max(10px,var(--sal));
   background:linear-gradient(180deg,rgba(20,22,80,.96),rgba(20,22,80,.82));border-bottom:3px solid var(--toyedge);box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .hprof{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;position:relative}
 .hprof canvas{width:52px;height:52px;border-radius:12px;border:3px solid #ffcf4a;box-shadow:0 3px 0 var(--toyedge);flex:none}
@@ -593,12 +597,14 @@ html.da #modalCard>h2{margin:0 -20px 4px;padding:12px 16px;border-radius:18px 18
 .hres.pts i{background:radial-gradient(circle at 35% 30%,#b8fff0,#2bc8a0);color:#064a3a}
 .hres.gem i{background:radial-gradient(circle at 35% 30%,#c8f4ff,#2aa0e8);color:#063a6a}
 button.hres{cursor:pointer}
+html.da body.hub .sound-gate,html.da body.mg-on .sound-gate{display:none}
+.hgear.hgear{position:relative}.hgear.mute::after{content:"🔇";position:absolute;right:-6px;bottom:-6px;font-size:.75rem;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#ff3344;border:2px solid #fff}
 .hgear{all:unset;cursor:pointer;flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;color:#fff;background:linear-gradient(180deg,#6a72f0,#434ac4);border:2px solid var(--toyedge);box-shadow:0 3px 0 var(--toyedge)}
 .hres .plus{width:18px;height:18px;border-radius:5px;background:linear-gradient(180deg,var(--go1),var(--go2));display:grid;place-items:center;font-size:.9rem;margin-left:2px}
 @media (max-width:520px){.hres.pts{display:none}.hname i{width:70px}.hres{padding-right:6px;font-size:.85rem}}
 /* ---------- Barre d'onglets ---------- */
-.hubnav{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;align-items:flex-end;gap:4px;box-sizing:border-box;padding:0 max(6px,env(safe-area-inset-left,0px)) calc(4px + env(safe-area-inset-bottom,0px));
-  background:linear-gradient(180deg,#1c1f6a,#121448);border-top:3px solid var(--toyedge);height:calc(84px + env(safe-area-inset-bottom,0px));max-width:100vw}
+.hubnav{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;align-items:flex-end;gap:4px;box-sizing:border-box;padding:0 max(6px,var(--sal)) calc(4px + var(--sab));
+  background:linear-gradient(180deg,#1c1f6a,#121448);border-top:3px solid var(--toyedge);height:calc(84px + var(--sab));max-width:100vw}
 .hubnav button{all:unset;flex:1 1 0;min-width:0;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:0;height:76px;border-radius:16px 16px 0 0;transition:height .18s,background .18s}
 .hubnav .hicon{width:58px;height:58px;display:grid;place-items:center;font-size:1.8rem;transition:transform .18s}
 .hubnav .hicon canvas{width:58px;height:58px}
@@ -612,7 +618,7 @@ button.hres{cursor:pointer}
 /* ---------- Écran Campagne ---------- */
 html.da body.hub #scrMap>.topbar,html.da body.hub #scrMap>.worldnav,html.da body.hub #scrMap>.map-grid{display:none}
 .camp{position:relative;display:grid;grid-template-columns:76px minmax(0,1fr) 76px;grid-template-rows:auto auto minmax(0,1fr) auto auto;grid-template-areas:"bn bn bn" "ti ti ti" "ls is rs" "lv lv lv" "pl pl pl";gap:8px;box-sizing:border-box;
-  height:calc(100dvh - 76px - 96px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:340px;border-radius:24px;padding:10px;overflow:hidden;
+  height:calc(100dvh - 76px - 96px - var(--sat) - var(--sab));min-height:340px;border-radius:24px;padding:10px;overflow:hidden;
   background:radial-gradient(ellipse at 50% 35%,color-mix(in srgb,var(--sky1) 85%,#fff) 0%,var(--sky1) 35%,var(--sky2) 100%);border:3px solid var(--toyedge);box-shadow:inset 0 3px 0 var(--toyhi),0 5px 0 var(--toyedge)}
 .camp::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.18) 0 2px,transparent 3px),radial-gradient(circle at 70% 25%,rgba(255,255,255,.14) 0 1.5px,transparent 2.5px),radial-gradient(circle at 85% 60%,rgba(255,255,255,.12) 0 2px,transparent 3px);background-size:180px 160px}
 .cbanner{all:unset;grid-area:bn;cursor:pointer;position:relative;display:flex;align-items:center;gap:10px;justify-self:center;width:min(520px,100%);height:58px;border-radius:16px;overflow:hidden;
@@ -636,7 +642,7 @@ html.da body.hub #scrMap>.topbar,html.da body.hub #scrMap>.worldnav,html.da body
 .carrow{all:unset;cursor:pointer;position:absolute;top:50%;margin-top:-21px;z-index:3;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:1.1rem;color:#fff;
   background:linear-gradient(180deg,#6a72f0,#434ac4);border:3px solid var(--toyedge);box-shadow:0 3px 0 var(--toyedge)}
 .carrow.l{left:0}.carrow.r{right:0}
-html.da body.hub .sound-gate{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}
+html.da body.hub .sound-gate{bottom:calc(var(--sab) + 104px)}
 html.da body.hub [id$="Back"]{display:none}.carrow:disabled{opacity:.35;cursor:default}
 .clevels{grid-area:lv;display:flex;gap:8px;overflow-x:auto;padding:6px 4px 10px;scrollbar-width:none;justify-content:safe center;z-index:2}
 .clevels::-webkit-scrollbar{display:none}
@@ -657,7 +663,8 @@ html.da body.hub [id$="Back"]{display:none}.carrow:disabled{opacity:.35;cursor:d
 .cinfo{all:unset;cursor:pointer;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font:400 1.6rem var(--font-toy);color:#fff;background:linear-gradient(180deg,#5ac8ff,#2a7ae0);border:3px solid var(--toyedge);box-shadow:0 4px 0 var(--toyedge)}
 .csheet{position:fixed;inset:0;z-index:28;background:rgba(12,14,48,.7);display:flex;align-items:flex-end;justify-content:center}
 .csheetin{width:min(560px,100%);max-height:82dvh;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#4248b8,#2c3090);border:4px solid var(--toyedge);border-bottom:0}
-.csheetin>.btn{align-self:flex-end}
+.csheetin>.btn{align-self:flex-end}.csheetin>*{flex-shrink:0}
+.csheetin{max-height:calc(100dvh - var(--sat) - 12px)!important;padding-bottom:calc(10px + var(--sab))!important;box-sizing:border-box}
 .csheetin #detail{position:static;width:auto}
 .isleflash{position:fixed;inset:0;z-index:29;background:radial-gradient(circle,#fff,#bff6ff);opacity:0;pointer-events:none}
 @media (max-width:520px){.camp{grid-template-columns:60px minmax(0,1fr) 60px;padding:8px 6px;gap:6px}.cside b{font-size:.6rem}.cside span{font-size:1.3rem}.cnum{width:42px;height:48px;font-size:1.4rem}.carrow{width:36px;height:36px;margin-top:-18px;font-size:.95rem}}
@@ -670,6 +677,30 @@ html.da body.hub [id$="Back"]{display:none}.carrow:disabled{opacity:.35;cursor:d
 @media (max-height:570px){.cbanner{height:40px}.cbart,.cbart canvas{width:40px;height:40px}.cbtxt small{display:none}.ctitle small{display:none}
   .cside b{display:none}.cside button{padding:6px 2px}.clv{height:44px}.bigbtn{height:56px}.bigbtn b{font-size:1.5rem}.bigbtn small{font-size:.7rem}}
 @media (prefers-reduced-motion:reduce){.bigbtn,.clv.next,.hbadge{animation:none}}
+/* ---------- Téléphone en paysage : barre d'onglets en colonne à gauche, menu sur deux colonnes ---------- */
+@media (orientation:landscape) and (max-height:520px){
+  html.da body.hub{padding:calc(52px + var(--sat)) var(--sar) var(--sab) calc(84px + var(--sal))}
+  .hubtop{padding:calc(4px + var(--sat)) max(10px,var(--sar)) 4px calc(10px + var(--sal))}
+  .hprof canvas{width:38px;height:38px;border-width:2px}.hlv{left:24px;min-width:18px;height:18px;font-size:.7rem;line-height:14px}
+  .hres{height:30px}.hres i{width:22px;height:22px}.hgear{width:32px;height:32px;font-size:1.1rem}
+  .hubnav{top:calc(48px + var(--sat));bottom:0;right:auto;width:calc(80px + var(--sal));height:auto;flex-direction:column;align-items:stretch;justify-content:center;gap:2px;
+    padding:4px 0 calc(4px + var(--sab)) var(--sal);border:0;border-right:3px solid var(--toyedge);left:0;transform:none;border-radius:0}
+  .hubnav button{flex:1 1 0;height:auto;max-height:64px;border-radius:0 14px 14px 0;justify-content:center}
+  .hubnav .hicon,.hubnav .hicon canvas{width:42px;height:42px}
+  .hubnav button.on{height:auto}.hubnav button.on .hicon{transform:scale(1.08)}.hubnav button.on b{margin-bottom:2px;font-size:.66rem}
+  .hbadge{top:2px;right:8px;width:18px;height:18px;font-size:.7rem;line-height:14px}
+  .camp{height:calc(100dvh - 56px - var(--sat) - var(--sab));min-height:0;margin-right:4px;
+    grid-template-columns:56px minmax(0,1fr) minmax(220px,40%) 56px;grid-template-rows:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"ls is bn rs" "ls is ti rs" "ls is lv rs" "ls is pl rs";gap:6px;padding:6px}
+  .cbanner{height:40px;width:100%}.cbart,.cbart canvas{width:40px;height:40px}.cbtxt b{font-size:.95rem}.cbtxt small{font-size:.66rem;display:block}
+  .ctitle{justify-content:flex-start}.cnum{width:34px;height:40px;font-size:1.15rem}.ctitle b{font-size:1.15rem}.ctitle small{font-size:.72rem;display:block}
+  .clevels{align-self:center;justify-content:safe center;gap:5px;padding:4px 2px 6px}
+  .clv{width:40px;height:44px;border-width:2px}.clv b{font-size:.95rem}.clv span{font-size:.5rem}.clv.sel{transform:translateY(-2px)}
+  .cplay{padding-bottom:4px;gap:6px}.bigbtn{width:auto;flex:1;height:56px}.bigbtn b{font-size:1.5rem}.cinfo{width:42px;height:42px;font-size:1.3rem}
+  .cside{justify-content:center;gap:6px}.cside button{padding:4px 2px}.cside span{font-size:1.1rem}.cside b{font-size:.56rem;display:block}
+  .cisle canvas.isle{inset:-10px -40px;width:calc(100% + 80px);height:calc(100% + 20px)}
+  html.da body.hub .sound-gate{bottom:calc(var(--sab) + 12px)}
+}
 /* ---------- Fenêtres d'accueil ---------- */
 /* ---------- Équipage : figurine sur socle ---------- */
 .crewstage{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);grid-template-rows:auto auto;gap:8px;padding:12px;border-radius:22px;
@@ -814,7 +845,7 @@ body.fsgame{padding:0;overflow:hidden;overscroll-behavior:none;touch-action:mani
 body.fsgame .app{max-width:none}
 body.fsgame #scrGame{position:fixed;inset:0;z-index:20;background:#05070d;display:grid;gap:4px;align-content:stretch;
   grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) 86px auto;grid-template-areas:"hud" "map" "info" "ctrl";
-  padding:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-right,0px)) max(4px,env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+  padding:max(4px,var(--sat)) max(4px,var(--sar)) max(4px,var(--sab)) max(4px,var(--sal))}
 body.fsgame .game-grid{display:contents}
 body.fsgame .board{grid-area:map;justify-self:center;align-self:center;margin:0;border-radius:4px}
 body.fsgame .board canvas#game{width:100%;height:100%}
@@ -844,12 +875,12 @@ body.fsgame .ctrl .row{flex-wrap:nowrap;gap:4px;width:100%}
 body.fsgame #scrGame > .ctrl > .btn{width:100%}
 body.fsgame .hud .stat .v{white-space:nowrap}
 .btn.sound-gate{position:fixed}
-body.fsgame .sound-gate{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
+body.fsgame .sound-gate{bottom:calc(var(--sab) + 150px)}
 body.fsgame .ctrl .row .btn{flex:1 1 0;min-width:0;font-size:.66rem;padding:7px 2px;overflow:hidden;text-overflow:ellipsis}
 body.fsgame #btnWave{padding:9px 6px;font-size:.82rem;white-space:normal;line-height:1.15}
 /* Tiroir : fiche, tourelles, ennemis (ouvert à la demande, par-dessus la carte) */
 body.fsgame .side{position:fixed;left:0;right:0;bottom:0;z-index:35;max-height:70dvh;overflow:auto;background:rgba(8,12,22,.97);
-  padding:10px max(10px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);
+  padding:10px max(10px,var(--sal)) calc(10px + var(--sab));border-top:1px solid var(--line);
   transform:translateY(105%);transition:transform .25s ease;box-shadow:0 -10px 30px rgba(0,0,0,.6)}
 body.fsgame.sheet .side{transform:none}
 .sheetclose{display:none}
@@ -875,6 +906,8 @@ body.fsgame.fsland .infobar .dialog p{-webkit-line-clamp:4}
 body.fsgame.fsland .ctrl .row{flex-wrap:wrap}
 body.fsgame.fsland .ctrl .row .btn{flex:1 1 28%}
 body.fsgame.fsland .side{left:auto;top:0;width:min(340px,60vw);max-height:none;transform:translateX(105%);border-top:0;border-left:1px solid var(--line)}
+html.da body.fsgame #scrGame .side{padding:10px max(10px,var(--sar)) calc(10px + var(--sab)) max(10px,var(--sal))}
+html.da body.fsgame.fsland #scrGame .side{padding:calc(10px + var(--sat)) calc(10px + var(--sar)) calc(10px + var(--sab)) 10px;width:calc(min(340px,60vw) + var(--sar));box-sizing:border-box}
 body.fsgame.fsland.sheet .side{transform:none}
 /* Équipement */
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
@@ -913,7 +946,7 @@ body.fsgame.fsland.sheet .side{transform:none}
 .sitem.chest.c1 .crate{border-color:#4fa3ff;background:linear-gradient(180deg,#2d4a7a,#16263f)}
 .sitem.chest.c2 .crate{border-color:#c58bff;background:linear-gradient(180deg,#4b2d7a,#24163f);box-shadow:0 0 16px rgba(197,139,255,.5)}
 .sitem.offer{border-color:var(--rc)}
-.toast2{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;background:rgba(17,24,41,.96);border:1px solid var(--cyan);padding:8px 16px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none}
+.toast2{position:fixed;left:50%;bottom:calc(24px + var(--sab));transform:translateX(-50%);z-index:70;background:rgba(17,24,41,.96);border:1px solid var(--cyan);padding:8px 16px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none}
 .toast2.on{animation:t2 2.2s ease forwards}
 @keyframes t2{10%,80%{opacity:1}100%{opacity:0}}
 @media (max-width:560px){.gslots{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.gcard.big{min-height:130px}.crewhero canvas{width:72px;height:72px}}
@@ -5828,7 +5861,8 @@ const Minigames = {
     const cv = $('mgCv'), ctx = cv.getContext('2d');
     const LW = game.W, LH = game.H;
     const fit = () => {
-      const bw = innerWidth, bh = innerHeight - 46, k = Math.min(bw / LW, bh / LH), dpr = Math.min(2, devicePixelRatio || 1);
+      const cs = getComputedStyle(el), px = v => parseFloat(cs[v]) || 0, bar = el.querySelector('.mgbar');
+      const bw = el.clientWidth - px('paddingLeft') - px('paddingRight'), bh = el.clientHeight - px('paddingTop') - px('paddingBottom') - (bar ? bar.offsetHeight : 46) - 4, k = Math.min(bw / LW, bh / LH), dpr = Math.min(2, devicePixelRatio || 1);
       cv.style.width = LW * k + 'px'; cv.style.height = LH * k + 'px';
       cv.width = Math.round(LW * k * dpr); cv.height = Math.round(LH * k * dpr);
       this.k = k * dpr;
@@ -7299,6 +7333,7 @@ const Sound = {
     const gate = document.getElementById('soundGate');
     const wantSound = this.settings.music > 0 || this.settings.voice > 0;
     if (gate) gate.hidden = this.running || !wantSound || document.hidden;
+    const gear = document.getElementById('hubGear'); if (gear) gear.classList.toggle('mute', !this.running && wantSound);
     document.querySelectorAll('[data-sound-state]').forEach(el => {
       el.textContent = !window.AudioContext && !window.webkitAudioContext ? 'Ce navigateur ne gère pas le son.'
         : this.running ? 'Son actif.' : 'Son en attente : touche « Activer le son ».';
@@ -7557,8 +7592,10 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.0.3';
+const APP_VERSION = '7.0.4';
 const CHANGELOG = [
+  { v: '7.0.4', date: '01.11.2026', items: ['Téléphone : rien ne passe plus sous l’heure, la batterie, l’encoche ou la barre d’accueil, dans les menus, les mini-jeux et la bataille', 'Mini-jeux : la barre du haut (Terminer, Abandonner) descend sous la barre d’état', 'Téléphone en paysage : onglets en colonne à gauche et écran Campagne sur deux colonnes', 'Le bouton « Activer le son » ne recouvre plus rien dans les menus : un appui suffit, et la roue des réglages signale quand le son attend'] },
+  { v: '7.0.3', date: '01.11.2026', items: ['Écran Campagne : tout tient dans l’écran sans faire défiler, boutons répartis à gauche et à droite, réglages dans la barre du haut'] },
   { v: '7.0.2', date: '01.11.2026', items: ['Fouille de la Rouille : les grilles commencées avant la v6.1 bloquaient au moment de dégager un objet ; elles sont réparées et les objets sont bien donnés', 'Plongée des Abysses : remonter jusqu’au ponton termine la plongée en gardant toute la prise, avec une flèche qui indique la surface'] },
   { v: '7.0.1', date: '01.11.2026', items: ['Téléphone : plus de zoom quand on touche deux fois vite, plus de sélection de texte ni de menu « Copier » sur un appui long'] },
   { v: '7.0', date: '01.11.2026', items: ['Nouvelle organisation des menus : barre du haut (profil, étoiles, points, gemmes) et barre d’onglets en bas (Boutique, Équipage, Campagne, Collection, Événements)', 'Écran Campagne : chaque monde est une île 3D flottante qui tourne au doigt, gros bouton Jouer, choix des niveaux, plongée vers l’île au lancement et envol d’une île à l’autre entre les mondes', 'L’équipage en figurines 3D : portraits dans toute l’interface, personnage animé sur son socle dans l’écran Équipage', 'Annonces du jour, connexion quotidienne sur 7 jours avec grand prix, page des nouveautés', 'Menus, boutique et mini-jeux redessinés en style jouet : panneaux bombés, gros boutons, bannières illustrées, personnages et décors plus soignés'] },
