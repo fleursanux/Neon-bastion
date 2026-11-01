@@ -451,6 +451,29 @@ body.mg-on{overflow:hidden}
 .mgrew{font-size:.85rem;color:var(--muted);margin:6px 0}
 .mgtk{margin-left:6px;letter-spacing:2px}
 .mgdigbg{z-index:29}
+.mgwallet{display:flex;gap:10px;flex-wrap:wrap;font-weight:700}.mgwallet span{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.mggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:10px}
+.mggain{font-size:1.05rem}.mggain b{color:var(--gem)}
+.mgpop{position:fixed;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(5,7,13,.7);padding:16px}
+.mgdigbg{overflow:auto;align-items:safe center}
+.dprog{display:flex;align-items:center;gap:8px;margin-top:6px}.dprog div{flex:1;height:8px;border-radius:4px;background:var(--panel-2);overflow:hidden}.dprog span{display:block;height:100%;background:linear-gradient(90deg,#ffb347,#ffcf4a)}
+.dleg{flex-direction:column;flex-wrap:nowrap;gap:4px}.dleg li{display:flex;gap:8px;align-items:center;background:var(--panel-2);border-left:3px solid var(--ic,var(--line));border-radius:6px;padding:4px 8px;text-decoration:none}
+.dleg li .dn{flex:1}.dleg li .dr{color:var(--gem);white-space:nowrap}.dleg li.ok{opacity:.6;text-decoration:none}.dleg li.ok .dr{color:var(--cyan)}.dleg .dic{font-size:1.1rem}
+.dleg li.dbonus{--ic:#ffcf4a;background:rgba(255,207,74,.1)}
+.dfound{list-style:none;padding:0;text-align:left;display:flex;flex-direction:column;gap:6px}
+.dbuy{justify-content:center;margin-top:8px}
+.crows{display:flex;flex-direction:column;gap:5px;margin:8px 0}
+.crow{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:8px;background:var(--panel-2)}.crow.cur{outline:1px solid var(--cyan)}.crow.dim{opacity:.35}
+.cdot{all:unset;box-sizing:border-box;width:26px;height:26px;border-radius:50%;display:inline-block;box-shadow:inset 0 -3px 0 rgba(0,0,0,.3);cursor:pointer}
+.cdot.empty{border:2px dashed var(--line);box-shadow:none;cursor:default}.cdot.big{width:40px;height:40px}.cdot[disabled]{opacity:.3;cursor:default}
+.cfb{margin-left:auto;font-size:.8rem;color:var(--muted)}.cok{color:#3ef2c8}.cnear{color:#ffcf4a}
+.cpal{display:flex;gap:10px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.tboard{position:relative;width:100%;aspect-ratio:6/4.6;margin:10px 0}
+.ttile{all:unset;box-sizing:border-box;position:absolute;width:15.6%;height:20.4%;border-radius:8px;background:#1b2440;border:2px solid var(--tc);color:var(--tc);display:flex;align-items:center;justify-content:center;font-size:clamp(1rem,5vw,1.6rem);box-shadow:0 4px 0 rgba(0,0,0,.45);cursor:pointer}
+.ttile.blocked{filter:brightness(.45) saturate(.6);cursor:default}
+.ttray{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:6px;border-radius:10px;background:#0a0e18;border:1px solid var(--line);margin-bottom:8px}
+.tslot{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--tc);border:2px solid var(--tc);background:#1b2440}.tslot.empty{border:1px dashed var(--line);background:none}
+
 .mgdig{max-width:460px;width:100%}
 .dgrid{display:grid;gap:4px;margin:10px 0}
 .dcell{all:unset;box-sizing:border-box;aspect-ratio:1;border-radius:6px;cursor:pointer;background:linear-gradient(145deg,#5a4630,#3a2c1c);border:1px solid #6d5538;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
@@ -4531,49 +4554,127 @@ const TownArt = {
    ===================================================================== */
 const LOADOUT_MAX = 10;
 /* =====================================================================
-   ÉVÉNEMENTS — mini-jeux à part du tower defense (tickets quotidiens, paliers de récompenses)
-   · Expédition de l'Arche : tir automatique et améliorations à choisir (façon Archero)
-   · Plongée des Abysses : harpon, oxygène et courants (façon Dave the Diver)
-   · Fouille de la Rouille : grille à creuser avec des pioches gagnées en jouant (façon événements « fouille »)
+   ÉVÉNEMENTS — mini-jeux à part du tower defense
+   Inspirés des formats qui marchent le mieux dans les jeux mobiles bien notés :
+   · Expédition de l'Arche : tir automatique et améliorations à choisir (Archero)
+   · Plongée des Abysses : harpon, oxygène et courants (Dave the Diver)
+   · Fouille de la Rouille : grille à creuser avec des pioches (Royal Match, Whiteout Survival)
+   · Chute de Plasma : plinko, des billes à lâcher sur des picots (Monopoly GO!, Royal Match)
+   · Percée : portes à calcul qui grossissent l'escouade (Last War)
+   · Code du Coffre : retrouver la combinaison de couleurs (Royal Match Magic Cauldron)
+   · Triage : trier des tuiles par trois (Whiteout Survival, Zen Match)
    ===================================================================== */
-const MG_TICKETS = 3;
+const MG_TICKETS = { exp: 3, dive: 3, run: 3, code: 2, tri: 3 };
+const MG_SHOP = [
+  { id: 'pick5', name: '5 pioches', desc: 'Pour la Fouille de la Rouille', price: 40, give: { picks: 5 } },
+  { id: 'pick15', name: '15 pioches', desc: 'Pour la Fouille de la Rouille · 1 pioche offerte sur 3', price: 100, give: { picks: 15 }, tag: 'Meilleur prix' },
+  { id: 'ball5', name: '5 billes', desc: 'Pour la Chute de Plasma', price: 25, give: { balls: 5 } },
+  { id: 'ball15', name: '15 billes', desc: 'Pour la Chute de Plasma', price: 60, give: { balls: 15 }, tag: 'Meilleur prix' },
+  { id: 'pick1', name: '1 pioche', desc: 'Pour la Fouille de la Rouille', price: 10, give: { picks: 1 } }
+];
+const MG_TICKET_PRICE = 15;
+/* Récompenses propres aux événements (pioches, billes), puis gemmes et objets via grant(). */
+function mgGrant(s, r) {
+  const m = Minigames.data(s), parts = [];
+  if (r.picks) { m.picks += r.picks; parts.push(`+${r.picks} ⛏`); }
+  if (r.balls) { m.balls += r.balls; parts.push(`+${r.balls} bille${r.balls > 1 ? 's' : ''}`); }
+  const g = grant(s, r);
+  if (g) parts.unshift(g);
+  return parts.join(', ');
+}
 const Minigames = {
   data(s) {
-    s.mg = s.mg || { day: '', tickets: { exp: MG_TICKETS, dive: MG_TICKETS }, picks: 3, best: { exp: 0, dive: 0 }, dig: null, stats: { exp: 0, dive: 0, dig: 0 } };
-    if (s.mg.day !== dayKey()) { s.mg.day = dayKey(); s.mg.tickets = { exp: MG_TICKETS, dive: MG_TICKETS }; s.mg.picks += 2; }
-    return s.mg;
+    s.mg = s.mg || { day: '', tickets: {}, picks: 3, best: {}, dig: null, stats: {} };
+    const m = s.mg;
+    m.tickets = m.tickets || {}; m.best = m.best || {}; m.stats = m.stats || {};
+    if (m.balls === undefined) m.balls = 5;
+    if (m.stage === undefined) m.stage = 1;
+    for (const k in MG_TICKETS) if (m.tickets[k] === undefined) m.tickets[k] = MG_TICKETS[k];
+    if (m.day !== dayKey()) { m.day = dayKey(); for (const k in MG_TICKETS) m.tickets[k] = Math.max(m.tickets[k] || 0, MG_TICKETS[k]); m.picks += 2; m.balls += 3; }
+    return m;
   },
-  /* Pioches gagnées en tower defense : 1 par victoire, 1 de plus avec 3 étoiles. */
-  earnPicks(s, stars) { const m = this.data(s), n = 1 + (stars === 3 ? 1 : 0); m.picks += n; return n; },
+  /* Gains en tower defense : 1 pioche et 2 billes par victoire, une de plus de chaque avec 3 étoiles. */
+  earn(s, stars) { const m = this.data(s), b = stars === 3 ? 1 : 0; m.picks += 1 + b; m.balls += 2 + b; return { picks: 1 + b, balls: 2 + b }; },
+  /* Achats avec les gemmes (boutique, ou directement dans les jeux). */
+  buy(key) {
+    const s = App.slot, m = this.data(s);
+    if (key.startsWith('ticket:')) { const id = key.slice(7); if (s.gems < MG_TICKET_PRICE) return this.noGems(); s.gems -= MG_TICKET_PRICE; m.tickets[id]++; Store.touch(s); Sound.sfx && Sound.sfx('sell'); return true; }
+    const it = MG_SHOP.find(x => x.id === key);
+    if (!it) return false;
+    if (s.gems < it.price) return this.noGems();
+    s.gems -= it.price; mgGrant(s, it.give); Store.touch(s); Sound.sfx && Sound.sfx('sell');
+    Toast2.show(`${it.name} achetée${it.give.picks || it.give.balls > 1 ? 's' : ''} · −${it.price} ${GEM}`);
+    return true;
+  },
+  noGems() { Toast2.show(`Pas assez de gemmes (${fmtBig(App.slot.gems)} ${GEM})`); return false; },
+  buyBtn(key, label, price) { const ok = App.slot.gems >= price; return `<button class="btn small ${ok ? 'gold' : ''}" data-mgbuy="${key}" type="button" ${ok ? '' : 'disabled'}>${label} · ${price} ${GEM}</button>`; },
+  bindBuy(root, after) { root.querySelectorAll('[data-mgbuy]').forEach(bt => { bt.onclick = ev => { ev.stopPropagation(); if (this.buy(bt.dataset.mgbuy)) after(); }; }); },
+  GAMES: [
+    { id: 'exp', who: 'volta', title: 'Expédition de l’Arche', btn: 'Partir', tag: 'Action',
+      desc: 'Pilote l’Arche à travers 10 secteurs de Rouille. Ton vaisseau tire seul : esquive, et choisis une amélioration après chaque secteur.',
+      rew: m => `Record : secteur <b>${m.best.exp || 0}</b> / 10 · 4 ${GEM} par secteur · un objet au secteur 5 · objet rare et +30 ${GEM} au secteur 10` },
+    { id: 'dive', who: 'iris', title: 'Plongée des Abysses', btn: 'Plonger', tag: 'Adresse',
+      desc: 'Harponne les poissons de données avant de manquer d’oxygène. Plus c’est profond, plus ça rapporte. Remonte à temps pour garder toute ta prise.',
+      rew: m => `Record : <b>${m.best.dive || 0}</b> points · 1 ${GEM} pour 6 points · un objet par lanterne dorée` },
+    { id: 'run', who: 'krast', title: 'Percée', btn: 'Foncer', tag: 'Calcul',
+      desc: 'Guide ton escouade à travers les portes : +, −, ×, ÷. Grossis-la assez pour écraser le gardien au bout de la route.',
+      rew: m => `Étape <b>${m.stage}</b> · victoire : ${10 + 3 * m.stage} ${GEM} et plus selon les survivants · un objet toutes les 3 étapes` },
+    { id: 'code', who: 'nyx', title: 'Code du Coffre', btn: 'Déchiffrer', tag: 'Réflexion',
+      desc: 'Retrouve la combinaison de 4 couleurs du coffre en 8 essais. Après chaque essai, Nyx te dit combien de couleurs sont bien placées.',
+      rew: () => `1 à 3 essais : objet épique + 30 ${GEM} · 4 à 5 : objet rare + 15 ${GEM} · 6 à 8 : 8 ${GEM}` },
+    { id: 'tri', who: 'lyra', title: 'Triage', btn: 'Trier', tag: 'Puzzle',
+      desc: 'Touche les pièces libres pour les poser dans le plateau : trois pareilles disparaissent. Le plateau a 7 places : ne le remplis pas !',
+      rew: () => `1 ${GEM} par trio · tout trier : +20 ${GEM} et un objet rare` },
+    { id: 'plinko', who: 'ohm', title: 'Chute de Plasma', btn: 'Lâcher des billes', tag: 'Chance', cur: 'balls',
+      desc: 'Choisis où lâcher chaque bille : elle rebondit sur les picots et tombe dans une case. La récompense est écrite sur la case.',
+      rew: () => `Cases : objet · 15 ${GEM} · 5 ${GEM} · 1 pioche · 2 ${GEM}. Billes gagnées en jouant (2 par victoire, 3 avec 3 étoiles)` },
+    { id: 'dig', who: 'brann', title: 'Fouille de la Rouille', btn: 'Creuser', tag: 'Trésor', cur: 'picks',
+      desc: 'Creuse une grille case par case. Chaque objet entièrement dégagé te rapporte la récompense affichée dans la liste.',
+      rew: m => `Grille ${m.dig ? m.dig.lvl : 1} · pièces, batteries, caisses d’équipement, reliques · bonus de grille complète` }
+  ],
   renderHub() {
     const s = App.slot, m = this.data(s);
     $('mgGems').textContent = fmtBig(s.gems);
-    const card = (id, title, who, desc, play, extra) => `<section class="panel mgcard" style="--mc:${CAST[who].color}"><div class="mghead"><canvas width="72" height="72" data-portrait="${who}"></canvas>` +
-      `<div><p class="eyebrow">${esc(CAST[who].name)} propose</p><h3>${title}</h3><p class="hint">${desc}</p></div></div>${extra}<div class="row">${play}</div></section>`;
-    const tk = id => `<span class="mgtk">${'🎟'.repeat(m.tickets[id])}${'·'.repeat(MG_TICKETS - m.tickets[id])}</span>`;
-    $('mgBody').innerHTML =
-      '<p class="hint">Trois activités à part, pour souffler entre deux batailles. Les tickets reviennent chaque jour ; les pioches se gagnent en remportant des niveaux (une de plus avec 3 étoiles).</p>' +
-      card('exp', 'Expédition de l’Arche', 'volta', 'Pilote l’Arche à travers 10 secteurs de Rouille. Ton vaisseau tire seul : esquive, et choisis une amélioration après chaque secteur.',
-        `<button class="btn primary" data-play="exp" type="button" ${m.tickets.exp ? '' : 'disabled'}>Partir ${tk('exp')}</button>`,
-        `<p class="mgrew">Record : secteur <b>${m.best.exp}</b> / 10 · Récompense : 4 ${GEM} par secteur, un objet au secteur 5, un objet rare et +30 ${GEM} au secteur 10</p>`) +
-      card('dive', 'Plongée des Abysses', 'iris', 'Plonge sous les pontons de l’océan quantique. Harponne les poissons de données avant de manquer d’oxygène. Plus c’est profond, plus ça rapporte.',
-        `<button class="btn primary" data-play="dive" type="button" ${m.tickets.dive ? '' : 'disabled'}>Plonger ${tk('dive')}</button>`,
-        `<p class="mgrew">Record : <b>${m.best.dive}</b> points de prise · 1 ${GEM} pour 6 points, un objet pour chaque lanterne dorée</p>`) +
-      card('dig', 'Fouille de la Rouille', 'brann', 'Creuse les décombres d’un vieux hangar. Chaque coup de pioche dégage une case ; dégage un objet en entier pour l’emporter.',
-        `<button class="btn primary" data-play="dig" type="button">Creuser · ⛏ ${m.picks}</button>`,
-        `<p class="mgrew">Pièces, batteries, caisses d’équipement et reliques. Tout trouver sur une grille rapporte un bonus et ouvre une grille plus riche.</p>`);
+    let h = `<div class="mgwallet"><span>⛏ <b>${m.picks}</b> pioche${m.picks > 1 ? 's' : ''}</span><span>● <b>${m.balls}</b> bille${m.balls > 1 ? 's' : ''}</span><span class="gem">${fmtBig(s.gems)} ${GEM}</span></div>` +
+      '<p class="hint">Activités à part, pour souffler entre deux batailles. Les tickets 🎟 reviennent chaque jour. Pioches et billes se gagnent en remportant des niveaux, ou s’achètent avec des gemmes.</p><div class="mggrid">';
+    for (const g of this.GAMES) {
+      if (!CAST[g.who]) continue;
+      let play, more = '';
+      if (g.cur) { const n = m[g.cur]; play = `<button class="btn primary" data-play="${g.id}" type="button">${g.btn} · ${g.cur === 'picks' ? '⛏' : '●'} ${n}</button>`; }
+      else {
+        const t = m.tickets[g.id];
+        play = `<button class="btn primary" data-play="${g.id}" type="button" ${t ? '' : 'disabled'}>${g.btn} <span class="mgtk">${'🎟'.repeat(Math.min(5, t))}${t ? '' : 'plus de ticket'}</span></button>`;
+        if (!t) more = this.buyBtn('ticket:' + g.id, '+1 ticket', MG_TICKET_PRICE);
+      }
+      h += `<section class="panel mgcard" style="--mc:${CAST[g.who].color}"><div class="mghead"><canvas width="72" height="72" data-portrait="${g.who}"></canvas>` +
+        `<div><p class="eyebrow">${esc(g.tag)} · ${esc(CAST[g.who].name)} propose</p><h3>${g.title}</h3><p class="hint">${g.desc}</p></div></div><p class="mgrew">${g.rew(m)}</p><div class="row">${play}${more}</div></section>`;
+    }
+    h += '</div>';
     const body = $('mgBody');
+    body.innerHTML = h;
     body.querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
     body.querySelectorAll('[data-play]').forEach(bt => { bt.onclick = () => this.start(bt.dataset.play); });
+    this.bindBuy(body, () => this.renderHub());
   },
   start(id) {
     const s = App.slot, m = this.data(s);
     if (id === 'dig') { Dig.open(); return; }
+    if (id === 'plinko') { this.run(Plinko); return; }
     if (!m.tickets[id]) return;
     m.tickets[id]--; Store.touch(s);
-    const game = id === 'exp' ? Expedition : Dive;
-    this.run(game);
+    if (id === 'code') { Code.open(); return; }
+    if (id === 'tri') { Triage.open(); return; }
+    this.run({ exp: Expedition, dive: Dive, run: Breach }[id]);
   },
+  /* Fenêtre par-dessus un jeu en DOM (Fouille, Code, Triage) */
+  popup(html, btn, fn) {
+    const el = $('mgDig');
+    let pop = el.querySelector('.mgpop');
+    if (!pop) { pop = document.createElement('div'); pop.className = 'mgpop'; el.appendChild(pop); }
+    pop.innerHTML = `<div class="card mgend">${html}<div class="row" style="justify-content:center"><button class="btn primary" type="button">${btn}</button></div></div>`;
+    pop.querySelector('button').onclick = () => { pop.remove(); fn && fn(); };
+  },
+  closeDom() { $('mgDig').hidden = true; $('mgDig').innerHTML = ''; this.renderHub(); },
   /* ---------- Cadre commun : plein écran, toile, contrôles au doigt et à la souris ---------- */
   run(game) {
     const el = $('mg');
@@ -4603,14 +4704,14 @@ const Minigames = {
       if (stop) return;
       end();
       const rew = game.reward(result), s = App.slot, m = this.data(s);
-      const msg = grant(s, rew.grant);
+      const msg = rew.summary !== undefined ? rew.summary : mgGrant(s, rew.grant || {});
       if (rew.best !== undefined) m.best[game.id] = Math.max(m.best[game.id] || 0, rew.best);
       m.stats[game.id] = (m.stats[game.id] || 0) + 1;
       Store.touch(s);
       const ov = $('mgOver');
       ov.hidden = false;
-      ov.innerHTML = `<div class="card mgend"><h2>${esc(rew.title)}</h2><p>${esc(rew.text)}</p><p class="gem">${msg ? 'Récompense : ' + esc(msg) : 'Pas de récompense cette fois.'}</p><div class="row"><button class="btn primary" id="mgClose" type="button">Retour aux événements</button></div></div>`;
-      if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; setTimeout(() => Reveal.show(items, game.title), 300); }
+      ov.innerHTML = `<div class="card mgend"><h2>${esc(rew.title)}</h2><p>${esc(rew.text)}</p><p class="mggain">${msg ? 'Tu remportes : <b>' + esc(msg) + '</b>' : 'Pas de récompense cette fois.'}</p><div class="row"><button class="btn primary" id="mgClose" type="button">Retour aux événements</button></div></div>`;
+      if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; setTimeout(() => Reveal.show(items, game.title, true), 300); }
       $('mgClose').onclick = () => this.close();
       Sound.sfx && Sound.sfx('up');
     };
@@ -4916,58 +5017,75 @@ const Dive = {
   }
 };
 
+
 /* ---------- Fouille de la Rouille : grille à dégager ---------- */
 const DIG_ITEMS = [
-  { id: 'piece', name: 'Pièce de cuivre', w: 1, h: 1, c: '#ffb347', rew: () => ({ gems: 4 }) },
-  { id: 'batterie', name: 'Batterie', w: 2, h: 1, c: '#5ef0ff', rew: () => ({ gems: 10 }) },
-  { id: 'caisse', name: 'Caisse d’équipement', w: 2, h: 2, c: '#c58bff', rew: lvl => ({ item: Math.min(3, Math.floor(lvl / 2)) }) },
-  { id: 'relique', name: 'Relique de l’Arche', w: 3, h: 1, c: '#ffcf4a', rew: () => ({ gems: 25 }) },
-  { id: 'coeur', name: 'Cœur de Rouille', w: 2, h: 3, c: '#ff3355', rew: lvl => ({ gems: 20, item: Math.min(4, 1 + Math.floor(lvl / 2)) }) }
+  { id: 'piece', name: 'Pièce de cuivre', icon: '🪙', w: 1, h: 1, c: '#ffb347', rew: () => ({ gems: 4 }) },
+  { id: 'batterie', name: 'Batterie', icon: '🔋', w: 2, h: 1, c: '#5ef0ff', rew: () => ({ gems: 10, balls: 2 }) },
+  { id: 'caisse', name: 'Caisse d’équipement', icon: '📦', w: 2, h: 2, c: '#c58bff', rew: lvl => ({ item: Math.min(3, Math.floor(lvl / 2)) }) },
+  { id: 'relique', name: 'Relique de l’Arche', icon: '🏺', w: 3, h: 1, c: '#ffcf4a', rew: () => ({ gems: 25 }) },
+  { id: 'coeur', name: 'Cœur de Rouille', icon: '💠', w: 2, h: 3, c: '#ff3355', rew: lvl => ({ gems: 20, item: Math.min(4, 1 + Math.floor(lvl / 2)) }) }
 ];
+/* Texte lisible d'une récompense, sans la donner */
+function rewText(r) {
+  const p = [];
+  if (r.gems) p.push(`${r.gems} ${GEM}`);
+  if (r.picks) p.push(`${r.picks} ⛏`);
+  if (r.balls) p.push(`${r.balls} bille${r.balls > 1 ? 's' : ''}`);
+  if (r.item !== undefined && r.item !== null) p.push(`objet ${RARITY[r.item].name.toLowerCase()}`);
+  return p.join(' + ');
+}
 const Dig = {
   COLS: 7, ROWS: 6,
+  bonus: lvl => ({ gems: 10 + 5 * lvl, picks: 3 }),
   board(s) {
     const m = Minigames.data(s);
-    if (!m.dig || m.dig.done) {
-      const lvl = m.dig ? m.dig.lvl + 1 : 1, items = [], occ = new Set();
-      const wanted = ['piece', 'piece', 'batterie', 'caisse', lvl >= 2 ? 'relique' : 'batterie', ...(lvl >= 3 ? ['coeur'] : [])];
-      for (const id of wanted) {
-        const t = DIG_ITEMS.find(x => x.id === id);
-        for (let k = 0; k < 200; k++) {
-          const rot = Math.random() < 0.5, w = rot ? t.h : t.w, h = rot ? t.w : t.h, x = Math.floor(Math.random() * (this.COLS - w + 1)), y = Math.floor(Math.random() * (this.ROWS - h + 1));
-          const cells = []; for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) cells.push((x + i) + ',' + (y + j));
-          if (cells.some(c => occ.has(c))) continue;
-          cells.forEach(c => occ.add(c)); items.push({ id, x, y, w, h, got: false }); break;
-        }
-      }
-      m.dig = { lvl, items, open: [], done: false };
-    }
+    if (!m.dig) m.dig = this.make(1);
     return m.dig;
   },
-  open() {
-    const s = App.slot;
-    this.board(s);
-    this.render();
-    $('mgDig').hidden = false;
+  make(lvl) {
+    const items = [], occ = new Set();
+    const wanted = ['piece', 'piece', 'batterie', 'caisse', lvl >= 2 ? 'relique' : 'batterie', ...(lvl >= 3 ? ['coeur'] : [])];
+    for (const id of wanted) {
+      const t = DIG_ITEMS.find(x => x.id === id);
+      for (let k = 0; k < 300; k++) {
+        const rot = Math.random() < 0.5, w = rot ? t.h : t.w, h = rot ? t.w : t.h, x = Math.floor(Math.random() * (this.COLS - w + 1)), y = Math.floor(Math.random() * (this.ROWS - h + 1));
+        const cells = []; for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) cells.push((x + i) + ',' + (y + j));
+        if (cells.some(c => occ.has(c))) continue;
+        cells.forEach(c => occ.add(c)); items.push({ id, x, y, w, h, got: false }); break;
+      }
+    }
+    return { lvl, items, open: [], done: false, earned: [] };
   },
+  open() { this.board(App.slot); this.render(); $('mgDig').hidden = false; },
   render() {
     const s = App.slot, m = Minigames.data(s), b = this.board(s), open = new Set(b.open);
     let cells = '';
     for (let y = 0; y < this.ROWS; y++) for (let x = 0; x < this.COLS; x++) {
       const key = x + ',' + y, it = b.items.find(i => x >= i.x && x < i.x + i.w && y >= i.y && y < i.y + i.h), o = open.has(key);
       const t = it ? DIG_ITEMS.find(d => d.id === it.id) : null;
-      cells += `<button class="dcell${o ? ' open' : ''}${o && it ? ' item' : ''}${it && it.got ? ' got' : ''}" data-k="${key}" type="button" ${o ? 'disabled' : ''} style="${o && t ? `--ic:${t.c}` : ''}" aria-label="${o ? (t ? t.name : 'vide') : 'décombres'}">${o && t ? '◆' : ''}</button>`;
+      cells += `<button class="dcell${o ? ' open' : ''}${o && it ? ' item' : ''}${it && it.got ? ' got' : ''}" data-k="${key}" type="button" ${o ? 'disabled' : ''} style="${o && t ? `--ic:${t.c}` : ''}" aria-label="${o ? (t ? t.name : 'vide') : 'décombres'}">${o && t ? t.icon : ''}</button>`;
     }
-    const legend = b.items.map(i => { const t = DIG_ITEMS.find(d => d.id === i.id); return `<li class="${i.got ? 'ok' : ''}" style="--ic:${t.c}"><span class="sw"></span>${esc(t.name)} <small>${i.w}×${i.h}</small></li>`; }).join('');
+    const got = b.items.filter(i => i.got).length;
+    const legend = b.items.map(i => { const t = DIG_ITEMS.find(d => d.id === i.id); return `<li class="${i.got ? 'ok' : ''}" style="--ic:${t.c}"><span class="dic">${t.icon}</span><span class="dn">${esc(t.name)} <small>${i.w}×${i.h} cases</small></span><b class="dr">${i.got ? '✓ gagné' : esc(rewText(t.rew(b.lvl)))}</b></li>`; }).join('');
     $('mgDig').innerHTML = `<div class="card mgdig"><div class="topbar"><div><p class="eyebrow">Fouille de la Rouille · grille ${b.lvl}</p><h2 style="margin:0">⛏ ${m.picks} pioche${m.picks > 1 ? 's' : ''}</h2></div><button class="btn small" id="digClose" type="button">Fermer</button></div>` +
-      `<div class="dgrid" style="grid-template-columns:repeat(${this.COLS},1fr)">${cells}</div><ul class="dleg">${legend}</ul>` +
-      `<p class="hint">${m.picks ? 'Touche une case pour creuser. Un objet dégagé en entier est à toi.' : 'Plus de pioches : gagne des niveaux pour en obtenir (une par victoire, une de plus avec 3 étoiles), et deux de plus chaque jour.'}</p></div>`;
-    $('digClose').onclick = () => { $('mgDig').hidden = true; Minigames.renderHub(); };
+      `<div class="dprog"><div><span style="width:${got / b.items.length * 100}%"></span></div><small>${got} / ${b.items.length} objets dégagés</small></div>` +
+      `<div class="dgrid" style="grid-template-columns:repeat(${this.COLS},1fr)">${cells}</div>` +
+      `<p class="eyebrow">Cachés dans cette grille · ce que chacun rapporte</p><ul class="dleg">${legend}<li class="dbonus"><span class="dic">🏆</span><span class="dn">Tout dégager</span><b class="dr">${esc(rewText(this.bonus(b.lvl)))}</b></li></ul>` +
+      `<div class="row dbuy">${Minigames.buyBtn('pick1', '+1 ⛏', 10)}${Minigames.buyBtn('pick5', '+5 ⛏', 40)}${Minigames.buyBtn('pick15', '+15 ⛏', 100)}</div>` +
+      `<p class="hint">Touche une case pour la creuser (1 pioche). Un objet est gagné quand toutes ses cases sont dégagées. Pioches : 1 par victoire, 2 avec 3 étoiles, 2 offertes chaque jour.</p></div>`;
+    $('digClose').onclick = () => Minigames.closeDom();
     $('mgDig').querySelectorAll('.dcell:not(.open)').forEach(bt => { bt.onclick = () => this.dig(bt.dataset.k); });
+    Minigames.bindBuy($('mgDig'), () => this.render());
   },
   dig(key) {
     const s = App.slot, m = Minigames.data(s), b = this.board(s);
-    if (m.picks <= 0 || b.open.includes(key)) { if (m.picks <= 0) Toast2.show('Plus de pioches : gagne des niveaux pour en obtenir'); return; }
+    if (b.open.includes(key)) return;
+    if (m.picks <= 0) {
+      Minigames.popup(`<h2>Plus de pioches</h2><p>Gagne des niveaux pour en obtenir, ou achète-en avec tes gemmes (tu en as ${fmtBig(s.gems)} ${GEM}).</p><div class="row" style="justify-content:center">${Minigames.buyBtn('pick5', '+5 ⛏', 40)}${Minigames.buyBtn('pick15', '+15 ⛏', 100)}</div>`, 'Fermer');
+      Minigames.bindBuy($('mgDig').querySelector('.mgpop'), () => this.render());
+      return;
+    }
     m.picks--; b.open.push(key);
     Sound.sfx && Sound.sfx('build'); buzz(10);
     const open = new Set(b.open), found = [];
@@ -4976,12 +5094,319 @@ const Dig = {
       let all = true; for (let i = 0; i < it.w; i++) for (let j = 0; j < it.h; j++) if (!open.has((it.x + i) + ',' + (it.y + j))) all = false;
       if (all) { it.got = true; found.push(it); }
     }
-    let msg = '';
-    for (const it of found) { const t = DIG_ITEMS.find(d => d.id === it.id); msg += (msg ? ' · ' : '') + `${t.name} : ` + grant(s, t.rew(b.lvl)); }
-    if (b.items.every(i => i.got)) { b.done = true; msg += (msg ? ' · ' : '') + 'Grille complète : ' + grant(s, { gems: 10 + 5 * b.lvl }); }
+    const lines = [];
+    for (const it of found) { const t = DIG_ITEMS.find(d => d.id === it.id), r = t.rew(b.lvl), g = mgGrant(s, r); b.earned.push(g); lines.push(`<li><span class="dic">${t.icon}</span> <b>${esc(t.name)}</b> → <span class="gem">${esc(g)}</span></li>`); }
+    let html = '';
+    if (lines.length) html = `<h2>Trouvé !</h2><ul class="dfound">${lines.join('')}</ul>`;
+    if (b.items.every(i => i.got)) {
+      const g = mgGrant(s, this.bonus(b.lvl)); b.earned.push(g);
+      html += `<h2>Grille ${b.lvl} terminée !</h2><p>Bonus de grille complète : <b class="gem">${esc(g)}</b></p><p class="hint">Total gagné sur cette grille : ${esc(b.earned.join(' · '))}</p><p class="hint">La grille ${b.lvl + 1} cache des objets plus précieux.</p>`;
+      m.dig = this.make(b.lvl + 1);
+    }
     Store.touch(s);
     this.render();
-    if (msg) { Toast2.show(msg); Sound.sfx && Sound.sfx('up'); if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; Reveal.show(items, 'Fouille de la Rouille'); } }
+    if (html) {
+      Sound.sfx && Sound.sfx('up');
+      const items = grant.items && grant.items.length ? grant.items : null; grant.items = null;
+      Minigames.popup(html, m.dig !== b ? 'Grille suivante' : 'Continuer', () => { if (items) Reveal.show(items, 'Fouille de la Rouille', true); });
+    }
+  }
+};
+
+/* ---------- Chute de Plasma : plinko ---------- */
+const PLINKO_SLOTS = [
+  { r: { item: 1 }, label: 'Objet', c: '#c58bff' }, { r: { gems: 15 }, label: '15◆', c: '#5ef0ff' }, { r: { gems: 5 }, label: '5◆', c: '#4fa3ff' },
+  { r: { picks: 1 }, label: '1⛏', c: '#ffb347' }, { r: { gems: 2 }, label: '2◆', c: '#56658f' }, { r: { picks: 1 }, label: '1⛏', c: '#ffb347' },
+  { r: { gems: 5 }, label: '5◆', c: '#4fa3ff' }, { r: { gems: 15 }, label: '15◆', c: '#5ef0ff' }, { r: { item: 1 }, label: 'Objet', c: '#c58bff' }
+];
+const Plinko = {
+  id: 'plinko', title: 'Chute de Plasma', W: 360, H: 640, quitLabel: 'Terminer',
+  init() {
+    this.balls = []; this.fx = []; this.t = 0; this.paused = false; this.won = []; this.dropX = 180; this.cd = 0;
+    this.pegs = [];
+    for (let r = 0; r < 11; r++) { const n = r % 2 ? 8 : 9, off = r % 2 ? 40 : 20; for (let i = 0; i < n; i++) this.pegs.push([off + i * 40, 150 + r * 36]); }
+  },
+  update(dt, P) {
+    this.t += dt; this.cd -= dt;
+    const m = Minigames.data(App.slot);
+    if (P.down || P.tap) this.dropX = clamp((P.tap || [P.x])[0], 24, 336);
+    if (P.tap && this.cd <= 0) {
+      if (m.balls > 0) { m.balls--; Store.touch(App.slot); this.balls.push({ x: this.dropX + (Math.random() - 0.5) * 2, y: 100, vx: 0, vy: 0 }); this.cd = 0.25; Sound.sfx && Sound.sfx('ui'); }
+      else this.outOfBalls();
+    }
+    for (const b of this.balls) {
+      b.vy += 900 * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+      for (const [px, py] of this.pegs) {
+        const dx = b.x - px, dy = b.y - py, d = Math.hypot(dx, dy);
+        if (d < 11 && d > 0) {
+          const nx = dx / d, ny = dy / d, dot = b.vx * nx + b.vy * ny;
+          if (dot < 0) { b.vx -= 1.5 * dot * nx; b.vy -= 1.5 * dot * ny; b.vx += (Math.random() - 0.5) * 60; b.vx *= 0.8; b.vy *= 0.6; }
+          b.x = px + nx * 11; b.y = py + ny * 11;
+        }
+      }
+      if (b.x < 7) { b.x = 7; b.vx = Math.abs(b.vx) * 0.5; } if (b.x > 353) { b.x = 353; b.vx = -Math.abs(b.vx) * 0.5; }
+      if (b.y > 585 && !b.done) {
+        b.done = true;
+        const i = clamp(Math.floor(b.x / 40), 0, 8), sl = PLINKO_SLOTS[i], g = mgGrant(App.slot, sl.r);
+        this.won.push(g); Store.touch(App.slot);
+        this.fx.push({ x: clamp(i * 40 + 20, 40, 320), y: 560, t: 1.2, text: '+' + sl.label, c: sl.c, slot: i });
+        Sound.sfx && Sound.sfx(sl.r.item ? 'up' : 'sell');
+        if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; this.paused = true; Reveal.show(items, 'Chute de Plasma', true); setTimeout(() => { this.paused = false; }, 600); }
+      }
+    }
+    this.balls = this.balls.filter(b => !b.done);
+    for (const f of this.fx) { f.t -= dt; f.y -= 30 * dt; }
+    this.fx = this.fx.filter(f => f.t > 0);
+  },
+  outOfBalls() {
+    this.paused = true;
+    const ov = $('mgOver'); ov.hidden = false;
+    ov.innerHTML = `<div class="card mgend"><h2>Plus de billes</h2><p>Tu gagnes 2 billes par victoire (3 avec 3 étoiles), et 3 chaque jour. Tu peux aussi en acheter.</p><div class="row" style="justify-content:center">${Minigames.buyBtn('ball5', '+5 billes', 25)}${Minigames.buyBtn('ball15', '+15 billes', 60)}</div><div class="row" style="justify-content:center"><button class="btn" id="plBack" type="button">Retour</button></div></div>`;
+    const back = () => { ov.hidden = true; ov.innerHTML = ''; this.paused = false; };
+    Minigames.bindBuy(ov, back);
+    $('plBack').onclick = back;
+  },
+  draw(g) {
+    g.fillStyle = '#070a14'; g.fillRect(0, 0, 360, 640);
+    // Rail de lâcher
+    g.fillStyle = 'rgba(94,240,255,.08)'; g.fillRect(0, 70, 360, 60);
+    g.strokeStyle = 'rgba(94,240,255,.5)'; g.setLineDash([4, 6]); g.beginPath(); g.moveTo(this.dropX, 80); g.lineTo(this.dropX, 140); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#5ef0ff'; g.shadowColor = '#5ef0ff'; g.shadowBlur = 10; g.beginPath(); g.arc(this.dropX, 100, 7, 0, TAU); g.fill(); g.shadowBlur = 0;
+    for (const [x, y] of this.pegs) { g.fillStyle = '#9fb0d6'; g.beginPath(); g.arc(x, y, 4, 0, TAU); g.fill(); }
+    PLINKO_SLOTS.forEach((sl, i) => {
+      const hit = this.fx.find(f => f.slot === i);
+      g.fillStyle = hit ? sl.c : 'rgba(17,24,41,.95)'; g.fillRect(i * 40 + 2, 560, 36, 70);
+      g.strokeStyle = sl.c; g.lineWidth = 2; g.strokeRect(i * 40 + 2, 560, 36, 70);
+      g.fillStyle = hit ? '#05070d' : sl.c; g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText(sl.label, i * 40 + 20, 600);
+    });
+    for (const b of this.balls) { g.fillStyle = '#5ef0ff'; g.shadowColor = '#5ef0ff'; g.shadowBlur = 12; g.beginPath(); g.arc(b.x, b.y, 7, 0, TAU); g.fill(); g.shadowBlur = 0; }
+    for (const f of this.fx) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.font = '800 16px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(f.text, f.x, f.y - 20); g.globalAlpha = 1; }
+    const m = Minigames.data(App.slot);
+    g.fillStyle = '#e4ecfb'; g.font = '700 13px "Chakra Petch", sans-serif'; g.textAlign = 'center';
+    g.fillText(m.balls ? 'Touche l’écran : la bille tombe à cet endroit' : 'Plus de billes : touche pour en acheter', 180, 40);
+    g.fillText(`● ${m.balls} bille${m.balls > 1 ? 's' : ''}`, 180, 60);
+  },
+  info() { return `${this.won.length} lâchée${this.won.length > 1 ? 's' : ''}`; },
+  result() { return { won: this.won }; },
+  reward(r) {
+    // Les gains ont déjà été donnés bille par bille : on les additionne pour le récapitulatif.
+    const tot = { gems: 0, picks: 0, balls: 0, items: 0 };
+    for (const w of r.won) { const g = /\+(\d+) ◆/.exec(w); if (g) tot.gems += +g[1]; const p = /\+(\d+) ⛏/.exec(w); if (p) tot.picks += +p[1]; if (/objet/.test(w)) tot.items++; }
+    const parts = []; if (tot.gems) parts.push(`+${tot.gems} ${GEM}`); if (tot.picks) parts.push(`+${tot.picks} ⛏`); if (tot.items) parts.push(`${tot.items} objet${tot.items > 1 ? 's' : ''}`);
+    return { summary: parts.join(', '), title: 'Fin de la session', text: `${r.won.length} bille${r.won.length > 1 ? 's' : ''} lâchée${r.won.length > 1 ? 's' : ''}. Les gains sont déjà dans ton inventaire.` };
+  }
+};
+
+/* ---------- Percée : portes à calcul ---------- */
+const Breach = {
+  id: 'run', title: 'Percée', W: 360, H: 640, SPEED: 150, GAP: 250,
+  init() {
+    const m = Minigames.data(App.slot), st = this.stage = m.stage;
+    Object.assign(this, { paused: false, t: 0, x: 180, n: 5, scroll: 0, rows: [], fx: [], over: false, flash: 0 });
+    // Génère la route et calcule le meilleur score possible pour régler le gardien
+    let best = 5, y = 400;
+    const nRows = 7 + Math.min(6, st);
+    for (let i = 0; i < nRows; i++) {
+      if (i > 1 && i % 3 === 2) { const e = Math.max(3, Math.round(best * (0.25 + 0.03 * Math.min(8, st)))); this.rows.push({ y, kind: 'foe', n: e }); best = Math.max(0, best - e); }
+      else {
+        const good = () => { const r = Math.random(); return r < 0.2 ? { op: '×', v: 2 } : r < 0.27 && i > 3 ? { op: '×', v: 3 } : { op: '+', v: 4 + Math.floor(Math.random() * (6 + st * 2)) }; };
+        const bad = () => { const r = Math.random(); return r < 0.3 ? { op: '÷', v: 2 } : { op: '−', v: 3 + Math.floor(Math.random() * (4 + st * 2)) }; };
+        let a = good(), b = Math.random() < 0.55 ? bad() : good();
+        if (Math.random() < 0.5) [a, b] = [b, a];
+        this.rows.push({ y, kind: 'gate', l: a, r: b });
+        best = Math.max(this.apply(best, a), this.apply(best, b));
+      }
+      y += this.GAP;
+    }
+    this.boss = { y: y + 60, hp: Math.max(8, Math.round(best * (0.55 + 0.04 * Math.min(8, st)))) };
+    this.banner = { text: `Étape ${st}`, t: 1.5 };
+  },
+  apply(n, g) { return Math.max(0, Math.round(g.op === '+' ? n + g.v : g.op === '−' ? n - g.v : g.op === '×' ? n * g.v : n / g.v)); },
+  update(dt, P, keys) {
+    this.t += dt;
+    if (this.banner) { this.banner.t -= dt; if (this.banner.t <= 0) this.banner = null; }
+    if (P.down) this.x += (clamp(P.x, 40, 320) - this.x) * Math.min(1, dt * 12);
+    const kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.q || keys.a ? 1 : 0);
+    this.x = clamp(this.x + kx * 260 * dt, 40, 320);
+    if (this.over) return;
+    this.scroll += this.SPEED * dt;
+    const pY = 520;
+    for (const r of this.rows) {
+      if (r.done || r.y - this.scroll > 0) continue;
+      r.done = true;
+      if (r.kind === 'gate') {
+        const g = this.x < 180 ? r.l : r.r, before = this.n; this.n = this.apply(this.n, g); r.pick = this.x < 180 ? 'l' : 'r';
+        this.fx.push({ text: `${g.op}${g.v} → ${this.n}`, t: 1, c: this.n >= before ? '#3ef2c8' : '#ff5468' }); Sound.sfx && Sound.sfx(this.n >= before ? 'up' : 'alarm');
+      } else { this.n = Math.max(0, this.n - r.n); this.flash = 0.3; this.fx.push({ text: `Combat −${r.n} → ${this.n}`, t: 1, c: '#ff5468' }); Sound.sfx && Sound.sfx('boom'); buzz(40); }
+      if (this.n <= 0) { this.end(false); return; }
+    }
+    if (this.boss.y - this.scroll <= 0) { const win = this.n > this.boss.hp; this.n = win ? this.n - this.boss.hp : 0; this.end(win); }
+    for (const f of this.fx) f.t -= dt;
+    this.fx = this.fx.filter(f => f.t > 0);
+    if (this.flash > 0) this.flash -= dt;
+    this._pY = pY;
+  },
+  end(win) { this.over = true; this.win = win; this.flash = 0; this.fx = []; setTimeout(() => Minigames.finish(this.result()), 900); },
+  draw(g) {
+    const pY = 520, sy = wy => pY - (wy - this.scroll);
+    g.fillStyle = '#060912'; g.fillRect(0, 0, 360, 640);
+    g.fillStyle = '#0d1424'; g.fillRect(20, 0, 320, 640);
+    g.strokeStyle = 'rgba(94,240,255,.15)'; g.lineWidth = 2;
+    for (let i = 0; i < 12; i++) { const y = ((i * 60 + this.scroll) % 720) - 60; g.beginPath(); g.moveTo(180, y); g.lineTo(180, y + 30); g.stroke(); }
+    for (const r of this.rows) {
+      const y = sy(r.y); if (y < -80 || y > 700) continue;
+      if (r.kind === 'gate') {
+        for (const [side, gt] of [['l', r.l], ['r', r.r]]) {
+          const x0 = side === 'l' ? 24 : 184, good = gt.op === '+' || gt.op === '×', c = good ? '#3ef2c8' : '#ff5468';
+          g.globalAlpha = r.done && r.pick !== side ? 0.25 : 1;
+          g.fillStyle = good ? 'rgba(62,242,200,.18)' : 'rgba(255,84,104,.18)'; g.fillRect(x0, y - 26, 152, 52);
+          g.strokeStyle = c; g.lineWidth = 2; g.strokeRect(x0, y - 26, 152, 52);
+          g.fillStyle = c; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(`${gt.op}${gt.v}`, x0 + 76, y + 9);
+          g.globalAlpha = 1;
+        }
+      } else if (!r.done) {
+        for (let i = 0; i < Math.min(r.n, 30); i++) { g.fillStyle = '#ff5468'; g.beginPath(); g.arc(180 + ((i * 37) % 200) - 100, y - 10 + ((i * 13) % 24), 5, 0, TAU); g.fill(); }
+        g.fillStyle = '#ffe1e5'; g.font = '800 18px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(`${r.n} ennemis`, 180, y - 26);
+      }
+    }
+    const by = sy(this.boss.y);
+    if (by > -100 && by < 700) {
+      g.save(); g.translate(180, by); g.fillStyle = '#1a0a12'; g.strokeStyle = '#ff3355'; g.lineWidth = 3; g.shadowColor = '#ff3355'; g.shadowBlur = 16;
+      polygonPath(g, 0, 0, 46, 6, this.t); g.fill(); g.stroke(); g.shadowBlur = 0;
+      g.fillStyle = '#ffffff'; g.font = '800 22px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.boss.hp, 0, 8);
+      g.font = '700 12px "Chakra Petch", sans-serif'; g.fillText('Gardien', 0, -56); g.restore();
+    }
+    // Escouade
+    const shown = Math.min(this.n, 40);
+    for (let i = 0; i < shown; i++) { const a = i * 2.4, r = 4 + Math.sqrt(i) * 5; g.fillStyle = '#5ef0ff'; g.beginPath(); g.arc(this.x + Math.cos(a) * r, pY + Math.sin(a) * r * 0.6, 4, 0, TAU); g.fill(); }
+    g.fillStyle = '#05070d'; g.fillRect(this.x - 24, pY + 24, 48, 20); g.strokeStyle = '#5ef0ff'; g.strokeRect(this.x - 24, pY + 24, 48, 20);
+    g.fillStyle = '#e4ecfb'; g.font = '800 14px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText(this.n, this.x, pY + 39);
+    if (this.flash > 0) { g.fillStyle = `rgba(255,84,104,${this.flash})`; g.fillRect(0, 0, 360, 640); }
+    this.fx.forEach((f, i) => { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.font = '800 18px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(f.text, 180, 440 - i * 22 - (1 - f.t) * 20); g.globalAlpha = 1; });
+    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t); g.fillStyle = '#e4ecfb'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 260); g.globalAlpha = 1; }
+    if (this.t < 5) { g.fillStyle = 'rgba(228,236,251,.8)'; g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('Glisse le doigt à gauche ou à droite pour choisir les portes', 180, 620); }
+    if (this.over) { g.fillStyle = this.win ? '#3ef2c8' : '#ff5468'; g.font = '800 30px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.win ? 'PERCÉE !' : 'REPOUSSÉS', 180, 300); }
+  },
+  info() { return `Étape ${this.stage} · escouade ${this.n}`; },
+  quit() { this.over = true; Minigames.finish({ win: false, rem: 0, stage: this.stage, quit: true }); },
+  result() { return { win: this.win, rem: this.n, stage: this.stage }; },
+  reward(r) {
+    const m = Minigames.data(App.slot);
+    if (!r.win) return { grant: r.quit ? {} : { gems: 3 }, title: 'Repoussés', text: `Le gardien de l’étape ${r.stage} tient bon. Choisis mieux tes portes : les × valent souvent plus que les + en fin de route.` };
+    m.stage = r.stage + 1;
+    const gr = { gems: 10 + 3 * r.stage + Math.floor(r.rem / 4) };
+    if (r.stage % 3 === 0) gr.item = Math.min(3, Math.floor(r.stage / 3));
+    return { best: r.stage, grant: gr, title: 'Percée réussie !', text: `Étape ${r.stage} franchie avec ${r.rem} survivants. L’étape ${r.stage + 1} sera plus dure.` };
+  }
+};
+
+/* ---------- Code du Coffre : combinaison de couleurs ---------- */
+const CODE_COLORS = [['#5ef0ff', 'cyan'], ['#ff4fa3', 'rose'], ['#ffcf4a', 'jaune'], ['#3ef2c8', 'vert'], ['#c58bff', 'violet'], ['#ff8a3d', 'orange']];
+const Code = {
+  LEN: 4, TRIES: 8,
+  open() {
+    const pool = [0, 1, 2, 3, 4, 5]; shuffle(pool, Math.random);
+    this.secret = pool.slice(0, this.LEN); this.rows = []; this.cur = []; this.done = false;
+    $('mgDig').hidden = false; this.render();
+  },
+  score(guess) { let ok = 0, near = 0; guess.forEach((c, i) => { if (this.secret[i] === c) ok++; else if (this.secret.includes(c)) near++; }); return { ok, near }; },
+  render() {
+    const dot = c => `<span class="cdot" style="background:${CODE_COLORS[c][0]}"></span>`;
+    let rows = '';
+    for (let i = 0; i < this.TRIES; i++) {
+      const r = this.rows[i];
+      if (r) rows += `<div class="crow">${r.g.map(dot).join('')}<span class="cfb"><b class="cok">${r.ok}</b> bien placée${r.ok > 1 ? 's' : ''} · <b class="cnear">${r.near}</b> mal placée${r.near > 1 ? 's' : ''}</span></div>`;
+      else if (i === this.rows.length && !this.done) rows += `<div class="crow cur">${Array.from({ length: this.LEN }, (_, k) => this.cur[k] !== undefined ? `<button class="cdot" data-rm="${k}" style="background:${CODE_COLORS[this.cur[k]][0]}" type="button" aria-label="retirer"></button>` : '<span class="cdot empty"></span>').join('')}<span class="cfb">Essai ${i + 1} / ${this.TRIES}</span></div>`;
+      else rows += `<div class="crow dim">${'<span class="cdot empty"></span>'.repeat(this.LEN)}</div>`;
+    }
+    const pal = CODE_COLORS.map((c, i) => `<button class="cdot big" data-c="${i}" style="background:${c[0]}" type="button" aria-label="${c[1]}" ${this.cur.includes(i) || this.cur.length >= this.LEN || this.done ? 'disabled' : ''}></button>`).join('');
+    $('mgDig').innerHTML = `<div class="card mgdig"><div class="topbar"><div><p class="eyebrow">Code du Coffre</p><h2 style="margin:0">Trouve les 4 couleurs</h2></div><button class="btn small" id="cQuit" type="button">Abandonner</button></div>` +
+      `<p class="hint">4 couleurs différentes parmi 6. Après chaque essai : <b class="cok">bien placées</b> = bonne couleur au bon endroit, <b class="cnear">mal placées</b> = couleur présente mais ailleurs.</p>` +
+      `<div class="crows">${rows}</div><div class="cpal">${pal}</div><div class="row" style="justify-content:center"><button class="btn primary" id="cGo" type="button" ${this.cur.length === this.LEN && !this.done ? '' : 'disabled'}>Valider l’essai</button></div>` +
+      `<ul class="dleg"><li><b class="dr">1–3 essais</b>&nbsp;objet épique + 30 ${GEM}</li><li><b class="dr">4–5</b>&nbsp;objet rare + 15 ${GEM}</li><li><b class="dr">6–8</b>&nbsp;8 ${GEM}</li></ul></div>`;
+    const el = $('mgDig');
+    el.querySelectorAll('[data-c]').forEach(b => { b.onclick = () => { this.cur.push(+b.dataset.c); Sound.sfx && Sound.sfx('ui'); this.render(); }; });
+    el.querySelectorAll('[data-rm]').forEach(b => { b.onclick = () => { this.cur.splice(+b.dataset.rm, 1); this.render(); }; });
+    $('cGo').onclick = () => this.submit();
+    $('cQuit').onclick = () => { if (this.done) return Minigames.closeDom(); this.finish(false); };
+  },
+  submit() {
+    const r = { g: this.cur.slice(), ...this.score(this.cur) };
+    this.rows.push(r); this.cur = [];
+    Sound.sfx && Sound.sfx(r.ok === this.LEN ? 'up' : 'build');
+    if (r.ok === this.LEN) this.finish(true);
+    else if (this.rows.length >= this.TRIES) this.finish(false);
+    else this.render();
+  },
+  finish(win) {
+    this.done = true; this.render();
+    const s = App.slot, n = this.rows.length, gr = !win ? { gems: 2 } : n <= 3 ? { gems: 30, item: 2 } : n <= 5 ? { gems: 15, item: 1 } : { gems: 8 };
+    const g = mgGrant(s, gr), m = Minigames.data(s);
+    if (win) m.best.code = m.best.code ? Math.min(m.best.code, n) : n;
+    Store.touch(s);
+    const items = grant.items && grant.items.length ? grant.items : null; grant.items = null;
+    const sol = this.secret.map(c => `<span class="cdot" style="background:${CODE_COLORS[c][0]}"></span>`).join('');
+    Minigames.popup(`<h2>${win ? `Coffre ouvert en ${n} essai${n > 1 ? 's' : ''} !` : 'Le coffre reste fermé'}</h2><div class="crow" style="justify-content:center">${sol}</div><p class="mggain">Tu remportes : <b>${esc(g)}</b></p>`, 'Retour aux événements', () => { Minigames.closeDom(); if (items) Reveal.show(items, 'Code du Coffre'); });
+  }
+};
+
+/* ---------- Triage : tuiles par trois ---------- */
+const TRI_TYPES = [['◆', '#5ef0ff'], ['●', '#ff4fa3'], ['▲', '#ffcf4a'], ['■', '#3ef2c8'], ['★', '#c58bff'], ['✚', '#ff8a3d'], ['⬢', '#4fa3ff'], ['✦', '#ff5468']];
+const Triage = {
+  SLOTS: 7,
+  open() {
+    // Positions en 3 couches décalées d'une demi-case ; 15 trios
+    const pos = [];
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 6; x++) pos.push({ x, y, z: 0 });
+    for (let y = 0; y < 3; y++) for (let x = 0; x < 5; x++) pos.push({ x: x + 0.5, y: y + 0.5, z: 1 });
+    const top = []; for (let y = 0; y < 2; y++) for (let x = 0; x < 4; x++) top.push({ x: x + 1, y: y + 1, z: 2 });
+    shuffle(top, Math.random); pos.push(...top.slice(0, 6));
+    const types = []; for (let i = 0; i < 15; i++) { const t = i % TRI_TYPES.length; types.push(t, t, t); }
+    shuffle(types, Math.random);
+    this.tiles = pos.map((p, i) => ({ ...p, t: types[i], id: i }));
+    this.tray = []; this.triples = 0; this.done = false; this.undo = 1; this.mix = 1; this.last = null;
+    $('mgDig').hidden = false; this.render();
+  },
+  free(tile) { return !this.tiles.some(o => o !== tile && !o.gone && o.z > tile.z && Math.abs(o.x - tile.x) < 1 && Math.abs(o.y - tile.y) < 1); },
+  render() {
+    const left = this.tiles.filter(t => !t.gone);
+    const tiles = left.sort((a, b) => a.z - b.z).map(t => { const f = this.free(t), ty = TRI_TYPES[t.t]; return `<button class="ttile${f ? '' : ' blocked'}" data-id="${t.id}" type="button" style="left:${t.x / 6 * 100}%;top:${t.y / 4.6 * 100}%;--tc:${ty[1]};z-index:${t.z + 1}" ${f && !this.done ? '' : 'disabled'}>${ty[0]}</button>`; }).join('');
+    const tray = Array.from({ length: this.SLOTS }, (_, i) => { const t = this.tray[i]; return t !== undefined ? `<span class="tslot" style="--tc:${TRI_TYPES[t][1]}">${TRI_TYPES[t][0]}</span>` : '<span class="tslot empty"></span>'; }).join('');
+    $('mgDig').innerHTML = `<div class="card mgdig"><div class="topbar"><div><p class="eyebrow">Triage · ${this.triples} trio${this.triples > 1 ? 's' : ''} sur 15</p><h2 style="margin:0">Trie par trois</h2></div><button class="btn small" id="tQuit" type="button">Abandonner</button></div>` +
+      `<div class="tboard">${tiles}</div><div class="ttray">${tray}</div>` +
+      `<div class="row" style="justify-content:center"><button class="btn small" id="tUndo" type="button" ${this.undo && this.last && !this.done ? '' : 'disabled'}>↶ Annuler (${this.undo})</button><button class="btn small" id="tMix" type="button" ${this.mix && !this.done ? '' : 'disabled'}>⟳ Mélanger (${this.mix})</button></div>` +
+      `<p class="hint">Seules les pièces non recouvertes se touchent. Gains : 1 ${GEM} par trio, tout trier : +20 ${GEM} et un objet rare.</p></div>`;
+    const el = $('mgDig');
+    el.querySelectorAll('.ttile:not([disabled])').forEach(b => { b.onclick = () => this.pick(+b.dataset.id); });
+    $('tUndo').onclick = () => { const t = this.last; if (!t) return; const i = this.tray.lastIndexOf(t.t); if (i >= 0) this.tray.splice(i, 1); t.gone = false; this.last = null; this.undo--; this.render(); };
+    $('tMix').onclick = () => { const left = this.tiles.filter(t => !t.gone), ts = left.map(t => t.t); shuffle(ts, Math.random); left.forEach((t, i) => { t.t = ts[i]; }); this.mix--; this.render(); };
+    $('tQuit').onclick = () => this.finish(false);
+  },
+  pick(id) {
+    const t = this.tiles[id]; if (t.gone || this.done) return;
+    t.gone = true; this.last = t;
+    // Range le plateau : les pièces pareilles côte à côte
+    const at = this.tray.lastIndexOf(t.t);
+    if (at >= 0) this.tray.splice(at + 1, 0, t.t); else this.tray.push(t.t);
+    Sound.sfx && Sound.sfx('ui');
+    if (this.tray.filter(x => x === t.t).length >= 3) {
+      let k = 3; this.tray = this.tray.filter(x => !(x === t.t && k-- > 0));
+      this.triples++; this.last = null; Sound.sfx && Sound.sfx('sell'); buzz(15);
+    }
+    if (this.tiles.every(x => x.gone)) return this.finish(true);
+    if (this.tray.length >= this.SLOTS) return this.finish(false);
+    this.render();
+  },
+  finish(win) {
+    if (this.done) return;
+    this.done = true; this.render();
+    const s = App.slot, gr = { gems: this.triples + (win ? 20 : 0) };
+    if (win) gr.item = 1;
+    const g = mgGrant(s, gr), m = Minigames.data(s);
+    m.best.tri = Math.max(m.best.tri || 0, this.triples);
+    Store.touch(s);
+    const items = grant.items && grant.items.length ? grant.items : null; grant.items = null;
+    Minigames.popup(`<h2>${win ? 'Tout est trié !' : this.tray.length >= this.SLOTS ? 'Plateau plein' : 'Partie terminée'}</h2><p>${this.triples} trio${this.triples > 1 ? 's' : ''} sur 15.</p><p class="mggain">${g ? `Tu remportes : <b>${esc(g)}</b>` : 'Pas de récompense cette fois.'}</p>`, 'Retour aux événements', () => { Minigames.closeDom(); if (items) Reveal.show(items, 'Triage'); });
   }
 };
 
@@ -5166,10 +5591,10 @@ const Toast2 = {
 
 /* Ouverture de caisse : les objets se retournent un à un, avec la couleur de leur rareté. */
 const Reveal = {
-  show(items, title) {
+  show(items, title, inMini) {
     const s = App.slot, best = Math.max(...items.map(i => i.r));
     const html = `<div class="reveal ${items.length > 3 ? 'many' : ''}">${items.map((it, i) => `<div class="rv r${it.r}" style="--rc:${RARITY[it.r].color};animation-delay:${i * 140}ms">${gearIcon(it, items.length > 3 ? 34 : 52)}<b>${esc(GEAR_BY_ID[it.t].name)}</b><small style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</small></div>`).join('')}</div>`;
-    Modal.open({ title: title || 'Nouvel équipement', html, actions: [{ label: 'Voir l’équipage', fn: () => App.show('crew') }, { label: 'Continuer', cls: 'primary' }] });
+    Modal.open({ title: title || 'Nouvel équipement', html, actions: [...(inMini ? [] : [{ label: 'Voir l’équipage', fn: () => App.show('crew') }]), { label: 'Continuer', cls: 'primary' }] });
     Sound.sfx && Sound.sfx(best >= 3 ? 'boom' : 'up');
     void s;
   }
@@ -5957,8 +6382,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '6.0';
+const APP_VERSION = '6.1';
 const CHANGELOG = [
+  { v: '6.1', date: '01.11.2026', items: ['Quatre nouveaux mini-jeux dans Événements : Percée (portes à calcul), Code du Coffre (combinaison de couleurs), Triage (tuiles par trois) et Chute de Plasma (billes)', 'Fouille : chaque objet caché affiche ce qu’il rapporte, barre de progression, fenêtre « Trouvé ! » et récapitulatif de fin de grille', 'Pioches, billes et tickets achetables avec des gemmes, dans la Fouille, dans la Chute de Plasma et dans l’onglet Événements de la boutique', 'Les victoires donnent aussi des billes (2, ou 3 avec 3 étoiles)'] },
   { v: '6.0', date: '01.11.2026', items: ['Événements : trois mini-jeux à part du tower defense (Expédition de l’Arche, Plongée des Abysses, Fouille de la Rouille), avec tickets quotidiens et pioches gagnées en jouant', 'Arsenal : 10 nouvelles tourelles (mortier, cryo, flamme, essaim, prisme, orage, mines, nanites, diapason, éclipse), choix de 10 tourelles max avant chaque niveau et 3 présélections favorites', 'Pluie de météores : les cristaux affichent ce qu’ils rapportent (or ou gemmes)', 'Équipage : toucher une case d’équipement filtre l’inventaire sur ce type d’objet', 'Les annonces d’événements s’affichent dans le panneau d’informations, plus sur la carte'] },
   { v: '5.5', date: '29.10.2026', items: ['Décor de la ville : une capture du jeu peut être collée telle quelle, son fond noir est retiré et les sols de la planche remplissent l’extérieur'] },
   { v: '5.4', date: '29.10.2026', items: ['Camp des Rogues recomposé comme dans le jeu : grand enclos rectangulaire, feu de camp entouré de tentes, chariots le long de la palissade, extérieur dans le noir', 'Les zones de l’acte partent de la porte du camp, sur la droite de la carte'] },
@@ -6098,7 +6524,7 @@ const Meta = {
   updateBadge() {
     const n = this.claimables(App.slot), el = $('questCount');
     el.textContent = String(n); el.hidden = !n;
-    if (!D2 && App.slot) { const m = Minigames.data(App.slot), e = $('evCount'), k = m.tickets.exp + m.tickets.dive + (m.picks > 0 ? 1 : 0); e.textContent = String(k); e.hidden = !k; }
+    if (!D2 && App.slot) { const m = Minigames.data(App.slot), e = $('evCount'), k = Object.keys(MG_TICKETS).reduce((a, id) => a + m.tickets[id], 0) + (m.picks > 0 ? 1 : 0) + (m.balls > 0 ? 1 : 0); e.textContent = String(k); e.hidden = !k; }
   },
 
   /* Résultats d'une victoire : défis, étapes d'histoire, fragments. */
@@ -6300,7 +6726,7 @@ const Meta = {
   renderShop() {
     const s = App.slot;
     $('shopGems').textContent = fmtBig(s.gems);
-    this.tabs($('shopTabs'), [['packs', 'Gemmes'], ['gear', 'Équipement'], ['boosts', 'Boosts'], ['relics', 'Reliques'], ['look', 'Apparence'], ['points', 'Points']], this.shopTab, id => { this.shopTab = id; this.renderShop(); });
+    this.tabs($('shopTabs'), [['packs', 'Gemmes'], ['gear', 'Équipement'], ['boosts', 'Boosts'], ['relics', 'Reliques'], ['look', 'Apparence'], ['points', 'Points'], ...(D2 ? [] : [['mg', 'Événements']])], this.shopTab, id => { this.shopTab = id; this.renderShop(); });
     const body = $('shopBody');
     let h = '';
     const buyBtn = (key, price, label) => `<button class="btn small ${s.gems >= price ? 'primary' : ''}" data-buy="${key}" type="button" ${s.gems >= price ? '' : 'disabled'}>${label || 'Acheter'} · ${fmtBig(price)} ${GEM}</button>`;
@@ -6343,6 +6769,13 @@ const Meta = {
           PALETTES.map(p => { const own = s.skins.owned[t.id + ':' + p.id]; return `<button class="swatch ${s.skins.equip[t.id] === p.id ? 'on' : ''} ${own ? '' : 'locked'}" style="background:${p.color}" data-skin="${t.id}:${p.id}" type="button" title="${esc(p.name)}${own ? '' : ` · ${SKIN_PRICE} ${GEM}`}" aria-label="${esc(t.name)} ${esc(p.name)}${own ? '' : ', à acheter'}">${own ? '' : GEM}</button>`; }).join('') + '</div></div>';
       }
       h += '</div>';
+    } else if (this.shopTab === 'mg') {
+      const m = Minigames.data(s);
+      h += `<p class="hint">Pour les mini-jeux de l’écran Événements. Tu as ⛏ ${m.picks} pioche${m.picks > 1 ? 's' : ''} et ● ${m.balls} bille${m.balls > 1 ? 's' : ''}.</p><div class="shopgrid">`;
+      for (const it of MG_SHOP) h += `<div class="sitem">${it.tag ? `<span class="badge gold">${it.tag}</span>` : ''}<b class="big">${it.give.picks ? '⛏' : '●'} ${esc(it.name)}</b><small class="muted">${esc(it.desc)}</small>${buyBtn('mg:' + it.id, it.price)}</div>`;
+      h += '</div><div class="list" style="margin-top:10px">';
+      for (const g of Minigames.GAMES.filter(x => !x.cur)) h += `<div class="qrow"><div><b>Ticket · ${g.title}</b><p class="hint">Une partie de plus aujourd’hui (${m.tickets[g.id]} en réserve).</p></div>${buyBtn('mg:ticket:' + g.id, MG_TICKET_PRICE)}</div>`;
+      h += '</div>';
     } else {
       const price = pointPrice(s);
       h += `<div class="qrow"><div><b>Point d’amélioration</b><p class="hint">Un point de plus pour l’arbre de compétences. Le prix augmente de 15 ${GEM} à chaque achat. Points disponibles : ${pointsAvailable(s)}.</p></div>${buyBtn('point', price)}</div>`;
@@ -6365,6 +6798,7 @@ const Meta = {
   },
   buy(key) {
     const s = App.slot, [kind, id] = key.split(':');
+    if (kind === 'mg') { if (Minigames.buy(key.slice(3))) this.renderShop(); return; }
     const pay = price => { if (s.gems < price) return false; s.gems -= price; return true; };
     if (kind === 'pack') {
       const p = GEM_PACKS[+id];
@@ -9931,7 +10365,7 @@ const GameView = {
       slot.counters.wins++;
       if (st === 3) slot.counters.threeStars++;
       const res = Meta.onVictory(b);
-      if (!D2) { const np = Minigames.earnPicks(slot, st); res.lines.push(`+${np} pioche${np > 1 ? 's' : ''} pour la Fouille de la Rouille (Événements)`); }
+      if (!D2) { const e = Minigames.earn(slot, st); res.lines.push(`Événements : +${e.picks} pioche${e.picks > 1 ? 's' : ''} ⛏ et +${e.balls} billes ●`); }
       if (lv.boss && !prev) res.lines.push(`Nouveau fragment de mémoire : « ${chapter(lv.world).fragment.title} » (voir le journal)`);
       Store.touch(slot);
       const avail = pointsAvailable(slot), ready = Meta.claimables(slot);
