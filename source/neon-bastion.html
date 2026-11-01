@@ -451,6 +451,97 @@ body.mg-on{overflow:hidden}
 .mgrew{font-size:.85rem;color:var(--muted);margin:6px 0}
 .mgtk{margin-left:6px;letter-spacing:2px}
 .mgdigbg{z-index:29}
+/* =====================================================================
+   INTERFACE DE BORD (mode normal) — la console tactique de l'Arche
+   Métal mat vissé, écrans enfoncés, diodes pour l'état. Aucun halo décoratif :
+   seules les informations de jeu ont de la couleur.
+   ===================================================================== */
+html.da #scrGame{--plate:#1a202b;--plate2:#121720;--edge:#07090d;--screen:#080b10;--amber:#ffb547;--led:#3ef2c8}
+html.da #scrGame .eyebrow{font-family:var(--font-num);letter-spacing:.16em;font-size:.62rem;color:#8390a8}
+/* Instruments du haut */
+html.da #scrGame .hud{padding:6px 10px;background:linear-gradient(180deg,#1b212c,#11151d);border:1px solid var(--edge);border-radius:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 0 rgba(0,0,0,.4)}
+html.da #scrGame .hud .lvl .eyebrow::before{content:"▸ SECTEUR · "}
+html.da #scrGame .stat{position:relative;background:var(--screen);border:1px solid var(--edge);border-radius:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.05);padding:5px 12px 5px 18px;min-width:84px}
+html.da #scrGame .stat::before{content:"";position:absolute;left:7px;top:9px;width:5px;height:5px;border-radius:50%;background:#3a4252}
+html.da #scrGame .stat.lives::before{background:#ff5468;box-shadow:0 0 6px #ff5468}
+html.da #scrGame .stat.gold::before{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+html.da #scrGame .stat.wave::before{background:var(--led);box-shadow:0 0 6px var(--led)}
+html.da #scrGame .stat .k{font-family:var(--font-num);font-size:.56rem;letter-spacing:.16em}
+html.da #scrGame .stat .v{font-size:1.15rem;text-shadow:none}
+html.da #scrGame .stat.gold .v{color:var(--amber)}
+html.da #scrGame .stat:not(.lives):not(.gold):not(.wave){min-width:0;opacity:.75}
+html.da #scrGame .stat:not(.lives):not(.gold):not(.wave) .v{font-size:.9rem;color:#c8d0de}
+/* Écran de jeu enchâssé dans la console */
+html.da #scrGame .board{border:1px solid var(--edge);border-radius:8px;box-shadow:0 0 0 5px #151a23,0 0 0 6px var(--edge),0 10px 30px rgba(0,0,0,.5)}
+html.da #scrGame .game-grid{gap:18px}
+/* La console de droite */
+html.da #scrGame .side{counter-reset:mod;gap:8px;padding:8px;background:linear-gradient(180deg,#171c26,#0f131a);border:1px solid var(--edge);border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 24px rgba(0,0,0,.4)}
+html.da #scrGame .consolehead{display:flex;align-items:center;gap:8px;padding:2px 4px 4px;font:700 .6rem var(--font-num);letter-spacing:.2em;color:#6d7890;border-bottom:1px solid rgba(0,0,0,.6);box-shadow:0 1px 0 rgba(255,255,255,.04)}
+html.da #scrGame .consolehead span{flex:1}
+html.da #scrGame .consolehead i{width:6px;height:6px;border-radius:50%;background:var(--led);box-shadow:0 0 6px var(--led);animation:ledblink 2.4s steps(1) infinite}
+@keyframes ledblink{0%,92%{opacity:1}93%,100%{opacity:.2}}
+html.da #scrGame .side>.panel,html.da #scrGame>.ctrl{background:linear-gradient(180deg,var(--plate),var(--plate2));border:1px solid var(--edge);border-radius:5px;clip-path:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.5);padding:12px 12px 12px;
+  background-image:radial-gradient(circle at 6px 6px,#3a4252 1.4px,#0a0d12 1.8px,transparent 2.4px),radial-gradient(circle at calc(100% - 6px) 6px,#3a4252 1.4px,#0a0d12 1.8px,transparent 2.4px),radial-gradient(circle at 6px calc(100% - 6px),#3a4252 1.4px,#0a0d12 1.8px,transparent 2.4px),radial-gradient(circle at calc(100% - 6px) calc(100% - 6px),#3a4252 1.4px,#0a0d12 1.8px,transparent 2.4px),linear-gradient(180deg,var(--plate),var(--plate2))}
+html.da #scrGame .side>.panel::before{display:none}
+html.da #scrGame .side>.panel>.eyebrow:first-child{padding-left:8px}
+html.da #scrGame .side>.panel>.eyebrow:first-child::before{counter-increment:mod;content:counter(mod,decimal-leading-zero) " │ ";color:#4c566a}
+/* Commandes : vraies touches */
+html.da #scrGame .ctrl .btn.small{background:linear-gradient(180deg,#2a3242,#1b212c);border:1px solid var(--edge);color:#c9d2e2;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 0 #07090d;font-family:var(--font-num);font-size:.72rem;letter-spacing:.04em}
+html.da #scrGame .ctrl .btn.small:active:not(:disabled){transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 0 #07090d}
+html.da #scrGame #btnWave{background:linear-gradient(180deg,#45e9c3,#1fae8c);color:#04201a;border:1px solid #0a3d31;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.2),0 4px 0 #0a4a3b,0 6px 10px rgba(0,0,0,.4);font-family:var(--font-ui);font-weight:800;letter-spacing:.02em;white-space:normal;line-height:1.2}
+html.da #scrGame #btnWave:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 1px 0 #0a4a3b}
+html.da #scrGame #btnWave.early{background:linear-gradient(180deg,#ffd27a,#e89a1c);color:#2a1700;border-color:#4a2c00;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.2),0 4px 0 #6a4000,0 6px 10px rgba(0,0,0,.4)}
+html.da #scrGame #btnWave::after{display:none}
+/* Tourelles : cartouches enfichées dans la console */
+html.da #scrGame .shop{gap:5px}
+html.da #scrGame .tbtn{position:relative;background:var(--screen);border:1px solid var(--edge);border-radius:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.05);padding:8px 4px 6px}
+html.da #scrGame .tbtn::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:2px;border-radius:2px;background:var(--accent);opacity:.35}
+html.da #scrGame .tbtn .tk{position:absolute;left:5px;top:3px;font:700 .55rem var(--font-num);color:#4c566a;font-style:normal}
+html.da #scrGame .tbtn b{font-family:var(--font-ui);font-weight:600;color:#c9d2e2}
+html.da #scrGame .tbtn em{color:var(--amber)}
+html.da #scrGame .tbtn[aria-disabled="false"]{box-shadow:inset 0 2px 6px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.05)}
+html.da #scrGame .tbtn[aria-disabled="true"]{opacity:1}
+html.da #scrGame .tbtn[aria-disabled="true"] canvas,html.da #scrGame .tbtn[aria-disabled="true"] b{opacity:.4;filter:grayscale(.7)}
+html.da #scrGame .tbtn[aria-disabled="true"] em{color:#a04a4a}
+html.da #scrGame .tbtn[aria-pressed="true"]{border-color:var(--accent);background:linear-gradient(180deg,rgba(255,255,255,.04),var(--screen))}
+html.da #scrGame .tbtn[aria-pressed="true"]::before{opacity:1;box-shadow:0 0 6px var(--accent)}
+html.da #scrGame .tbtn:hover:not([aria-disabled="true"]){border-color:#3a4458}
+html.da #scrGame details.help{font-size:.76rem;color:var(--muted)}
+html.da #scrGame details.help summary{cursor:pointer;font:700 .62rem var(--font-num);letter-spacing:.14em;color:#6d7890;text-transform:uppercase;list-style:none}
+html.da #scrGame details.help summary::before{content:"▸ "}html.da #scrGame details.help[open] summary::before{content:"▾ "}
+html.da #scrGame details.help p{margin:6px 0 0;line-height:1.45}
+/* Écrans d'information : fiche de tourelle, scanner, transmissions */
+html.da #scrGame .insp,html.da #scrGame .evpanel{position:relative;overflow:hidden}
+html.da #scrGame .insp::after,html.da #scrGame .evpanel::after,html.da #scrGame .dialog::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+html.da #scrGame .insp{border-left:3px solid var(--insp,var(--led)) !important}
+html.da #scrGame .insp .bar{background:#05070a;border-radius:1px;box-shadow:inset 0 1px 2px rgba(0,0,0,.8)}
+html.da #scrGame .evpanel>.eyebrow{color:var(--ec,#8390a8)}
+html.da #scrGame .evpanel>.eyebrow::after{content:" ●";animation:ledblink 1s steps(1) infinite}
+html.da #scrGame .evpanel .evbanner{background:var(--screen);border:1px solid var(--edge);border-left:3px solid var(--ec);border-radius:3px;box-shadow:inset 0 2px 6px rgba(0,0,0,.7);text-align:left}
+html.da #scrGame .evbanner b{font-family:var(--font-num);font-size:.9rem;letter-spacing:.08em}
+html.da #scrGame .evchip{border-radius:3px;font-family:var(--font-num);letter-spacing:.04em}
+html.da #scrGame .erow{border-radius:3px;font-family:var(--font-ui)}
+html.da #scrGame .erow:hover{background:rgba(255,255,255,.03)}
+html.da #scrGame .elist{background:var(--screen);border:1px solid var(--edge);border-radius:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.7);padding:4px}
+/* Transmission de l'équipage */
+html.da #scrGame .dialog{background:linear-gradient(180deg,rgba(18,22,30,.96),rgba(10,13,18,.96));border:1px solid var(--edge);border-left:3px solid var(--dc,var(--led));border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.5);overflow:hidden}
+html.da #scrGame .dialog b{font-family:var(--font-num);text-transform:uppercase;letter-spacing:.14em;font-size:.66rem}
+html.da #scrGame .dialog b::before{content:"◉ CANAL · ";color:#6d7890;animation:ledblink 1.2s steps(1) infinite}
+html.da #scrGame .dialog canvas{border-radius:3px;background:#05070a;box-shadow:inset 0 0 0 1px var(--edge)}
+html.da #scrGame .toast{background:var(--screen);border:1px solid var(--edge);border-left:3px solid var(--led);border-radius:3px;font-family:var(--font-num);font-size:.78rem;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+html.da #scrGame .nextwave{background:rgba(8,11,16,.9);border:1px solid var(--edge);border-radius:3px}
+html.da #scrGame .chip{background:rgba(8,11,16,.9);border-color:var(--edge);border-radius:3px;font-family:var(--font-num)}
+/* Téléphone en plein écran : mêmes matières, plus compact */
+html.da body.fsgame #scrGame .hud{padding:3px 6px;border-radius:4px}
+html.da body.fsgame #scrGame .stat{padding:2px 6px 2px 13px}
+html.da body.fsgame #scrGame .stat::before{left:4px;top:6px;width:4px;height:4px}
+html.da body.fsgame #scrGame .stat .v{font-size:.82rem}
+html.da body.fsgame #scrGame .side{border-radius:10px 10px 0 0}
+html.da body.fsgame #scrGame .board{box-shadow:none}
+html.da body.fsgame #scrGame .hud .lvl .eyebrow::before{content:""}
+html.da body.fsgame #scrGame>.ctrl{padding:5px}
+html.da body.fsgame #scrGame .stat:nth-child(5){display:none}
 .bump{display:inline-block;animation:vbump .22s ease-out}@keyframes vbump{40%{transform:scale(1.18);color:#fff2c0}}
 .hurt{display:inline-block;animation:vhurt .4s ease-out}@keyframes vhurt{20%,60%{transform:translateX(-3px);color:#fff}40%,80%{transform:translateX(3px)}}
 @media (prefers-reduced-motion:reduce){.bump,.hurt{animation:none}}
@@ -562,7 +653,7 @@ body.fsgame .shop{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
 body.fsgame .tbtn{padding:5px 2px}
 body.fsgame .tbtn b{font-size:.62rem}
 body.fsgame .tbtn em{font-size:.64rem}
-body.fsgame .shop + .hint{display:none}
+body.fsgame .shop + .hint,body.fsgame .shop + .help{display:none}
 body.fsgame .overlay{position:fixed;z-index:40}
 /* Paysage : carte à gauche sur toute la hauteur, colonne d'infos et de commandes à droite */
 body.fsgame.fsland #scrGame{grid-template-columns:auto minmax(160px,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"map hud" "map info" "map ctrl"}
@@ -877,6 +968,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
       </div>
       <div class="infobar" id="infobar"></div>
       <aside class="side">
+        <div class="consolehead"><span>ARCHE · CONSOLE TACTIQUE</span><i></i></div>
         <section class="panel ctrl">
           <button class="btn primary" id="btnWave" type="button">Lancer la vague</button>
           <div class="row">
@@ -894,7 +986,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
         <section class="panel">
           <p class="eyebrow">Tourelles</p>
           <div class="shop" id="shop"></div>
-          <p class="hint">Touche une case libre de la carte pour ouvrir le menu de construction, ou une tourelle pour l’améliorer. Tu peux aussi choisir une tourelle ici, puis une case libre. Toutes les cases vides s'achètent. Clique un ennemi pour ses statistiques. <kbd>1</kbd>–<kbd>0</kbd> tourelles, <kbd>Échap</kbd> annuler, <kbd>Espace</kbd> vague. Pendant une vague, le bouton de vague lance la suivante en avance (bonus d’or).</p>
+          <details class="help"><summary>Commandes</summary><p class="hint">Touche une case libre de la carte pour ouvrir le menu de construction, ou une tourelle pour l’améliorer. Tu peux aussi choisir une tourelle ici, puis une case libre. Toutes les cases vides s'achètent. Clique un ennemi pour ses statistiques. <kbd>1</kbd>–<kbd>0</kbd> tourelles, <kbd>Échap</kbd> annuler, <kbd>Espace</kbd> vague. Pendant une vague, le bouton de vague lance la suivante en avance (bonus d’or).</p></details>
         </section>
         <section class="panel">
           <p class="eyebrow" id="elistTitle">Ennemis du niveau</p>
@@ -967,6 +1059,7 @@ const MODE = (() => {
   try { return localStorage.getItem('nb-mode') === 'd2' ? 'd2' : 'neon'; } catch (e) { return 'neon'; }
 })();
 const D2 = MODE === 'd2';
+if (!D2) document.documentElement.classList.add('da');
 const ACT_SIZES = [8, 8, 8, 2, 8];                 // zones jouables de chaque acte (la ville de l'acte est l'écran de sélection)
 const D2_DIFFS = ['Normal', 'Cauchemar', 'Enfer']; // chaque difficulté rejoue les 5 actes
 const D2_CYCLE = ACT_SIZES.reduce((a, b) => a + b, 0);   // 34 zones par difficulté
@@ -6387,8 +6480,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '6.2';
+const APP_VERSION = '6.3';
 const CHANGELOG = [
+  { v: '6.3', date: '01.11.2026', items: ['Interface de bord : le panneau de droite devient la console tactique de l’Arche (métal vissé, écrans enfoncés, diodes d’état, modules numérotés)', 'Instruments du haut : vies, or et vague mis en avant avec leur diode, score et gemmes en retrait', 'Tourelles en cartouches avec leur touche de raccourci ; prix en rouge quand l’or manque', 'Bouton de vague en vraie touche : cyan pour lancer, ambre pour appeler en avance', 'Messages de l’équipage en transmissions, aide repliée sous « Commandes »'] },
   { v: '6.2', date: '01.11.2026', items: ['Nouvelle direction artistique 2D « La lumière contre la Rouille » : sol en métal mat et usé propre à chaque planète, chemin en tranchée, pénombre que seules tes tourelles éclairent', 'La Rouille laisse des traces : coulures sur le chemin, flaques à chaque élimination, brûlures des explosions et givre des tourelles de gel, qui s’effacent lentement', 'Ennemis en matière rouillée avec ombre au sol, tourelles en métal avec ombres portées, faille d’entrée en métal fondu, noyau toujours cyan', 'Étalonnage des couleurs par planète, grain discret, image qui se désature quand les vies baissent', 'Nombres de dégâts regroupés par ennemi, or qui saute quand il augmente, vies qui tremblent quand on en perd'] },
   { v: '6.1', date: '01.11.2026', items: ['Quatre nouveaux mini-jeux dans Événements : Percée (portes à calcul), Code du Coffre (combinaison de couleurs), Triage (tuiles par trois) et Chute de Plasma (billes)', 'Fouille : chaque objet caché affiche ce qu’il rapporte, barre de progression, fenêtre « Trouvé ! » et récapitulatif de fin de grille', 'Pioches, billes et tickets achetables avec des gemmes, dans la Fouille, dans la Chute de Plasma et dans l’onglet Événements de la boutique', 'Les victoires donnent aussi des billes (2, ou 3 avec 3 étoiles)'] },
   { v: '6.0', date: '01.11.2026', items: ['Événements : trois mini-jeux à part du tower defense (Expédition de l’Arche, Plongée des Abysses, Fouille de la Rouille), avec tickets quotidiens et pioches gagnées en jouant', 'Arsenal : 10 nouvelles tourelles (mortier, cryo, flamme, essaim, prisme, orage, mines, nanites, diapason, éclipse), choix de 10 tourelles max avant chaque niveau et 3 présélections favorites', 'Pluie de météores : les cristaux affichent ce qu’ils rapportent (or ou gemmes)', 'Équipage : toucher une case d’équipement filtre l’inventaire sur ce type d’objet', 'Les annonces d’événements s’affichent dans le panneau d’informations, plus sur la carte'] },
@@ -10602,7 +10696,7 @@ const GameView = {
       bt.title = `${def.name} (${keys[i]})`;
       const ic = iconCanvas(60); towerIcon(ic, def);
       bt.append(ic);
-      bt.insertAdjacentHTML('beforeend', `<b>${esc(def.name)}</b><em>${fmtBig(b.towerCost(def))}</em>`);
+      bt.insertAdjacentHTML('beforeend', `<i class="tk">${keys[i]}</i><b>${esc(def.name)}</b><em>${fmtBig(b.towerCost(def))}</em>`);
       bt.onclick = () => this.selectType(def.id);
       shop.appendChild(bt);
       this.shopButtons[def.id] = bt;
@@ -10930,6 +11024,7 @@ const GameView = {
       : b.state === 'wave' && b.canCallWave ? `⏩ Vague ${b.wave + 1} en avance · +${fmtBig(b.earlyBonus(b.chain + 1))} or`
       : b.state === 'wave' ? 'Vague finale en cours…' : 'Niveau terminé';
     this.setText('btn', $('btnWave'), label);
+    $('btnWave').classList.toggle('early', b.state === 'wave' && b.canCallWave);
     const dis = !b.canCallWave;
     if (this.cache.dis !== dis) { this.cache.dis = dis; $('btnWave').disabled = dis; }
     for (const [id, btn] of Object.entries(this.shopButtons)) {
