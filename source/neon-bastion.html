@@ -452,6 +452,7 @@ body.d2 .btn.primary *{color:#1a0e04}
 .mg canvas{touch-action:none;display:block;user-select:none;-webkit-user-select:none}
 .mgover{position:absolute;inset:calc(46px + var(--sat)) var(--sar) var(--sab) var(--sal);display:flex;align-items:center;justify-content:center;background:rgba(5,7,13,.75);padding:16px;box-sizing:border-box}
 .mgend{max-width:420px;width:100%;text-align:center}
+.mgpalier{display:flex;gap:10px;align-items:center;text-align:left;padding:8px 10px;border-radius:10px;border:1.5px solid var(--rc);background:color-mix(in srgb,var(--rc) 12%,transparent)}.mgpalier span{display:flex;flex-direction:column}.mgpalier small{color:var(--muted);font-size:.72rem}.mgpalier b{color:var(--rc)}
 .mgpick{display:flex;flex-direction:column;gap:8px;margin-top:10px;text-align:left}
 body.mg-on{overflow:hidden}
 .mgcard{border-left:3px solid var(--mc)}
@@ -927,8 +928,12 @@ body.fsgame.fsland.sheet .side{transform:none}
 .gcard small{font-size:.62rem;color:var(--rc);font-weight:700}
 .gcard .gstat{font-size:.6rem;color:var(--muted);line-height:1.3}
 .gcard.big{min-height:150px}
-.gcard.r3,.gcard.r4{box-shadow:0 0 14px color-mix(in srgb,var(--rc) 35%,transparent)}
-.gcard.r4{animation:mythic 2.4s ease-in-out infinite}
+.gcard.r5,.gcard.r6{box-shadow:0 0 14px color-mix(in srgb,var(--rc) 35%,transparent)}
+.gcard.r6,.rv.r6{animation:rainbowGlow 3s linear infinite}.gcard.r6 .gicon,.rv.r6 .gicon,.gdetail.r6 .gicon{animation:hueSpin 3s linear infinite}
+.gcard.r6 small:not(.gstars),.rv.r6 small,.gdetail.r6 .grname{background:linear-gradient(90deg,#ff4a5a,#ffd84a,#5dff9a,#5ef0ff,#c58bff,#ff7ae0);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.gstars{color:#ffd84a!important;letter-spacing:-1px}
+@keyframes hueSpin{to{filter:hue-rotate(360deg) drop-shadow(0 0 6px currentColor)}}
+@keyframes rainbowGlow{0%{box-shadow:0 0 16px #ff4a5a}20%{box-shadow:0 0 16px #ffd84a}40%{box-shadow:0 0 16px #5dff9a}60%{box-shadow:0 0 16px #5ef0ff}80%{box-shadow:0 0 16px #c58bff}100%{box-shadow:0 0 16px #ff4a5a}}
 @keyframes mythic{50%{box-shadow:0 0 22px color-mix(in srgb,var(--rc) 60%,transparent)}}
 .gown{position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:50%;background:var(--cyan);color:#062019;font:800 .62rem/17px var(--font-ui)}
 .gmerge{position:absolute;top:4px;left:4px;font:800 .6rem var(--font-num);color:#1d0b33;background:var(--violet);border-radius:4px;padding:1px 4px}
@@ -939,7 +944,7 @@ body.fsgame.fsland.sheet .side{transform:none}
   background:radial-gradient(circle at 50% 25%,color-mix(in srgb,var(--rc) 35%,transparent),transparent 65%),var(--panel-2);animation:flipIn .55s cubic-bezier(.2,1.3,.4,1) backwards}
 .reveal.many .rv{width:86px;padding:7px 4px}.reveal.many .rv b{font-size:.62rem}
 .rv b{font-size:.7rem;line-height:1.15}.rv small{font-size:.62rem;font-weight:700}
-.rv.r3,.rv.r4{box-shadow:0 0 22px var(--rc)}
+.rv.r5{box-shadow:0 0 22px var(--rc)}
 @keyframes flipIn{0%{transform:perspective(400px) rotateY(90deg) scale(.6);opacity:0}100%{transform:none;opacity:1}}
 .sitem.chest .crate{width:54px;height:40px;border-radius:6px;background:linear-gradient(180deg,#6a4b2a,#3d2a17);border:2px solid #c9a24a;position:relative;box-shadow:inset 0 -6px 0 rgba(0,0,0,.25)}
 .sitem.chest .crate::after{content:"";position:absolute;left:50%;top:40%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:2px;background:#ffcf4a}
@@ -4240,13 +4245,17 @@ const activeLoadout = slot => slot.loadout.filter(id => slot.relics[id]).slice(0
    objets identiques fusionnent en un objet de rareté supérieure.
    On les obtient en fin de niveau, dans les quêtes et dans la boutique.
    ===================================================================== */
+/* 7 raretés (même ordre que l'Expédition). Au niveau maximum, un objet Mythique gagne jusqu'à 12 étoiles. */
 const RARITY = [
   { name: 'Commun', color: '#b8c2d8', mul: 1, scrap: 2, price: 30 },
-  { name: 'Rare', color: '#4fa3ff', mul: 1.6, scrap: 6, price: 90 },
-  { name: 'Épique', color: '#c58bff', mul: 2.4, scrap: 15, price: 220 },
-  { name: 'Légendaire', color: '#ffcf4a', mul: 3.6, scrap: 40, price: 600 },
-  { name: 'Mythique', color: '#ff4fa3', mul: 5.2, scrap: 100, price: 1500 }
+  { name: 'Magique', color: '#4fa3ff', mul: 1.6, scrap: 6, price: 90 },
+  { name: 'Rare', color: '#ffd84a', mul: 2.4, scrap: 15, price: 220 },
+  { name: 'Exceptionnel', color: '#ff8a3d', mul: 3.0, scrap: 25, price: 400 },
+  { name: 'Épique', color: '#c58bff', mul: 3.4, scrap: 40, price: 600 },
+  { name: 'Légendaire', color: '#ff4a5a', mul: 3.9, scrap: 70, price: 1000 },
+  { name: 'Mythique', color: '#ff7ae0', mul: 5.2, scrap: 120, price: 1800, rainbow: true }
 ];
+const GEAR_TOP = 6, GEAR_STARS = 12;
 const GEAR_SLOTS = [
   { id: 'arme', name: 'Arme', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
   { id: 'blindage', name: 'Blindage', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
@@ -4287,22 +4296,27 @@ if (D2) {
 const GEAR_BY_ID = Object.fromEntries(GEAR.map(g => [g.id, g]));
 const CHESTS = [
   { id: 'c1', name: 'Caisse de ferraille', price: 50, n: 1, min: 0, desc: '1 objet · Commun ou mieux' },
-  { id: 'c2', name: 'Caisse renforcée', price: 150, n: 1, min: 1, desc: '1 objet · Rare ou mieux' },
-  { id: 'c3', name: 'Caisse de l’Arche', price: 400, n: 1, min: 2, desc: '1 objet · Épique ou mieux' },
-  { id: 'c10', name: '10 caisses renforcées', price: 1350, n: 10, min: 1, desc: '10 objets Rare ou mieux · 10 % de réduction', tag: 'Meilleure offre' }
+  { id: 'c2', name: 'Caisse renforcée', price: 150, n: 1, min: 1, desc: '1 objet · Magique ou mieux' },
+  { id: 'c3', name: 'Caisse de l’Arche', price: 400, n: 1, min: 3, desc: '1 objet · Exceptionnel ou mieux' },
+  { id: 'c10', name: '10 caisses renforcées', price: 1350, n: 10, min: 1, desc: '10 objets Magique ou mieux · 10 % de réduction', tag: 'Meilleure offre' }
 ];
 
 const Gear = {
   migrate(s) {
     s.gear = Object.assign({ items: [], equip: {}, scrap: 0, next: 1, fresh: 0, day: '', offers: [] }, s.gear || {});
     for (const c of CREW_IDS) s.gear.equip[c] = Object.assign({ arme: null, blindage: null, module: null }, s.gear.equip[c] || {});
+    // v2 : 7 raretés. Légendaire et Mythique gardent leur nom ; Rare devient Magique, Épique devient Rare (même puissance)
+    if (!s.gear.v) { const M = [0, 1, 2, 5, 6]; for (const it of s.gear.items) it.r = M[it.r] ?? it.r; for (const o of s.gear.offers || []) o.r = M[o.r] ?? o.r; s.gear.v = 2; }
   },
+  canStar: it => it.r === GEAR_TOP && it.l >= 5 + 5 * it.r && (it.st || 0) < GEAR_STARS,
+  starCost: it => Math.round(1000 * Math.pow(1.4, it.st || 0)),
+  starText: it => it.st ? '★'.repeat(it.st) : '',
   maxLevel: r => 5 + 5 * r,
   upCost: it => Math.ceil(4 * it.l * (it.r + 1)),
   /* Valeur d'une statistique pour un objet donné. */
   value(it, sub) {
     const t = GEAR_BY_ID[it.t], st = sub ? t.sub : t.stat, base = sub ? (GEAR.find(g => g.stat === st) || t).base * 0.5 : t.base;
-    const v = base * RARITY[it.r].mul * (1 + 0.12 * (it.l - 1));
+    const v = base * RARITY[it.r].mul * (1 + 0.1 * (it.st || 0)) * (1 + 0.12 * (it.l - 1));
     return GEAR_STATS[st].flat ? Math.max(1, Math.round(v)) : v;
   },
   stats(it) {
@@ -4314,10 +4328,10 @@ const Gear = {
   /* Tirage d'un objet : la rareté dépend du monde atteint et d'un minimum garanti. */
   roll(slot, min, rng) {
     rng = rng || Math.random;
-    const w = maxWorld(slot), weights = [60, 28, 9 + w * 0.6, 2.4 + w * 0.25, 0.4 + w * 0.08];
-    let tot = 0; for (let i = min; i < 5; i++) tot += weights[i];
+    const w = maxWorld(slot), weights = [60, 28, 9 + w * 0.6, 4 + w * 0.4, 2 + w * 0.25, 1.2 + w * 0.15, 0.3 + w * 0.06];
+    let tot = 0; for (let i = min; i < 7; i++) tot += weights[i];
     let x = rng() * tot, r = min;
-    for (let i = min; i < 5; i++) { x -= weights[i]; if (x <= 0) { r = i; break; } }
+    for (let i = min; i < 7; i++) { x -= weights[i]; if (x <= 0) { r = i; break; } }
     const t = GEAR[Math.floor(rng() * GEAR.length)];
     return { t: t.id, r, l: 1 };
   },
@@ -4372,7 +4386,7 @@ const Gear = {
   },
   /* Trois objets identiques (même modèle, même rareté) donnent un objet de la rareté suivante. */
   mergeGroup(slot, it) {
-    if (it.r >= 4) return [];
+    if (it.r >= GEAR_TOP) return [];
     const same = slot.gear.items.filter(x => x.t === it.t && x.r === it.r);
     if (same.length < 3) return [];
     same.sort((a, b) => (b.uid === it.uid) - (a.uid === it.uid) || b.l - a.l);
@@ -4391,8 +4405,8 @@ const Gear = {
     if (o) slot.gear.equip[o.c][o.s] = null;
     slot.gear.items = slot.gear.items.filter(x => x.uid !== uid);
   },
-  recycle(slot, it) { const gain = RARITY[it.r].scrap * it.l; this.remove(slot, it.uid); slot.gear.scrap += gain; return gain; },
-  score(it) { return this.stats(it).reduce((a, [st, v]) => a + (GEAR_STATS[st].flat ? v * 0.03 : v), 0); },
+  recycle(slot, it) { const gain = RARITY[it.r].scrap * it.l + 300 * (it.st || 0); this.remove(slot, it.uid); slot.gear.scrap += gain; return gain; },
+  score(it) { return (it.st || 0) * 0.1 + this.stats(it).reduce((a, [st, v]) => a + (GEAR_STATS[st].flat ? v * 0.03 : v), 0); },
   /* Équipe automatiquement le meilleur objet libre dans chaque emplacement du personnage. */
   autoEquip(slot, c) {
     for (const sl of GEAR_SLOTS) {
@@ -4422,7 +4436,7 @@ function gearCard(slot, it, opts) {
   const t = GEAR_BY_ID[it.t], R = RARITY[it.r], o = Gear.owner(slot, it.uid), merge = Gear.mergeGroup(slot, it).length >= 3;
   return `<button class="gcard r${it.r} ${opts && opts.big ? 'big' : ''}" type="button" data-item="${it.uid}" style="--rc:${R.color}">` +
     gearIcon(it, opts && opts.big ? 54 : 38) +
-    `<b>${esc(t.name)}</b><small>${R.name} · niv. ${it.l}</small>` +
+    `<b>${esc(t.name)}</b><small>${R.name} · niv. ${it.l}</small>${it.st ? `<small class="gstars">${Gear.starText(it)}</small>` : ''}` +
     `<span class="gstat">${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join('<br>')}</span>` +
     (o ? `<span class="gown" title="Équipé par ${esc(CAST[o.c].name)}">${esc(CAST[o.c].name[0])}</span>` : '') +
     (merge ? '<span class="gmerge" title="Fusion possible">×3</span>' : '') + '</button>';
@@ -5917,10 +5931,10 @@ const Minigames = {
     if (g && g.afterClose) g.afterClose();
   },
   /* Choix d'une carte parmi trois (améliorations), par-dessus la partie. */
-  choose(title, opts, fn) {
+  choose(title, opts, fn, note) {
     const ov = $('mgOver');
     ov.hidden = false;
-    ov.innerHTML = `<div class="card mgend"><h2>${esc(title)}</h2><div class="mgpick">${opts.map((o, i) => `<button class="choice" data-i="${i}" type="button"><b>${esc(o.name)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div></div>`;
+    ov.innerHTML = `<div class="card mgend"><h2>${esc(title)}</h2>${note || ''}<div class="mgpick">${opts.map((o, i) => `<button class="choice" data-i="${i}" type="button"><b>${esc(o.name)}</b><span>${esc(o.desc)}</span></button>`).join('')}</div></div>`;
     ov.querySelectorAll('[data-i]').forEach(bt => { bt.onclick = () => { ov.hidden = true; ov.innerHTML = ''; fn(opts[+bt.dataset.i]); }; });
   }
 };
@@ -6213,7 +6227,7 @@ const ExpHub = {
     h += `<div class="expbox"><b>Ton vaisseau</b>${this.shipStats(st)}</div>
       <p class="hint">Maintiens le doigt (ou les flèches) pour piloter l’Arche dans tout l’écran : elle tire seule sur l’ennemi le plus proche. Après chaque secteur, choisis une amélioration parmi trois.
       Les ennemis deviennent plus nombreux, plus résistants et plus variés au fil des secteurs : équipe-toi au Hangar et renforce ton équipement.
-      Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent des objets, parfois des pièces de set (vertes). Nouveau record : des gemmes ${GEM}.</p>`;
+      Tous les 10 secteurs franchis, un objet d’équipement pour ton équipage de Neon Bastion (Rare ou mieux au secteur 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40). Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent aussi des objets, parfois des pièces de set (vertes). Nouveau record : des gemmes ${GEM}.</p>`;
     return h;
   },
   tag(it) {
@@ -6402,7 +6416,7 @@ const Expedition = {
     Object.assign(this, { st, paused: false, t: 0, x: 180, y: 560, cleared: 0, kills: 0, cd: 0, inv: 0, en: [], shots: [], eshots: [], fx: [], drops: [], mines: [], bolts: [],
       spawnQ: [], banner: null, power: {}, modT: { missile: 1.5, laser: 3, arc: 1, nova: 2, mine: 1, drone: 0 }, beam: 0, over: false,
       wave: (r ? r.wave : o.wave) - 1, startWave: r ? r.startWave || r.wave : o.wave, score: r ? r.score : 0, kills: r ? r.kills : 0,
-      runEc: r ? r.ec : 0, runItems: r ? r.items : 0, waveEc: 0, waveItems: [], ups: {},
+      runEc: r ? r.ec : 0, runItems: r ? r.items : 0, crewItems: r ? r.crew || 0 : 0, waveEc: 0, waveItems: [], ups: {},
       stars: Array.from({ length: 60 }, () => [Math.random() * 360, Math.random() * 640, 0.3 + Math.random()]) });
     // Valeurs de départ : Atelier + équipement du Hangar
     Object.assign(this, { dmg: 10 * st.dmg, rate: 1 / st.rate, multi: st.multi, pierce: st.pierce, crit: st.crit, speed: st.speed, maxHp: st.lives, hp: st.lives,
@@ -6435,7 +6449,7 @@ const Expedition = {
   snapshot() {
     const s = App.slot, e = ExpData.get(s);
     const ups = Object.assign({}, this.ups); delete ups.heal;
-    e.run = { wave: this.wave, hp: this.hp, ups, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, startWave: this.startWave };
+    e.run = { wave: this.wave, hp: this.hp, ups, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, crew: this.crewItems, startWave: this.startWave };
     Store.touch(s);
   },
   nextWave() {
@@ -6583,6 +6597,13 @@ const Expedition = {
     if (!this.spawnQ.length && !this.en.length) {
       this.cleared = this.wave;
       this.gainEc(5 + this.wave);
+      // Palier : tous les 10 secteurs franchis, un objet d'équipement pour l'équipage de Neon Bastion (rareté minimale croissante)
+      if (this.wave % 10 === 0) {
+        const sl = App.slot; Gear.migrate(sl);
+        const it = Gear.give(sl, Gear.roll(sl, Math.min(5, 1 + this.wave / 10)));
+        this.crewItems = (this.crewItems || 0) + 1; Store.touch(sl); this.palier = it;
+        this.fx.push({ txt: `Palier ${this.wave} · pour l’équipage :`, c: '#e4ecfb', x: 180, y: 280, t: 3 }, { txt: Gear.label(it), c: RARITY[it.r].color, x: 180, y: 300, t: 3 });
+      }
       if (this.regen && Math.random() < this.regen && this.hp < this.maxHp) { this.hp++; this.fx.push({ txt: 'Coque réparée', c: '#5dff9a', x: 180, y: 360, t: 1.4 }); }
       this.bankWave();
       this.eshots = []; this.paused = true;
@@ -6590,7 +6611,9 @@ const Expedition = {
       shuffle(pool, Math.random);
       for (const u of pool) { if (pick.length >= 3) break; if (!pick.some(p => p.cat === u.cat) || pick.length >= 2) pick.push(u); }
       Minigames.choose(`Secteur ${this.wave} nettoyé · choisis une amélioration`, pick.map(u => ({ id: u.id, name: `${u.name}${this.ups[u.id] && u.max < 99 ? ' · niv. ' + (this.ups[u.id] + 1) : ''}`, desc: `${u.cat} · ${u.desc}` })),
-        u => { this.applyUp(u.id); Sound.sfx && Sound.sfx('up'); this.paused = false; this.nextWave(); });
+        u => { this.applyUp(u.id); Sound.sfx && Sound.sfx('up'); this.paused = false; this.nextWave(); },
+        this.palier ? `<div class="mgpalier" style="--rc:${RARITY[this.palier.r].color}">${gearIcon(this.palier, 40)}<span><small>Palier ${this.wave} · objet pour l’équipage</small><b>${esc(Gear.label(this.palier))}</b></span></div>` : '');
+      this.palier = null;
     }
   },
   dronePos(i) { const o = [[-30, -4], [30, -4], [0, 28]][i % 3]; return [this.x + o[0], this.y + o[1] + Math.sin(this.t * 4 + i) * 2]; },
@@ -6694,7 +6717,7 @@ const Expedition = {
   },
   info() { return `Secteur ${this.wave} · ${this.kills} détruits`; },
   quit() { if (this.over) return; this.paused = true; this.quitting = true; Minigames.finish(this.result()); },
-  result() { return { wave: this.wave, cleared: this.cleared, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, quit: !!this.quitting }; },
+  result() { return { wave: this.wave, cleared: this.cleared, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, crew: this.crewItems, quit: !!this.quitting }; },
   reward(r) {
     const s = App.slot, e = ExpData.get(s);
     this.quitting = false;
@@ -6706,6 +6729,7 @@ const Expedition = {
     Store.touch(s);
     const parts = [`${fmtBig(r.ec)} ${EXC} éclats`];
     if (r.items) parts.push(`${r.items} objet${r.items > 1 ? 's' : ''} pour le Hangar`);
+    if (r.crew) parts.push(`${r.crew} objet${r.crew > 1 ? 's' : ''} pour l’équipage`);
     if (gems) parts.push(mgGrant(s, { gems }));
     return { best: e.best, summary: parts.join(' · '), title: cleared > prev ? 'Nouveau record !' : 'Fin de l’expédition', text: `Secteurs franchis : ${cleared} · score ${fmtBig(r.score)} · ${r.kills} ennemis détruits.` };
   },
@@ -6842,7 +6866,7 @@ const Dive = {
   result(drowned) { return { drowned, value: drowned ? Math.floor(this.value() / 2) : this.value(), rare: this.bag.filter(f => f.rare).length, n: this.bag.length }; },
   reward(r) {
     const gr = { gems: Math.floor(r.value / 6) };
-    if (r.rare) gr.item = Math.min(3, r.rare);
+    if (r.rare) gr.item = [0, 1, 2, 5][Math.min(3, r.rare)];
     return { best: r.value, grant: gr, title: r.drowned ? 'À court d’oxygène !' : 'Belle plongée !', text: r.drowned ? `Iris t’a remonté à temps, mais la moitié de la prise a filé. Valeur gardée : ${r.value} points.` : `${r.n} poissons rapportés, pour ${r.value} points.${r.rare ? ` Dont ${r.rare} lanterne${r.rare > 1 ? 's' : ''} dorée${r.rare > 1 ? 's' : ''} !` : ''}` };
   }
 };
@@ -7131,7 +7155,7 @@ const Breach = {
     if (!r.win) return { grant: r.quit ? {} : { gems: 3 }, title: 'Repoussés', text: `Le gardien de l’étape ${r.stage} tient bon. Choisis mieux tes portes : les × valent souvent plus que les + en fin de route.` };
     m.stage = r.stage + 1;
     const gr = { gems: 10 + 3 * r.stage + Math.floor(r.rem / 4) };
-    if (r.stage % 3 === 0) gr.item = Math.min(3, Math.floor(r.stage / 3));
+    if (r.stage % 3 === 0) gr.item = [0, 1, 2, 5][Math.min(3, Math.floor(r.stage / 3))];
     return { best: r.stage, grant: gr, title: 'Percée réussie !', text: `Étape ${r.stage} franchie avec ${r.rem} survivants. L’étape ${r.stage + 1} sera plus dure.` };
   }
 };
@@ -7412,10 +7436,13 @@ const CrewView = {
     const s = App.slot, it = Gear.find(s, uid);
     if (!it) return;
     const t = GEAR_BY_ID[it.t], o = Gear.owner(s, uid), max = Gear.maxLevel(it.r), cost = Gear.upCost(it), grp = Gear.mergeGroup(s, it);
-    const next = it.l < max ? Gear.stats({ ...it, l: it.l + 1 }) : null;
-    const html = `<div class="gdetail" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</b> · ${GEAR_SLOTS.find(x => x.id === t.slot).name} · niveau ${it.l} / ${max}</p>` +
+    const star = Gear.canStar(it), sc = star ? Gear.starCost(it) : 0, top = it.r === GEAR_TOP;
+    const next = it.l < max ? Gear.stats({ ...it, l: it.l + 1 }) : star ? Gear.stats({ ...it, st: (it.st || 0) + 1 }) : null;
+    const html = `<div class="gdetail r${it.r}" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b class="grname" style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</b> · ${GEAR_SLOTS.find(x => x.id === t.slot).name} · niveau ${it.l} / ${max}${top ? ` · étoiles ${it.st || 0} / ${GEAR_STARS}` : ''}</p>` +
+      (top ? `<div class="expstars">${Array.from({ length: GEAR_STARS }, (_, i) => `<i class="${i < (it.st || 0) ? 'on' : ''}">★</i>`).join('')}</div>` : '') +
+      (top && it.l < max ? `<p class="hint">Au niveau ${max}, l’objet peut gagner jusqu’à ${GEAR_STARS} étoiles : +10 % à ses valeurs par étoile.</p>` : '') +
       `<ul class="traits" style="text-align:left">${Gear.stats(it).map(([st, v], i) => `<li>${esc(Gear.statText(st, v))}${next ? ` <span style="color:var(--cyan)">→ ${esc(Gear.statText(st, next[i][1]).split(' ')[0])}</span>` : ''}${GEAR_STATS[st].crew ? ' <span class="muted">(tourelles du porteur)</span>' : ''}</li>`).join('')}</ul>` +
-      (it.r < 2 ? '<p class="hint">Dès la rareté Épique, l’objet gagne une seconde statistique.</p>' : '') +
+      (it.r < 2 ? '<p class="hint">Dès la rareté Rare, l’objet gagne une seconde statistique.</p>' : '') +
       `<p class="hint">${o ? `Équipé par ${esc(CAST[o.c].name)}.` : 'Pas équipé.'} Ferraille : ${fmtBig(s.gear.scrap)} ${SCRAP}</p></div>`;
     const acts = [];
     const c = this.char;
@@ -7425,8 +7452,12 @@ const CrewView = {
       if (s.gear.scrap < cost) { Toast2.show(`Il manque ${cost - s.gear.scrap} ${SCRAP} ferraille`); return; }
       s.gear.scrap -= cost; it.l++; Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); setTimeout(() => this.detail(uid), 30);
     } });
+    if (star) acts.push({ label: `★ Étoile ${(it.st || 0) + 1} · ${fmtBig(sc)} ${SCRAP}`, cls: s.gear.scrap >= sc ? 'gold' : '', fn: () => {
+      if (s.gear.scrap < sc) { Toast2.show(`Il manque ${fmtBig(sc - s.gear.scrap)} ${SCRAP} ferraille`); return; }
+      s.gear.scrap -= sc; it.st = (it.st || 0) + 1; Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); setTimeout(() => this.detail(uid), 30);
+    } });
     if (grp.length >= 3) acts.push({ label: `Fusionner ×3 → ${RARITY[it.r + 1].name}`, cls: 'violet', fn: () => { const r = Gear.merge(s, it); Store.touch(s); this.render(); if (r) Reveal.show([r], 'Fusion réussie'); } });
-    acts.push({ label: `Recycler · +${RARITY[it.r].scrap * it.l} ${SCRAP}`, cls: 'danger', fn: () => {
+    acts.push({ label: `Recycler · +${RARITY[it.r].scrap * it.l + 300 * (it.st || 0)} ${SCRAP}`, cls: 'danger', fn: () => {
       const doIt = () => { const g = Gear.recycle(s, it); Store.touch(s); Toast2.show(`+${g} ${SCRAP} ferraille`); this.render(); };
       if (it.r >= 2) setTimeout(() => Modal.open({ title: 'Recycler cet objet ?', text: `${Gear.label(it)} sera détruit contre ${RARITY[it.r].scrap * it.l} ${SCRAP}.`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] }), 30);
       else doIt();
@@ -7572,7 +7603,7 @@ function storySteps(w) {
 }
 function stepDone(s, w, i) { const st = storySteps(w)[i]; return !!((s.story.steps[w] || [])[i] || (st.retro && st.retro(s))); }
 const chapterDone = (s, w) => [0, 1, 2].every(i => stepDone(s, w, i));
-const artReward = w => ({ gems: 80 + 20 * w, item: 3 });
+const artReward = w => ({ gems: 80 + 20 * w, item: 5 });
 const chapterReward = w => ({ gems: 50 + 10 * w, relic: w % 2 === 0, point: w % 2 === 1, item: Math.min(3, 1 + Math.floor(w / 2)) });
 const maxWorld = s => Math.min(WORLD_MAX, worldOf(s.unlocked));
 const fragmentCount = s => { let n = Object.keys(s.story.logs).length; for (let w = 1; w <= maxWorld(s); w++) if ((s.stars[worldLast(w)] || 0) > 0) n++; return n; };
@@ -8242,8 +8273,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.6';
+const APP_VERSION = '7.7';
 const CHANGELOG = [
+  { v: '7.7', date: '02.11.2026', items: ['Équipement de l’équipage : mêmes 7 raretés que l’Expédition (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique arc-en-ciel). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques, les anciens Épiques deviennent Rares', 'Équipement de l’équipage : un objet Mythique au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % par étoile), payées en ferraille', 'La Caisse de l’Arche donne maintenant un objet Exceptionnel ou mieux', 'Expédition : tous les 10 secteurs franchis, un objet d’équipement pour l’équipage de Neon Bastion (Rare ou mieux à 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40)'] },
   { v: '7.6', date: '02.11.2026', items: ['Expédition : 7 raretés dans l’ordre Commun (gris), Magique (bleu), Rare (jaune), Exceptionnel (orange), Épique (violet), Légendaire (rouge), Mythique (arc-en-ciel), plus les objets de set (verts). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques et les anciens Épiques deviennent Rares', 'Étoiles : un objet Mythique ou de set au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % à ses valeurs par étoile, +1 niveau d’arme toutes les 3 étoiles)', 'La fusion de 3 objets identiques va maintenant jusqu’à Mythique'] },
   { v: '7.5', date: '02.11.2026', items: ['Expédition, Hangar : touche un emplacement pour choisir son équipement parmi les objets compatibles', 'Fiche d’objet comme pour l’équipage : valeurs actuelles → niveau suivant, amélioration, fusion de 3 objets identiques vers la rareté suivante, recyclage (et recyclage des communs en un geste)', 'Nouvelle rareté Exceptionnel (orange), entre Épique et Légendaire', '12 sets d’objets verts (3 à 5 pièces) : bonus spéciaux selon le nombre de pièces équipées (arc électrique, survie au coup fatal, recharge de bouclier, achèvement, dégâts contre les Colosses…). Nouvel onglet Sets', 'Difficulté nettement relevée : ennemis plus résistants, plus d’élites, tirs plus rapides et plus fréquents au fil des secteurs', '7 nouveaux ennemis : Tisseur (10), Porte-essaim (12), Soigneur (15), Poseur de mines (18), Spectre (21), Chasseur (24), Bombardier (27)'] },
   { v: '7.4.2', date: '02.11.2026', items: ['Expédition, Atelier : la liste ne remonte plus en haut après chaque achat', 'Chaque amélioration affiche son effet actuel et celui du prochain niveau', 'L’amélioration « Aimant » de l’Atelier devient « Collecteur » pour ne plus se confondre avec le bonus Aimant'] },
@@ -8476,7 +8508,7 @@ const Meta = {
     if (r.relic) p.push(typeof r.relic === 'string' ? `relique ${RELIC_BY_ID[r.relic].name}` : 'une relique');
     if (r.skin) p.push('apparence Or');
     if (r.fragment) p.push('un fragment du journal');
-    if (r.item !== undefined && r.item !== null) p.push(`un objet ${RARITY[r.item].name}${r.item < 4 ? ' ou mieux' : ''}`);
+    if (r.item !== undefined && r.item !== null) p.push(`un objet ${RARITY[r.item].name}${r.item < GEAR_TOP ? ' ou mieux' : ''}`);
     return 'Récompense : ' + p.join(' · ');
   },
 
