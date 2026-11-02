@@ -6797,7 +6797,7 @@ const PLT_SLOTS = [
 const PLT_STAT = {
   dmg: { l: 'dégâts du blaster', pct: true }, rate: { l: 'cadence', pct: true }, multi: { l: 'tir', flat: true }, pierce: { l: 'perforation', flat: true },
   hp: { l: 'cœur', flat: true, pl: 'cœurs' }, shield: { l: 'bouclier', flat: true }, regen: { l: 'cœur réparé en fin de niveau', pct: true },
-  speed: { l: 'vitesse', pct: true }, jump: { l: 'hauteur de saut', pct: true }, airjump: { l: 'saut en l’air', lv: true }, drone: { l: 'drone tireur', lv: true },
+  speed: { l: 'vitesse', pct: true }, jump: { l: 'hauteur de saut', pct: true }, airjump: { l: 'puissance des sauts en l’air', lv: true }, drone: { l: 'drone tireur', lv: true },
   inv: { l: 'invulnérabilité après un choc', pct: true }, bolts: { l: 'boulons', pct: true }, luck: { l: 'chance d’objet', pct: true },
   crit: { l: 'coup critique', pct: true }, magnet: { l: 'portée d’aimant', pct: true }, stomp: { l: 'dégâts d’écrasement', pct: true },
   bossDmg: { l: 'dégâts contre les gardiens', pct: true },
@@ -6910,7 +6910,7 @@ const PLT_CFG = {
     h += `<div class="expbox"><b>Nouvelle partie</b><p class="hint">Point de départ : chaque gardien vaincu (niveaux 5, 10, 15…) débloque le départ suivant.</p>
       <div class="row">${cps.map(w => `<button class="btn ${e.run ? '' : 'primary'}" data-go="new" data-w="${w}" type="button">${w === 1 ? 'Départ · niveau 1' : 'Niveau ' + w}</button>`).join('')}</div></div>`;
     h += `<div class="expbox"><b>Pip</b>${H.shipStats(st)}</div>
-      <p class="hint">Boutons ◀ ▶ pour courir, gros bouton pour sauter (plus tu le gardes, plus tu sautes haut ; flèches et espace au clavier). Saute sur les ennemis pour les écraser ; ton blaster tire seul sur le plus proche. Les piquants ne s’écrasent pas : tire-leur dessus.
+      <p class="hint">Pouce gauche : un joystick apparaît où tu poses le doigt sur la moitié gauche de l’écran (gauche/droite pour courir, bas pour tomber plus vite, haut pour freiner la descente). Pouce droit : SAUTER, ou n’importe où à droite ; re-touche en l’air pour un double, triple, quadruple saut… sans limite. Plus tu gardes le doigt, plus le saut est haut (flèches et espace au clavier). Saute sur les ennemis pour les écraser ; ton blaster tire seul sur le plus proche. Les piquants ne s’écrasent pas : tire-leur dessus.
       Frappe les caisses ⚡ par en dessous. Rejoins la balise au bout de chaque niveau. Les boulons ${PLC} d’un niveau sont gardés à sa fin. Nouveau record : des gemmes ${GEM}.</p>`;
     return h;
   },
@@ -6941,29 +6941,36 @@ const Plat = {
     Object.assign(this, { st, t: 0, over: false, paused: false, kills: r ? r.kills : 0, score: r ? r.score : 0, runEc: r ? r.ec : 0, runItems: r ? r.items : 0,
       startLvl: r ? r.startLvl || r.lvl : o.wave || 1, lvl: (r ? r.lvl : o.wave || 1) - 1, cleared: 0, touches: new Map(), fx: [],
       dmg: 10 * st.dmg, rate: 1 / st.rate, multi: st.multi, pierce: st.pierce, maxHp: st.hp, hp: st.hp, shieldMax: st.shield, crit: st.crit, critMul: 2 + st.critMul,
-      spd: 165 * Math.min(2, st.speed), jumpV: 620 * Math.sqrt(1 + Math.min(0.6, st.jump - 1)), airMax: Math.min(3, st.airjump), invT: st.inv, ecMul: st.bolts, luck: st.luck,
+      spd: 165 * Math.min(2, st.speed), jumpV: 620 * Math.sqrt(1 + Math.min(0.6, st.jump - 1)), airK: 0.75 + 0.06 * Math.min(5, st.airjump), invT: st.inv, ecMul: st.bolts, luck: st.luck,
       magnet: st.magnet, stompK: st.stomp, bossDmg: st.bossDmg, vamp: st.vamp, vampK: 0, shieldRegen: st.shieldRegen, shT: 0, revive: st.revive, shock: st.shock,
       float: st.float, droneN: Math.min(3, st.drone), regen: st.regen });
     if (r) this.hp = Math.min(this.maxHp, r.hp || this.maxHp);
     this.bindTouch();
     this.nextLevel(true);
   },
-  /* Commandes tactiles à plusieurs doigts : ◀ ▶ à gauche, saut à droite. */
+  /* Commandes tactiles à deux mains : joystick pour le pouce gauche (moitié gauche de l'écran), saut pour le pouce droit. */
   bindTouch() {
     const cv = $('mgCv'); if (!cv) return;
+    this.stick = null;
     const pos = ev => { const r = cv.getBoundingClientRect(); return [(ev.clientX - r.left) / r.width * this.W, (ev.clientY - r.top) / r.height * this.H]; };
-    const set = ev => { const [x, y] = pos(ev); this.touches.set(ev.pointerId, { x, y }); };
-    cv.addEventListener('pointerdown', set); cv.addEventListener('pointermove', ev => { if (this.touches.has(ev.pointerId)) set(ev); });
-    const del = ev => this.touches.delete(ev.pointerId);
-    cv.addEventListener('pointerup', del); cv.addEventListener('pointercancel', del); cv.addEventListener('pointerleave', del);
+    cv.addEventListener('pointerdown', ev => { const [x, y] = pos(ev); if (x < this.W / 2 && !this.stick) this.stick = { id: ev.pointerId, ox: x, oy: y, x, y }; else this.touches.set(ev.pointerId, { x, y }); });
+    cv.addEventListener('pointermove', ev => { const [x, y] = pos(ev); if (this.stick && this.stick.id === ev.pointerId) { this.stick.x = x; this.stick.y = y; } else if (this.touches.has(ev.pointerId)) this.touches.set(ev.pointerId, { x, y }); });
+    const del = ev => { if (this.stick && this.stick.id === ev.pointerId) this.stick = null; else this.touches.delete(ev.pointerId); };
+    cv.addEventListener('pointerup', del); cv.addEventListener('pointercancel', del);
   },
+  STICK_R: 42,
   input(keys) {
-    let L = !!(keys.ArrowLeft || keys.q || keys.a), R = !!(keys.ArrowRight || keys.d), J = !!(keys[' '] || keys.ArrowUp || keys.z || keys.w);
-    for (const p of this.touches.values()) {
-      if (p.y < this.CTRL - 30) { if (p.x > 200) J = true; continue; }
-      if (p.x < 90) L = true; else if (p.x < 185) R = true; else if (p.x > 220) J = true;
+    let mx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.q || keys.a ? 1 : 0), my = (keys.ArrowDown || keys.s ? 1 : 0);
+    let J = !!(keys[' '] || keys.ArrowUp || keys.z || keys.w);
+    const st = this.stick;
+    if (st) {
+      let dx = st.x - st.ox, dy = st.y - st.oy; const d = Math.hypot(dx, dy), R = this.STICK_R;
+      if (d > R) { st.ox = st.x - dx / d * R; st.oy = st.y - dy / d * R; dx = dx / d * R; dy = dy / d * R; } // la base suit le pouce
+      const ax = dx / R, ay = dy / R;
+      if (Math.abs(ax) > 0.18) mx = ax; if (Math.abs(ay) > 0.35) my = ay;
     }
-    return { L, R, J };
+    if (this.touches.size) J = true;
+    return { mx: clamp(mx, -1, 1), my: clamp(my, -1, 1), J };
   },
   snapshot() {
     const e = PlatData.get(App.slot);
@@ -7025,7 +7032,7 @@ const Plat = {
     Object.assign(this, { L, g, boss, arenaStart, arenaEnd: arenaStart + arena, bossOn: false, bossObj: null,
       beacon: { x: (boss ? arenaStart + arena - 3 : L - 5) * T, y: 12 * T, on: !boss },
       en: [], shots: [], eshots: [], bolts: bolts.map(b => ({ ...b, a: 0 })), pows, drops: [], power: {},
-      px: 2 * T, py: 12 * T - 26, vx: 0, vy: 0, w: 18, h: 26, face: 1, onG: false, coyote: 0, jbuf: 0, airLeft: this.airMax, jHeld: false,
+      px: 2 * T, py: 12 * T - 26, vx: 0, vy: 0, w: 18, h: 26, face: 1, onG: false, coyote: 0, jbuf: 0, jHeld: false,
       inv: 1, cd: 0.5, droneCd: 0.6, camX: 0, safe: { x: 2 * T, y: 12 * T - 26 }, safeT: 0, lvEc: 0, lvItems: [], done: false, walk: 0 });
     this.shields = this.shieldMax;
     for (const e of en) this.spawn(e.t, (e.c + 0.5) * T, e.gh * T);
@@ -7042,7 +7049,7 @@ const Plat = {
       hp, max: hp, c: b[4], ec: b[5], stomp: b[6], elite, fly, y0: groundY - 120, ph: Math.random() * 6, fire: 1.5 + Math.random() * 2, hitT: 0, onG: false });
   },
   tile(c, r) { if (c < 0) return 1; if (c >= this.L || r >= this.ROWS) return 0; if (r < 0) return 0; return this.g[c * this.ROWS + r]; },
-  solid(c, r) { const v = this.tile(c, r); return v === 1 || v === 2 || v === 3 || v === 4 || v === 5; },
+  solid(c, r) { if (r < 0 && this.boss && c === this.arenaEnd + 1) return true; const v = this.tile(c, r); return v === 1 || v === 2 || v === 3 || v === 4 || v === 5; },
   /* Déplacement d'une boîte avec collisions sur la grille. */
   move(o, dt, onHead) {
     const T = this.T;
@@ -7122,24 +7129,26 @@ const Plat = {
   step(dt, keys) {
     const T = this.T, inp = this.input(keys);
     // Pip
-    const want = (inp.R ? 1 : 0) - (inp.L ? 1 : 0);
-    const acc = this.onG ? 1400 : 900;
-    if (want) { this.vx += want * acc * dt; this.face = want; } else { const f = (this.onG ? 1600 : 500) * dt; this.vx = Math.abs(this.vx) <= f ? 0 : this.vx - Math.sign(this.vx) * f; }
+    const want = inp.mx, tv = want * this.spd;
+    const acc = this.onG ? 1600 : 1100;
+    if (want) { this.vx += clamp(tv - this.vx, -acc * dt, acc * dt); this.face = Math.sign(want); } else { const f = (this.onG ? 1600 : 500) * dt; this.vx = Math.abs(this.vx) <= f ? 0 : this.vx - Math.sign(this.vx) * f; }
     this.vx = clamp(this.vx, -this.spd, this.spd);
     if (inp.J && !this.jHeld) this.jbuf = 0.12;
     this.jbuf -= dt; this.coyote -= dt;
     if (this.jbuf > 0) {
       if (this.onG || this.coyote > 0) { this.vy = -this.jumpV; this.jbuf = 0; this.coyote = 0; Sound.sfx && Sound.sfx('ui'); }
-      else if (this.airLeft > 0) { this.airLeft--; this.vy = -this.jumpV * 0.85; this.jbuf = 0; this.fx.push({ ring: true, x: this.px + 9, y: this.py + 26, c: '#9afff0', r: 12, t: 0.25 }); }
+      else { this.vy = -this.jumpV * this.airK; this.jbuf = 0; this.fx.push({ ring: true, x: this.px + 9, y: this.py + 26, c: '#9afff0', r: 12, t: 0.25 }); }
     }
     if (!inp.J && this.vy < -220) this.vy *= 0.6;
     this.jHeld = inp.J;
-    this.vy = Math.min(this.vy + 1800 * dt, this.float && inp.J && this.vy > 0 ? 90 : 900);
+    // joystick vers le bas : chute rapide ; vers le haut : descente freinée
+    this.vy = Math.min(this.vy + (1800 + (inp.my > 0.5 && !this.onG ? 1600 : 0)) * dt, this.float && inp.J && this.vy > 0 ? 90 : inp.my < -0.5 && this.vy > 0 ? 220 : inp.my > 0.5 ? 1200 : 900);
     const wasG = this.onG;
     const box = { x: this.px, y: this.py, w: this.w, h: this.h, vx: this.vx, vy: this.vy };
     this.move(box, dt, (c, r) => this.hitCrate(c, r));
     Object.assign(this, { px: box.x, py: box.y, vx: box.vx, vy: box.vy, onG: box.onG });
-    if (this.onG) { this.coyote = 0.08; this.airLeft = this.airMax; if (box.gt === 5) { this.hurt(); this.vy = -480; this.onG = false; } }
+    if (this.py < -28) { this.py = -28; if (this.vy < 0) this.vy = 0; } // plafond : Pip reste visible
+    if (this.onG) { this.coyote = 0.08; if (box.gt === 5) { this.hurt(); this.vy = -480; this.onG = false; } }
     else if (wasG && this.vy >= 0) this.coyote = 0.08;
     if (this.onG && box.gt !== 5) { this.safeT -= dt; const c0 = Math.floor(this.px / T), c1 = Math.floor((this.px + this.w) / T), r = Math.floor((this.py + this.h + 2) / T); if (this.safeT <= 0 && this.solid(c0 - 1, r) && this.solid(c1 + 1, r) && this.tile(c0, r) !== 5) { this.safe = { x: this.px, y: this.py }; this.safeT = 0.4; } }
     if (this.py > this.ROWS * T + 40) this.hurt(true);
@@ -7201,7 +7210,7 @@ const Plat = {
       if (this.px < e.x + e.w && this.px + this.w > e.x && this.py < e.y + e.h && this.py + this.h > e.y) {
         const fromTop = this.vy > 60 && this.py + this.h - e.y < 16;
         if (fromTop && e.stomp && !(e.sInv > 0)) {
-          this.vy = -this.jumpV * 0.7; this.airLeft = this.airMax;
+          this.vy = -this.jumpV * 0.7;
           if (e.boss) { e.sInv = 0.6; this.damage(e, e.max * 0.06 * this.stompK); }
           else this.damage(e, e.max * (e.t === 'armor' ? 0.55 : 1) * Math.min(1.5, this.stompK) / (e.elite ? 3 : 1));
           if (this.shock) { for (const o of this.en) if (o !== e && !o.dead && Math.abs(o.x - e.x) < 80 && Math.abs(o.y - e.y) < 60) this.damage(o, o.boss ? o.max * 0.02 : o.max * 0.5); this.fx.push({ ring: true, x: e.x + e.w / 2, y: e.y + e.h, c: '#ffd84a', r: 70, t: 0.35 }); }
@@ -7364,10 +7373,13 @@ const Plat = {
     g.strokeStyle = 'rgba(255,255,255,.08)'; g.beginPath(); g.moveTo(0, this.CTRL + 0.5); g.lineTo(W, this.CTRL + 0.5); g.stroke();
     const btn = (x, y, w, h, on, draw) => { g.fillStyle = on ? 'rgba(94,240,255,.28)' : 'rgba(255,255,255,.06)'; g.strokeStyle = on ? '#5ef0ff' : 'rgba(255,255,255,.18)'; g.lineWidth = 2; g.beginPath(); g.roundRect(x, y, w, h, 16); g.fill(); g.stroke(); g.fillStyle = on ? '#5ef0ff' : '#c9d3ea'; draw(x + w / 2, y + h / 2); };
     const cy = this.CTRL + 14;
-    btn(8, cy, 76, 84, inp.L, (x, y) => { g.beginPath(); g.moveTo(x - 12, y); g.lineTo(x + 10, y - 14); g.lineTo(x + 10, y + 14); g.closePath(); g.fill(); });
-    btn(94, cy, 76, 84, inp.R, (x, y) => { g.beginPath(); g.moveTo(x + 12, y); g.lineTo(x - 10, y - 14); g.lineTo(x - 10, y + 14); g.closePath(); g.fill(); });
+    { const st = this.stick, ox = st ? st.ox : 90, oy = st ? st.oy : cy + 42, kx = ox + inp.mx * this.STICK_R, ky = oy + (st ? clamp(st.y - st.oy, -this.STICK_R, this.STICK_R) : 0);
+      g.fillStyle = st ? 'rgba(94,240,255,.12)' : 'rgba(255,255,255,.05)'; g.strokeStyle = st ? '#5ef0ff' : 'rgba(255,255,255,.18)'; g.lineWidth = 2;
+      g.beginPath(); g.arc(ox, oy, this.STICK_R + 6, 0, TAU); g.fill(); g.stroke();
+      g.fillStyle = st ? '#5ef0ff' : 'rgba(201,211,234,.55)'; g.beginPath(); g.arc(kx, ky, 18, 0, TAU); g.fill();
+      if (!st) { g.fillStyle = 'rgba(201,211,234,.5)'; for (const [dx, dy, a] of [[-34, 0, Math.PI], [34, 0, 0], [0, -34, -Math.PI / 2], [0, 34, Math.PI / 2]]) { g.save(); g.translate(ox + dx, oy + dy); g.rotate(a); g.beginPath(); g.moveTo(5, 0); g.lineTo(-3, -5); g.lineTo(-3, 5); g.fill(); g.restore(); } } }
     btn(228, cy, 124, 84, inp.J, (x, y) => { g.font = '800 16px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('SAUTER', x, y); g.textBaseline = 'alphabetic'; });
-    if (this.lvl === this.startLvl && this.t < 5) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.85)'; g.fillText('◀ ▶ pour courir · SAUTER (garde-le pour sauter plus haut)', 180, 470); g.fillText('Écrase les ennemis ; ton blaster tire seul', 180, 488); }
+    if (this.lvl === this.startLvl && this.t < 5) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.85)'; g.fillText('Pouce gauche : joystick · SAUTER à droite', 180, 452); g.fillText('Re-touche SAUTER en l’air pour sauter encore, sans limite', 180, 470); g.fillText('Écrase les ennemis ; ton blaster tire seul', 180, 488); }
     if (this.over) { g.fillStyle = 'rgba(5,7,13,.55)'; g.fillRect(0, 0, W, this.CTRL); g.fillStyle = '#ff5468'; g.font = '800 24px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('FIN DE LA COURSE', 180, 250); }
   },
   heart(g, x, y, on) {
@@ -8954,8 +8966,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.8.1';
+const APP_VERSION = '7.9';
 const CHANGELOG = [
+  { v: '7.9', date: '02.11.2026', items: ['Course des Toits : joystick pour le pouce gauche (il apparaît où tu poses le doigt : courir, bas pour tomber plus vite, haut pour freiner la descente) et saut pour le pouce droit', 'Course des Toits : sauts en l’air illimités, re-touche SAUTER pour enchaîner double, triple, quadruple saut… Les objets « saut en l’air » augmentent maintenant la puissance de ces sauts'] },
   { v: '7.8.1', date: '02.11.2026', items: ['Onglet Sets (Expédition et Course des Toits) : touche une pièce pour voir ses statistiques au niveau 1, au niveau 25 et avec 12 étoiles, et celles de ton exemplaire'] },
   { v: '7.8', date: '02.11.2026', items: ['Nouvel événement : Course des Toits, un jeu de plateforme. Guide Pip de toit en toit, écrase les ennemis, frappe les caisses ⚡, bats un gardien tous les 5 niveaux. Partie sauvegardée avec le même équipement que l’Expédition : Vestiaire (5 emplacements), 7 raretés, 10 sets, fusion, étoiles et Atelier', 'Les événements se débloquent un par un, tous les 10 niveaux : Expédition dès le départ, Course des Toits au niveau 11, puis Plongée (21), Percée (31), Code du Coffre (41), Triage (51), Chute de Plasma (61) et Fouille (71)'] },
   { v: '7.7', date: '02.11.2026', items: ['Équipement de l’équipage : mêmes 7 raretés que l’Expédition (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique arc-en-ciel). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques, les anciens Épiques deviennent Rares', 'Équipement de l’équipage : un objet Mythique au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % par étoile), payées en ferraille', 'La Caisse de l’Arche donne maintenant un objet Exceptionnel ou mieux', 'Expédition : tous les 10 secteurs franchis, un objet d’équipement pour l’équipage de Neon Bastion (Rare ou mieux à 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40)'] },
