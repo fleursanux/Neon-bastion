@@ -744,8 +744,13 @@ html.da body.hub .gcard{border-radius:14px;border-width:3px;box-shadow:inset 0 3
 .exptabs{flex-wrap:wrap;gap:6px}
 .expbox{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.02)}.expbox p{margin:0}
 .expstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 10px;font-size:.78rem;color:var(--muted)}.expstats b{color:var(--fg)}.expstats .wide{grid-column:1/-1}
-.expslots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.expslot{display:flex;flex-direction:column;gap:4px}.expslot>small{color:var(--muted);font-size:.72rem}
+.expslots{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.expslot{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:12px;border:1px dashed var(--line);background:rgba(255,255,255,.02)}.expslot:active,.expslot:hover{border-color:var(--cyan)}.expslot>small{color:var(--muted);font-size:.72rem}
+.expdetail{grid-column:1/-1;border-color:var(--rc)}.expdetail ul{margin:0;padding-left:18px;font-size:.82rem}.expdetail small{color:var(--muted)}.expnext{color:var(--cyan);font-weight:700}
+.exppick{display:flex;flex-direction:column;gap:6px}.exprow{display:flex;gap:6px;align-items:center}.exprow>.expitem{flex:1;min-width:0}.exprow>.btn,.exprow>.hint{flex:none}
+.expset{border-color:rgba(61,220,90,.45)}.expsetname{color:#3ddc5a}.expsetname small{color:var(--muted);font-weight:400}
+.exppieces{display:flex;flex-wrap:wrap;gap:4px}.exppieces span{font-size:.72rem;padding:2px 6px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}.exppieces span.own{color:var(--fg)}.exppieces span.on{color:#3ddc5a;border-color:#3ddc5a}
+.expbonus{margin:0;padding-left:18px;font-size:.78rem;color:var(--muted)}.expbonus li.on{color:#3ddc5a}.expspec b{color:#3ddc5a}
 .expempty{border:1px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--muted);font-size:.8rem}
 .expitem{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--rc);background:rgba(10,14,24,.6);width:100%}
 .expitem.sel{box-shadow:0 0 0 2px var(--rc)}.expitem.eq{background:color-mix(in srgb,var(--rc) 12%,rgba(10,14,24,.6))}
@@ -5916,23 +5921,42 @@ const Minigames = {
   }
 };
 
-/* ---------- Expédition de l'Arche : envahisseurs de la Rouille ----------
-   Jeu de tir façon « invaders » sans fin : formation qui descend par à-coups, abris destructibles,
-   vaisseau mystère, vaisseau-mère toutes les 5 vagues. Progression conservée d'une partie à l'autre :
-   éclats ✦ à dépenser dans l'Atelier, objets à équiper dans le Hangar (5 emplacements), points de départ,
-   partie interrompue reprise au début de la vague. */
+/* ---------- Expédition de l'Arche ----------
+   Tir libre sans fin : l'Arche se pilote dans tout l'écran et tire seule, Colosse tous les 5 secteurs,
+   nouveaux ennemis au fil des secteurs. Progression conservée d'une partie à l'autre : éclats ✦ pour l'Atelier,
+   objets (6 raretés + objets de set verts) à équiper, améliorer et fusionner dans le Hangar. */
 const EXC = '✦';
 const EXP_SLOTS = [
   { id: 'canon', name: 'Canon', icon: '🔫' }, { id: 'module', name: 'Module', icon: '🛰' }, { id: 'coque', name: 'Coque', icon: '🛡' },
   { id: 'reacteur', name: 'Réacteur', icon: '🔥' }, { id: 'puce', name: 'Puce', icon: '💾' }
 ];
-/* Valeurs de chaque statistique pour un objet Commun niveau 1 (multipliées par la rareté et le niveau). */
+/* Raretés propres à l'Expédition. Les objets de set (verts) forment une catégorie à part : ils ne se fusionnent pas. */
+const EXP_RAR = [
+  { name: 'Commun', color: '#b8c2d8', mul: 1 },
+  { name: 'Rare', color: '#4fa3ff', mul: 1.6 },
+  { name: 'Épique', color: '#c58bff', mul: 2.4 },
+  { name: 'Exceptionnel', color: '#ff8a3d', mul: 3.2 },
+  { name: 'Légendaire', color: '#ffcf4a', mul: 4.2 },
+  { name: 'Mythique', color: '#ff4fa3', mul: 5.6 },
+  { name: 'Set', color: '#3ddc5a', mul: 3.6 }
+];
+const EXP_SET_R = 6, EXP_TOP_R = 5;
+/* Statistiques d'équipement. pct : pourcentage · flat : nombre · lv : niveau d'arme · txt : effet spécial. */
 const EXP_STAT = {
   dmg: { l: 'dégâts', pct: true }, rate: { l: 'cadence', pct: true }, multi: { l: 'projectile', flat: true }, pierce: { l: 'perforation', flat: true },
   missile: { l: 'missiles', lv: true }, lateral: { l: 'canons latéraux', lv: true }, drone: { l: 'drone d’escorte', lv: true }, laser: { l: 'rayon chargé', lv: true },
-  lives: { l: 'vie', flat: true }, shield: { l: 'bouclier par vague', flat: true }, regen: { l: 'réparation en fin de vague', pct: true },
+  arc: { l: 'arc électrique', lv: true }, nova: { l: 'onde de choc', lv: true }, mine: { l: 'mines', lv: true }, orb: { l: 'drone orbital', lv: true },
+  rear: { l: 'canon arrière', lv: true }, slow: { l: 'champ de stase', lv: true },
+  lives: { l: 'point de coque', flat: true, pl: 'points de coque' }, shield: { l: 'bouclier', flat: true }, regen: { l: 'réparation en fin de secteur', pct: true },
   speed: { l: 'vitesse', pct: true }, inv: { l: 'invulnérabilité après un choc', pct: true },
-  eclats: { l: 'éclats', pct: true }, luck: { l: 'chance d’objet', pct: true }, crit: { l: 'coup critique', pct: true }, power: { l: 'durée des bonus', pct: true }
+  eclats: { l: 'éclats', pct: true }, luck: { l: 'chance d’objet', pct: true }, crit: { l: 'coup critique', pct: true }, power: { l: 'durée des bonus', pct: true },
+  bossDmg: { l: 'dégâts contre Colosses et élites', pct: true },
+  vamp: { txt: v => `1 point de coque réparé tous les ${v} ennemis détruits`, min: true },
+  shieldRegen: { txt: v => `1 bouclier rechargé toutes les ${v} s`, min: true },
+  revive: { txt: () => 'Survit une fois par partie à un coup fatal' },
+  critMul: { txt: () => 'Coups critiques ×3 au lieu de ×2' },
+  execute: { txt: v => `Achève les ennemis sous ${Math.round(v * 100)} % de vie`, max: true },
+  eslow: { txt: v => `Tirs ennemis ${Math.round(v * 100)} % plus lents`, max: true }
 };
 const EXP_GEAR = [
   { id: 'ion', slot: 'canon', name: 'Canon ionique', main: ['dmg', 0.1], sub: ['rate', 0.04] },
@@ -5953,7 +5977,56 @@ const EXP_GEAR = [
   { id: 'visee', slot: 'puce', name: 'Puce de visée', main: ['crit', 0.04], sub: ['dmg', 0.04] },
   { id: 'ampli', slot: 'puce', name: 'Puce d’amplification', main: ['power', 0.15], sub: ['luck', 0.05] }
 ];
+/* Sets : 3 à 5 pièces (une par emplacement). Les bonus s'ajoutent selon le nombre de pièces équipées. */
+const EXP_SETS = [
+  { id: 'ions', name: 'Tempête d’ions', pieces: [
+      ['canon', 'Bobine d’ions', ['rate', 0.08], ['dmg', 0.05]], ['module', 'Condensateur d’orage', ['arc', 1], ['rate', 0.04]],
+      ['coque', 'Paratonnerre', ['shield', 1], ['lives', 1]], ['reacteur', 'Turbine ionique', ['speed', 0.08], ['rate', 0.04]], ['puce', 'Puce de foudre', ['crit', 0.04], ['rate', 0.04]]],
+    bonus: { 2: [['rate', 0.15]], 3: [['arc', 1]], 4: [['multi', 1]], 5: [['arc', 2], ['dmg', 0.25]] } },
+  { id: 'bastion', name: 'Bastion d’acier', pieces: [
+      ['coque', 'Plaques de rempart', ['lives', 1], ['shield', 1]], ['module', 'Projecteur de bouclier', ['shield', 1], ['regen', 0.08]],
+      ['reacteur', 'Stabilisateur lourd', ['inv', 0.2], ['speed', 0.04]], ['puce', 'Puce de garde', ['regen', 0.15], ['luck', 0.05]]],
+    bonus: { 2: [['shield', 1]], 3: [['shieldRegen', 20]], 4: [['revive', 1], ['lives', 1]] } },
+  { id: 'nuee', name: 'Nuée mécanique', pieces: [
+      ['module', 'Ruche de drones', ['drone', 1], ['dmg', 0.04]], ['coque', 'Hangar dorsal', ['orb', 1], ['lives', 1]], ['puce', 'Puce d’essaim', ['dmg', 0.1], ['rate', 0.04]]],
+    bonus: { 2: [['drone', 1]], 3: [['orb', 1], ['dmg', 0.2]] } },
+  { id: 'colosses', name: 'Tueur de Colosses', pieces: [
+      ['canon', 'Brise-colosse', ['dmg', 0.12], ['crit', 0.03]], ['module', 'Harpon lourd', ['missile', 1], ['dmg', 0.04]],
+      ['puce', 'Puce de traque', ['bossDmg', 0.15], ['crit', 0.02]], ['reacteur', 'Propulseur de traque', ['speed', 0.08], ['dmg', 0.04]]],
+    bonus: { 2: [['bossDmg', 0.3]], 3: [['crit', 0.1]], 4: [['bossDmg', 0.6], ['pierce', 1]] } },
+  { id: 'artificier', name: 'Artificier', pieces: [
+      ['module', 'Baie de missiles', ['missile', 1], ['dmg', 0.04]], ['canon', 'Canon incendiaire', ['dmg', 0.1], ['rate', 0.04]], ['puce', 'Détonateur', ['mine', 1], ['power', 0.08]]],
+    bonus: { 2: [['mine', 1]], 3: [['missile', 1], ['dmg', 0.2]] } },
+  { id: 'ombre', name: 'Voile d’ombre', pieces: [
+      ['reacteur', 'Moteur silencieux', ['speed', 0.1], ['inv', 0.1]], ['coque', 'Coque furtive', ['inv', 0.25], ['lives', 1]],
+      ['puce', 'Puce de brouillage', ['luck', 0.08], ['speed', 0.04]], ['canon', 'Canon spectral', ['pierce', 1], ['dmg', 0.05]]],
+    bonus: { 2: [['speed', 0.15]], 3: [['inv', 0.5]], 4: [['eslow', 0.25]] } },
+  { id: 'moisson', name: 'Moisson stellaire', pieces: [
+      ['puce', 'Puce de récolte', ['eclats', 0.12], ['luck', 0.06]], ['coque', 'Soute stellaire', ['lives', 1], ['eclats', 0.05]], ['reacteur', 'Réacteur glaneur', ['speed', 0.08], ['luck', 0.05]]],
+    bonus: { 2: [['eclats', 0.25]], 3: [['luck', 0.3], ['vamp', 30]] } },
+  { id: 'prisme', name: 'Prisme', pieces: [
+      ['canon', 'Lentille focale', ['crit', 0.04], ['dmg', 0.05]], ['module', 'Émetteur prismatique', ['laser', 1], ['crit', 0.02]],
+      ['coque', 'Coque miroir', ['shield', 1], ['lives', 1]], ['reacteur', 'Réacteur à photons', ['rate', 0.08], ['speed', 0.04]], ['puce', 'Puce de réfraction', ['dmg', 0.1], ['crit', 0.02]]],
+    bonus: { 2: [['laser', 1]], 3: [['crit', 0.12]], 4: [['pierce', 1]], 5: [['laser', 2], ['critMul', 1]] } },
+  { id: 'onde', name: 'Onde noire', pieces: [
+      ['coque', 'Coque résonante', ['lives', 1], ['shield', 1]], ['module', 'Générateur d’onde', ['nova', 1], ['dmg', 0.04]],
+      ['puce', 'Puce de stase', ['slow', 1], ['power', 0.08]], ['reacteur', 'Réacteur sismique', ['speed', 0.08], ['inv', 0.1]]],
+    bonus: { 2: [['nova', 1]], 3: [['slow', 1]], 4: [['nova', 1], ['shield', 1]] } },
+  { id: 'bourreau', name: 'Bourreau', pieces: [
+      ['canon', 'Lame d’exécution', ['dmg', 0.12], ['crit', 0.03]], ['puce', 'Puce du verdict', ['crit', 0.05], ['dmg', 0.04]], ['module', 'Arc punitif', ['arc', 1], ['crit', 0.02]]],
+    bonus: { 2: [['crit', 0.08]], 3: [['execute', 0.15]] } },
+  { id: 'sentinelle', name: 'Sentinelle', pieces: [
+      ['canon', 'Canon de veille', ['multi', 1], ['dmg', 0.04]], ['module', 'Batterie latérale', ['lateral', 1], ['rate', 0.04]],
+      ['coque', 'Tourelle dorsale', ['rear', 1], ['lives', 1]], ['reacteur', 'Réacteur de garde', ['rate', 0.08], ['speed', 0.04]], ['puce', 'Puce de ciblage', ['crit', 0.04], ['rate', 0.04]]],
+    bonus: { 2: [['lateral', 1]], 3: [['rear', 1]], 4: [['multi', 1]], 5: [['rate', 0.3], ['lateral', 1]] } },
+  { id: 'phenix', name: 'Phénix', pieces: [
+      ['coque', 'Plumes de braise', ['regen', 0.15], ['lives', 1]], ['reacteur', 'Réacteur renaissant', ['inv', 0.2], ['speed', 0.04]],
+      ['puce', 'Puce de cendres', ['power', 0.15], ['regen', 0.08]], ['module', 'Orbe de flamme', ['orb', 1], ['dmg', 0.04]]],
+    bonus: { 2: [['regen', 0.25]], 3: [['vamp', 25]], 4: [['lives', 2], ['revive', 1]] } }
+];
+const EXP_SET_BY_ID = Object.fromEntries(EXP_SETS.map(S => [S.id, S]));
 const EXP_GEAR_BY_ID = Object.fromEntries(EXP_GEAR.map(g => [g.id, g]));
+for (const S of EXP_SETS) for (const [slot, name, main, sub] of S.pieces) EXP_GEAR_BY_ID[S.id + '_' + slot] = { id: S.id + '_' + slot, slot, name, main, sub, set: S.id };
 /* Améliorations permanentes de l'Atelier (payées en éclats). */
 const EXP_UPS = [
   { id: 'dmg', name: 'Canon principal', desc: '+12 % de dégâts', max: 10, cost: 40, k: 1.45, tot: l => `+${12 * l} % de dégâts` },
@@ -5970,72 +6043,121 @@ const ExpData = {
     const m = Minigames.data(s);
     if (!m.exp || !m.exp.v) {
       const old = m.best.exp || 0;
-      m.exp = { v: 1, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
+      m.exp = { v: 2, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
       m.best.exp = 0;
     }
-    if (m.exp.ups.bunker) { m.exp.ups.shield = Math.min(3, m.exp.ups.bunker); delete m.exp.ups.bunker; }
-    return m.exp;
+    const e = m.exp;
+    if (e.ups.bunker) { e.ups.shield = Math.min(3, e.ups.bunker); delete e.ups.bunker; }
+    // v2 : la rareté Exceptionnel s'insère entre Épique et Légendaire
+    if (e.v < 2) { for (const it of e.items) if (it.r >= 3) it.r++; e.v = 2; }
+    return e;
   },
   upCost(u, lv) { return Math.round(u.cost * Math.pow(u.k, lv)); },
-  maxLevel(it) { return 5 + 5 * it.r; },
-  /* Valeurs d'un objet : principale + secondaire (dès Rare), selon la rareté et le niveau. */
+  model(it) { return EXP_GEAR_BY_ID[it.b]; },
+  isSet(it) { return !!EXP_GEAR_BY_ID[it.b].set; },
+  rar(it) { return EXP_RAR[it.r]; },
+  maxLevel(it) { return this.isSet(it) ? 25 : 5 + 5 * it.r; },
+  /* Valeurs d'un objet : principale + secondaire (dès Rare ; toujours pour un objet de set), selon la rareté et le niveau. */
   vals(it) {
-    const b = EXP_GEAR_BY_ID[it.b], mul = RARITY[it.r].mul, lvk = 1 + 0.08 * (it.lvl - 1), out = {};
-    const add = (k, base, kk) => {
+    const b = this.model(it), set = !!b.set, mul = EXP_RAR[it.r].mul, lvk = 1 + 0.08 * (it.lvl - 1), out = {};
+    const add = (k, base, sub) => {
       const st = EXP_STAT[k];
       let v;
-      if (st.lv) v = 1 + it.r + Math.floor((it.lvl - 1) / 5);
-      else if (st.flat) v = base * (1 + (it.r >= 3 ? 1 : 0) + (it.r >= 4 && k === 'lives' ? 1 : 0)) * kk;
-      else v = base * mul * lvk * kk;
+      if (st.lv) v = sub ? 1 + Math.floor((it.lvl - 1) / 10) : (set ? 2 : 1 + Math.min(it.r, 4)) + Math.floor((it.lvl - 1) / 5);
+      else if (st.flat) v = base * (sub ? 1 : set ? 2 : 1 + (it.r >= 3 ? 1 : 0) + (it.r >= 5 ? 1 : 0));
+      else v = base * mul * lvk * (sub ? 0.6 : 1);
       out[k] = (out[k] || 0) + v;
     };
-    add(b.main[0], b.main[1], 1);
-    if (it.r >= 1) { const [k, v] = b.sub; add(k, v, EXP_STAT[k].flat ? (it.r >= 2 ? 1 : 0) : 0.6); }
-    for (const k in out) if (EXP_STAT[k].flat && !EXP_STAT[k].lv) out[k] = Math.round(out[k]);
-    for (const k in out) if (!out[k]) delete out[k];
+    add(b.main[0], b.main[1], false);
+    if (b.sub && (set || it.r >= 1)) { const [k, v] = b.sub; if (set || !EXP_STAT[k].flat || it.r >= 2) add(k, v, true); }
+    for (const k in out) if (EXP_STAT[k].flat) out[k] = Math.round(out[k]);
     return out;
   },
-  fmt(k, v) { const st = EXP_STAT[k]; return st.lv ? `${st.l} niv. ${v}` : st.flat ? `+${v} ${st.l}${v > 1 && k !== 'pierce' ? 's' : ''}` : `+${Math.round(v * 100)} % ${st.l}`; },
+  fmt(k, v) {
+    const st = EXP_STAT[k];
+    if (st.txt) return st.txt(v);
+    if (st.lv) return `${st.l} niv. ${v}`;
+    if (st.flat) return `+${v} ${v > 1 ? (st.pl || st.l + (k === 'pierce' ? '' : 's')) : st.l}`;
+    return `+${Math.round(v * 100)} % ${st.l}`;
+  },
+  short(k, v) { const st = EXP_STAT[k]; return st.lv ? `niv. ${v}` : st.flat ? `+${v}` : `+${Math.round(v * 100)} %`; },
   desc(it) { const v = this.vals(it); return Object.keys(v).map(k => this.fmt(k, v[k])).join(' · '); },
-  /* Statistiques du vaisseau : base + Atelier + équipement. */
+  /* Pièces de set équipées, par set. */
+  setCounts(e) {
+    const c = {};
+    for (const sl of EXP_SLOTS) { const it = e.items.find(x => x.uid === e.eq[sl.id]), b = it && this.model(it); if (b && b.set) c[b.set] = (c[b.set] || 0) + 1; }
+    return c;
+  },
+  addStat(st, k, v) {
+    const S = EXP_STAT[k];
+    if (['dmg', 'eclats', 'luck', 'power', 'rate', 'speed', 'inv'].includes(k)) st[k] *= 1 + v;
+    else if (S.min) st[k] = st[k] ? Math.min(st[k], v) : v;
+    else if (S.max) st[k] = Math.max(st[k] || 0, v);
+    else st[k] = (st[k] || 0) + v;
+  },
+  /* Statistiques du vaisseau : base + Atelier + équipement + bonus de set. */
   stats(s) {
     const e = this.get(s), u = id => e.ups[id] || 0;
     const st = { dmg: 1 + 0.12 * u('dmg'), rate: 3 * (1 + 0.08 * u('rate')), multi: 1, pierce: 0, lives: 3 + u('lives'), shield: u('shield'), regen: 0,
       speed: 200 * (1 + 0.08 * u('speed')), inv: 1.4, eclats: 1 + 0.1 * u('eclats'), luck: 1 + 0.15 * u('luck'), crit: 0.03, power: 1 + 0.15 * u('power'),
-      missile: 0, lateral: 0, drone: 0, laser: 0 };
+      missile: 0, lateral: 0, drone: 0, laser: 0, arc: 0, nova: 0, mine: 0, orb: 0, rear: 0, slow: 0,
+      bossDmg: 0, vamp: 0, shieldRegen: 0, revive: 0, critMul: 0, execute: 0, eslow: 0 };
     for (const sl of EXP_SLOTS) {
       const it = e.items.find(x => x.uid === e.eq[sl.id]); if (!it) continue;
       const v = this.vals(it);
-      for (const k in v) {
-        if (k === 'dmg' || k === 'eclats' || k === 'luck' || k === 'power') st[k] *= 1 + v[k];
-        else if (k === 'rate') st.rate *= 1 + v[k];
-        else if (k === 'speed') st.speed *= 1 + v[k];
-        else if (k === 'inv') st.inv *= 1 + v[k];
-        else st[k] += v[k];
-      }
+      for (const k in v) this.addStat(st, k, v[k]);
     }
+    const c = this.setCounts(e);
+    for (const S of EXP_SETS) for (const n in S.bonus) if ((c[S.id] || 0) >= +n) for (const [k, v] of S.bonus[n]) this.addStat(st, k, v);
     return st;
   },
-  /* Nouvel objet : la rareté s'améliore avec la vague atteinte et la chance. */
-  roll(s, wave, luck, minR) {
-    const e = this.get(s), w = [60, 28, 9, 2.5, 0.5].map((x, i) => i ? x * (1 + wave * 0.06) * luck : x);
-    let r = 0, t = Math.random() * w.reduce((a, b) => a + b, 0);
-    for (let i = 0; i < w.length; i++) { t -= w[i]; if (t <= 0) { r = i; break; } }
-    r = Math.max(r, minR || 0);
-    const b = EXP_GEAR[Math.floor(Math.random() * EXP_GEAR.length)];
-    const it = { uid: e.next++, b: b.id, r, lvl: 1, n: 1 };
-    if (e.items.length >= 60) { const g = this.recycleValue(it); e.eclats += g; return { it, auto: g }; }
+  /* Nouvel objet : la rareté s'améliore avec le secteur atteint et la chance. Les objets de set sont rares. */
+  roll(s, wave, luck, minR, setChance) {
+    const e = this.get(s);
+    let it;
+    if (setChance && Math.random() < setChance) {
+      const S = EXP_SETS[Math.floor(Math.random() * EXP_SETS.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)];
+      it = { uid: e.next++, b: S.id + '_' + p[0], r: EXP_SET_R, lvl: 1, n: 1 };
+    } else {
+      const w = [60, 28, 9, 4, 1.5, 0.4].map((x, i) => i ? x * (1 + wave * 0.04) * luck : x);
+      let r = 0, t = Math.random() * w.reduce((a, b) => a + b, 0);
+      for (let i = 0; i < w.length; i++) { t -= w[i]; if (t <= 0) { r = i; break; } }
+      r = Math.max(r, minR || 0);
+      const b = EXP_GEAR[Math.floor(Math.random() * EXP_GEAR.length)];
+      it = { uid: e.next++, b: b.id, r, lvl: 1, n: 1 };
+      if (e.items.length >= 80) { const g = this.recycleValue(it); e.eclats += g; return { it, auto: g }; }
+    }
     e.items.push(it); e.fresh++;
     return { it };
   },
-  recycleValue(it) { return Math.round(6 * Math.pow(it.r + 1, 2) + 4 * (it.lvl - 1)); },
-  upgradeCost(it) { return Math.round((12 + it.lvl * 8) * (1 + it.r * 0.6)); },
-  name(it) { return EXP_GEAR_BY_ID[it.b].name; }
+  costR(it) { return this.isSet(it) ? 3.5 : it.r; },
+  recycleValue(it) { return Math.round(6 * Math.pow(this.costR(it) + 1, 2) + 4 * (it.lvl - 1)); },
+  upgradeCost(it) { return Math.round((12 + it.lvl * 8) * (1 + this.costR(it) * 0.6)); },
+  /* Fusion : 3 exemplaires du même objet et de la même rareté donnent la rareté suivante (comme pour l'équipage). */
+  mergeGroup(e, it) {
+    if (this.isSet(it) || it.r >= EXP_TOP_R) return [];
+    const eqd = new Set(Object.values(e.eq));
+    const same = e.items.filter(x => x.b === it.b && x.r === it.r);
+    if (same.length < 3) return [];
+    same.sort((a, b) => (b.uid === it.uid) - (a.uid === it.uid) || eqd.has(b.uid) - eqd.has(a.uid) || b.lvl - a.lvl);
+    return same.slice(0, 3);
+  },
+  merge(e, it) {
+    const grp = this.mergeGroup(e, it);
+    if (grp.length < 3) return null;
+    const keep = grp[0], lvl = Math.max(...grp.map(x => x.lvl));
+    for (const x of grp.slice(1)) this.remove(e, x);
+    keep.r++; keep.lvl = Math.min(this.maxLevel(keep), lvl);
+    return keep;
+  },
+  remove(e, it) { for (const k in e.eq) if (e.eq[k] === it.uid) e.eq[k] = null; e.items = e.items.filter(x => x !== it); },
+  score(it) { const v = this.vals(it); return Object.keys(v).reduce((a, k) => a + (EXP_STAT[k].pct ? v[k] * 100 : v[k] * 12), 0) + (this.isSet(it) ? 15 : 0); },
+  name(it) { return this.model(it).name; }
 };
 
 /* ---------- Écran du Hangar (hors partie) ---------- */
 const ExpHub = {
-  tab: 'play', sel: null, filter: 'all',
+  tab: 'play', sel: null, filter: 'all', pick: null,
   open(tab) {
     if (tab) this.tab = tab;
     const el = $('mgDig'); el.hidden = false; this.render();
@@ -6043,28 +6165,32 @@ const ExpHub = {
   close() { Minigames.closeDom(); },
   render() {
     const s = App.slot, e = ExpData.get(s), st = ExpData.stats(s), el = $('mgDig');
-    const tabs = [['play', 'Partie'], ['hangar', 'Hangar' + (e.fresh ? ` (${e.fresh})` : '')], ['atelier', 'Atelier']];
+    const tabs = [['play', 'Partie'], ['hangar', 'Hangar' + (e.fresh ? ` (${e.fresh})` : '')], ['sets', 'Sets'], ['atelier', 'Atelier']];
     let h = `<div class="card mgdig expdig"><div class="row" style="justify-content:space-between;align-items:center"><div><p class="eyebrow">Secteurs de la Rouille</p><h2>Expédition de l’Arche</h2></div>
       <button class="btn small" id="expClose" type="button">Fermer</button></div>
       <div class="expwallet"><span class="expec">${EXC} <b>${fmtBig(e.eclats)}</b> éclats</span><span>Record : secteur <b>${e.best}</b></span><span>Meilleur score <b>${fmtBig(e.score)}</b></span></div>
       <div class="row exptabs">${tabs.map(([id, l]) => `<button class="btn small ${this.tab === id ? 'primary' : ''}" data-tab="${id}" type="button">${l}</button>`).join('')}</div>`;
-    const old = el.querySelector('.expdig'), keep = old && this.lastTab === this.tab ? old.scrollTop : 0; this.lastTab = this.tab;
+    const view = this.tab + '|' + (this.tab === 'hangar' ? this.pick || '' : '');
+    const old = el.querySelector('.expdig'), keep = old && this.lastView === view ? old.scrollTop : 0; this.lastView = view;
     if (this.tab === 'play') h += this.playHtml(s, e, st);
-    else if (this.tab === 'hangar') h += this.hangarHtml(s, e);
+    else if (this.tab === 'hangar') h += this.pick ? this.pickHtml(s, e) : this.hangarHtml(s, e, st);
+    else if (this.tab === 'sets') h += this.setsHtml(e);
     else h += this.atelierHtml(s, e);
     el.innerHTML = h + '</div>';
     if (keep) el.querySelector('.expdig').scrollTop = keep;
     $('expClose').onclick = () => this.close();
-    el.querySelectorAll('[data-tab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.tab; if (this.tab === 'hangar') { e.fresh = 0; Store.touch(s); } this.sel = null; this.render(); }; });
+    el.querySelectorAll('[data-tab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.tab; if (this.tab === 'hangar') { e.fresh = 0; Store.touch(s); } this.sel = null; this.pick = null; this.render(); }; });
     this.bind(s, e);
   },
   shipStats(st) {
-    const mods = ['missile', 'lateral', 'drone', 'laser'].filter(k => st[k]).map(k => `${EXP_STAT[k].l} ${st[k]}`);
+    const mods = ['missile', 'lateral', 'drone', 'laser', 'arc', 'nova', 'mine', 'orb', 'rear', 'slow'].filter(k => st[k]).map(k => `${EXP_STAT[k].l} ${st[k]}`);
+    const spec = ['bossDmg', 'vamp', 'shieldRegen', 'revive', 'critMul', 'execute', 'eslow'].filter(k => st[k]).map(k => ExpData.fmt(k, st[k]));
     return `<div class="expstats">
       <span>Dégâts <b>×${st.dmg.toFixed(2)}</b></span><span>Cadence <b>${st.rate.toFixed(1)}/s</b></span><span>Projectiles <b>${st.multi}</b></span>
-      <span>Vies <b>${st.lives}</b></span><span>Boucliers <b>${st.shield}</b></span><span>Vitesse <b>${Math.round(st.speed)}</b></span>
+      <span>Coque <b>${st.lives}</b></span><span>Boucliers <b>${st.shield}</b></span><span>Vitesse <b>${Math.round(st.speed)}</b></span>
       ${st.pierce ? `<span>Perforation <b>${st.pierce}</b></span>` : ''}${st.crit > 0.031 ? `<span>Critique <b>${Math.round(st.crit * 100)} %</b></span>` : ''}
-      ${mods.length ? `<span class="wide">Modules : <b>${mods.join(' · ')}</b></span>` : ''}</div>`;
+      ${mods.length ? `<span class="wide">Armes : <b>${mods.join(' · ')}</b></span>` : ''}
+      ${spec.length ? `<span class="wide expspec">Spécial : <b>${spec.join(' · ')}</b></span>` : ''}</div>`;
   },
   playHtml(s, e, st) {
     const cps = [1]; for (let w = 6; w <= e.best + 1; w += 5) cps.push(w);
@@ -6074,36 +6200,85 @@ const ExpHub = {
     h += `<div class="expbox"><b>Nouvelle partie</b><p class="hint">Point de départ : chaque Colosse vaincu (secteurs 5, 10, 15…) débloque le départ suivant, avec des améliorations tirées au sort pour rattraper les secteurs sautés.</p>
       <div class="row">${cps.map(w => `<button class="btn ${e.run ? '' : 'primary'}" data-go="new" data-w="${w}" type="button">${w === 1 ? 'Départ · secteur 1' : 'Secteur ' + w}</button>`).join('')}</div></div>`;
     h += `<div class="expbox"><b>Ton vaisseau</b>${this.shipStats(st)}</div>
-      <p class="hint">Maintiens le doigt (ou les flèches) pour piloter l’Arche dans tout l’écran : elle tire seule sur l’ennemi le plus proche. Après chaque secteur, choisis une amélioration parmi trois : 14 armes (missiles, rayon, arc électrique, mines, drones…), boucliers, coque, propulseurs, butin.
-      Les éclats ${EXC} et les objets d’un secteur sont gardés à sa fin. Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent des objets pour le Hangar. Nouveau record : des gemmes ${GEM}.</p>`;
+      <p class="hint">Maintiens le doigt (ou les flèches) pour piloter l’Arche dans tout l’écran : elle tire seule sur l’ennemi le plus proche. Après chaque secteur, choisis une amélioration parmi trois.
+      Les ennemis deviennent plus nombreux, plus résistants et plus variés au fil des secteurs : équipe-toi au Hangar et renforce ton équipement.
+      Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent des objets, parfois des pièces de set (vertes). Nouveau record : des gemmes ${GEM}.</p>`;
     return h;
   },
-  itemCard(it, eqd) {
-    const R = RARITY[it.r];
-    return `<button class="expitem${eqd ? ' eq' : ''}${this.sel === it.uid ? ' sel' : ''}" data-it="${it.uid}" type="button" style="--rc:${R.color}">
-      <i>${EXP_SLOTS.find(x => x.id === EXP_GEAR_BY_ID[it.b].slot).icon}</i><span><b>${esc(ExpData.name(it))}</b><small>${R.name} · niv. ${it.lvl}${eqd ? ' · équipé' : ''}</small><em>${esc(ExpData.desc(it))}</em></span></button>`;
+  tag(it) {
+    const b = ExpData.model(it), R = ExpData.rar(it);
+    return b.set ? `Set · ${EXP_SET_BY_ID[b.set].name}` : R.name;
   },
-  hangarHtml(s, e) {
-    let h = '<div class="expslots">';
+  itemCard(it, eqd, div) {
+    const R = ExpData.rar(it), b = ExpData.model(it), el = div ? 'div' : 'button';
+    return `<${el} class="expitem${eqd ? ' eq' : ''}${this.sel === it.uid ? ' sel' : ''}${b.set ? ' set' : ''}" ${div ? '' : `data-it="${it.uid}" type="button"`} style="--rc:${R.color}">
+      <i>${EXP_SLOTS.find(x => x.id === b.slot).icon}</i><span><b>${esc(b.name)}</b><small>${esc(this.tag(it))} · niv. ${it.lvl}${eqd ? ' · équipé' : ''}</small><em>${esc(ExpData.desc(it))}</em></span></${el}>`;
+  },
+  /* Fiche d'un objet : valeurs actuelles → niveau suivant, amélioration, fusion, recyclage. */
+  detailHtml(e, it) {
+    const b = ExpData.model(it), R = ExpData.rar(it), eqd = e.eq[b.slot] === it.uid, max = ExpData.maxLevel(it), cost = ExpData.upgradeCost(it), rv = ExpData.recycleValue(it);
+    const v = ExpData.vals(it), nv = it.lvl < max ? ExpData.vals({ ...it, lvl: it.lvl + 1 }) : null, grp = ExpData.mergeGroup(e, it);
+    let h = `<div class="expbox expdetail" style="--rc:${R.color}"><b style="color:${R.color}">${esc(b.name)}</b><small>${esc(this.tag(it))} · ${EXP_SLOTS.find(x => x.id === b.slot).name} · niveau ${it.lvl} / ${max}</small>
+      <ul>${Object.keys(v).map(k => `<li>${esc(ExpData.fmt(k, v[k]))}${nv && nv[k] !== v[k] ? ` <span class="expnext">→ ${ExpData.short(k, nv[k])}</span>` : ''}</li>`).join('')}</ul>`;
+    if (b.set) h += this.setBlock(e, EXP_SET_BY_ID[b.set], true);
+    else if (it.r < EXP_TOP_R) {
+      const n = e.items.filter(x => x.b === it.b && x.r === it.r).length;
+      h += `<p class="hint">Fusion : 3 × ${esc(b.name)} ${R.name.toLowerCase()} → 1 ${EXP_RAR[it.r + 1].name.toLowerCase()} (tu en as ${n}/3). Le niveau le plus haut est gardé.</p>`;
+    }
+    h += `<div class="row">${eqd ? `<button class="btn small" data-act="unequip" type="button">Retirer</button>` : `<button class="btn small primary" data-act="equip" type="button">Équiper</button>`}
+      ${it.lvl < max ? `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-act="up" type="button" ${e.eclats >= cost ? '' : 'disabled'}>Améliorer · ${cost} ${EXC}</button>` : '<span class="hint">Niveau maximum</span>'}
+      ${grp.length >= 3 ? `<button class="btn small violet" data-act="merge" type="button">Fusionner ×3 → ${EXP_RAR[it.r + 1].name}</button>` : ''}
+      ${eqd ? '' : `<button class="btn small" data-act="recycle" type="button">Recycler · +${rv} ${EXC}</button>`}</div></div>`;
+    return h;
+  },
+  listHtml(e, list) {
+    const eqd = new Set(Object.values(e.eq));
+    return `<div class="explist">${list.map(it => this.itemCard(it, eqd.has(it.uid)) + (this.sel === it.uid ? this.detailHtml(e, it) : '')).join('')}</div>`;
+  },
+  hangarHtml(s, e, st) {
+    let h = '<p class="hint">Touche un emplacement pour choisir son équipement, ou un objet pour l’améliorer, le fusionner ou le recycler.</p><div class="expslots">';
     for (const sl of EXP_SLOTS) {
-      const it = e.items.find(x => x.uid === e.eq[sl.id]);
-      h += `<div class="expslot"><small>${sl.icon} ${sl.name}</small>${it ? this.itemCard(it, true) : '<div class="expempty">Vide</div>'}</div>`;
+      const it = e.items.find(x => x.uid === e.eq[sl.id]), n = e.items.filter(x => ExpData.model(x).slot === sl.id).length;
+      h += `<button class="expslot" data-slot="${sl.id}" type="button"><small>${sl.icon} ${sl.name} · ${n} objet${n > 1 ? 's' : ''} › choisir</small>${it ? this.itemCard(it, true, true) : '<div class="expempty">Vide · toucher pour équiper</div>'}</button>`;
     }
     h += '</div>';
-    const sel = e.items.find(x => x.uid === this.sel);
-    if (sel) {
-      const slot = EXP_GEAR_BY_ID[sel.b].slot, eqd = e.eq[slot] === sel.uid, cur = e.items.find(x => x.uid === e.eq[slot]);
-      const max = ExpData.maxLevel(sel), cost = ExpData.upgradeCost(sel), rv = ExpData.recycleValue(sel);
-      h += `<div class="expbox"><b style="color:${RARITY[sel.r].color}">${esc(ExpData.name(sel))}</b> <small>${RARITY[sel.r].name} · niv. ${sel.lvl} / ${max}</small>
-        <p>${esc(ExpData.desc(sel))}</p>${cur && !eqd ? `<p class="hint">Équipé actuellement : ${esc(ExpData.name(cur))} — ${esc(ExpData.desc(cur))}</p>` : ''}
-        <div class="row">${eqd ? `<button class="btn small" data-act="unequip" type="button">Retirer</button>` : `<button class="btn small primary" data-act="equip" type="button">Équiper</button>`}
-        ${sel.lvl < max ? `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-act="up" type="button" ${e.eclats >= cost ? '' : 'disabled'}>Améliorer · ${cost} ${EXC}</button>` : '<span class="hint">Niveau maximum</span>'}
-        ${eqd ? '' : `<button class="btn small" data-act="recycle" type="button">Recycler · +${rv} ${EXC}</button>`}</div></div>`;
-    }
-    const list = e.items.filter(it => this.filter === 'all' || EXP_GEAR_BY_ID[it.b].slot === this.filter).sort((a, b) => b.r - a.r || b.lvl - a.lvl);
-    h += `<div class="row exptabs"><button class="btn small ${this.filter === 'all' ? 'primary' : ''}" data-f="all" type="button">Tout (${e.items.length}/60)</button>${EXP_SLOTS.map(sl => `<button class="btn small ${this.filter === sl.id ? 'primary' : ''}" data-f="${sl.id}" type="button">${sl.icon}</button>`).join('')}</div>`;
-    h += list.length ? `<div class="explist">${list.map(it => this.itemCard(it, Object.values(e.eq).includes(it.uid))).join('')}</div>` : '<p class="hint">Aucun objet pour l’instant : abats les Colosses et les ennemis d’élite (cercle doré) pour en gagner.</p>';
+    const c = ExpData.setCounts(e), act = EXP_SETS.filter(S => c[S.id]);
+    if (act.length) h += act.map(S => this.setBlock(e, S, true)).join('');
+    h += `<div class="expbox"><b>Ton vaisseau</b>${this.shipStats(st)}</div>`;
+    const list = e.items.filter(it => this.filter === 'all' || ExpData.model(it).slot === this.filter).sort((a, b) => ExpData.isSet(b) - ExpData.isSet(a) || b.r - a.r || b.lvl - a.lvl);
+    const commons = e.items.filter(x => x.r === 0 && !Object.values(e.eq).includes(x.uid)).length;
+    h += `<div class="row exptabs"><button class="btn small ${this.filter === 'all' ? 'primary' : ''}" data-f="all" type="button">Tout (${e.items.length}/80)</button>${EXP_SLOTS.map(sl => `<button class="btn small ${this.filter === sl.id ? 'primary' : ''}" data-f="${sl.id}" type="button">${sl.icon}</button>`).join('')}
+      ${commons ? `<button class="btn small" data-act="recycleCommons" type="button">Recycler les communs (${commons})</button>` : ''}</div>`;
+    h += list.length ? this.listHtml(e, list) : '<p class="hint">Aucun objet pour l’instant : abats les Colosses et les ennemis d’élite (cercle doré) pour en gagner.</p>';
     return h;
+  },
+  /* Choix de l'équipement d'un emplacement. */
+  pickHtml(s, e) {
+    const sl = EXP_SLOTS.find(x => x.id === this.pick), cur = e.items.find(x => x.uid === e.eq[sl.id]);
+    const list = e.items.filter(it => ExpData.model(it).slot === sl.id).sort((a, b) => ExpData.score(b) - ExpData.score(a));
+    let h = `<div class="row" style="justify-content:space-between;align-items:center"><b>${sl.icon} Choisir : ${sl.name}</b><button class="btn small" data-act="back" type="button">‹ Retour</button></div>`;
+    h += cur ? `<p class="hint">Équipé actuellement :</p>${this.itemCard(cur, true)}${this.sel === cur.uid ? this.detailHtml(e, cur) : ''}` : '<p class="hint">Rien d’équipé ici.</p>';
+    if (cur) list.splice(list.indexOf(cur), 1);
+    if (!list.length) return h + `<p class="hint">Aucun autre objet de type ${sl.name.toLowerCase()} pour l’instant.</p>`;
+    h += `<p class="hint">Touche « Équiper » pour l’installer, ou l’objet pour voir sa fiche (amélioration, fusion, recyclage).</p><div class="exppick">`;
+    for (const it of list) {
+      h += `<div class="exprow">${this.itemCard(it, false)}<button class="btn small primary" data-eq="${it.uid}" type="button">Équiper</button></div>`;
+      if (this.sel === it.uid) h += this.detailHtml(e, it);
+    }
+    return h + '</div>';
+  },
+  setBlock(e, S, compact) {
+    const c = ExpData.setCounts(e)[S.id] || 0, n = S.pieces.length;
+    const own = new Set(e.items.map(x => x.b)), eqb = new Set(Object.values(e.eq).map(u => (e.items.find(x => x.uid === u) || {}).b));
+    let h = `<div class="expbox expset"><b class="expsetname">${esc(S.name)} <small>${c}/${n} équipées</small></b>`;
+    if (!compact) h += `<div class="exppieces">${S.pieces.map(([sl, name]) => { const id = S.id + '_' + sl, st = eqb.has(id) ? 'on' : own.has(id) ? 'own' : ''; return `<span class="${st}">${EXP_SLOTS.find(x => x.id === sl).icon} ${esc(name)}${st === 'on' ? ' · équipée' : st === 'own' ? ' · possédée' : ''}</span>`; }).join('')}</div>`;
+    h += `<ul class="expbonus">${Object.keys(S.bonus).map(k => `<li class="${c >= +k ? 'on' : ''}"><b>${k} pièces</b> : ${S.bonus[k].map(([kk, v]) => esc(ExpData.fmt(kk, v))).join(' · ')}</li>`).join('')}</ul></div>`;
+    return h;
+  },
+  setsHtml(e) {
+    const own = EXP_SETS.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
+    return `<p class="hint">Les objets de set (verts) sont rares : Colosses et ennemis d’élite peuvent en laisser à partir du secteur 5. Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent.</p>` +
+      EXP_SETS.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
   },
   atelierHtml(s, e) {
     return '<p class="hint">Améliorations permanentes : elles servent pour toutes tes prochaines parties.</p><div class="explist">' + EXP_UPS.map(u => {
@@ -6112,28 +6287,39 @@ const ExpHub = {
     }).join('') + '</div>';
   },
   bind(s, e) {
-    const el = $('mgDig');
+    const el = $('mgDig'), done = (sfx) => { Sound.sfx && Sound.sfx(sfx || 'ui'); Store.touch(s); this.render(); };
     el.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => {
       const g = b.dataset.go;
       if (g === 'resume') this.launch({ resume: e.run });
       else if (g === 'drop') { e.run = null; Store.touch(s); this.render(); }
       else if (g === 'new') { e.run = null; this.launch({ wave: +b.dataset.w }); }
     }; });
+    el.querySelectorAll('[data-slot]').forEach(b => { b.onclick = () => { this.pick = b.dataset.slot; this.sel = null; this.render(); }; });
     el.querySelectorAll('[data-it]').forEach(b => { b.onclick = () => { this.sel = this.sel === +b.dataset.it ? null : +b.dataset.it; this.render(); }; });
+    el.querySelectorAll('[data-eq]').forEach(b => { b.onclick = () => {
+      const it = e.items.find(x => x.uid === +b.dataset.eq); if (!it) return;
+      e.eq[ExpData.model(it).slot] = it.uid; this.pick = null; this.sel = null; done('build');
+    }; });
     el.querySelectorAll('[data-f]').forEach(b => { b.onclick = () => { this.filter = b.dataset.f; this.render(); }; });
     el.querySelectorAll('[data-act]').forEach(b => { b.onclick = () => {
+      const a = b.dataset.act;
+      if (a === 'back') { this.pick = null; this.sel = null; this.render(); return; }
+      if (a === 'recycleCommons') {
+        let g = 0; for (const it of e.items.filter(x => x.r === 0 && !Object.values(e.eq).includes(x.uid))) { g += ExpData.recycleValue(it); ExpData.remove(e, it); }
+        e.eclats += g; this.sel = null; done('sell'); return;
+      }
       const it = e.items.find(x => x.uid === this.sel); if (!it) return;
-      const slot = EXP_GEAR_BY_ID[it.b].slot, a = b.dataset.act;
-      if (a === 'equip') e.eq[slot] = it.uid;
-      else if (a === 'unequip') e.eq[slot] = null;
-      else if (a === 'up') { const c = ExpData.upgradeCost(it); if (e.eclats < c) return; e.eclats -= c; it.lvl++; }
-      else if (a === 'recycle') { e.eclats += ExpData.recycleValue(it); e.items = e.items.filter(x => x !== it); this.sel = null; }
-      Sound.sfx && Sound.sfx(a === 'up' ? 'up' : 'ui'); Store.touch(s); this.render();
+      const slot = ExpData.model(it).slot;
+      if (a === 'equip') { e.eq[slot] = it.uid; if (this.pick) { this.pick = null; this.sel = null; } done('build'); }
+      else if (a === 'unequip') { e.eq[slot] = null; done(); }
+      else if (a === 'up') { const c = ExpData.upgradeCost(it); if (e.eclats < c) return; e.eclats -= c; it.lvl++; done('up'); }
+      else if (a === 'merge') { if (ExpData.merge(e, it)) { this.sel = it.uid; done('up'); } }
+      else if (a === 'recycle') { e.eclats += ExpData.recycleValue(it); ExpData.remove(e, it); this.sel = null; done('sell'); }
     }; });
     el.querySelectorAll('[data-up]').forEach(b => { b.onclick = () => {
       const u = EXP_UPS.find(x => x.id === b.dataset.up), lv = e.ups[u.id] || 0, c = ExpData.upCost(u, lv);
       if (lv >= u.max || e.eclats < c) return;
-      e.eclats -= c; e.ups[u.id] = lv + 1; Sound.sfx && Sound.sfx('up'); Store.touch(s); this.render();
+      e.eclats -= c; e.ups[u.id] = lv + 1; done('up');
     }; });
   },
   launch(opts) { Expedition.opts = opts; $('mgDig').hidden = true; $('mgDig').innerHTML = ''; Minigames.run(Expedition); }
@@ -6170,7 +6356,25 @@ const EXP_RUN_UPS = [
 ];
 const EXP_EN = {  // pv, vitesse, rayon, couleur, éclats
   drone: [14, 70, 9, '#ffcf4a', 1], zig: [12, 85, 9, '#ff8a3d', 1], shooter: [22, 55, 11, '#ff4fa3', 2], tank: [70, 38, 16, '#b06bff', 3],
-  dart: [16, 60, 9, '#ff3355', 2], splitter: [34, 50, 13, '#5dff9a', 2], mini: [8, 95, 6, '#9cffc0', 0], sniper: [26, 50, 11, '#5ef0ff', 3], boss: [520, 30, 34, '#ff3355', 0]
+  dart: [16, 60, 9, '#ff3355', 2], splitter: [34, 50, 13, '#5dff9a', 2], mini: [8, 95, 6, '#9cffc0', 0], sniper: [26, 50, 11, '#5ef0ff', 3], boss: [420, 30, 34, '#ff3355', 0],
+  weaver: [24, 60, 10, '#ff7ae0', 2], carrier: [110, 28, 18, '#ffa94d', 4], healer: [40, 45, 11, '#7dff6a', 3], layer: [36, 50, 12, '#c8a2ff', 3],
+  phantom: [30, 70, 10, '#e4ecfb', 3], seeker: [20, 95, 8, '#ff5468', 2], bomber: [60, 40, 14, '#ffd84a', 4]
+};
+/* Ennemis disponibles selon le secteur (from) et leur fréquence (w). */
+const EXP_SPAWN = [
+  { t: 'drone', from: 1, w: 3 }, { t: 'zig', from: 1, w: 2 }, { t: 'shooter', from: 2, w: 2, name: 'Tireur' }, { t: 'tank', from: 3, w: 1.2, name: 'Blindé' },
+  { t: 'dart', from: 4, w: 1.2, name: 'Plongeur' }, { t: 'splitter', from: 6, w: 1, name: 'Scissipare' }, { t: 'sniper', from: 8, w: 0.8, name: 'Tireur d’élite' },
+  { t: 'weaver', from: 10, w: 1, name: 'Tisseur' }, { t: 'carrier', from: 12, w: 0.5, name: 'Porte-essaim' }, { t: 'healer', from: 15, w: 0.5, name: 'Soigneur' },
+  { t: 'layer', from: 18, w: 0.7, name: 'Poseur de mines' }, { t: 'phantom', from: 21, w: 0.8, name: 'Spectre' }, { t: 'seeker', from: 24, w: 0.9, name: 'Chasseur' },
+  { t: 'bomber', from: 27, w: 0.6, name: 'Bombardier' }
+];
+/* Actions spéciales des ennemis (appelées quand leur minuterie arrive à zéro). */
+const EXP_ACT = {
+  weaver(g, e) { const v = 150 * g.esp(); for (const da of [-0.3, 0, 0.3]) g.eshots.push({ x: e.x, y: e.y, vx: Math.cos(Math.PI / 2 + da) * v, vy: Math.sin(Math.PI / 2 + da) * v }); e.fire = 2.4 * g.fk(); },
+  carrier(g, e) { if (g.en.length < 70) for (const dx of [-12, 12]) g.spawn('mini', e.x + dx, e.y + 14); e.fire = 3.6; },
+  healer(g, e) { for (const o of g.en) if (o !== e && !o.dead && (o.x - e.x) ** 2 + (o.y - e.y) ** 2 < 110 * 110) o.hp = Math.min(o.max, o.hp + o.max * (o.type === 'boss' ? 0.02 : 0.12)); g.fx.push({ ring: true, x: e.x, y: e.y, c: '#7dff6a', r: 80, t: 0.35 }); e.fire = 2.6; },
+  layer(g, e) { g.eshots.push({ x: e.x, y: e.y + 8, vx: 0, vy: 40, mine: true, r: 7 }); e.fire = 1.8 * g.fk(); },
+  bomber(g, e) { const n = 8 + Math.floor(g.wave / 10), v = 115 * g.esp(), off = e.ph; for (let i = 0; i < n; i++) { const a = off + i * TAU / n; g.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); } e.fire = 3.2 * g.fk(); }
 };
 
 /* ---------- La partie : l'Arche se déplace librement et tire seule ---------- */
@@ -6187,7 +6391,8 @@ const Expedition = {
     // Valeurs de départ : Atelier + équipement du Hangar
     Object.assign(this, { dmg: 10 * st.dmg, rate: 1 / st.rate, multi: st.multi, pierce: st.pierce, crit: st.crit, speed: st.speed, maxHp: st.lives, hp: st.lives,
       shieldMax: st.shield, shields: st.shield, invT: st.inv, regen: st.regen, ecMul: st.eclats, luck: st.luck, powMul: st.power,
-      lateral: st.lateral, rear: 0, missile: st.missile, laser: st.laser, arc: 0, nova: 0, mine: 0, drone: st.drone, orbs: 0, slow: 0 });
+      lateral: st.lateral, rear: st.rear, missile: st.missile, laser: st.laser, arc: st.arc, nova: st.nova, mine: st.mine, drone: st.drone, orbs: st.orb, slow: st.slow,
+      bossDmg: st.bossDmg, vamp: st.vamp, vampK: 0, shieldRegen: st.shieldRegen, shT: 0, revive: st.revive, critMul: 2 + st.critMul, execute: st.execute, eslow: st.eslow, hitFx: 0 });
     if (r) { for (const id in r.ups || {}) for (let i = 0; i < r.ups[id]; i++) this.applyUp(id, true); this.hp = Math.min(this.maxHp, r.hp || r.lives || this.maxHp); this.shields = this.shieldMax; }
     else if (o.wave > 1) {
       // Départ plus loin : des améliorations tirées au sort pour rattraper les secteurs sautés
@@ -6223,31 +6428,31 @@ const Expedition = {
     this.snapshot();
     this.shields = this.shieldMax;
     if (boss) q.push({ type: 'boss', delay: 1 });
-    const n = Math.min(40, boss ? 4 + w : 6 + w * 2);
+    const n = Math.min(50, boss ? 4 + w : 6 + w * 2), pool = EXP_SPAWN.filter(t => w >= t.from), fresh = EXP_SPAWN.find(t => t.from === w && t.from > 1);
+    const wt = t => t.w * (t.from === 1 ? Math.max(0.25, 1 - w * 0.025) : 1), tot = pool.reduce((a, t) => a + wt(t), 0);
     for (let i = 0; i < n; i++) {
-      const r = Math.random(); let type = 'drone';
-      if (w >= 8 && r < 0.08) type = 'sniper';
-      else if (w >= 6 && r < 0.18) type = 'splitter';
-      else if (w >= 4 && r < 0.3) type = 'dart';
-      else if (w >= 3 && r < 0.42) type = 'tank';
-      else if (w >= 2 && r < 0.6) type = 'shooter';
-      else if (r < 0.8) type = 'zig';
-      q.push({ type, delay: Math.max(0.18, 0.5 - w * 0.012) + Math.random() * 0.45 });
+      let x = Math.random() * tot, type = 'drone';
+      for (const t of pool) { x -= wt(t); if (x <= 0) { type = t.t; break; } }
+      if (fresh && i % 4 === 1) type = fresh.t;
+      q.push({ type, delay: Math.max(0.15, 0.5 - w * 0.012) + Math.random() * 0.45 });
     }
     this.spawnQ = q; this.spawnT = 1.2;
-    this.banner = { text: boss ? `Secteur ${w} · Colosse !` : `Secteur ${w}`, t: 1.6 };
+    this.banner = { text: boss ? `Secteur ${w} · Colosse !` : `Secteur ${w}`, sub: fresh ? `Nouvel ennemi : ${fresh.name}` : '', t: fresh ? 2.6 : 1.6 };
   },
   spawn(type, x, y) {
-    const w = this.wave, hpk = 1 + 0.32 * (w - 1), b = EXP_EN[type], elite = type !== 'boss' && type !== 'mini' && Math.random() < 0.05;
+    const w = this.wave, hpk = (1 + 0.25 * (w - 1)) * Math.pow(1.05, w - 1), b = EXP_EN[type], elite = type !== 'boss' && type !== 'mini' && Math.random() < Math.min(0.2, 0.04 + w * 0.003);
     const hp = b[0] * hpk * (type === 'boss' ? 1 + 0.15 * (w / 5 - 1) : 1) * (elite ? 3 : 1);
-    this.en.push({ type, x: x ?? 30 + Math.random() * 300, y: y ?? -30, hp, max: hp, sp: b[1] * (1 + 0.02 * w), r: b[2] * (elite ? 1.3 : 1), c: b[3], ec: b[4], elite,
-      ph: Math.random() * 6, fire: 1 + Math.random() * 1.5, mode: 0, aim: 0 });
+    this.en.push({ type, x: x ?? 30 + Math.random() * 300, y: y ?? -30, hp, max: hp, sp: b[1] * (1 + Math.min(0.8, 0.02 * w)), r: b[2] * (elite ? 1.3 : 1), c: b[3], ec: b[4], elite,
+      ph: Math.random() * 6, fire: 1 + Math.random() * 1.5, mode: 0, aim: 0, blink: 2 + Math.random(), hid: 0 });
   },
+  fk() { return Math.max(0.5, 1 - 0.012 * this.wave); },
+  esp() { return 1 + Math.min(0.6, 0.01 * this.wave); },
   gainEc(n) { this.waveEc += n * this.ecMul * (this.power.aimant > 0 ? 2 : 1); },
   dropItem(minR) {
-    const res = ExpData.roll(App.slot, this.wave, this.luck, minR);
+    const setChance = this.wave >= 5 ? (minR !== undefined && minR !== null ? 0.15 : 0.03) * this.luck : 0;
+    const res = ExpData.roll(App.slot, this.wave, this.luck, minR, setChance), R = ExpData.rar(res.it);
     this.waveItems.push(res.it);
-    this.fx.push({ txt: `${RARITY[res.it.r].name} : ${ExpData.name(res.it)}`, c: RARITY[res.it.r].color, x: 180, y: 330, t: 2.2 });
+    this.fx.push({ txt: `${ExpData.isSet(res.it) ? 'Set' : R.name} : ${ExpData.name(res.it)}`, c: R.color, x: 180, y: 330, t: 2.6 });
     if (res.auto) this.waveEc += res.auto;
   },
   bankWave() {
@@ -6255,7 +6460,7 @@ const Expedition = {
     e.eclats += ec; this.runEc += ec; this.runItems += this.waveItems.length; this.waveEc = 0; this.waveItems = [];
     Store.touch(s);
   },
-  nearest(x, y, maxD) { let t = null, bd = (maxD || 1e9) ** 2; for (const e of this.en) { if (e.dead || e.y < -10) continue; const d = (e.x - x) ** 2 + (e.y - y) ** 2; if (d < bd) { bd = d; t = e; } } return t; },
+  nearest(x, y, maxD) { let t = null, bd = (maxD || 1e9) ** 2; for (const e of this.en) { if (e.dead || e.y < -10 || e.hid > 0) continue; const d = (e.x - x) ** 2 + (e.y - y) ** 2; if (d < bd) { bd = d; t = e; } } return t; },
   shoot(x, y, a, sp, dmg, o) { this.shots.push(Object.assign({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, dmg, p: 0, hit: new Set() }, o || {})); },
   update(dt, P, keys) {
     this.t += dt;
@@ -6274,6 +6479,7 @@ const Expedition = {
     if (d > 1) { this.x += dx / d * Math.min(step, d); this.y += dy / d * Math.min(step, d); }
     this.x = clamp(this.x, 16, 344); this.y = clamp(this.y, 140, 620);
     if (this.inv > 0) this.inv -= dt; if (this.hitFx > 0) this.hitFx -= dt;
+    if (this.shieldRegen && this.shields < this.shieldMax) { this.shT += dt; if (this.shT >= this.shieldRegen) { this.shT = 0; this.shields++; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#4fa3ff', r: 26, t: 0.4 }); } } else this.shT = 0;
     // Apparitions
     if (this.spawnQ.length) { this.spawnT -= dt; if (this.spawnT <= 0) { const s = this.spawnQ.shift(); this.spawn(s.type); this.spawnT = s.delay; } }
     // Arme principale : tir automatique vers l'ennemi le plus proche
@@ -6313,8 +6519,14 @@ const Expedition = {
       if (e.type === 'zig' || e.type === 'mini') { e.y += sp * dt; e.x += Math.sin(e.ph * 3) * 90 * dt; }
       else if (e.type === 'shooter' || e.type === 'boss' || e.type === 'sniper') { const stopY = e.type === 'boss' ? 110 : e.type === 'sniper' ? 80 + (e.r * 9) % 50 : 140 + (e.r * 7) % 60; if (e.y < stopY) e.y += sp * dt * 1.6; else e.x += Math.sin(e.ph) * 40 * dt; }
       else if (e.type === 'dart') { if (e.mode === 0) { e.y += sp * dt; if (e.y > 90 + (e.ph * 37) % 120) { e.mode = 1; e.aim = 0.6; } } else if (e.mode === 1) { e.aim -= dt; if (e.aim <= 0) { const a = Math.atan2(this.y - e.y, this.x - e.x); e.vx = Math.cos(a) * 330; e.vy = Math.sin(a) * 330; e.mode = 2; } } else { e.x += e.vx * dt * slow; e.y += e.vy * dt * slow; } }
+      else if (e.type === 'weaver') { e.y += sp * dt * 0.8; e.x += Math.cos(e.ph * 1.5) * 120 * dt; }
+      else if (e.type === 'carrier' || e.type === 'healer' || e.type === 'bomber') { const stopY = 90 + (e.r * 13) % 80; if (e.y < stopY) e.y += sp * dt * 1.6; else e.x += Math.sin(e.ph * 0.7) * 35 * dt; }
+      else if (e.type === 'layer') { e.y += sp * dt * 0.6; e.x += Math.sin(e.ph * 0.9) * 70 * dt; }
+      else if (e.type === 'seeker') { if (e.va === undefined) e.va = Math.PI / 2; let d2 = Math.atan2(this.y - e.y, this.x - e.x) - e.va; while (d2 > Math.PI) d2 -= TAU; while (d2 < -Math.PI) d2 += TAU; e.va += clamp(d2, -2 * dt, 2 * dt); e.x += Math.cos(e.va) * sp * dt; e.y += Math.sin(e.va) * sp * dt; }
+      else if (e.type === 'phantom') { e.y += sp * dt * 0.7; e.blink -= dt; if (e.hid > 0) { e.hid -= dt; if (e.hid <= 0) { e.x = clamp(e.x + (Math.random() - 0.5) * 180, 20, 340); e.y = Math.max(-10, e.y - 40); } } else if (e.blink <= 0 && e.y > 20) { e.hid = 0.8; e.blink = 2.2 + Math.random(); } }
       else e.y += sp * dt;
       if (e.type !== 'dart') e.x = clamp(e.x, 12, 348);
+      if (EXP_ACT[e.type]) { e.fire -= dt; if (e.fire <= 0 && e.y > 30) EXP_ACT[e.type](this, e); }
       if (e.type === 'shooter' || e.type === 'boss') {
         e.fire -= dt;
         if (e.fire <= 0 && e.y > 40) {
@@ -6323,7 +6535,7 @@ const Expedition = {
             if (e.mode === 0) { const n = 10 + Math.min(8, Math.floor(this.wave / 5)), off = e.ph; for (let i = 0; i < n; i++) { const a = off + i * TAU / n; this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140 }); } e.fire = 1.6; }
             else if (e.mode === 1) { const a = Math.atan2(this.y - e.y, this.x - e.x); for (let i = -2; i <= 2; i++) this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a + i * 0.12) * 200, vy: Math.sin(a + i * 0.12) * 200 }); e.fire = 1.4; }
             else { for (let i = 0; i < 4; i++) this.spawn(i % 2 ? 'zig' : 'drone', e.x - 45 + i * 30, e.y + 30); e.fire = 2.2; }
-          } else { const a = Math.atan2(this.y - e.y, this.x - e.x); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170 }); e.fire = 1.8 + Math.random(); }
+          } else { const a = Math.atan2(this.y - e.y, this.x - e.x), v = 170 * this.esp(); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); e.fire = (1.8 + Math.random()) * this.fk(); }
         }
       }
       if (e.type === 'sniper') { e.fire -= dt; if (e.fire <= 0 && e.y > 60) { if (!e.aim) { e.aim = 0.8; e.ax = this.x; e.ay = this.y; } e.aim -= dt; if (e.aim <= 0.01) { const a = Math.atan2(e.ay - e.y, e.ax - e.x); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 420, vy: Math.sin(a) * 420, fast: true }); e.aim = 0; e.fire = 3 + Math.random(); } } }
@@ -6333,15 +6545,17 @@ const Expedition = {
     for (let i = 0; i < this.orbs; i++) { const a = this.t * 3 + i * TAU / this.orbs, ox = this.x + Math.cos(a) * 40, oy = this.y + Math.sin(a) * 40; for (const e of this.en) if ((e.x - ox) ** 2 + (e.y - oy) ** 2 < (e.r + 7) ** 2) this.damage(e, this.dmg * 2.2 * dt); }
     // Collisions
     for (const s of this.shots) for (const e of this.en) {
-      if (e.dead || s.dead || s.hit.has(e)) continue;
+      if (e.dead || s.dead || s.hit.has(e) || e.hid > 0) continue;
       if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 < (e.r + 4) ** 2) {
         s.hit.add(e);
         if (s.splash) { for (const o of this.en) if ((o.x - s.x) ** 2 + (o.y - s.y) ** 2 < (s.splash + o.r) ** 2) this.damage(o, s.dmg * (o === e ? 1 : 0.5)); this.fx.push({ ring: true, x: s.x, y: s.y, c: '#ff9b3d', r: s.splash + 6, t: 0.3 }); s.dead = true; break; }
         this.damage(e, s.dmg, true); if (s.p-- <= 0) s.dead = true;
       }
     }
-    for (const s of this.eshots) { s.x += s.vx * dt; s.y += s.vy * dt; if ((s.x - this.x) ** 2 + (s.y - this.y) ** 2 < 13 * 13) { s.dead = true; this.hurt(); } }
-    for (const e of this.en) if (!e.dead && (e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (e.r + 10) ** 2) { if (e.type !== 'boss') { e.dead = true; e.gone = true; } this.hurt(); }
+    for (const s of this.shots) if (!s.dead) for (const m of this.eshots) if (m.mine && !m.dead && (m.x - s.x) ** 2 + (m.y - s.y) ** 2 < (m.r + 4) ** 2) { m.dead = true; s.dead = true; this.fx.push({ ring: true, x: m.x, y: m.y, c: '#c8a2ff', r: 12, t: 0.3 }); break; }
+    const ek = 1 - this.eslow;
+    for (const s of this.eshots) { s.x += s.vx * dt * ek; s.y += s.vy * dt * ek; if ((s.x - this.x) ** 2 + (s.y - this.y) ** 2 < (9 + (s.r || 4)) ** 2) { s.dead = true; this.hurt(); } }
+    for (const e of this.en) if (!e.dead && !(e.hid > 0) && (e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (e.r + 10) ** 2) { if (e.type !== 'boss') { e.dead = true; e.gone = true; } this.hurt(); }
     // Bonus qui tombent
     for (const d of this.drops) { d.y += 80 * dt; if ((d.x - this.x) ** 2 + (d.y - this.y) ** 2 < 24 * 24) { d.dead = true; const P2 = EXP_POWERS[d.k]; if (d.k === 'bouclier') this.shields++; else if (d.k === 'repar') this.hp = Math.min(this.maxHp, this.hp + 1); else this.power[d.k] = P2.d * this.powMul; this.fx.push({ txt: P2.name, c: P2.c, x: this.x, y: this.y - 30, t: 1 }); Sound.sfx && Sound.sfx('up'); } }
     this.shots = this.shots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -20 && s.x < 380);
@@ -6366,11 +6580,14 @@ const Expedition = {
   dronePos(i) { const o = [[-30, -4], [30, -4], [0, 28]][i % 3]; return [this.x + o[0], this.y + o[1] + Math.sin(this.t * 4 + i) * 2]; },
   damage(e, v, direct) {
     if (e.dead) return;
+    if (e.hid > 0) return;
     const crit = direct && Math.random() < this.crit;
-    e.hp -= v * (crit ? 2 : 1);
+    e.hp -= v * (crit ? this.critMul : 1) * (e.type === 'boss' || e.elite ? 1 + this.bossDmg : 1);
+    if (e.hp > 0 && this.execute && e.type !== 'boss' && e.hp < e.max * this.execute) e.hp = 0;
     if (crit) this.fx.push({ txt: 'Critique', c: '#ffcf4a', x: e.x, y: e.y - 14, t: 0.5, small: true });
     if (e.hp <= 0) {
       e.dead = true; this.kills++; this.score += Math.round(e.max) * this.wave;
+      if (this.vamp && ++this.vampK >= this.vamp) { this.vampK = 0; if (this.hp < this.maxHp) { this.hp++; this.fx.push({ txt: '+1 coque', c: '#5dff9a', x: clamp(this.x, 44, 316), y: this.y - 34, t: 1 }); } }
       this.gainEc(e.ec * (e.elite ? 4 : 1));
       this.fx.push({ ring: true, x: e.x, y: e.y, c: e.c, r: e.r * 1.6, t: 0.35 });
       for (let i = 0; i < 8; i++) { const a = Math.random() * TAU, sp = 40 + Math.random() * 120; this.fx.push({ p: true, x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: e.c, t: 0.5 }); }
@@ -6384,6 +6601,7 @@ const Expedition = {
   hurt() {
     if (this.inv > 0 || this.over) return;
     if (this.shields > 0) { this.shields--; this.inv = 0.8; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#4fa3ff', r: 30, t: 0.4 }); Sound.sfx && Sound.sfx('build'); return; }
+    if (this.hp <= 1 && this.revive > 0) { this.revive--; this.inv = 2.5; this.hitFx = 0.35; this.eshots = []; this.fx.push({ txt: 'Sursaut de survie !', c: '#3ddc5a', x: 180, y: 330, t: 2 }); this.fx.push({ ring: true, x: this.x, y: this.y, c: '#3ddc5a', r: 60, t: 0.5 }); return; }
     this.hp--; this.inv = this.invT; this.hitFx = 0.35; this.fx.push({ txt: '−1 coque', c: '#ff5468', x: clamp(this.x, 44, 316), y: this.y - 34, t: 1 }); buzz(60); Sound.sfx && Sound.sfx('alarm');
   },
   gameOver() {
@@ -6405,10 +6623,18 @@ const Expedition = {
       else if (e.type === 'shooter') polygonPath(g, 0, 0, e.r, 4, Math.PI / 4);
       else if (e.type === 'sniper') polygonPath(g, 0, 0, e.r, 3, Math.PI / 2);
       else if (e.type === 'splitter') polygonPath(g, 0, 0, e.r, 5, e.ph);
+      else if (e.type === 'weaver') polygonPath(g, 0, 0, e.r, 4, 0);
+      else if (e.type === 'carrier') { g.beginPath(); g.rect(-e.r, -e.r * 0.7, e.r * 2, e.r * 1.4); }
+      else if (e.type === 'healer') { const r = e.r, k = r * 0.38; g.beginPath(); g.moveTo(-k, -r); g.lineTo(k, -r); g.lineTo(k, -k); g.lineTo(r, -k); g.lineTo(r, k); g.lineTo(k, k); g.lineTo(k, r); g.lineTo(-k, r); g.lineTo(-k, k); g.lineTo(-r, k); g.lineTo(-r, -k); g.lineTo(-k, -k); g.closePath(); }
+      else if (e.type === 'layer') polygonPath(g, 0, 0, e.r, 4, e.ph * 2);
+      else if (e.type === 'bomber') polygonPath(g, 0, 0, e.r, 8, e.ph * 0.3);
+      else if (e.type === 'seeker') { g.rotate(e.va ?? Math.PI / 2); g.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? e.r * 0.45 : e.r * 1.3; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.closePath(); }
+      else if (e.type === 'phantom') { g.globalAlpha = e.hid > 0 ? 0.12 : 0.85; g.beginPath(); g.arc(0, 0, e.r, 0, TAU); }
       else if (e.type === 'dart') { const a = e.mode === 2 ? Math.atan2(e.vy, e.vx) : Math.PI / 2; g.rotate(a); g.beginPath(); g.moveTo(e.r * 1.4, 0); g.lineTo(-e.r, e.r * 0.8); g.lineTo(-e.r * 0.5, 0); g.lineTo(-e.r, -e.r * 0.8); g.closePath(); }
       else { g.beginPath(); g.arc(0, 0, e.r, 0, TAU); }
       g.fill(); g.stroke(); g.shadowBlur = 0;
-      if (e.type !== 'dart') { g.fillStyle = e.c; g.beginPath(); g.arc(0, 0, e.r * 0.35, 0, TAU); g.fill(); }
+      if (e.type === 'carrier') { g.strokeStyle = e.c; g.lineWidth = 1.5; for (const dx of [-e.r * 0.5, 0, e.r * 0.5]) { g.beginPath(); g.moveTo(dx, -e.r * 0.4); g.lineTo(dx, e.r * 0.4); g.stroke(); } }
+      else if (e.type !== 'dart' && e.type !== 'healer') { g.fillStyle = e.c; g.beginPath(); g.arc(0, 0, e.r * 0.35, 0, TAU); g.fill(); }
       g.restore();
       if (e.elite) { g.strokeStyle = '#ffcf4a'; g.lineWidth = 1.5; g.setLineDash([2, 3]); g.beginPath(); g.arc(e.x, e.y, e.r + 5, 0, TAU); g.stroke(); g.setLineDash([]); }
       if (e.type === 'dart' && e.mode === 1) { g.strokeStyle = 'rgba(255,51,85,.5)'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(this.x, this.y); g.stroke(); g.setLineDash([]); }
@@ -6421,7 +6647,7 @@ const Expedition = {
       if (s.mis) { g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx)); g.fillStyle = '#ff9b3d'; g.fillRect(-6, -2, 12, 4); g.fillStyle = 'rgba(255,207,74,.6)'; g.fillRect(-12, -1.5, 6, 3); g.restore(); }
       else { g.fillStyle = s.side ? '#9afff0' : '#5ef0ff'; g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx) + Math.PI / 2); g.fillRect(-1.5, -5, 3, 10); g.restore(); }
     }
-    for (const s of this.eshots) { if (s.fast) { const k = 0.05; g.strokeStyle = 'rgba(255,120,60,.55)'; g.lineWidth = 3; g.beginPath(); g.moveTo(s.x - s.vx * k, s.y - s.vy * k); g.lineTo(s.x, s.y); g.stroke(); } g.fillStyle = s.fast ? '#ff8a3d' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.fast ? 4 : 4, 0, TAU); g.fill(); }
+    for (const s of this.eshots) { if (s.mine) { g.strokeStyle = '#c8a2ff'; g.lineWidth = 2; g.globalAlpha = 0.7 + 0.3 * Math.sin(this.t * 8); g.beginPath(); g.arc(s.x, s.y, s.r, 0, TAU); g.stroke(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + this.t; g.beginPath(); g.moveTo(s.x + Math.cos(a) * s.r, s.y + Math.sin(a) * s.r); g.lineTo(s.x + Math.cos(a) * (s.r + 4), s.y + Math.sin(a) * (s.r + 4)); g.stroke(); } g.globalAlpha = 1; g.fillStyle = '#c8a2ff'; g.beginPath(); g.arc(s.x, s.y, 2.5, 0, TAU); g.fill(); continue; } if (s.fast) { const k = 0.05; g.strokeStyle = 'rgba(255,120,60,.55)'; g.lineWidth = 3; g.beginPath(); g.moveTo(s.x - s.vx * k, s.y - s.vy * k); g.lineTo(s.x, s.y); g.stroke(); } g.fillStyle = s.fast ? '#ff8a3d' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.fast ? 4 : 4, 0, TAU); g.fill(); }
     for (const d of this.drops) { const P2 = EXP_POWERS[d.k]; g.save(); g.shadowColor = P2.c; g.shadowBlur = 10; g.strokeStyle = P2.c; g.lineWidth = 2; g.fillStyle = '#05070d'; g.beginPath(); g.arc(d.x, d.y, 9, 0, TAU); g.fill(); g.stroke(); g.restore(); g.fillStyle = P2.c; g.font = '800 11px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(P2.l, d.x, d.y + 1); g.textBaseline = 'alphabetic'; }
     for (const f of this.fx) {
       if (f.p) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.fillRect(f.x - 1.5, f.y - 1.5, 3, 3); g.globalAlpha = 1; }
@@ -6446,7 +6672,7 @@ const Expedition = {
     for (let i = 0; i < this.shields; i++) { g.strokeStyle = '#4fa3ff'; g.lineWidth = 2; g.beginPath(); g.arc(16 + i * 16, 34, 6, 0, TAU); g.stroke(); }
     g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'right'; g.fillStyle = '#c58bff'; g.fillText(`${EXC} ${Math.round(this.runEc + this.waveEc)}`, 350, 20);
     let py = 38; for (const k in this.power) if (this.power[k] > 0) { const P2 = EXP_POWERS[k]; g.fillStyle = P2.c; g.fillText(`${P2.name} ${Math.ceil(this.power[k])} s`, 350, py); py += 15; }
-    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t * 2); g.fillStyle = '#e4ecfb'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); g.globalAlpha = 1; }
+    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t * 2); g.fillStyle = '#e4ecfb'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); if (this.banner.sub) { g.fillStyle = '#ff8a3d'; g.font = '700 15px "Chakra Petch", sans-serif'; g.fillText(this.banner.sub, 180, 328); } g.globalAlpha = 1; }
     if (this.wave === this.startWave && this.t < 5) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.8)'; g.fillText('Maintiens le doigt pour piloter : l’Arche tire seule', 180, 470); }
     if (this.over) { g.fillStyle = 'rgba(5,7,13,.55)'; g.fillRect(0, 0, 360, 640); g.fillStyle = '#ff5468'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('FIN DE L’EXPÉDITION', 180, 300); }
   },
@@ -8000,8 +8226,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.4.2';
+const APP_VERSION = '7.5';
 const CHANGELOG = [
+  { v: '7.5', date: '02.11.2026', items: ['Expédition, Hangar : touche un emplacement pour choisir son équipement parmi les objets compatibles', 'Fiche d’objet comme pour l’équipage : valeurs actuelles → niveau suivant, amélioration, fusion de 3 objets identiques vers la rareté suivante, recyclage (et recyclage des communs en un geste)', 'Nouvelle rareté Exceptionnel (orange), entre Épique et Légendaire', '12 sets d’objets verts (3 à 5 pièces) : bonus spéciaux selon le nombre de pièces équipées (arc électrique, survie au coup fatal, recharge de bouclier, achèvement, dégâts contre les Colosses…). Nouvel onglet Sets', 'Difficulté nettement relevée : ennemis plus résistants, plus d’élites, tirs plus rapides et plus fréquents au fil des secteurs', '7 nouveaux ennemis : Tisseur (10), Porte-essaim (12), Soigneur (15), Poseur de mines (18), Spectre (21), Chasseur (24), Bombardier (27)'] },
   { v: '7.4.2', date: '02.11.2026', items: ['Expédition, Atelier : la liste ne remonte plus en haut après chaque achat', 'Chaque amélioration affiche son effet actuel et celui du prochain niveau', 'L’amélioration « Aimant » de l’Atelier devient « Collecteur » pour ne plus se confondre avec le bonus Aimant'] },
   { v: '7.4.1', date: '02.11.2026', items: ['Expédition de l’Arche : un ennemi qui sort par le bas de l’écran ne retire plus de coque, il revient par le haut', 'Le tir des tireurs d’élite et sa ligne de visée passent en orange pour ne plus se confondre avec tes tirs', 'Chaque dégât est maintenant signalé : flash rouge et « −1 coque » au-dessus de l’Arche'] },
   { v: '7.4', date: '02.11.2026', items: ['Expédition de l’Arche retrouve son jeu d’origine et ses graphismes néon : l’Arche se pilote dans tout l’écran et tire seule', 'Secteurs sans fin, Colosse tous les 5 secteurs, nouveaux ennemis (plongeurs, scissipares, tireurs d’élite) et ennemis d’élite', 'Après chaque secteur : 3 améliorations au choix parmi 21 (14 armes : missiles, rayon, arc électrique, onde de choc, mines, drones, canons latéraux et arrière…, plus boucliers, coque, propulseurs, butin)', 'On garde la sauvegarde, le Hangar et l’Atelier : la partie reprend au début du secteur avec toutes ses améliorations'] },
