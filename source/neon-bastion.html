@@ -562,21 +562,21 @@ html.da body.hub{padding-top:calc(76px + var(--sat));padding-bottom:calc(96px + 
 html.da body.hub .bgfx{background:radial-gradient(ellipse at 50% 0%,#4a4fc8 0%,#2a2e8c 40%,#171a5a 100%)}
 html.da body.hub .bgfx::before,html.da body.hub .bgfx::after{display:none}
 /* Textes épais contournés */
-html.da body.hub h2,html.da body.hub h3,html.da #modalCard>h2{font-family:var(--font-toy);font-weight:400;letter-spacing:.02em;color:#fff;-webkit-text-stroke:0;text-shadow:0 2px 0 var(--toyedge),2px 0 0 var(--toyedge),-2px 0 0 var(--toyedge),0 -2px 0 var(--toyedge),0 4px 0 rgba(0,0,0,.35)}
-html.da body.hub .eyebrow{color:#b9c2ff;letter-spacing:.1em}
+html.da body.hub .app h2,html.da body.hub .app h3,html.da #modalCard>h2{font-family:var(--font-toy);font-weight:400;letter-spacing:.02em;color:#fff;-webkit-text-stroke:0;text-shadow:0 2px 0 var(--toyedge),2px 0 0 var(--toyedge),-2px 0 0 var(--toyedge),0 -2px 0 var(--toyedge),0 4px 0 rgba(0,0,0,.35)}
+html.da body.hub .app .eyebrow{color:#b9c2ff;letter-spacing:.1em}
 /* Panneaux bombés */
 html.da body.hub .app .panel,html.da body.hub .app .ccard,html.da body.hub .app .qrow,html.da body.hub .app .sitem,html.da body.hub .app .worldnav{background:linear-gradient(180deg,var(--toy1),var(--toy2));border:3px solid var(--toyedge);border-radius:18px;box-shadow:inset 0 3px 0 var(--toyhi),inset 0 -4px 0 rgba(0,0,0,.18),0 5px 0 var(--toyedge);clip-path:none}
 html.da body.hub .app .panel::before,html.da body.hub .app .ccard::before{display:none}
-html.da body.hub .hint,html.da body.hub .muted{color:#c3cbff}
+html.da body.hub .app .hint,html.da body.hub .app .muted{color:#c3cbff}
 /* Boutons : bleus par défaut, jaunes pour l'action principale, verts pour « Allez-y » */
-html.da body.hub .btn,html.da #modal .btn{font-family:var(--font-toy);font-weight:400;letter-spacing:.03em;color:#fff;border-radius:14px;border:3px solid var(--toyedge);background:linear-gradient(180deg,#6a72f0,#434ac4);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 4px 0 var(--toyedge);text-shadow:0 2px 0 rgba(0,0,0,.35)}
-html.da body.hub .btn:active:not(:disabled),html.da #modal .btn:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 1px 0 var(--toyedge)}
-html.da body.hub .btn.primary,html.da body.hub .btn.gold,html.da #modal .btn.primary,html.da #modal .btn.gold{background:linear-gradient(180deg,var(--cta1),var(--cta2));color:var(--ctatx);text-shadow:0 1px 0 rgba(255,255,255,.5)}
-html.da body.hub .btn.violet,html.da #modal .btn.violet{background:linear-gradient(180deg,#e09aff,#a454e8)}
-html.da body.hub .btn.go,html.da #modal .btn.go{background:linear-gradient(180deg,var(--go1),var(--go2));color:#fff}
-html.da body.hub .btn[aria-selected="true"]{background:linear-gradient(180deg,var(--cta1),var(--cta2));color:var(--ctatx);text-shadow:none}
-html.da body.hub .btn::after{display:none}
-html.da body.hub .count{background:#ff3344;border:2px solid #fff;font-family:var(--font-toy);font-weight:400}
+html.da body.hub .app .btn,html.da #modal .btn{font-family:var(--font-toy);font-weight:400;letter-spacing:.03em;color:#fff;border-radius:14px;border:3px solid var(--toyedge);background:linear-gradient(180deg,#6a72f0,#434ac4);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 4px 0 var(--toyedge);text-shadow:0 2px 0 rgba(0,0,0,.35)}
+html.da body.hub .app .btn:active:not(:disabled),html.da #modal .btn:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 1px 0 var(--toyedge)}
+html.da body.hub .app .btn.primary,html.da body.hub .app .btn.gold,html.da #modal .btn.primary,html.da #modal .btn.gold{background:linear-gradient(180deg,var(--cta1),var(--cta2));color:var(--ctatx);text-shadow:0 1px 0 rgba(255,255,255,.5)}
+html.da body.hub .app .btn.violet,html.da #modal .btn.violet{background:linear-gradient(180deg,#e09aff,#a454e8)}
+html.da body.hub .app .btn.go,html.da #modal .btn.go{background:linear-gradient(180deg,var(--go1),var(--go2));color:#fff}
+html.da body.hub .app .btn[aria-selected="true"]{background:linear-gradient(180deg,var(--cta1),var(--cta2));color:var(--ctatx);text-shadow:none}
+html.da body.hub .app .btn::after{display:none}
+html.da body.hub .app .count{background:#ff3344;border:2px solid #fff;font-family:var(--font-toy);font-weight:400}
 /* Fenêtres */
 html.da #modal{background:rgba(12,14,48,.78);backdrop-filter:blur(2px)}
 html.da #modalCard{background:linear-gradient(180deg,#4248b8,#2c3090);border:4px solid var(--toyedge);border-radius:22px;box-shadow:inset 0 4px 0 var(--toyhi),0 8px 0 var(--toyedge),0 30px 80px rgba(0,0,0,.6);padding-top:0}
@@ -739,28 +739,19 @@ html.da body.hub .app .sitem b{text-shadow:0 2px 0 var(--toyedge)}
 html.da body.hub .app .sitem .big{font-family:var(--font-toy);font-size:1.9rem;color:#fff}
 html.da body.hub .app .qrow{background:linear-gradient(180deg,#4a50c8,#2e3290)}
 html.da body.hub .gcard{border-radius:14px;border-width:3px;box-shadow:inset 0 3px 0 rgba(255,255,255,.25),0 3px 0 var(--toyedge);background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 60%,#3a3fae),color-mix(in srgb,var(--rc) 25%,#22266e))}
-/* ---------- Mini-jeux : habillage jouet ---------- */
-html.da .mg{background:#1a1d4a}
-html.da .mg .mgbar{background:linear-gradient(180deg,#4a50c8,#2e3290);border-bottom:3px solid var(--toyedge)}
-html.da .mg .mgbar b,html.da .mg .mgbar span{font-family:var(--font-toy);font-weight:400;color:#fff;text-shadow:0 2px 0 var(--toyedge)}
-html.da .mg .btn,html.da .mgdig .btn,html.da .mgend .btn{font-family:var(--font-toy);font-weight:400;color:#fff;border-radius:12px;border:3px solid var(--toyedge);background:linear-gradient(180deg,#6a72f0,#434ac4);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 4px 0 var(--toyedge)}
-html.da .mg .btn.primary,html.da .mgdig .btn.primary,html.da .mgend .btn.primary,html.da .mgdig .btn.gold{background:linear-gradient(180deg,var(--cta1),var(--cta2));color:var(--ctatx)}
-html.da .mgend,html.da .mgdig{background:linear-gradient(180deg,#4248b8,#2c3090);border:4px solid var(--toyedge);border-radius:22px;box-shadow:inset 0 4px 0 var(--toyhi),0 8px 0 var(--toyedge)}
-html.da .mgend h2,html.da .mgdig h2{font-family:var(--font-toy);font-weight:400;color:#fff;text-shadow:0 2px 0 var(--toyedge),2px 0 0 var(--toyedge),-2px 0 0 var(--toyedge),0 -2px 0 var(--toyedge)}
-html.da .mgend .choice{background:linear-gradient(180deg,#6ac8ff,#2a8ae0);border:3px solid var(--toyedge);border-radius:14px;box-shadow:0 4px 0 var(--toyedge);color:#fff}
-html.da .mgend .choice b{font-family:var(--font-toy);font-weight:400;font-size:1.1rem;text-shadow:0 2px 0 var(--toyedge)}
-html.da .dcell{background:linear-gradient(160deg,#c8946a,#8a5a3a);border:3px solid #3a2414;border-radius:10px;box-shadow:inset 0 3px 0 rgba(255,255,255,.3),inset 0 -4px 0 rgba(0,0,0,.25),0 3px 0 #3a2414}
-html.da .dcell.open{background:#f4dcae;border-color:#c8a06a;box-shadow:inset 0 3px 6px rgba(120,80,30,.35)}
-html.da .dcell.item{background:color-mix(in srgb,var(--ic) 45%,#fff4d8);border-color:var(--ic)}
-html.da .dleg li{background:rgba(10,12,50,.45);border-radius:10px}
-html.da .cdot{border:3px solid var(--toyedge);box-shadow:inset -3px -4px 0 rgba(0,0,0,.25),inset 3px 3px 0 rgba(255,255,255,.45)}
-html.da .cdot.empty{border:3px dashed rgba(255,255,255,.35);box-shadow:none}
-html.da .crow{background:rgba(10,12,50,.45);border-radius:12px}
-html.da .ttile{background:linear-gradient(180deg,#ffffff,#e4e8f8);border:3px solid var(--toyedge);border-radius:10px;box-shadow:0 5px 0 #9aa4d8,0 7px 0 var(--toyedge);font-size:clamp(1.1rem,5.5vw,1.7rem);text-shadow:0 1px 0 rgba(0,0,0,.2)}
-html.da .ttile.blocked{filter:brightness(.55) saturate(.7)}
-html.da .ttray{background:linear-gradient(180deg,#a8743a,#7a4a20);border:3px solid #3a2414;border-radius:14px;box-shadow:inset 0 3px 0 rgba(255,255,255,.25)}
-html.da .tslot{background:#ffffff;border:2px solid var(--toyedge);border-radius:8px}.html.da .tslot.empty{background:rgba(0,0,0,.2)}
-html.da .tslot.empty{background:rgba(0,0,0,.25);border:2px dashed rgba(255,255,255,.3)}
+.expdig{max-width:540px;text-align:left}.expdig>.row:first-child h2{margin:0}
+.expwallet{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted)}.expwallet b{color:var(--fg)}.expec b{color:#c58bff}
+.exptabs{flex-wrap:wrap;gap:6px}
+.expbox{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.02)}.expbox p{margin:0}
+.expstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 10px;font-size:.78rem;color:var(--muted)}.expstats b{color:var(--fg)}.expstats .wide{grid-column:1/-1}
+.expslots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.expslot{display:flex;flex-direction:column;gap:4px}.expslot>small{color:var(--muted);font-size:.72rem}
+.expempty{border:1px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--muted);font-size:.8rem}
+.expitem{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--rc);background:rgba(10,14,24,.6);width:100%}
+.expitem.sel{box-shadow:0 0 0 2px var(--rc)}.expitem.eq{background:color-mix(in srgb,var(--rc) 12%,rgba(10,14,24,.6))}
+.expitem i{font-style:normal;font-size:1.15rem}.expitem span{display:flex;flex-direction:column;gap:2px;min-width:0}.expitem b{color:var(--rc);font-size:.85rem}.expitem small{color:var(--muted);font-size:.7rem}.expitem em{font-style:normal;font-size:.72rem;color:var(--fg)}
+.explist{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+.expup{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px}.expup span{display:flex;flex-direction:column;gap:2px}.expup em{font-style:normal;font-size:.75rem;color:var(--muted)}.expup small{color:var(--muted)}
 .login7{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .ltile{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:14px;background:#fdf1d8;border:3px solid #c8925a;box-shadow:0 3px 0 #8a5a2a;color:#5a3010}
 .ltile em{font:400 .85rem var(--font-toy);font-style:normal;color:#fff;background:linear-gradient(180deg,#5ac8ff,#2a8ae0);border-radius:8px;padding:1px 8px;text-shadow:0 1px 0 rgba(0,0,0,.3)}
@@ -5740,7 +5731,7 @@ const PLINKO_DRAW = function (g) {
   TZ.text(g, `● ${m.balls} bille${m.balls > 1 ? 's' : ''}`, 180, 52, 16, '#9ff7ff');
 };
 
-const MG_TICKETS = { exp: 3, dive: 3, run: 3, code: 2, tri: 3 };
+const MG_TICKETS = { dive: 3, run: 3, code: 2, tri: 3 };
 const MG_SHOP = [
   { id: 'pick5', name: '5 pioches', desc: 'Pour la Fouille de la Rouille', price: 40, give: { picks: 5 } },
   { id: 'pick15', name: '15 pioches', desc: 'Pour la Fouille de la Rouille · 1 pioche offerte sur 3', price: 100, give: { picks: 15 }, tag: 'Meilleur prix' },
@@ -5786,9 +5777,9 @@ const Minigames = {
   buyBtn(key, label, price) { const ok = App.slot.gems >= price; return `<button class="btn small ${ok ? 'gold' : ''}" data-mgbuy="${key}" type="button" ${ok ? '' : 'disabled'}>${label} · ${price} ${GEM}</button>`; },
   bindBuy(root, after) { root.querySelectorAll('[data-mgbuy]').forEach(bt => { bt.onclick = ev => { ev.stopPropagation(); if (this.buy(bt.dataset.mgbuy)) after(); }; }); },
   GAMES: [
-    { id: 'exp', who: 'volta', title: 'Expédition de l’Arche', btn: 'Partir', tag: 'Action',
-      desc: 'Pilote l’Arche à travers 10 secteurs de Rouille. Ton vaisseau tire seul : esquive, et choisis une amélioration après chaque secteur.',
-      rew: m => `Record : secteur <b>${m.best.exp || 0}</b> / 10 · 4 ${GEM} par secteur · un objet au secteur 5 · objet rare et +30 ${GEM} au secteur 10` },
+    { id: 'exp', who: 'volta', title: 'Expédition de l’Arche', btn: 'Ouvrir le hangar', tag: 'Arcade', free: true,
+      desc: 'Repousse les envahisseurs de la Rouille vague après vague. Partie libre et sauvegardée : gagne des éclats et des objets, équipe ton vaisseau et va plus loin à chaque partie.',
+      rew: m => { const e = m.exp && m.exp.v ? m.exp : { best: 0, eclats: 0 }; return `Record : vague <b>${e.best}</b> · ${fmtBig(e.eclats)} ${EXC} éclats · gemmes à chaque nouveau record`; } },
     { id: 'dive', who: 'iris', title: 'Plongée des Abysses', btn: 'Plonger', tag: 'Adresse',
       desc: 'Harponne les poissons de données avant de manquer d’oxygène. Plus c’est profond, plus ça rapporte. Remonte à temps pour garder toute ta prise.',
       rew: m => `Record : <b>${m.best.dive || 0}</b> points · 1 ${GEM} pour 6 points · un objet par lanterne dorée` },
@@ -5816,7 +5807,8 @@ const Minigames = {
     for (const g of this.GAMES) {
       if (!CAST[g.who]) continue;
       let play, more = '';
-      if (g.cur) { const n = m[g.cur]; play = `<button class="btn primary" data-play="${g.id}" type="button">${g.btn} · ${g.cur === 'picks' ? '⛏' : '●'} ${n}</button>`; }
+      if (g.free) play = `<button class="btn primary" data-play="${g.id}" type="button">${g.btn}</button>`;
+      else if (g.cur) { const n = m[g.cur]; play = `<button class="btn primary" data-play="${g.id}" type="button">${g.btn} · ${g.cur === 'picks' ? '⛏' : '●'} ${n}</button>`; }
       else {
         const t = m.tickets[g.id];
         play = `<button class="btn primary" data-play="${g.id}" type="button" ${t ? '' : 'disabled'}>${g.btn} <span class="mgtk">${'🎟'.repeat(Math.min(5, t))}${t ? '' : 'plus de ticket'}</span></button>`;
@@ -5837,6 +5829,7 @@ const Minigames = {
     const s = App.slot, m = this.data(s);
     if (id === 'dig') { Dig.open(); return; }
     if (id === 'plinko') { this.run(Plinko); return; }
+    if (id === 'exp') { ExpHub.open('play'); return; }
     if (!m.tickets[id]) return;
     m.tickets[id]--; Store.touch(s);
     if (id === 'code') { Code.open(); return; }
@@ -5854,6 +5847,7 @@ const Minigames = {
   closeDom() { $('mgDig').hidden = true; $('mgDig').innerHTML = ''; this.renderHub(); },
   /* ---------- Cadre commun : plein écran, toile, contrôles au doigt et à la souris ---------- */
   run(game) {
+    this.cur = game;
     const el = $('mg');
     el.innerHTML = `<div class="mgbar"><b>${esc(game.title)}</b><span id="mgInfo"></span><button class="btn small" id="mgQuit" type="button">${game.quitLabel || 'Abandonner'}</button></div><canvas id="mgCv"></canvas><div class="mgover" id="mgOver" hidden></div>`;
     el.hidden = false;
@@ -5888,7 +5882,7 @@ const Minigames = {
       Store.touch(s);
       const ov = $('mgOver');
       ov.hidden = false;
-      ov.innerHTML = `<div class="card mgend"><h2>${esc(rew.title)}</h2><p>${esc(rew.text)}</p><p class="mggain">${msg ? 'Tu remportes : <b>' + esc(msg) + '</b>' : 'Pas de récompense cette fois.'}</p><div class="row"><button class="btn primary" id="mgClose" type="button">Retour aux événements</button></div></div>`;
+      ov.innerHTML = `<div class="card mgend"><h2>${esc(rew.title)}</h2><p>${esc(rew.text)}</p><p class="mggain">${msg ? 'Tu remportes : <b>' + esc(msg) + '</b>' : 'Pas de récompense cette fois.'}</p><div class="row"><button class="btn primary" id="mgClose" type="button">${game.closeLabel || 'Retour aux événements'}</button></div></div>`;
       if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; setTimeout(() => Reveal.show(items, game.title, true), 300); }
       $('mgClose').onclick = () => this.close();
       Sound.sfx && Sound.sfx('up');
@@ -5910,6 +5904,8 @@ const Minigames = {
   close() {
     const el = $('mg'); el.hidden = true; el.innerHTML = ''; document.body.classList.remove('mg-on');
     App.show('events');
+    const g = this.cur; this.cur = null;
+    if (g && g.afterClose) g.afterClose();
   },
   /* Choix d'une carte parmi trois (améliorations), par-dessus la partie. */
   choose(title, opts, fn) {
@@ -5920,152 +5916,633 @@ const Minigames = {
   }
 };
 
-/* ---------- Expédition de l'Arche ---------- */
-const EXP_UPGRADES = [
-  { id: 'multi', name: 'Tir double', desc: '+1 projectile par salve', max: 4, fx: g => { g.multi++; } },
-  { id: 'rate', name: 'Cadence', desc: 'Tire 25 % plus vite', max: 5, fx: g => { g.rate *= 0.8; } },
-  { id: 'dmg', name: 'Puissance', desc: '+35 % de dégâts', max: 6, fx: g => { g.dmg *= 1.35; } },
-  { id: 'pierce', name: 'Perforation', desc: 'Les tirs traversent un ennemi de plus', max: 3, fx: g => { g.pierce++; } },
-  { id: 'orb', name: 'Drone orbital', desc: 'Un drone tourne autour de l’Arche et blesse au contact', max: 3, fx: g => { g.orbs++; } },
-  { id: 'hp', name: 'Coque renforcée', desc: '+1 point de coque et soin complet', max: 4, fx: g => { g.maxHp++; g.hp = g.maxHp; } },
-  { id: 'spd', name: 'Propulseurs', desc: 'Déplacement 20 % plus rapide', max: 3, fx: g => { g.speed *= 1.2; } },
-  { id: 'side', name: 'Tirs latéraux', desc: 'Deux tirs en diagonale à chaque salve', max: 1, fx: g => { g.side = true; } }
+/* ---------- Expédition de l'Arche : envahisseurs de la Rouille ----------
+   Jeu de tir façon « invaders » sans fin : formation qui descend par à-coups, abris destructibles,
+   vaisseau mystère, vaisseau-mère toutes les 5 vagues. Progression conservée d'une partie à l'autre :
+   éclats ✦ à dépenser dans l'Atelier, objets à équiper dans le Hangar (5 emplacements), points de départ,
+   partie interrompue reprise au début de la vague. */
+const EXC = '✦';
+const EXP_SLOTS = [
+  { id: 'canon', name: 'Canon', icon: '🔫' }, { id: 'module', name: 'Module', icon: '🛰' }, { id: 'coque', name: 'Coque', icon: '🛡' },
+  { id: 'reacteur', name: 'Réacteur', icon: '🔥' }, { id: 'puce', name: 'Puce', icon: '💾' }
 ];
+/* Valeurs de chaque statistique pour un objet Commun niveau 1 (multipliées par la rareté et le niveau). */
+const EXP_STAT = {
+  dmg: { l: 'dégâts', pct: true }, rate: { l: 'cadence', pct: true }, multi: { l: 'projectile', flat: true }, pierce: { l: 'perforation', flat: true },
+  missile: { l: 'missiles', lv: true }, lateral: { l: 'canons latéraux', lv: true }, drone: { l: 'drone d’escorte', lv: true }, laser: { l: 'rayon chargé', lv: true },
+  lives: { l: 'vie', flat: true }, shield: { l: 'bouclier par vague', flat: true }, regen: { l: 'réparation en fin de vague', pct: true },
+  speed: { l: 'vitesse', pct: true }, inv: { l: 'invulnérabilité après un choc', pct: true },
+  eclats: { l: 'éclats', pct: true }, luck: { l: 'chance d’objet', pct: true }, crit: { l: 'coup critique', pct: true }, power: { l: 'durée des bonus', pct: true }
+};
+const EXP_GEAR = [
+  { id: 'ion', slot: 'canon', name: 'Canon ionique', main: ['dmg', 0.1], sub: ['rate', 0.04] },
+  { id: 'rafale', slot: 'canon', name: 'Canon à rafales', main: ['rate', 0.08], sub: ['dmg', 0.04] },
+  { id: 'jumeau', slot: 'canon', name: 'Canon jumelé', main: ['multi', 1], sub: ['dmg', 0.04] },
+  { id: 'perfo', slot: 'canon', name: 'Lance-perforant', main: ['pierce', 1], sub: ['dmg', 0.05] },
+  { id: 'missile', slot: 'module', name: 'Lance-missiles', main: ['missile', 1], sub: ['dmg', 0.03] },
+  { id: 'lateral', slot: 'module', name: 'Canons latéraux', main: ['lateral', 1], sub: ['rate', 0.03] },
+  { id: 'drone', slot: 'module', name: 'Drone d’escorte', main: ['drone', 1], sub: ['dmg', 0.03] },
+  { id: 'laser', slot: 'module', name: 'Rayon chargé', main: ['laser', 1], sub: ['crit', 0.02] },
+  { id: 'blind', slot: 'coque', name: 'Coque blindée', main: ['lives', 1], sub: ['shield', 1] },
+  { id: 'bouclier', slot: 'coque', name: 'Générateur de bouclier', main: ['shield', 1], sub: ['regen', 0.08] },
+  { id: 'nanites', slot: 'coque', name: 'Nanites de coque', main: ['regen', 0.15], sub: ['lives', 1] },
+  { id: 'turbo', slot: 'reacteur', name: 'Réacteur turbo', main: ['speed', 0.08], sub: ['inv', 0.1] },
+  { id: 'phase', slot: 'reacteur', name: 'Déphaseur', main: ['inv', 0.2], sub: ['speed', 0.04] },
+  { id: 'recup', slot: 'puce', name: 'Puce de récupération', main: ['eclats', 0.1], sub: ['luck', 0.06] },
+  { id: 'chance', slot: 'puce', name: 'Puce de chance', main: ['luck', 0.12], sub: ['eclats', 0.05] },
+  { id: 'visee', slot: 'puce', name: 'Puce de visée', main: ['crit', 0.04], sub: ['dmg', 0.04] },
+  { id: 'ampli', slot: 'puce', name: 'Puce d’amplification', main: ['power', 0.15], sub: ['luck', 0.05] }
+];
+const EXP_GEAR_BY_ID = Object.fromEntries(EXP_GEAR.map(g => [g.id, g]));
+/* Améliorations permanentes de l'Atelier (payées en éclats). */
+const EXP_UPS = [
+  { id: 'dmg', name: 'Canon principal', desc: '+12 % de dégâts', max: 10, cost: 40, k: 1.45 },
+  { id: 'rate', name: 'Chargeur', desc: '+8 % de cadence', max: 8, cost: 50, k: 1.45 },
+  { id: 'lives', name: 'Coque', desc: '+1 vie', max: 3, cost: 200, k: 2.5 },
+  { id: 'speed', name: 'Propulseurs', desc: '+8 % de vitesse', max: 5, cost: 40, k: 1.5 },
+  { id: 'bunker', name: 'Abris', desc: 'Les abris encaissent un tir de plus', max: 3, cost: 80, k: 2 },
+  { id: 'eclats', name: 'Aimant', desc: '+10 % d’éclats', max: 6, cost: 60, k: 1.5 },
+  { id: 'luck', name: 'Radar à butin', desc: '+15 % de chance d’objet', max: 5, cost: 90, k: 1.6 },
+  { id: 'power', name: 'Batteries', desc: '+15 % de durée des bonus', max: 4, cost: 60, k: 1.6 }
+];
+const ExpData = {
+  get(s) {
+    const m = Minigames.data(s);
+    if (!m.exp || !m.exp.v) {
+      const old = m.best.exp || 0;
+      m.exp = { v: 1, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
+      m.best.exp = 0;
+    }
+    return m.exp;
+  },
+  upCost(u, lv) { return Math.round(u.cost * Math.pow(u.k, lv)); },
+  maxLevel(it) { return 5 + 5 * it.r; },
+  /* Valeurs d'un objet : principale + secondaire (dès Rare), selon la rareté et le niveau. */
+  vals(it) {
+    const b = EXP_GEAR_BY_ID[it.b], mul = RARITY[it.r].mul, lvk = 1 + 0.08 * (it.lvl - 1), out = {};
+    const add = (k, base, kk) => {
+      const st = EXP_STAT[k];
+      let v;
+      if (st.lv) v = 1 + it.r + Math.floor((it.lvl - 1) / 5);
+      else if (st.flat) v = base * (1 + (it.r >= 3 ? 1 : 0) + (it.r >= 4 && k === 'lives' ? 1 : 0)) * kk;
+      else v = base * mul * lvk * kk;
+      out[k] = (out[k] || 0) + v;
+    };
+    add(b.main[0], b.main[1], 1);
+    if (it.r >= 1) { const [k, v] = b.sub; add(k, v, EXP_STAT[k].flat ? (it.r >= 2 ? 1 : 0) : 0.6); }
+    for (const k in out) if (EXP_STAT[k].flat && !EXP_STAT[k].lv) out[k] = Math.round(out[k]);
+    for (const k in out) if (!out[k]) delete out[k];
+    return out;
+  },
+  fmt(k, v) { const st = EXP_STAT[k]; return st.lv ? `${st.l} niv. ${v}` : st.flat ? `+${v} ${st.l}${v > 1 && k !== 'pierce' ? 's' : ''}` : `+${Math.round(v * 100)} % ${st.l}`; },
+  desc(it) { const v = this.vals(it); return Object.keys(v).map(k => this.fmt(k, v[k])).join(' · '); },
+  /* Statistiques du vaisseau : base + Atelier + équipement. */
+  stats(s) {
+    const e = this.get(s), u = id => e.ups[id] || 0;
+    const st = { dmg: 1 + 0.12 * u('dmg'), rate: 3 * (1 + 0.08 * u('rate')), multi: 1, pierce: 0, lives: 3 + u('lives'), shield: 0, regen: 0,
+      speed: 200 * (1 + 0.08 * u('speed')), inv: 1.4, eclats: 1 + 0.1 * u('eclats'), luck: 1 + 0.15 * u('luck'), crit: 0.03, power: 1 + 0.15 * u('power'),
+      bunker: 1 + u('bunker'), missile: 0, lateral: 0, drone: 0, laser: 0 };
+    for (const sl of EXP_SLOTS) {
+      const it = e.items.find(x => x.uid === e.eq[sl.id]); if (!it) continue;
+      const v = this.vals(it);
+      for (const k in v) {
+        if (k === 'dmg' || k === 'eclats' || k === 'luck' || k === 'power') st[k] *= 1 + v[k];
+        else if (k === 'rate') st.rate *= 1 + v[k];
+        else if (k === 'speed') st.speed *= 1 + v[k];
+        else if (k === 'inv') st.inv *= 1 + v[k];
+        else st[k] += v[k];
+      }
+    }
+    return st;
+  },
+  /* Nouvel objet : la rareté s'améliore avec la vague atteinte et la chance. */
+  roll(s, wave, luck, minR) {
+    const e = this.get(s), w = [60, 28, 9, 2.5, 0.5].map((x, i) => i ? x * (1 + wave * 0.06) * luck : x);
+    let r = 0, t = Math.random() * w.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < w.length; i++) { t -= w[i]; if (t <= 0) { r = i; break; } }
+    r = Math.max(r, minR || 0);
+    const b = EXP_GEAR[Math.floor(Math.random() * EXP_GEAR.length)];
+    const it = { uid: e.next++, b: b.id, r, lvl: 1, n: 1 };
+    if (e.items.length >= 60) { const g = this.recycleValue(it); e.eclats += g; return { it, auto: g }; }
+    e.items.push(it); e.fresh++;
+    return { it };
+  },
+  recycleValue(it) { return Math.round(6 * Math.pow(it.r + 1, 2) + 4 * (it.lvl - 1)); },
+  upgradeCost(it) { return Math.round((12 + it.lvl * 8) * (1 + it.r * 0.6)); },
+  name(it) { return EXP_GEAR_BY_ID[it.b].name; }
+};
+
+/* ---------- Écran du Hangar (hors partie) ---------- */
+const ExpHub = {
+  tab: 'play', sel: null, filter: 'all',
+  open(tab) {
+    if (tab) this.tab = tab;
+    const el = $('mgDig'); el.hidden = false; this.render();
+  },
+  close() { Minigames.closeDom(); },
+  render() {
+    const s = App.slot, e = ExpData.get(s), st = ExpData.stats(s), el = $('mgDig');
+    const tabs = [['play', 'Partie'], ['hangar', 'Hangar' + (e.fresh ? ` (${e.fresh})` : '')], ['atelier', 'Atelier']];
+    let h = `<div class="card mgdig expdig"><div class="row" style="justify-content:space-between;align-items:center"><div><p class="eyebrow">Envahisseurs de la Rouille</p><h2>Expédition de l’Arche</h2></div>
+      <button class="btn small" id="expClose" type="button">Fermer</button></div>
+      <div class="expwallet"><span class="expec">${EXC} <b>${fmtBig(e.eclats)}</b> éclats</span><span>Record : vague <b>${e.best}</b></span><span>Meilleur score <b>${fmtBig(e.score)}</b></span></div>
+      <div class="row exptabs">${tabs.map(([id, l]) => `<button class="btn small ${this.tab === id ? 'primary' : ''}" data-tab="${id}" type="button">${l}</button>`).join('')}</div>`;
+    if (this.tab === 'play') h += this.playHtml(s, e, st);
+    else if (this.tab === 'hangar') h += this.hangarHtml(s, e);
+    else h += this.atelierHtml(s, e);
+    el.innerHTML = h + '</div>';
+    $('expClose').onclick = () => this.close();
+    el.querySelectorAll('[data-tab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.tab; if (this.tab === 'hangar') { e.fresh = 0; Store.touch(s); } this.sel = null; this.render(); }; });
+    this.bind(s, e);
+  },
+  shipStats(st) {
+    const mods = ['missile', 'lateral', 'drone', 'laser'].filter(k => st[k]).map(k => `${EXP_STAT[k].l} ${st[k]}`);
+    return `<div class="expstats">
+      <span>Dégâts <b>×${st.dmg.toFixed(2)}</b></span><span>Cadence <b>${st.rate.toFixed(1)}/s</b></span><span>Projectiles <b>${st.multi}</b></span>
+      <span>Vies <b>${st.lives}</b></span><span>Boucliers <b>${st.shield}</b></span><span>Vitesse <b>${Math.round(st.speed)}</b></span>
+      ${st.pierce ? `<span>Perforation <b>${st.pierce}</b></span>` : ''}${st.crit > 0.031 ? `<span>Critique <b>${Math.round(st.crit * 100)} %</b></span>` : ''}
+      ${mods.length ? `<span class="wide">Modules : <b>${mods.join(' · ')}</b></span>` : ''}</div>`;
+  },
+  playHtml(s, e, st) {
+    const cps = [1]; for (let w = 6; w <= e.best + 1; w += 5) cps.push(w);
+    let h = '';
+    if (e.run) h += `<div class="expbox"><b>Partie en cours</b><p class="hint">Vague ${e.run.wave} · ${e.run.lives} vie${e.run.lives > 1 ? 's' : ''} · score ${fmtBig(e.run.score)}. Tu reprends au début de la vague.</p>
+      <div class="row"><button class="btn primary" data-go="resume" type="button">Reprendre · vague ${e.run.wave}</button><button class="btn small" data-go="drop" type="button">Abandonner cette partie</button></div></div>`;
+    h += `<div class="expbox"><b>Nouvelle partie</b><p class="hint">Point de départ : chaque vaisseau-mère vaincu (vagues 5, 10, 15…) débloque le départ suivant.</p>
+      <div class="row">${cps.map(w => `<button class="btn ${e.run ? '' : 'primary'}" data-go="new" data-w="${w}" type="button">${w === 1 ? 'Départ · vague 1' : 'Vague ' + w}</button>`).join('')}</div></div>`;
+    h += `<div class="expbox"><b>Ton vaisseau</b>${this.shipStats(st)}</div>
+      <p class="hint">Glisse le doigt (ou flèches ←→) pour te déplacer : l’Arche tire toute seule. Détruis la formation avant qu’elle n’atteigne les abris. Le vaisseau mystère traverse parfois le haut de l’écran : abats-le pour du butin.
+      Les éclats ${EXC} et les objets gagnés pendant une vague sont gardés à la fin de la vague. Nouveau record : des gemmes ${GEM}.</p>`;
+    return h;
+  },
+  itemCard(it, eqd) {
+    const R = RARITY[it.r];
+    return `<button class="expitem${eqd ? ' eq' : ''}${this.sel === it.uid ? ' sel' : ''}" data-it="${it.uid}" type="button" style="--rc:${R.color}">
+      <i>${EXP_SLOTS.find(x => x.id === EXP_GEAR_BY_ID[it.b].slot).icon}</i><span><b>${esc(ExpData.name(it))}</b><small>${R.name} · niv. ${it.lvl}${eqd ? ' · équipé' : ''}</small><em>${esc(ExpData.desc(it))}</em></span></button>`;
+  },
+  hangarHtml(s, e) {
+    let h = '<div class="expslots">';
+    for (const sl of EXP_SLOTS) {
+      const it = e.items.find(x => x.uid === e.eq[sl.id]);
+      h += `<div class="expslot"><small>${sl.icon} ${sl.name}</small>${it ? this.itemCard(it, true) : '<div class="expempty">Vide</div>'}</div>`;
+    }
+    h += '</div>';
+    const sel = e.items.find(x => x.uid === this.sel);
+    if (sel) {
+      const slot = EXP_GEAR_BY_ID[sel.b].slot, eqd = e.eq[slot] === sel.uid, cur = e.items.find(x => x.uid === e.eq[slot]);
+      const max = ExpData.maxLevel(sel), cost = ExpData.upgradeCost(sel), rv = ExpData.recycleValue(sel);
+      h += `<div class="expbox"><b style="color:${RARITY[sel.r].color}">${esc(ExpData.name(sel))}</b> <small>${RARITY[sel.r].name} · niv. ${sel.lvl} / ${max}</small>
+        <p>${esc(ExpData.desc(sel))}</p>${cur && !eqd ? `<p class="hint">Équipé actuellement : ${esc(ExpData.name(cur))} — ${esc(ExpData.desc(cur))}</p>` : ''}
+        <div class="row">${eqd ? `<button class="btn small" data-act="unequip" type="button">Retirer</button>` : `<button class="btn small primary" data-act="equip" type="button">Équiper</button>`}
+        ${sel.lvl < max ? `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-act="up" type="button" ${e.eclats >= cost ? '' : 'disabled'}>Améliorer · ${cost} ${EXC}</button>` : '<span class="hint">Niveau maximum</span>'}
+        ${eqd ? '' : `<button class="btn small" data-act="recycle" type="button">Recycler · +${rv} ${EXC}</button>`}</div></div>`;
+    }
+    const list = e.items.filter(it => this.filter === 'all' || EXP_GEAR_BY_ID[it.b].slot === this.filter).sort((a, b) => b.r - a.r || b.lvl - a.lvl);
+    h += `<div class="row exptabs"><button class="btn small ${this.filter === 'all' ? 'primary' : ''}" data-f="all" type="button">Tout (${e.items.length}/60)</button>${EXP_SLOTS.map(sl => `<button class="btn small ${this.filter === sl.id ? 'primary' : ''}" data-f="${sl.id}" type="button">${sl.icon}</button>`).join('')}</div>`;
+    h += list.length ? `<div class="explist">${list.map(it => this.itemCard(it, Object.values(e.eq).includes(it.uid))).join('')}</div>` : '<p class="hint">Aucun objet pour l’instant : abats le vaisseau mystère et les vaisseaux-mères pour en gagner.</p>';
+    return h;
+  },
+  atelierHtml(s, e) {
+    return '<p class="hint">Améliorations permanentes : elles servent pour toutes tes prochaines parties.</p><div class="explist">' + EXP_UPS.map(u => {
+      const lv = e.ups[u.id] || 0, cost = ExpData.upCost(u, lv), max = lv >= u.max;
+      return `<div class="expup"><span><b>${u.name}</b> <small>niv. ${lv} / ${u.max}</small><em>${u.desc}</em></span>${max ? '<small>Maximum</small>' : `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-up="${u.id}" type="button" ${e.eclats >= cost ? '' : 'disabled'}>${cost} ${EXC}</button>`}</div>`;
+    }).join('') + '</div>';
+  },
+  bind(s, e) {
+    const el = $('mgDig');
+    el.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => {
+      const g = b.dataset.go;
+      if (g === 'resume') this.launch({ resume: e.run });
+      else if (g === 'drop') { e.run = null; Store.touch(s); this.render(); }
+      else if (g === 'new') { e.run = null; this.launch({ wave: +b.dataset.w }); }
+    }; });
+    el.querySelectorAll('[data-it]').forEach(b => { b.onclick = () => { this.sel = this.sel === +b.dataset.it ? null : +b.dataset.it; this.render(); }; });
+    el.querySelectorAll('[data-f]').forEach(b => { b.onclick = () => { this.filter = b.dataset.f; this.render(); }; });
+    el.querySelectorAll('[data-act]').forEach(b => { b.onclick = () => {
+      const it = e.items.find(x => x.uid === this.sel); if (!it) return;
+      const slot = EXP_GEAR_BY_ID[it.b].slot, a = b.dataset.act;
+      if (a === 'equip') e.eq[slot] = it.uid;
+      else if (a === 'unequip') e.eq[slot] = null;
+      else if (a === 'up') { const c = ExpData.upgradeCost(it); if (e.eclats < c) return; e.eclats -= c; it.lvl++; }
+      else if (a === 'recycle') { e.eclats += ExpData.recycleValue(it); e.items = e.items.filter(x => x !== it); this.sel = null; }
+      Sound.sfx && Sound.sfx(a === 'up' ? 'up' : 'ui'); Store.touch(s); this.render();
+    }; });
+    el.querySelectorAll('[data-up]').forEach(b => { b.onclick = () => {
+      const u = EXP_UPS.find(x => x.id === b.dataset.up), lv = e.ups[u.id] || 0, c = ExpData.upCost(u, lv);
+      if (lv >= u.max || e.eclats < c) return;
+      e.eclats -= c; e.ups[u.id] = lv + 1; Sound.sfx && Sound.sfx('up'); Store.touch(s); this.render();
+    }; });
+  },
+  launch(opts) { Expedition.opts = opts; $('mgDig').hidden = true; $('mgDig').innerHTML = ''; Minigames.run(Expedition); }
+};
+
+/* ---------- Dessins (pixels lumineux, mis en cache) ---------- */
+const INV_ART = {
+  sonde: { c: '#ffcf4a', f: [['....XXX....', '..XXXXXXX..', '.XX.XXX.XX.', '.XXXXXXXXX.', '..X.X.X.X..', '.X.......X.', 'X.........X'],
+    ['....XXX....', '..XXXXXXX..', '.XX.XXX.XX.', '.XXXXXXXXX.', '..X.X.X.X..', '..X.....X..', '...X...X...']] },
+  pince: { c: '#ff8a3d', f: [['X.........X', 'XX..XXX..XX', '.XXXXXXXXX.', '..XX.X.XX..', '..XXXXXXX..', '.X.X...X.X.', 'X.........X'],
+    ['...........', 'XX..XXX..XX', 'XXXXXXXXXXX', '..XX.X.XX..', '..XXXXXXX..', '..X.X.X.X..', '.X.......X.']] },
+  veilleur: { c: '#ff4fa3', f: [['...XXXXX...', '.XXXXXXXXX.', 'XXX..X..XXX', 'XXXXXXXXXXX', '.X.XXXXX.X.', 'X..X...X..X', '....X.X....'],
+    ['...XXXXX...', '.XXXXXXXXX.', 'XXX..X..XXX', 'XXXXXXXXXXX', '.X.XXXXX.X.', '.X.X...X.X.', 'X...X.X...X']] },
+  blinde: { c: '#b06bff', f: [['.XXXXXXXXX.', 'XX.X.X.X.XX', 'XXXXXXXXXXX', 'X.XXX.XXX.X', 'XXXXXXXXXXX', '.XX.....XX.', 'XX.......XX'],
+    ['.XXXXXXXXX.', 'XX.X.X.X.XX', 'XXXXXXXXXXX', 'X.XXX.XXX.X', 'XXXXXXXXXXX', '.XX.....XX.', '.XX.....XX.']] },
+  tireur: { c: '#5dff9a', f: [['X.........X', 'XX.......XX', '.XXXXXXXXX.', '..XX.X.XX..', '...XXXXX...', '....XXX....', '.....X.....'],
+    ['...........', 'X.........X', 'XXXXXXXXXXX', '.XXX.X.XXX.', '...XXXXX...', '....XXX....', '.....X.....']] },
+  plongeur: { c: '#ff3355', f: [['.....X.....', '....XXX....', '...XX.XX...', '..XXXXXXX..', '.XX.XXX.XX.', 'XX...X...XX', 'X.........X'],
+    ['.....X.....', '....XXX....', '...XX.XX...', '..XXXXXXX..', '.XX.XXX.XX.', '.XX..X..XX.', '..X.....X..']] },
+  mystere: { c: '#ff5468', f: [['.....XXXXXX.....', '...XXXXXXXXXX...', '..XXXXXXXXXXXX..', '.XX.XX.XX.XX.XX.', 'XXXXXXXXXXXXXXXX', '..XXX..XX..XXX..', '...X........X...']] },
+  arche: { c: '#5ef0ff', f: [['.....X.....', '....XXX....', '....XXX....', '.X.XXXXX.X.', '.XXXXXXXXX.', 'XXXXXXXXXXX', 'XXX.XXX.XXX', 'X.........X']] }
+};
+const INV_PX = 2.6;
+const InvSpr = {
+  cache: new Map(),
+  get(kind, frame, flash) {
+    const key = kind + frame + (flash ? 'f' : '');
+    let c = this.cache.get(key);
+    if (c) return c;
+    const a = INV_ART[kind], f = a.f[frame % a.f.length], w = f[0].length, h = f.length, pad = 6, P = INV_PX * 2;
+    c = document.createElement('canvas'); c.width = w * P + pad * 4; c.height = h * P + pad * 4;
+    const g = c.getContext('2d'); g.shadowColor = a.c; g.shadowBlur = 10; g.fillStyle = flash ? '#ffffff' : a.c;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (f[y][x] === 'X') g.fillRect(pad * 2 + x * P, pad * 2 + y * P, P - 0.6, P - 0.6);
+    c.lw = c.width / 2; c.lh = c.height / 2;
+    this.cache.set(key, c); return c;
+  },
+  draw(g, kind, frame, x, y, flash, k = 1) { const c = this.get(kind, frame, flash), w = c.lw * k, h = c.lh * k; g.drawImage(c, x - w / 2, y - h / 2, w, h); }
+};
+const INV_TYPES = {
+  sonde: { hp: 1, pts: 10, ec: 1 }, pince: { hp: 1, pts: 20, ec: 1 }, veilleur: { hp: 2, pts: 30, ec: 2 },
+  blinde: { hp: 4, pts: 40, ec: 3 }, tireur: { hp: 2, pts: 40, ec: 2 }, plongeur: { hp: 1, pts: 50, ec: 2 }
+};
+const EXP_POWERS = {
+  rafale: { c: '#ffcf4a', l: 'R', name: 'Rafale', d: 8 }, triple: { c: '#5ef0ff', l: 'T', name: 'Tir triple', d: 8 },
+  bouclier: { c: '#4fa3ff', l: 'B', name: 'Bouclier' }, repar: { c: '#5dff9a', l: '+', name: 'Réparation' }, aimant: { c: '#c58bff', l: '✦', name: 'Éclats ×2', d: 12 }
+};
+
+/* ---------- La partie ---------- */
 const Expedition = {
-  id: 'exp', title: 'Expédition de l’Arche', W: 360, H: 640,
+  id: 'exp', title: 'Expédition de l’Arche', W: 360, H: 640, quitLabel: 'Pause · quitter', closeLabel: 'Retour au hangar', opts: null,
   init() {
-    Object.assign(this, { paused: false, wave: 0, cleared: 0, kills: 0, t: 0, x: 180, y: 560, hp: 3, maxHp: 3, rate: 0.42, cd: 0, dmg: 10, multi: 1, pierce: 0, orbs: 0, side: false,
-      speed: 230, inv: 0, en: [], shots: [], eshots: [], fx: [], ups: {}, spawnQ: [], stars: Array.from({ length: 60 }, () => [Math.random() * 360, Math.random() * 640, 0.3 + Math.random()]) });
+    const s = App.slot, e = ExpData.get(s), st = ExpData.stats(s), o = this.opts || { wave: 1 }, r = o.resume;
+    this.opts = null;
+    Object.assign(this, { st, paused: false, t: 0, x: 180, y: 600, wave: (r ? r.wave : o.wave) - 1, startWave: r ? r.startWave || r.wave : o.wave,
+      lives: r ? r.lives : st.lives, score: r ? r.score : 0, kills: r ? r.kills : 0, runEc: r ? r.ec : 0, runItems: r ? r.items : 0,
+      waveEc: 0, waveItems: [], cd: 0, inv: 0, shields: 0, shots: [], bombs: [], inv_: [], fx: [], drops: [], banner: null, ufo: null, ufoT: 14 + Math.random() * 10,
+      boss: null, power: {}, modT: { missile: 2, drone: 0, laser: 4 }, beam: 0, over: false,
+      stars: Array.from({ length: 70 }, () => [Math.random() * 360, Math.random() * 640, 0.3 + Math.random()]) });
     this.nextWave();
   },
-  nextWave() {
-    this.wave++;
-    const w = this.wave, boss = w === 5 || w === 10, q = [];
-    if (boss) q.push({ type: 'boss', delay: 1 });
-    const n = boss ? 4 + w : 5 + w * 2;
-    for (let i = 0; i < n; i++) {
-      const r = Math.random(), type = w >= 3 && r < 0.18 ? 'tank' : w >= 2 && r < 0.42 ? 'shooter' : r < 0.7 ? 'zig' : 'drone';
-      q.push({ type, delay: 0.45 + Math.random() * 0.5 });
-    }
-    this.spawnQ = q; this.spawnT = 1.2;
-    this.banner = { text: boss ? `Secteur ${w} · Colosse !` : `Secteur ${w}`, t: 1.6 };
+  /* Abris : grilles de cellules de 4 px, rongées par les tirs des deux camps. */
+  makeBunkers() {
+    const mask = ['....XXXXXXXX....', '..XXXXXXXXXXXX..', '.XXXXXXXXXXXXXX.', 'XXXXXXXXXXXXXXXX', 'XXXXXXXXXXXXXXXX', 'XXXXXXXXXXXXXXXX', 'XXXXX......XXXXX', 'XXXX........XXXX'];
+    this.bunkers = [0, 1, 2, 3].map(i => {
+      const b = { x: 22 + i * 84, y: 512, w: 16, h: 8, c: new Uint8Array(16 * 8) };
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 16; x++) if (mask[y][x] === 'X') b.c[y * 16 + x] = this.st.bunker;
+      return b;
+    });
   },
-  spawn(type) {
-    const w = this.wave, hpk = 1 + 0.32 * (w - 1);
-    const base = { drone: [14, 70, 9, '#ffcf4a'], zig: [12, 85, 9, '#ff8a3d'], shooter: [22, 55, 11, '#ff4fa3'], tank: [70, 38, 16, '#b06bff'], boss: [520, 30, 34, '#ff3355'] }[type];
-    this.en.push({ type, x: 30 + Math.random() * 300, y: -30, hp: base[0] * hpk, max: base[0] * hpk, sp: base[1], r: base[2], c: base[3], ph: Math.random() * 6, fire: 1 + Math.random() * 1.5 });
+  bunkerHit(x, y, dmg) {
+    for (const b of this.bunkers) {
+      const cx = Math.floor((x - b.x) / 4), cy = Math.floor((y - b.y) / 4);
+      if (cx < 0 || cy < 0 || cx >= b.w || cy >= b.h) continue;
+      const i = cy * b.w + cx;
+      if (!b.c[i]) continue;
+      b.c[i] = Math.max(0, b.c[i] - dmg);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const j = (cy + dy) * b.w + cx + dx; if (cx + dx >= 0 && cx + dx < b.w && cy + dy >= 0 && cy + dy < b.h && Math.random() < 0.45 && b.c[j]) b.c[j]--; }
+      return true;
+    }
+    return false;
+  },
+  rowsFor(w) {
+    const n = Math.min(5 + Math.floor((w - 1) / 3), 7), rows = [];
+    for (let i = 0; i < n; i++) rows.push(i === 0 ? 'veilleur' : i < 3 ? 'pince' : 'sonde');
+    if (w >= 3) rows[0] = 'blinde';
+    if (w >= 4) rows[1] = 'tireur';
+    if (w >= 8) rows[2] = 'blinde';
+    if (w >= 11) rows[3] = 'tireur';
+    return rows;
+  },
+  nextWave() {
+    const s = App.slot, e = ExpData.get(s);
+    this.wave++;
+    const w = this.wave, hpk = 1 + 0.16 * (w - 1);
+    // Sauvegarde au début de chaque vague : une partie interrompue reprend ici
+    e.run = { wave: w, lives: this.lives, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, startWave: this.startWave };
+    Store.touch(s);
+    this.makeBunkers();
+    this.inv_ = []; this.bombs = []; this.shots = []; this.drops = []; this.boss = null;
+    this.shields = this.st.shield;
+    if (w % 5 === 0) {
+      const hp = 60 * (1 + 0.45 * (w / 5 - 1)) * (1 + 0.1 * w);
+      this.boss = { x: 180, y: -60, hp, max: hp, ph: 0, fire: 2, mode: 0, flash: 0 }; this.form = null;
+      this.banner = { text: `Vague ${w} · Vaisseau-mère !`, t: 2 };
+    } else {
+      const rows = this.rowsFor(w), cols = w >= 6 ? 9 : 8;
+      this.form = { x: 180 - (cols - 1) * 17, y: 78 + Math.min(w - 1, 9) * 9, dir: 1, stepT: 0, frame: 0, total: rows.length * cols };
+      rows.forEach((k, r) => { for (let c = 0; c < cols; c++) {
+        const T = INV_TYPES[k], dive = w >= 6 && k === 'sonde' && Math.random() < 0.12;
+        this.inv_.push({ k: dive ? 'plongeur' : k, r, c, hp: T.hp * hpk, max: T.hp * hpk, flash: 0, fire: Math.random() * 4 });
+      } });
+      this.banner = { text: `Vague ${w}`, t: 1.5 };
+    }
+    this.waveEc = 0; this.waveItems = [];
+  },
+  invPos(v) { return v.dx !== undefined ? [v.dx, v.dy] : [this.form.x + v.c * 34, this.form.y + v.r * 26]; },
+  gainEc(n) { const k = (this.power.aimant > 0 ? 2 : 1) * this.st.eclats; this.waveEc += n * k; },
+  dropItem(minR) {
+    const s = App.slot, res = ExpData.roll(s, this.wave, this.st.luck, minR);
+    this.waveItems.push(res.it);
+    this.fx.push({ txt: `${RARITY[res.it.r].name} : ${ExpData.name(res.it)}`, c: RARITY[res.it.r].color, x: 180, y: 330, t: 2.2 });
+    if (res.auto) this.waveEc += res.auto;
+  },
+  bankWave() {
+    const s = App.slot, e = ExpData.get(s), ec = Math.round(this.waveEc);
+    e.eclats += ec; this.runEc += ec; this.runItems += this.waveItems.length; this.waveEc = 0; this.waveItems = [];
+    Store.touch(s);
+  },
+  hurt() {
+    if (this.inv > 0 || this.over) return;
+    if (this.shields > 0) { this.shields--; this.inv = 0.8; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#4fa3ff', r: 30, t: 0.4 }); Sound.sfx && Sound.sfx('build'); return; }
+    this.lives--; this.inv = this.st.inv; buzz(80); Sound.sfx && Sound.sfx('alarm');
+    this.fx.push({ ring: true, x: this.x, y: this.y, c: '#ff5468', r: 40, t: 0.5 });
+    if (this.lives <= 0) this.gameOver('Ton vaisseau a été détruit.');
+  },
+  gameOver(why) {
+    if (this.over) return;
+    this.over = true; this.why = why;
+    // La vague en cours compte à moitié : ses éclats et ses objets sont gardés
+    this.bankWave();
+    const e = ExpData.get(App.slot); e.run = null; e.runs++; e.kills += this.kills; Store.touch(App.slot);
+    setTimeout(() => Minigames.finish(this.result()), 900);
+  },
+  kill(v, x, y) {
+    v.dead = true; this.kills++;
+    const T = INV_TYPES[v.k]; this.score += T.pts * this.wave; this.gainEc(T.ec);
+    for (let i = 0; i < 10; i++) { const a = Math.random() * TAU, sp = 40 + Math.random() * 120; this.fx.push({ p: true, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: INV_ART[v.k].c, t: 0.5 }); }
+    if (Math.random() < 0.035 * this.st.power) { const ks = Object.keys(EXP_POWERS); this.drops.push({ x, y, k: ks[Math.floor(Math.random() * ks.length)] }); }
+    Sound.sfx && Sound.sfx('build');
+  },
+  hitInv(v, dmg, x, y) {
+    const crit = Math.random() < this.st.crit, d = dmg * (crit ? 2 : 1);
+    v.hp -= d; v.flash = 0.08;
+    if (crit) this.fx.push({ txt: 'Critique', c: '#ffcf4a', x, y: y - 12, t: 0.5, small: true });
+    if (v.hp <= 0) this.kill(v, x, y);
+  },
+  fire() {
+    const st = this.st, dmg = st.dmg, n = st.multi + (this.power.triple > 0 ? 2 : 0);
+    for (let i = 0; i < n; i++) {
+      const off = (i - (n - 1) / 2), a = -Math.PI / 2 + off * 0.07;
+      this.shots.push({ x: this.x + off * 6, y: this.y - 16, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, dmg, p: st.pierce, hit: new Set() });
+    }
+    if (st.lateral) for (const s2 of [-1, 1]) { const a = -Math.PI / 2 + s2 * 0.32; this.shots.push({ x: this.x + s2 * 10, y: this.y - 8, vx: Math.cos(a) * 470, vy: Math.sin(a) * 470, dmg: dmg * (0.4 + 0.15 * st.lateral), p: 0, hit: new Set(), side: true }); }
   },
   update(dt, P, keys) {
+    if (this.over) { this.t += dt; for (const f of this.fx) { f.t -= dt; if (f.p) { f.x += f.vx * dt; f.y += f.vy * dt; } } this.fx = this.fx.filter(f => f.t > 0); return; }
+    const st = this.st, w = this.wave;
     this.t += dt;
-    for (const s of this.stars) { s[1] += s[2] * 60 * dt; if (s[1] > 640) { s[1] = 0; s[0] = Math.random() * 360; } }
+    for (const s of this.stars) { s[1] += s[2] * 30 * dt; if (s[1] > 640) { s[1] = 0; s[0] = Math.random() * 360; } }
     if (this.banner) { this.banner.t -= dt; if (this.banner.t <= 0) this.banner = null; }
-    // Déplacement : vers le doigt (pendant l'appui) ou au clavier
-    let tx = this.x, ty = this.y;
-    if (P.down) { tx = P.x; ty = P.y - 40; }
-    const kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.q || keys.a ? 1 : 0), ky = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.z || keys.w ? 1 : 0);
-    if (kx || ky) { tx = this.x + kx * 100; ty = this.y + ky * 100; }
-    const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy), step = this.speed * dt;
-    if (d > 1) { this.x += dx / d * Math.min(step, d); this.y += dy / d * Math.min(step, d); }
-    this.x = clamp(this.x, 16, 344); this.y = clamp(this.y, 260, 620);
-    // Apparitions
-    if (this.spawnQ.length) { this.spawnT -= dt; if (this.spawnT <= 0) { const s = this.spawnQ.shift(); this.spawn(s.type); this.spawnT = s.delay; } }
-    // Tir automatique vers l'ennemi le plus proche
+    for (const k in this.power) this.power[k] -= dt;
+    // Déplacement : le vaisseau suit le doigt horizontalement, ou les flèches
+    let tx = this.x;
+    if (P.down) tx = P.x;
+    const kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.q || keys.a ? 1 : 0);
+    if (kx) tx = this.x + kx * 80;
+    const dx = tx - this.x, step = st.speed * dt;
+    this.x = clamp(this.x + Math.sign(dx) * Math.min(Math.abs(dx), step), 16, 344);
+    if (this.inv > 0) this.inv -= dt;
+    // Tir automatique
     this.cd -= dt;
-    if (this.cd <= 0 && this.en.length) {
-      this.cd = this.rate;
-      let tgt = null, bd = 1e9; for (const e of this.en) { const dd = (e.x - this.x) ** 2 + (e.y - this.y) ** 2; if (dd < bd && e.y > -10) { bd = dd; tgt = e; } }
-      const base = tgt ? Math.atan2(tgt.y - this.y, tgt.x - this.x) : -Math.PI / 2;
-      for (let i = 0; i < this.multi; i++) { const a = base + (i - (this.multi - 1) / 2) * 0.14; this.shots.push({ x: this.x, y: this.y - 14, vx: Math.cos(a) * 520, vy: Math.sin(a) * 520, p: this.pierce, hit: new Set() }); }
-      if (this.side) for (const a of [-Math.PI / 2 - 0.6, -Math.PI / 2 + 0.6]) this.shots.push({ x: this.x, y: this.y - 10, vx: Math.cos(a) * 480, vy: Math.sin(a) * 480, p: 0, hit: new Set() });
+    const rate = st.rate * (this.power.rafale > 0 ? 2 : 1);
+    if (this.cd <= 0 && this.shots.filter(s => !s.side && !s.mis).length < 4 + st.multi * 3 + (this.power.triple > 0 ? 6 : 0)) { this.cd = 1 / rate; this.fire(); }
+    // Modules
+    const targets = () => { const a = this.inv_.filter(v => !v.dead).map(v => { const [x, y] = this.invPos(v); return { v, x, y }; }); if (this.boss && this.boss.y > 0) a.push({ boss: true, x: this.boss.x, y: this.boss.y }); return a; };
+    if (st.missile) { this.modT.missile -= dt; if (this.modT.missile <= 0) { this.modT.missile = Math.max(1.1, 4 - 0.35 * st.missile); const tg = targets(); if (tg.length) { const t2 = tg[Math.floor(Math.random() * tg.length)]; this.shots.push({ x: this.x, y: this.y - 10, vx: 0, vy: -200, dmg: st.dmg * (2 + 0.6 * st.missile), p: 0, hit: new Set(), mis: true, tg: t2.boss ? 'boss' : t2.v, splash: 22 }); } } }
+    if (st.drone) { this.modT.drone -= dt; if (this.modT.drone <= 0) { this.modT.drone = 1 / (1.2 + 0.25 * st.drone); this.shots.push({ x: this.x - 28, y: this.y - 4, vx: 0, vy: -480, dmg: st.dmg * (0.5 + 0.15 * st.drone), p: 0, hit: new Set(), side: true }); } }
+    if (st.laser) { this.modT.laser -= dt; if (this.modT.laser <= 0) { this.modT.laser = Math.max(3, 8 - 0.6 * st.laser); this.beam = 0.45; this.beamX = this.x; } }
+    if (this.beam > 0) {
+      this.beam -= dt;
+      for (const t2 of targets()) if (Math.abs(t2.x - this.beamX) < 12 + 2 * st.laser) { if (t2.boss) this.hitBoss(st.dmg * (3 + st.laser) * dt * 3); else this.hitInv(t2.v, st.dmg * (3 + st.laser) * dt * 3, t2.x, t2.y); }
     }
-    for (const s of this.shots) { s.x += s.vx * dt; s.y += s.vy * dt; }
-    // Ennemis
-    for (const e of this.en) {
-      e.ph += dt;
-      if (e.type === 'zig') { e.y += e.sp * dt; e.x += Math.sin(e.ph * 3) * 90 * dt; }
-      else if (e.type === 'shooter' || e.type === 'boss') { const stopY = e.type === 'boss' ? 110 : 140 + (e.r * 7) % 60; if (e.y < stopY) e.y += e.sp * dt * 1.6; else e.x += Math.sin(e.ph) * 40 * dt; }
-      else e.y += e.sp * dt;
-      e.x = clamp(e.x, 12, 348);
-      if (e.type === 'shooter' || e.type === 'boss') {
-        e.fire -= dt;
-        if (e.fire <= 0 && e.y > 40) {
-          if (e.type === 'boss') { const n = 10, off = e.ph; for (let i = 0; i < n; i++) { const a = off + i * TAU / n; this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140 }); } e.fire = 1.6; }
-          else { const a = Math.atan2(this.y - e.y, this.x - e.x); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170 }); e.fire = 1.8 + Math.random(); }
+    // Tirs du joueur
+    for (const s of this.shots) {
+      if (s.mis) {
+        let tx2, ty2;
+        if (s.tg === 'boss' && this.boss) { tx2 = this.boss.x; ty2 = this.boss.y; }
+        else if (s.tg && !s.tg.dead && s.tg.r !== undefined) [tx2, ty2] = this.invPos(s.tg);
+        if (tx2 !== undefined) { const a = Math.atan2(ty2 - s.y, tx2 - s.x), cur = Math.atan2(s.vy, s.vx); let d2 = a - cur; while (d2 > Math.PI) d2 -= TAU; while (d2 < -Math.PI) d2 += TAU; const na = cur + clamp(d2, -5 * dt, 5 * dt), sp = Math.min(420, Math.hypot(s.vx, s.vy) + 300 * dt); s.vx = Math.cos(na) * sp; s.vy = Math.sin(na) * sp; }
+      }
+      s.x += s.vx * dt; s.y += s.vy * dt;
+    }
+    // Formation : avance par à-coups, de plus en plus vite quand elle se vide
+    if (this.form && !this.boss) {
+      const alive = this.inv_.filter(v => !v.dead && v.dx === undefined);
+      const f = this.form, frac = alive.length / f.total, iv = (0.035 + 0.6 * frac) / (1 + 0.05 * (w - 1));
+      f.stepT -= dt;
+      if (f.stepT <= 0 && alive.length) {
+        f.stepT = iv; f.frame ^= 1;
+        let minX = 1e9, maxX = -1e9; for (const v of alive) { const [x] = this.invPos(v); minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
+        if ((f.dir > 0 && maxX + 20 > 352) || (f.dir < 0 && minX - 20 < 8)) { f.y += 12; f.dir *= -1; } else f.x += 6 * f.dir;
+      }
+      // Tirs de la formation : un ennemi du bas de sa colonne
+      const bombRate = 0.55 + 0.14 * w;
+      if (alive.length && Math.random() < bombRate * dt) {
+        const cols = {}; for (const v of alive) if (!cols[v.c] || cols[v.c].r < v.r) cols[v.c] = v;
+        const list = Object.values(cols), v = list[Math.floor(Math.random() * list.length)], [x, y] = this.invPos(v);
+        const fast = w >= 4 && Math.random() < 0.3;
+        this.bombs.push({ x, y: y + 10, vx: 0, vy: fast ? 260 : 150 + w * 5, zig: !fast && w >= 2 && Math.random() < 0.4, ph: 0 });
+      }
+      for (const v of alive) if (v.k === 'tireur') { v.fire -= dt; if (v.fire <= 0) { v.fire = 3.5 + Math.random() * 3 - Math.min(2, w * 0.1); const [x, y] = this.invPos(v); const a = Math.atan2(this.y - y, this.x - x); this.bombs.push({ x, y: y + 8, vx: Math.cos(a) * 190, vy: Math.sin(a) * 190, aim: true }); } }
+      // Plongeurs : quittent la formation et piquent sur l'Arche
+      for (const v of alive) if (v.k === 'plongeur' && Math.random() < 0.08 * dt) { const [x, y] = this.invPos(v); v.dx = x; v.dy = y; v.vx = 0; v.dph = 0; }
+      for (const v of this.inv_) { if (v.dead || v.dx !== undefined) continue; const [x, y] = this.invPos(v); this.bunkerHit(x, y + 8, 9); if (y > 584 && v.dx === undefined) { this.lives = 0; this.gameOver('La Rouille a atteint ta ligne de défense.'); return; } }
+    }
+    for (const v of this.inv_) if (!v.dead && v.dx !== undefined) {
+      v.dph += dt; v.vx += (this.x - v.dx) * 1.2 * dt; v.vx = clamp(v.vx, -120, 120); v.dx += v.vx * dt + Math.sin(v.dph * 4) * 60 * dt; v.dy += (140 + w * 6) * dt;
+      this.bunkerHit(v.dx, v.dy + 8, 9);
+      if (v.dy > 660) v.dead = true;
+    }
+    // Vaisseau-mère
+    if (this.boss) this.updateBoss(dt);
+    // Vaisseau mystère
+    this.ufoT -= dt;
+    if (this.ufoT <= 0 && !this.ufo && !this.boss) { const d = Math.random() < 0.5 ? 1 : -1; this.ufo = { x: d > 0 ? -30 : 390, d, hp: 2 + w * 0.3 }; this.ufoT = 18 + Math.random() * 12; Sound.sfx && Sound.sfx('wave'); }
+    if (this.ufo) { this.ufo.x += this.ufo.d * 70 * dt; if (this.ufo.x < -40 || this.ufo.x > 400) this.ufo = null; }
+    // Collisions des tirs du joueur
+    for (const s of this.shots) {
+      if (s.dead) continue;
+      if (this.ufo && Math.abs(s.x - this.ufo.x) < 22 && Math.abs(s.y - 48) < 10) {
+        s.dead = true; this.ufo.hp -= s.dmg;
+        if (this.ufo.hp <= 0) {
+          const pts = [50, 100, 150, 300][Math.floor(Math.random() * 4)] * w; this.score += pts; this.gainEc(8 + w);
+          this.fx.push({ txt: `+${pts}`, c: '#ff5468', x: this.ufo.x, y: 48, t: 1 });
+          if (Math.random() < 0.35 * this.st.luck) this.dropItem(0); else { const ks = Object.keys(EXP_POWERS); this.drops.push({ x: this.ufo.x, y: 56, k: ks[Math.floor(Math.random() * ks.length)] }); }
+          for (let i = 0; i < 16; i++) { const a = Math.random() * TAU, sp = 60 + Math.random() * 140; this.fx.push({ p: true, x: this.ufo.x, y: 48, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: '#ff5468', t: 0.6 }); }
+          this.ufo = null; Sound.sfx && Sound.sfx('boom');
+        }
+        continue;
+      }
+      if (this.boss && this.boss.y > 0 && Math.abs(s.x - this.boss.x) < 58 && Math.abs(s.y - this.boss.y) < 26) { s.dead = true; this.hitBoss(s.dmg, s); continue; }
+      for (const v of this.inv_) {
+        if (v.dead || s.hit.has(v)) continue;
+        const [x, y] = this.invPos(v);
+        if (Math.abs(s.x - x) < 15 && Math.abs(s.y - y) < 11) {
+          s.hit.add(v);
+          if (s.splash) { for (const o of this.inv_) { if (o.dead) continue; const [ox, oy] = this.invPos(o); if (Math.hypot(ox - x, oy - y) < s.splash + 12) this.hitInv(o, s.dmg * (o === v ? 1 : 0.5), ox, oy); } this.fx.push({ ring: true, x, y, c: '#ff9b3d', r: s.splash + 10, t: 0.3 }); s.dead = true; break; }
+          this.hitInv(v, s.dmg, x, y);
+          if (s.p-- <= 0) { s.dead = true; break; }
         }
       }
-      if (e.y > 680) { e.dead = true; this.hurt(); }
     }
-    // Drones orbitaux
-    for (let i = 0; i < this.orbs; i++) {
-      const a = this.t * 3 + i * TAU / this.orbs, ox = this.x + Math.cos(a) * 40, oy = this.y + Math.sin(a) * 40;
-      for (const e of this.en) if ((e.x - ox) ** 2 + (e.y - oy) ** 2 < (e.r + 7) ** 2) this.damage(e, this.dmg * 2.2 * dt);
+    // Bombes ennemies
+    for (const b of this.bombs) {
+      if (b.zig) { b.ph += dt; b.x += Math.sin(b.ph * 10) * 80 * dt; }
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      if (this.bunkerHit(b.x, b.y, 1)) { b.dead = true; continue; }
+      if (Math.abs(b.x - this.x) < 13 && Math.abs(b.y - this.y) < 12) { b.dead = true; this.hurt(); continue; }
+      for (const s of this.shots) if (!s.dead && !s.mis && Math.abs(s.x - b.x) < 5 && Math.abs(s.y - b.y) < 9) { s.dead = true; if (Math.random() < 0.6) b.dead = true; break; }
     }
-    // Collisions des tirs
-    for (const s of this.shots) for (const e of this.en) {
-      if (e.dead || s.dead || s.hit.has(e)) continue;
-      if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 < (e.r + 4) ** 2) { s.hit.add(e); this.damage(e, this.dmg); if (s.p-- <= 0) s.dead = true; }
+    for (const v of this.inv_) if (!v.dead && v.dx !== undefined && Math.abs(v.dx - this.x) < 18 && Math.abs(v.dy - this.y) < 14) { v.dead = true; this.hurt(); }
+    // Bonus qui tombent
+    for (const d of this.drops) {
+      d.y += 80 * dt;
+      if (Math.abs(d.x - this.x) < 20 && Math.abs(d.y - this.y) < 18) {
+        d.dead = true; const P2 = EXP_POWERS[d.k];
+        if (d.k === 'bouclier') this.shields++;
+        else if (d.k === 'repar') this.lives = Math.min(this.st.lives + 2, this.lives + 1);
+        else this.power[d.k] = P2.d * this.st.power;
+        this.fx.push({ txt: P2.name, c: P2.c, x: this.x, y: this.y - 30, t: 1 }); Sound.sfx && Sound.sfx('up');
+      }
     }
-    for (const s of this.eshots) { s.x += s.vx * dt; s.y += s.vy * dt; if ((s.x - this.x) ** 2 + (s.y - this.y) ** 2 < 13 * 13) { s.dead = true; this.hurt(); } }
-    for (const e of this.en) if (!e.dead && (e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (e.r + 10) ** 2) { if (e.type !== 'boss') e.dead = true; this.hurt(); }
-    for (const f of this.fx) f.t -= dt;
+    for (const v of this.inv_) if (v.flash > 0) v.flash -= dt;
+    for (const f of this.fx) { f.t -= dt; if (f.p) { f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 0.94; f.vy *= 0.94; } }
     this.fx = this.fx.filter(f => f.t > 0);
-    this.shots = this.shots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -20 && s.x < 380);
-    this.eshots = this.eshots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -20 && s.x < 380);
-    this.en = this.en.filter(e => !e.dead);
-    if (this.inv > 0) this.inv -= dt;
-    if (this.hp <= 0) { Minigames.finish(this.result()); return; }
-    // Secteur terminé : amélioration à choisir
-    if (!this.spawnQ.length && !this.en.length) {
-      this.cleared = this.wave;
-      if (this.wave >= 10) { Minigames.finish(this.result()); return; }
-      this.paused = true;
-      const pool = EXP_UPGRADES.filter(u => (this.ups[u.id] || 0) < u.max);
-      shuffle(pool, Math.random);
-      Minigames.choose(`Secteur ${this.wave} nettoyé · choisis une amélioration`, pool.slice(0, 3), u => { u.fx(this); this.ups[u.id] = (this.ups[u.id] || 0) + 1; this.eshots = []; this.paused = false; this.nextWave(); });
+    this.shots = this.shots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -30 && s.x < 390);
+    this.bombs = this.bombs.filter(b => !b.dead && b.y < 660 && b.x > -20 && b.x < 380 && b.y > -20);
+    this.drops = this.drops.filter(d => !d.dead && d.y < 660);
+    this.inv_ = this.inv_.filter(v => !v.dead);
+    // Vague terminée
+    if (!this.inv_.length && !this.boss && !this.over) {
+      this.gainEc(5 + w);
+      if (this.st.regen && Math.random() < this.st.regen && this.lives < this.st.lives) { this.lives++; this.fx.push({ txt: 'Coque réparée', c: '#5dff9a', x: 180, y: 360, t: 1.4 }); }
+      this.bankWave();
+      this.nextWave();
     }
   },
-  damage(e, v) {
-    if (e.dead) return;
-    e.hp -= v;
-    if (e.hp <= 0) { e.dead = true; this.kills++; this.fx.push({ x: e.x, y: e.y, c: e.c, r: e.r, t: 0.35 }); Sound.sfx && Sound.sfx(e.type === 'boss' ? 'boom' : 'build'); }
+  hitBoss(d, s) {
+    const b = this.boss; if (!b) return;
+    const crit = s && Math.random() < this.st.crit;
+    b.hp -= d * (crit ? 2 : 1); b.flash = 0.06;
+    if (b.hp <= 0) {
+      this.score += 1000 * this.wave; this.gainEc(30 + 5 * this.wave);
+      for (let i = 0; i < 40; i++) { const a = Math.random() * TAU, sp = 60 + Math.random() * 220; this.fx.push({ p: true, x: b.x + (Math.random() - 0.5) * 80, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: i % 2 ? '#ff3355' : '#ffcf4a', t: 0.9 }); }
+      this.dropItem(this.wave >= 15 ? 2 : this.wave >= 10 ? 1 : 0);
+      this.boss = null; Sound.sfx && Sound.sfx('boom'); buzz(120);
+    }
   },
-  hurt() { if (this.inv > 0) return; this.hp--; this.inv = 1.2; buzz(60); Sound.sfx && Sound.sfx('alarm'); },
-  draw(g) { if (!D2) return EXP_DRAW.call(this, g); this.drawOld(g); },
-  drawOld(g) {
+  updateBoss(dt) {
+    const b = this.boss, w = this.wave;
+    b.ph += dt; if (b.flash > 0) b.flash -= dt;
+    if (b.y < 120) { b.y += 60 * dt; return; }
+    b.x = 180 + Math.sin(b.ph * 0.7) * 120;
+    b.fire -= dt;
+    if (b.fire <= 0) {
+      b.mode = (b.mode + 1) % 3;
+      if (b.mode === 0) { for (let i = -3; i <= 3; i++) { const a = Math.PI / 2 + i * 0.22; this.bombs.push({ x: b.x, y: b.y + 24, vx: Math.cos(a) * 170, vy: Math.sin(a) * 170 }); } b.fire = 2.2 - Math.min(1, w * 0.03); }
+      else if (b.mode === 1) { for (let i = 0; i < 3; i++) setTimeout(() => { if (!this.boss || this.over) return; const a = Math.atan2(this.y - b.y, this.x - b.x); this.bombs.push({ x: b.x, y: b.y + 20, vx: Math.cos(a) * 230, vy: Math.sin(a) * 230, aim: true }); }, i * 180); b.fire = 1.8; }
+      else { for (let i = 0; i < 5; i++) { const T = INV_TYPES.plongeur, hp = T.hp * (1 + 0.16 * (w - 1)); this.inv_.push({ k: 'plongeur', r: 0, c: 0, hp, max: hp, flash: 0, fire: 9, dx: b.x - 60 + i * 30, dy: b.y + 30, vx: 0, dph: i }); } b.fire = 3; }
+    }
+  },
+  draw(g) {
     g.fillStyle = '#05070d'; g.fillRect(0, 0, 360, 640);
-    for (const [x, y, z] of this.stars) { g.fillStyle = `rgba(228,236,251,${0.2 + z * 0.4})`; g.fillRect(x, y, z * 1.6, z * 1.6); }
-    for (const e of this.en) {
-      g.save(); g.translate(e.x, e.y); g.shadowColor = e.c; g.shadowBlur = 10;
-      g.fillStyle = '#0a0e18'; g.strokeStyle = e.c; g.lineWidth = 2.5;
-      if (e.type === 'boss') { polygonPath(g, 0, 0, e.r, 6, e.ph * 0.5); } else if (e.type === 'tank') polygonPath(g, 0, 0, e.r, 6, 0); else if (e.type === 'shooter') polygonPath(g, 0, 0, e.r, 4, Math.PI / 4); else { g.beginPath(); g.arc(0, 0, e.r, 0, TAU); }
-      g.fill(); g.stroke(); g.shadowBlur = 0;
-      g.fillStyle = e.c; g.beginPath(); g.arc(0, 0, e.r * 0.35, 0, TAU); g.fill();
-      if (e.max > 20) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(-e.r, -e.r - 8, e.r * 2, 3); g.fillStyle = e.c; g.fillRect(-e.r, -e.r - 8, e.r * 2 * Math.max(0, e.hp / e.max), 3); }
-      g.restore();
+    for (const [x, y, z] of this.stars) { g.fillStyle = `rgba(228,236,251,${0.15 + z * 0.35})`; g.fillRect(x, y, z * 1.5, z * 1.5); }
+    // Ligne de défense
+    g.strokeStyle = 'rgba(94,240,255,.18)'; g.setLineDash([4, 6]); g.beginPath(); g.moveTo(0, 590); g.lineTo(360, 590); g.stroke(); g.setLineDash([]);
+    // Abris
+    for (const b of this.bunkers) for (let y = 0; y < b.h; y++) for (let x = 0; x < b.w; x++) {
+      const v = b.c[y * b.w + x]; if (!v) continue;
+      g.fillStyle = v >= this.st.bunker ? '#3ef2c8' : v > 1 ? '#2bb898' : '#1b7a66'; g.fillRect(b.x + x * 4, b.y + y * 4, 3.6, 3.6);
     }
-    g.fillStyle = '#5ef0ff'; for (const s of this.shots) { g.fillRect(s.x - 1.5, s.y - 5, 3, 10); }
-    g.fillStyle = '#ff5468'; for (const s of this.eshots) { g.beginPath(); g.arc(s.x, s.y, 4, 0, TAU); g.fill(); }
-    for (const f of this.fx) { g.globalAlpha = f.t / 0.35; g.strokeStyle = f.c; g.lineWidth = 3; g.beginPath(); g.arc(f.x, f.y, f.r * (2 - f.t / 0.35), 0, TAU); g.stroke(); g.globalAlpha = 1; }
-    for (let i = 0; i < this.orbs; i++) { const a = this.t * 3 + i * TAU / this.orbs; g.fillStyle = '#3ef2c8'; g.beginPath(); g.arc(this.x + Math.cos(a) * 40, this.y + Math.sin(a) * 40, 5, 0, TAU); g.fill(); }
-    // L'Arche
-    if (!(this.inv > 0 && Math.floor(this.t * 12) % 2)) {
-      g.save(); g.translate(this.x, this.y);
-      g.fillStyle = 'rgba(94,240,255,.35)'; g.beginPath(); g.moveTo(-5, 14); g.lineTo(0, 26 + Math.random() * 8); g.lineTo(5, 14); g.fill();
-      g.fillStyle = '#111829'; g.strokeStyle = '#e4ecfb'; g.lineWidth = 2;
-      g.beginPath(); g.moveTo(0, -18); g.lineTo(13, 12); g.lineTo(0, 7); g.lineTo(-13, 12); g.closePath(); g.fill(); g.stroke();
-      g.fillStyle = '#5ef0ff'; g.beginPath(); g.arc(0, 0, 3.5, 0, TAU); g.fill();
+    // Formation et plongeurs
+    const fr = this.form ? this.form.frame : 0;
+    for (const v of this.inv_) { const [x, y] = this.invPos(v); InvSpr.draw(g, v.k, v.dx !== undefined ? Math.floor(this.t * 8) % 2 : fr, x, y, v.flash > 0);
+      if (v.max > 1.5 && v.hp < v.max) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x - 12, y - 14, 24, 2.5); g.fillStyle = INV_ART[v.k].c; g.fillRect(x - 12, y - 14, 24 * Math.max(0, v.hp / v.max), 2.5); } }
+    // Vaisseau-mère
+    if (this.boss) {
+      const b = this.boss;
+      g.save(); g.translate(b.x, b.y); g.shadowColor = '#ff3355'; g.shadowBlur = 16;
+      g.fillStyle = b.flash > 0 ? '#ffffff' : '#140812'; g.strokeStyle = '#ff3355'; g.lineWidth = 3;
+      g.beginPath(); g.moveTo(-60, 0); g.lineTo(-40, -22); g.lineTo(40, -22); g.lineTo(60, 0); g.lineTo(40, 18); g.lineTo(-40, 18); g.closePath(); g.fill(); g.stroke();
+      g.shadowBlur = 0; g.strokeStyle = '#ff8a3d'; g.lineWidth = 2; g.beginPath(); g.moveTo(-30, -8); g.lineTo(30, -8); g.stroke();
+      for (let i = -2; i <= 2; i++) { g.fillStyle = i === Math.round(Math.sin(b.ph * 3) * 2) ? '#ffcf4a' : '#ff3355'; g.beginPath(); g.arc(i * 18, 6, 4, 0, TAU); g.fill(); }
       g.restore();
+      g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(40, 38, 280, 6); g.fillStyle = '#ff3355'; g.fillRect(40, 38, 280 * Math.max(0, b.hp / b.max), 6);
+      g.fillStyle = '#ffb3be'; g.font = '700 10px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText('VAISSEAU-MÈRE', 180, 33);
     }
-    for (let i = 0; i < this.maxHp; i++) { g.fillStyle = i < this.hp ? '#ff5468' : '#24314f'; g.fillRect(10 + i * 16, 10, 12, 12); }
-    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t * 2); g.fillStyle = '#e4ecfb'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); g.globalAlpha = 1; }
+    // Vaisseau mystère
+    if (this.ufo) InvSpr.draw(g, 'mystere', 0, this.ufo.x, 48, false);
+    // Rayon chargé
+    if (this.beam > 0) { g.globalCompositeOperation = 'lighter'; g.fillStyle = `rgba(255,95,143,${0.35 + this.beam})`; const bw = 6 + 2 * this.st.laser; g.fillRect(this.beamX - bw / 2, 0, bw, this.y - 14); g.fillStyle = 'rgba(255,255,255,.7)'; g.fillRect(this.beamX - 1.5, 0, 3, this.y - 14); g.globalCompositeOperation = 'source-over'; }
+    // Tirs
+    for (const s of this.shots) {
+      if (s.mis) { g.fillStyle = '#ff9b3d'; g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx)); g.fillRect(-6, -2, 12, 4); g.fillStyle = 'rgba(255,207,74,.6)'; g.fillRect(-12, -1.5, 6, 3); g.restore(); }
+      else { g.fillStyle = s.side ? '#9afff0' : '#5ef0ff'; g.fillRect(s.x - 1.5, s.y - 6, 3, 12); }
+    }
+    for (const b of this.bombs) {
+      if (b.aim) { g.fillStyle = '#5dff9a'; g.beginPath(); g.arc(b.x, b.y, 3.5, 0, TAU); g.fill(); }
+      else if (b.zig) { g.strokeStyle = '#ff8a3d'; g.lineWidth = 2; g.beginPath(); g.moveTo(b.x - 3, b.y - 6); g.lineTo(b.x + 3, b.y - 2); g.lineTo(b.x - 3, b.y + 2); g.lineTo(b.x + 3, b.y + 6); g.stroke(); }
+      else { g.fillStyle = '#ff5468'; g.fillRect(b.x - 1.5, b.y - 5, 3, 10); }
+    }
+    for (const d of this.drops) { const P2 = EXP_POWERS[d.k]; g.save(); g.shadowColor = P2.c; g.shadowBlur = 10; g.strokeStyle = P2.c; g.lineWidth = 2; g.fillStyle = '#05070d'; g.beginPath(); g.arc(d.x, d.y, 9, 0, TAU); g.fill(); g.stroke(); g.restore(); g.fillStyle = P2.c; g.font = '800 11px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(P2.l, d.x, d.y + 1); g.textBaseline = 'alphabetic'; }
+    // Effets
+    for (const f of this.fx) {
+      if (f.p) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.fillRect(f.x - 1.5, f.y - 1.5, 3, 3); g.globalAlpha = 1; }
+      else if (f.ring) { g.globalAlpha = f.t * 2; g.strokeStyle = f.c; g.lineWidth = 2; g.beginPath(); g.arc(f.x, f.y, f.r * (1.2 - f.t), 0, TAU); g.stroke(); g.globalAlpha = 1; }
+      else if (f.txt) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.font = `700 ${f.small ? 10 : 14}px "Chakra Petch", sans-serif`; g.textAlign = 'center'; g.fillText(f.txt, f.x, f.y - (1 - f.t) * 10); g.globalAlpha = 1; }
+    }
+    // L'Arche, son drone et son bouclier
+    if (!this.over && !(this.inv > 0 && Math.floor(this.t * 12) % 2)) {
+      g.fillStyle = 'rgba(94,240,255,.35)'; g.beginPath(); g.moveTo(this.x - 4, this.y + 10); g.lineTo(this.x, this.y + 18 + Math.random() * 6); g.lineTo(this.x + 4, this.y + 10); g.fill();
+      InvSpr.draw(g, 'arche', 0, this.x, this.y, false);
+      if (this.st.drone) { const dx2 = this.x - 28, dy2 = this.y - 2 + Math.sin(this.t * 4) * 2; g.save(); g.shadowColor = '#3ef2c8'; g.shadowBlur = 8; g.fillStyle = '#3ef2c8'; g.beginPath(); g.moveTo(dx2, dy2 - 6); g.lineTo(dx2 + 5, dy2 + 4); g.lineTo(dx2 - 5, dy2 + 4); g.closePath(); g.fill(); g.restore(); }
+      if (this.shields > 0) { g.strokeStyle = 'rgba(79,163,255,.7)'; g.lineWidth = 2; g.beginPath(); g.arc(this.x, this.y, 20, 0, TAU); g.stroke(); }
+    }
+    // Barre du haut : score, vague, vies, boucliers, bonus actifs
+    g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'left'; g.fillStyle = '#e4ecfb'; g.fillText(`SCORE ${this.score}`, 8, 16);
+    g.textAlign = 'center'; g.fillText(`VAGUE ${this.wave}`, 180, 16);
+    g.textAlign = 'right'; g.fillStyle = '#c58bff'; g.fillText(`${EXC} ${Math.round(this.runEc + this.waveEc)}`, 352, 16);
+    for (let i = 0; i < this.lives; i++) InvSpr.draw(g, 'arche', 0, 14 + i * 20, 627, false, 0.55);
+    for (let i = 0; i < this.shields; i++) { g.strokeStyle = '#4fa3ff'; g.lineWidth = 2; g.beginPath(); g.arc(344 - i * 18, 628, 6, 0, TAU); g.stroke(); }
+    let px = 344 - this.shields * 18 - 6;
+    for (const k in this.power) if (this.power[k] > 0) { const P2 = EXP_POWERS[k]; g.fillStyle = P2.c; g.textAlign = 'right'; g.fillText(`${P2.l} ${Math.ceil(this.power[k])}s`, px, 632); px -= 44; }
+    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t * 2); g.fillStyle = '#e4ecfb'; g.font = '800 24px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); g.globalAlpha = 1; }
+    if (this.wave === this.startWave && this.t < 5) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.85)'; g.fillText('Glisse le doigt pour te déplacer : l’Arche tire seule', 180, 470); }
+    if (this.over) { g.fillStyle = 'rgba(5,7,13,.55)'; g.fillRect(0, 0, 360, 640); g.fillStyle = '#ff5468'; g.font = '800 28px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('FIN DE L’EXPÉDITION', 180, 300); }
   },
-  info() { return `Secteur ${this.wave} / 10 · ${this.kills} détruits`; },
-  result() { return { cleared: this.cleared, kills: this.kills }; },
+  info() { return `Vague ${this.wave} · ${this.lives} vie${this.lives > 1 ? 's' : ''}`; },
+  /* Bouton du haut : la partie est sauvegardée au début de la vague en cours. */
+  quit() {
+    if (this.over) return;
+    this.paused = true;
+    this.quitting = true;
+    Minigames.finish(this.result());
+  },
+  result() { return { wave: this.wave, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, quit: !!this.quitting, why: this.why }; },
   reward(r) {
-    const c = r.cleared, gr = { gems: 4 * c + Math.floor(r.kills / 15) };
-    if (c >= 10) { gr.gems += 30; gr.item = 2; } else if (c >= 5) gr.item = c >= 8 ? 1 : 0;
-    return { best: c, grant: gr, title: c >= 10 ? 'Expédition réussie !' : 'Fin de l’expédition', text: `Secteurs franchis : ${c} / 10 · ennemis détruits : ${r.kills}.` };
-  }
+    const s = App.slot, e = ExpData.get(s);
+    this.quitting = false;
+    if (r.quit) return { summary: 'partie sauvegardée', title: 'Partie en pause', text: `Ta partie est sauvegardée : tu reprendras au début de la vague ${r.wave}, avec ${e.run ? e.run.lives : 0} vie(s). Les éclats de cette vague n’étaient pas encore gagnés.` };
+    const cleared = Math.max(0, r.wave - 1), prev = e.best;
+    let gems = 0;
+    if (cleared > prev) { gems = (cleared - prev) * 3; for (let k = Math.floor(prev / 5) + 1; k * 5 <= cleared; k++) gems += 20; e.best = cleared; }
+    e.score = Math.max(e.score, r.score);
+    Store.touch(s);
+    const parts = [`${fmtBig(r.ec)} ${EXC} éclats`];
+    if (r.items) parts.push(`${r.items} objet${r.items > 1 ? 's' : ''} pour le Hangar`);
+    if (gems) parts.push(mgGrant(s, { gems }));
+    return { best: e.best, summary: parts.join(' · '), title: cleared > prev ? 'Nouveau record !' : 'Fin de l’expédition',
+      text: `${r.why || ''} Vagues franchies : ${cleared} · score ${fmtBig(r.score)} · ${r.kills} ennemis détruits.` };
+  },
+  afterClose() { ExpHub.open(); }
 };
 
 /* ---------- Plongée des Abysses ---------- */
@@ -6145,7 +6622,7 @@ const Dive = {
     for (const f of this.fx) { f.t -= dt; f.y -= 20 * dt; }
     this.fx = this.fx.filter(f => f.t > 0);
   },
-  draw(g) { if (!D2) return DIVE_DRAW.call(this, g); this.drawOld(g); },
+  draw(g) { this.drawOld(g); },
   drawOld(g) {
     const cam = this.cam, depthK = clamp(this.y / this.DEPTH, 0, 1);
     const sky = g.createLinearGradient(0, 0, 0, 640);
@@ -6187,7 +6664,10 @@ const Dive = {
     g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(10, 10, 160, 10); g.fillStyle = this.o2 < 15 ? '#ff5468' : '#5ef0ff'; g.fillRect(10, 10, 160 * this.o2 / 60, 10);
     g.fillStyle = '#e4ecfb'; g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'left'; g.fillText(`O₂ ${Math.ceil(this.o2)} s · ${Math.round(this.y / 10)} m`, 10, 34);
     if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t); g.font = '800 20px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); g.globalAlpha = 1; }
-    if (this.t < 6) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.8)'; g.fillText('Maintiens le doigt pour nager', 180, 604); g.fillText('Touche brièvement pour lancer le harpon', 180, 622); }
+    if (this.t < 6) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.8)'; g.fillText('Maintiens le doigt pour nager', 180, 586); g.fillText('Touche brièvement pour lancer le harpon', 180, 604); g.fillStyle = '#ffcf4a'; g.fillText('Remonte au ponton pour garder ta prise', 180, 622); }
+    if (this.maxY > 160) { const low = this.o2 < 15; g.globalAlpha = 0.6 + 0.4 * Math.sin(this.t * (low ? 10 : 3)); g.fillStyle = low ? '#ff5468' : '#ffcf4a';
+      g.beginPath(); g.moveTo(330, 60); g.lineTo(346, 80); g.lineTo(336, 80); g.lineTo(336, 96); g.lineTo(324, 96); g.lineTo(324, 80); g.lineTo(314, 80); g.closePath(); g.fill();
+      g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.fillText(low ? 'Remonte !' : `${Math.round(this.y / 10)} m`, 330, 112); g.globalAlpha = 1; }
   },
   value() { return this.bag.reduce((a, f) => a + f.val, 0); },
   info() { return `Prise : ${this.bag.length} poissons · ${this.value()} pts`; },
@@ -6353,7 +6833,7 @@ const Plinko = {
     Minigames.bindBuy(ov, back);
     $('plBack').onclick = back;
   },
-  draw(g) { if (!D2) return PLINKO_DRAW.call(this, g); this.drawOld(g); },
+  draw(g) { this.drawOld(g); },
   drawOld(g) {
     g.fillStyle = '#070a14'; g.fillRect(0, 0, 360, 640);
     // Rail de lâcher
@@ -6435,7 +6915,7 @@ const Breach = {
     this._pY = pY;
   },
   end(win) { this.over = true; this.win = win; this.flash = 0; this.fx = []; setTimeout(() => Minigames.finish(this.result()), 900); },
-  draw(g) { if (!D2) return RUN_DRAW.call(this, g); this.drawOld(g); },
+  draw(g) { this.drawOld(g); },
   drawOld(g) {
     const pY = 520, sy = wy => pY - (wy - this.scroll);
     g.fillStyle = '#060912'; g.fillRect(0, 0, 360, 640);
@@ -7595,8 +8075,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.2';
+const APP_VERSION = '7.3';
 const CHANGELOG = [
+  { v: '7.3', date: '02.11.2026', items: ['Expédition de l’Arche devient un vrai jeu d’envahisseurs : formation qui descend par à-coups et accélère, abris destructibles, vaisseau mystère, plongeurs, vaisseau-mère toutes les 5 vagues, bonus à ramasser', 'Partie libre et sauvegardée : une partie interrompue reprend au début de la vague, et chaque vaisseau-mère vaincu débloque un nouveau point de départ', 'Hangar : 5 emplacements (canon, module, coque, réacteur, puce) et 17 objets de 5 raretés à gagner, améliorer ou recycler', 'Atelier : améliorations permanentes payées en éclats ✦ ; des gemmes à chaque nouveau record', 'Les mini-jeux retrouvent leurs graphismes d’origine'] },
   { v: '7.2', date: '02.11.2026', items: ['Les 12 ennemis de la Rouille en figurines rendues dans Blender : machines rouillées en lévitation, 16 directions de déplacement, anneau au sol à la couleur de leur type', 'Le noyau de l’Arche et le portail de la Rouille en figurines', 'Le réglage « Tourelles et ennemis (vue 2D) » permet toujours de revenir au style néon'] },
   { v: '7.1', date: '02.11.2026', items: ['Nouvelle vue des tourelles : les 20 tourelles sont modélisées en 3D dans Blender puis rendues en figurines dessin animé, avec 32 orientations pour celles qui visent', 'Réglages › Graphismes › Tourelles (vue 2D) : choisis entre les figurines (nouvelle vue) et le style néon actuel'] },
   { v: '7.0.4', date: '01.11.2026', items: ['Téléphone : rien ne passe plus sous l’heure, la batterie, l’encoche ou la barre d’accueil, dans les menus, les mini-jeux et la bataille', 'Mini-jeux : la barre du haut (Terminer, Abandonner) descend sous la barre d’état', 'Téléphone en paysage : onglets en colonne à gauche et écran Campagne sur deux colonnes', 'Le bouton « Activer le son » ne recouvre plus rien dans les menus : un appui suffit, et la roue des réglages signale quand le son attend'] },
