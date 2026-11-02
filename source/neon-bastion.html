@@ -751,6 +751,10 @@ html.da body.hub .gcard{border-radius:14px;border-width:3px;box-shadow:inset 0 3
 .expset{border-color:rgba(61,220,90,.45)}.expsetname{color:#3ddc5a}.expsetname small{color:var(--muted);font-weight:400}
 .exppieces{display:flex;flex-wrap:wrap;gap:4px}.exppieces span{font-size:.72rem;padding:2px 6px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}.exppieces span.own{color:var(--fg)}.exppieces span.on{color:#3ddc5a;border-color:#3ddc5a}
 .expbonus{margin:0;padding-left:18px;font-size:.78rem;color:var(--muted)}.expbonus li.on{color:#3ddc5a}.expspec b{color:#3ddc5a}
+.expitem.expitem{position:relative}.expitem.myth{border-left-color:transparent}.expitem.myth::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:5px;border-radius:10px 0 0 10px;background:linear-gradient(180deg,#ff4a5a,#ffd84a,#5dff9a,#5ef0ff,#c58bff,#ff7ae0)}
+.expitem.myth b,.expdetail.myth .expname{background:linear-gradient(90deg,#ff4a5a,#ffd84a,#5dff9a,#5ef0ff,#c58bff,#ff7ae0);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.expdetail.myth{border-color:#c58bff;box-shadow:0 0 0 1px rgba(94,240,255,.35)}.expstar{color:#ffd84a;letter-spacing:-1px}
+.expstars{display:flex;gap:2px}.expstars i{font-style:normal;color:#2a3450;font-size:1rem}.expstars i.on{color:#ffd84a;text-shadow:0 0 6px rgba(255,216,74,.6)}
 .expempty{border:1px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--muted);font-size:.8rem}
 .expitem{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--rc);background:rgba(10,14,24,.6);width:100%}
 .expitem.sel{box-shadow:0 0 0 2px var(--rc)}.expitem.eq{background:color-mix(in srgb,var(--rc) 12%,rgba(10,14,24,.6))}
@@ -5932,15 +5936,16 @@ const EXP_SLOTS = [
 ];
 /* Raretés propres à l'Expédition. Les objets de set (verts) forment une catégorie à part : ils ne se fusionnent pas. */
 const EXP_RAR = [
-  { name: 'Commun', color: '#b8c2d8', mul: 1 },
-  { name: 'Rare', color: '#4fa3ff', mul: 1.6 },
-  { name: 'Épique', color: '#c58bff', mul: 2.4 },
-  { name: 'Exceptionnel', color: '#ff8a3d', mul: 3.2 },
-  { name: 'Légendaire', color: '#ffcf4a', mul: 4.2 },
-  { name: 'Mythique', color: '#ff4fa3', mul: 5.6 },
-  { name: 'Set', color: '#3ddc5a', mul: 3.6 }
+  { name: 'Commun', color: '#b8c2d8', mul: 1, lv: 1 },
+  { name: 'Magique', color: '#4fa3ff', mul: 1.5, lv: 2 },
+  { name: 'Rare', color: '#ffd84a', mul: 2.1, lv: 3 },
+  { name: 'Exceptionnel', color: '#ff8a3d', mul: 2.8, lv: 3 },
+  { name: 'Épique', color: '#c58bff', mul: 3.6, lv: 4 },
+  { name: 'Légendaire', color: '#ff4a5a', mul: 4.6, lv: 5 },
+  { name: 'Mythique', color: '#ff7ae0', mul: 5.8, lv: 6, rainbow: true },
+  { name: 'Set', color: '#3ddc5a', mul: 4, lv: 3 }
 ];
-const EXP_SET_R = 6, EXP_TOP_R = 5;
+const EXP_SET_R = 7, EXP_TOP_R = 6, EXP_STARS = 12;
 /* Statistiques d'équipement. pct : pourcentage · flat : nombre · lv : niveau d'arme · txt : effet spécial. */
 const EXP_STAT = {
   dmg: { l: 'dégâts', pct: true }, rate: { l: 'cadence', pct: true }, multi: { l: 'projectile', flat: true }, pierce: { l: 'perforation', flat: true },
@@ -6043,13 +6048,15 @@ const ExpData = {
     const m = Minigames.data(s);
     if (!m.exp || !m.exp.v) {
       const old = m.best.exp || 0;
-      m.exp = { v: 2, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
+      m.exp = { v: 3, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
       m.best.exp = 0;
     }
     const e = m.exp;
     if (e.ups.bunker) { e.ups.shield = Math.min(3, e.ups.bunker); delete e.ups.bunker; }
     // v2 : la rareté Exceptionnel s'insère entre Épique et Légendaire
     if (e.v < 2) { for (const it of e.items) if (it.r >= 3) it.r++; e.v = 2; }
+    // v3 : 7 raretés (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique) + Set ; Légendaire, Mythique et Set gardent leur nom
+    if (e.v < 3) { for (const it of e.items) it.r = [0, 1, 2, 3, 5, 6, 7][it.r] ?? it.r; e.v = 3; }
     return e;
   },
   upCost(u, lv) { return Math.round(u.cost * Math.pow(u.k, lv)); },
@@ -6059,12 +6066,12 @@ const ExpData = {
   maxLevel(it) { return this.isSet(it) ? 25 : 5 + 5 * it.r; },
   /* Valeurs d'un objet : principale + secondaire (dès Rare ; toujours pour un objet de set), selon la rareté et le niveau. */
   vals(it) {
-    const b = this.model(it), set = !!b.set, mul = EXP_RAR[it.r].mul, lvk = 1 + 0.08 * (it.lvl - 1), out = {};
+    const b = this.model(it), set = !!b.set, R = EXP_RAR[it.r], st0 = it.st || 0, mul = R.mul * (1 + 0.1 * st0), lvk = 1 + 0.08 * (it.lvl - 1), out = {};
     const add = (k, base, sub) => {
       const st = EXP_STAT[k];
       let v;
-      if (st.lv) v = sub ? 1 + Math.floor((it.lvl - 1) / 10) : (set ? 2 : 1 + Math.min(it.r, 4)) + Math.floor((it.lvl - 1) / 5);
-      else if (st.flat) v = base * (sub ? 1 : set ? 2 : 1 + (it.r >= 3 ? 1 : 0) + (it.r >= 5 ? 1 : 0));
+      if (st.lv) v = sub ? 1 + Math.floor((it.lvl - 1) / 10) : R.lv + Math.floor((it.lvl - 1) / 5) + Math.floor(st0 / 3);
+      else if (st.flat) v = base * (sub ? 1 : (set ? 2 : 1 + (it.r >= 3 ? 1 : 0) + (it.r >= 6 ? 1 : 0)) + (st0 >= 6 ? 1 : 0) + (st0 >= 12 ? 1 : 0));
       else v = base * mul * lvk * (sub ? 0.6 : 1);
       out[k] = (out[k] || 0) + v;
     };
@@ -6119,7 +6126,7 @@ const ExpData = {
       const S = EXP_SETS[Math.floor(Math.random() * EXP_SETS.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)];
       it = { uid: e.next++, b: S.id + '_' + p[0], r: EXP_SET_R, lvl: 1, n: 1 };
     } else {
-      const w = [60, 28, 9, 4, 1.5, 0.4].map((x, i) => i ? x * (1 + wave * 0.04) * luck : x);
+      const w = [60, 28, 10, 5, 2.5, 0.9, 0.25].map((x, i) => i ? x * (1 + wave * 0.04) * luck : x);
       let r = 0, t = Math.random() * w.reduce((a, b) => a + b, 0);
       for (let i = 0; i < w.length; i++) { t -= w[i]; if (t <= 0) { r = i; break; } }
       r = Math.max(r, minR || 0);
@@ -6130,8 +6137,12 @@ const ExpData = {
     e.items.push(it); e.fresh++;
     return { it };
   },
-  costR(it) { return this.isSet(it) ? 3.5 : it.r; },
-  recycleValue(it) { return Math.round(6 * Math.pow(this.costR(it) + 1, 2) + 4 * (it.lvl - 1)); },
+  costR(it) { return this.isSet(it) ? 4 : it.r; },
+  /* Étoiles : une fois l'objet Mythique (ou de set) au niveau maximum, 12 étoiles de plus. Chaque étoile : +10 % aux valeurs ; tous les 3 : +1 niveau d'arme. */
+  canStar(it) { return (it.r === EXP_TOP_R || this.isSet(it)) && it.lvl >= this.maxLevel(it) && (it.st || 0) < EXP_STARS; },
+  starCost(it) { return Math.round(250 * Math.pow(1.45, it.st || 0) * (this.isSet(it) ? 0.8 : 1)); },
+  stars(it) { return it.st ? '★'.repeat(it.st) : ''; },
+  recycleValue(it) { return Math.round(6 * Math.pow(this.costR(it) + 1, 2) + 4 * (it.lvl - 1) + 60 * (it.st || 0)); },
   upgradeCost(it) { return Math.round((12 + it.lvl * 8) * (1 + this.costR(it) * 0.6)); },
   /* Fusion : 3 exemplaires du même objet et de la même rareté donnent la rareté suivante (comme pour l'équipage). */
   mergeGroup(e, it) {
@@ -6151,7 +6162,7 @@ const ExpData = {
     return keep;
   },
   remove(e, it) { for (const k in e.eq) if (e.eq[k] === it.uid) e.eq[k] = null; e.items = e.items.filter(x => x !== it); },
-  score(it) { const v = this.vals(it); return Object.keys(v).reduce((a, k) => a + (EXP_STAT[k].pct ? v[k] * 100 : v[k] * 12), 0) + (this.isSet(it) ? 15 : 0); },
+  score(it) { const v = this.vals(it); return (it.st || 0) * 4 + Object.keys(v).reduce((a, k) => a + (EXP_STAT[k].pct ? v[k] * 100 : v[k] * 12), 0) + (this.isSet(it) ? 15 : 0); },
   name(it) { return this.model(it).name; }
 };
 
@@ -6211,22 +6222,26 @@ const ExpHub = {
   },
   itemCard(it, eqd, div) {
     const R = ExpData.rar(it), b = ExpData.model(it), el = div ? 'div' : 'button';
-    return `<${el} class="expitem${eqd ? ' eq' : ''}${this.sel === it.uid ? ' sel' : ''}${b.set ? ' set' : ''}" ${div ? '' : `data-it="${it.uid}" type="button"`} style="--rc:${R.color}">
-      <i>${EXP_SLOTS.find(x => x.id === b.slot).icon}</i><span><b>${esc(b.name)}</b><small>${esc(this.tag(it))} · niv. ${it.lvl}${eqd ? ' · équipé' : ''}</small><em>${esc(ExpData.desc(it))}</em></span></${el}>`;
+    return `<${el} class="expitem${eqd ? ' eq' : ''}${this.sel === it.uid ? ' sel' : ''}${b.set ? ' set' : ''}${R.rainbow ? ' myth' : ''}" ${div ? '' : `data-it="${it.uid}" type="button"`} style="--rc:${R.color}">
+      <i>${EXP_SLOTS.find(x => x.id === b.slot).icon}</i><span><b>${esc(b.name)}</b><small>${esc(this.tag(it))} · niv. ${it.lvl}${eqd ? ' · équipé' : ''}${it.st ? ` <span class="expstar">${ExpData.stars(it)}</span>` : ''}</small><em>${esc(ExpData.desc(it))}</em></span></${el}>`;
   },
   /* Fiche d'un objet : valeurs actuelles → niveau suivant, amélioration, fusion, recyclage. */
   detailHtml(e, it) {
     const b = ExpData.model(it), R = ExpData.rar(it), eqd = e.eq[b.slot] === it.uid, max = ExpData.maxLevel(it), cost = ExpData.upgradeCost(it), rv = ExpData.recycleValue(it);
-    const v = ExpData.vals(it), nv = it.lvl < max ? ExpData.vals({ ...it, lvl: it.lvl + 1 }) : null, grp = ExpData.mergeGroup(e, it);
-    let h = `<div class="expbox expdetail" style="--rc:${R.color}"><b style="color:${R.color}">${esc(b.name)}</b><small>${esc(this.tag(it))} · ${EXP_SLOTS.find(x => x.id === b.slot).name} · niveau ${it.lvl} / ${max}</small>
+    const star = ExpData.canStar(it), sc = star ? ExpData.starCost(it) : 0;
+    const v = ExpData.vals(it), nv = it.lvl < max ? ExpData.vals({ ...it, lvl: it.lvl + 1 }) : star ? ExpData.vals({ ...it, st: (it.st || 0) + 1 }) : null, grp = ExpData.mergeGroup(e, it);
+    const canSt = it.r === EXP_TOP_R || b.set;
+    let h = `<div class="expbox expdetail${R.rainbow ? ' myth' : ''}" style="--rc:${R.color}"><b class="expname" style="color:${R.color}">${esc(b.name)}</b><small>${esc(this.tag(it))} · ${EXP_SLOTS.find(x => x.id === b.slot).name} · niveau ${it.lvl} / ${max}${canSt ? ` · étoiles ${it.st || 0} / ${EXP_STARS}` : ''}</small>
+      ${canSt ? `<div class="expstars">${Array.from({ length: EXP_STARS }, (_, i) => `<i class="${i < (it.st || 0) ? 'on' : ''}">★</i>`).join('')}</div>` : ''}
       <ul>${Object.keys(v).map(k => `<li>${esc(ExpData.fmt(k, v[k]))}${nv && nv[k] !== v[k] ? ` <span class="expnext">→ ${ExpData.short(k, nv[k])}</span>` : ''}</li>`).join('')}</ul>`;
     if (b.set) h += this.setBlock(e, EXP_SET_BY_ID[b.set], true);
-    else if (it.r < EXP_TOP_R) {
+    if (canSt && it.lvl < max) h += `<p class="hint">Au niveau ${max}, l’objet peut gagner jusqu’à ${EXP_STARS} étoiles : +10 % à ses valeurs par étoile, +1 niveau d’arme toutes les 3 étoiles.</p>`;
+    if (b.set) {} else if (it.r < EXP_TOP_R) {
       const n = e.items.filter(x => x.b === it.b && x.r === it.r).length;
       h += `<p class="hint">Fusion : 3 × ${esc(b.name)} ${R.name.toLowerCase()} → 1 ${EXP_RAR[it.r + 1].name.toLowerCase()} (tu en as ${n}/3). Le niveau le plus haut est gardé.</p>`;
     }
     h += `<div class="row">${eqd ? `<button class="btn small" data-act="unequip" type="button">Retirer</button>` : `<button class="btn small primary" data-act="equip" type="button">Équiper</button>`}
-      ${it.lvl < max ? `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-act="up" type="button" ${e.eclats >= cost ? '' : 'disabled'}>Améliorer · ${cost} ${EXC}</button>` : '<span class="hint">Niveau maximum</span>'}
+      ${it.lvl < max ? `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-act="up" type="button" ${e.eclats >= cost ? '' : 'disabled'}>Améliorer · ${cost} ${EXC}</button>` : star ? `<button class="btn small ${e.eclats >= sc ? 'gold' : ''}" data-act="star" type="button" ${e.eclats >= sc ? '' : 'disabled'}>★ Étoile ${(it.st || 0) + 1} · ${fmtBig(sc)} ${EXC}</button>` : `<span class="hint">${canSt ? 'Toutes les étoiles' : 'Niveau maximum'}</span>`}
       ${grp.length >= 3 ? `<button class="btn small violet" data-act="merge" type="button">Fusionner ×3 → ${EXP_RAR[it.r + 1].name}</button>` : ''}
       ${eqd ? '' : `<button class="btn small" data-act="recycle" type="button">Recycler · +${rv} ${EXC}</button>`}</div></div>`;
     return h;
@@ -6277,7 +6292,7 @@ const ExpHub = {
   },
   setsHtml(e) {
     const own = EXP_SETS.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
-    return `<p class="hint">Les objets de set (verts) sont rares : Colosses et ennemis d’élite peuvent en laisser à partir du secteur 5. Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent.</p>` +
+    return `<p class="hint">Les objets de set (verts) sont rares : Colosses et ennemis d’élite peuvent en laisser à partir du secteur 5. Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent. Une pièce de set au niveau 25 peut encore gagner 12 étoiles.</p>` +
       EXP_SETS.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
   },
   atelierHtml(s, e) {
@@ -6313,6 +6328,7 @@ const ExpHub = {
       if (a === 'equip') { e.eq[slot] = it.uid; if (this.pick) { this.pick = null; this.sel = null; } done('build'); }
       else if (a === 'unequip') { e.eq[slot] = null; done(); }
       else if (a === 'up') { const c = ExpData.upgradeCost(it); if (e.eclats < c) return; e.eclats -= c; it.lvl++; done('up'); }
+      else if (a === 'star') { if (!ExpData.canStar(it)) return; const c = ExpData.starCost(it); if (e.eclats < c) return; e.eclats -= c; it.st = (it.st || 0) + 1; done('up'); }
       else if (a === 'merge') { if (ExpData.merge(e, it)) { this.sel = it.uid; done('up'); } }
       else if (a === 'recycle') { e.eclats += ExpData.recycleValue(it); ExpData.remove(e, it); this.sel = null; done('sell'); }
     }; });
@@ -8226,8 +8242,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.5';
+const APP_VERSION = '7.6';
 const CHANGELOG = [
+  { v: '7.6', date: '02.11.2026', items: ['Expédition : 7 raretés dans l’ordre Commun (gris), Magique (bleu), Rare (jaune), Exceptionnel (orange), Épique (violet), Légendaire (rouge), Mythique (arc-en-ciel), plus les objets de set (verts). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques et les anciens Épiques deviennent Rares', 'Étoiles : un objet Mythique ou de set au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % à ses valeurs par étoile, +1 niveau d’arme toutes les 3 étoiles)', 'La fusion de 3 objets identiques va maintenant jusqu’à Mythique'] },
   { v: '7.5', date: '02.11.2026', items: ['Expédition, Hangar : touche un emplacement pour choisir son équipement parmi les objets compatibles', 'Fiche d’objet comme pour l’équipage : valeurs actuelles → niveau suivant, amélioration, fusion de 3 objets identiques vers la rareté suivante, recyclage (et recyclage des communs en un geste)', 'Nouvelle rareté Exceptionnel (orange), entre Épique et Légendaire', '12 sets d’objets verts (3 à 5 pièces) : bonus spéciaux selon le nombre de pièces équipées (arc électrique, survie au coup fatal, recharge de bouclier, achèvement, dégâts contre les Colosses…). Nouvel onglet Sets', 'Difficulté nettement relevée : ennemis plus résistants, plus d’élites, tirs plus rapides et plus fréquents au fil des secteurs', '7 nouveaux ennemis : Tisseur (10), Porte-essaim (12), Soigneur (15), Poseur de mines (18), Spectre (21), Chasseur (24), Bombardier (27)'] },
   { v: '7.4.2', date: '02.11.2026', items: ['Expédition, Atelier : la liste ne remonte plus en haut après chaque achat', 'Chaque amélioration affiche son effet actuel et celui du prochain niveau', 'L’amélioration « Aimant » de l’Atelier devient « Collecteur » pour ne plus se confondre avec le bonus Aimant'] },
   { v: '7.4.1', date: '02.11.2026', items: ['Expédition de l’Arche : un ennemi qui sort par le bas de l’écran ne retire plus de coque, il revient par le haut', 'Le tir des tireurs d’élite et sa ligne de visée passent en orange pour ne plus se confondre avec tes tirs', 'Chaque dégât est maintenant signalé : flash rouge et « −1 coque » au-dessus de l’Arche'] },
