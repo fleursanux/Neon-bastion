@@ -6271,7 +6271,7 @@ const Expedition = {
     const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy), step = this.speed * dt;
     if (d > 1) { this.x += dx / d * Math.min(step, d); this.y += dy / d * Math.min(step, d); }
     this.x = clamp(this.x, 16, 344); this.y = clamp(this.y, 140, 620);
-    if (this.inv > 0) this.inv -= dt;
+    if (this.inv > 0) this.inv -= dt; if (this.hitFx > 0) this.hitFx -= dt;
     // Apparitions
     if (this.spawnQ.length) { this.spawnT -= dt; if (this.spawnT <= 0) { const s = this.spawnQ.shift(); this.spawn(s.type); this.spawnT = s.delay; } }
     // Arme principale : tir automatique vers l'ennemi le plus proche
@@ -6325,7 +6325,7 @@ const Expedition = {
         }
       }
       if (e.type === 'sniper') { e.fire -= dt; if (e.fire <= 0 && e.y > 60) { if (!e.aim) { e.aim = 0.8; e.ax = this.x; e.ay = this.y; } e.aim -= dt; if (e.aim <= 0.01) { const a = Math.atan2(e.ay - e.y, e.ax - e.x); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 420, vy: Math.sin(a) * 420, fast: true }); e.aim = 0; e.fire = 3 + Math.random(); } } }
-      if (e.y > 680 || e.x < -60 || e.x > 420 || e.y < -200) { e.dead = true; e.gone = true; if (e.y > 680) this.hurt(); }
+      if (e.y > 680 || e.x < -60 || e.x > 420) { e.y = -30; e.x = 30 + Math.random() * 300; if (e.type === 'dart') e.mode = 0; } else if (e.y < -200) { e.dead = true; e.gone = true; }
     }
     // Drones orbitaux
     for (let i = 0; i < this.orbs; i++) { const a = this.t * 3 + i * TAU / this.orbs, ox = this.x + Math.cos(a) * 40, oy = this.y + Math.sin(a) * 40; for (const e of this.en) if ((e.x - ox) ** 2 + (e.y - oy) ** 2 < (e.r + 7) ** 2) this.damage(e, this.dmg * 2.2 * dt); }
@@ -6382,7 +6382,7 @@ const Expedition = {
   hurt() {
     if (this.inv > 0 || this.over) return;
     if (this.shields > 0) { this.shields--; this.inv = 0.8; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#4fa3ff', r: 30, t: 0.4 }); Sound.sfx && Sound.sfx('build'); return; }
-    this.hp--; this.inv = this.invT; buzz(60); Sound.sfx && Sound.sfx('alarm');
+    this.hp--; this.inv = this.invT; this.hitFx = 0.35; this.fx.push({ txt: '−1 coque', c: '#ff5468', x: clamp(this.x, 44, 316), y: this.y - 34, t: 1 }); buzz(60); Sound.sfx && Sound.sfx('alarm');
   },
   gameOver() {
     if (this.over) return;
@@ -6410,7 +6410,7 @@ const Expedition = {
       g.restore();
       if (e.elite) { g.strokeStyle = '#ffcf4a'; g.lineWidth = 1.5; g.setLineDash([2, 3]); g.beginPath(); g.arc(e.x, e.y, e.r + 5, 0, TAU); g.stroke(); g.setLineDash([]); }
       if (e.type === 'dart' && e.mode === 1) { g.strokeStyle = 'rgba(255,51,85,.5)'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(this.x, this.y); g.stroke(); g.setLineDash([]); }
-      if (e.type === 'sniper' && e.aim > 0) { g.strokeStyle = `rgba(94,240,255,${0.3 + (0.8 - e.aim)})`; g.lineWidth = 1; g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(e.ax, e.ay); g.stroke(); }
+      if (e.type === 'sniper' && e.aim > 0) { g.strokeStyle = `rgba(255,138,61,${0.3 + (0.8 - e.aim)})`; g.lineWidth = 1.5; g.setLineDash([6, 5]); g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(e.ax, e.ay); g.stroke(); g.setLineDash([]); }
       if (e.max > 20) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(e.x - e.r, e.y - e.r - 8, e.r * 2, 3); g.fillStyle = e.c; g.fillRect(e.x - e.r, e.y - e.r - 8, e.r * 2 * Math.max(0, e.hp / e.max), 3); }
     }
     if (this.beam > 0) { const bw = 8 + 3 * this.laser; g.globalCompositeOperation = 'lighter'; g.fillStyle = `rgba(255,95,143,${0.3 + this.beam})`; g.fillRect(this.x - bw / 2, 0, bw, this.y - 14); g.fillStyle = 'rgba(255,255,255,.7)'; g.fillRect(this.x - 1.5, 0, 3, this.y - 14); g.globalCompositeOperation = 'source-over'; }
@@ -6419,7 +6419,7 @@ const Expedition = {
       if (s.mis) { g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx)); g.fillStyle = '#ff9b3d'; g.fillRect(-6, -2, 12, 4); g.fillStyle = 'rgba(255,207,74,.6)'; g.fillRect(-12, -1.5, 6, 3); g.restore(); }
       else { g.fillStyle = s.side ? '#9afff0' : '#5ef0ff'; g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx) + Math.PI / 2); g.fillRect(-1.5, -5, 3, 10); g.restore(); }
     }
-    for (const s of this.eshots) { g.fillStyle = s.fast ? '#5ef0ff' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.fast ? 3 : 4, 0, TAU); g.fill(); }
+    for (const s of this.eshots) { if (s.fast) { const k = 0.05; g.strokeStyle = 'rgba(255,120,60,.55)'; g.lineWidth = 3; g.beginPath(); g.moveTo(s.x - s.vx * k, s.y - s.vy * k); g.lineTo(s.x, s.y); g.stroke(); } g.fillStyle = s.fast ? '#ff8a3d' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.fast ? 4 : 4, 0, TAU); g.fill(); }
     for (const d of this.drops) { const P2 = EXP_POWERS[d.k]; g.save(); g.shadowColor = P2.c; g.shadowBlur = 10; g.strokeStyle = P2.c; g.lineWidth = 2; g.fillStyle = '#05070d'; g.beginPath(); g.arc(d.x, d.y, 9, 0, TAU); g.fill(); g.stroke(); g.restore(); g.fillStyle = P2.c; g.font = '800 11px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(P2.l, d.x, d.y + 1); g.textBaseline = 'alphabetic'; }
     for (const f of this.fx) {
       if (f.p) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.fillRect(f.x - 1.5, f.y - 1.5, 3, 3); g.globalAlpha = 1; }
@@ -6439,6 +6439,7 @@ const Expedition = {
       g.restore();
     }
     // Coque, boucliers, éclats, bonus actifs
+    if (this.hitFx > 0) { g.fillStyle = `rgba(255,40,70,${(this.hitFx / 0.35 * 0.28).toFixed(3)})`; g.fillRect(0, 0, 360, 640); }
     for (let i = 0; i < this.maxHp; i++) { g.fillStyle = i < this.hp ? '#ff5468' : '#24314f'; g.fillRect(10 + i * 16, 10, 12, 12); }
     for (let i = 0; i < this.shields; i++) { g.strokeStyle = '#4fa3ff'; g.lineWidth = 2; g.beginPath(); g.arc(16 + i * 16, 34, 6, 0, TAU); g.stroke(); }
     g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'right'; g.fillStyle = '#c58bff'; g.fillText(`${EXC} ${Math.round(this.runEc + this.waveEc)}`, 350, 20);
@@ -7997,8 +7998,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.4';
+const APP_VERSION = '7.4.1';
 const CHANGELOG = [
+  { v: '7.4.1', date: '02.11.2026', items: ['Expédition de l’Arche : un ennemi qui sort par le bas de l’écran ne retire plus de coque, il revient par le haut', 'Le tir des tireurs d’élite et sa ligne de visée passent en orange pour ne plus se confondre avec tes tirs', 'Chaque dégât est maintenant signalé : flash rouge et « −1 coque » au-dessus de l’Arche'] },
   { v: '7.4', date: '02.11.2026', items: ['Expédition de l’Arche retrouve son jeu d’origine et ses graphismes néon : l’Arche se pilote dans tout l’écran et tire seule', 'Secteurs sans fin, Colosse tous les 5 secteurs, nouveaux ennemis (plongeurs, scissipares, tireurs d’élite) et ennemis d’élite', 'Après chaque secteur : 3 améliorations au choix parmi 21 (14 armes : missiles, rayon, arc électrique, onde de choc, mines, drones, canons latéraux et arrière…, plus boucliers, coque, propulseurs, butin)', 'On garde la sauvegarde, le Hangar et l’Atelier : la partie reprend au début du secteur avec toutes ses améliorations'] },
   { v: '7.3', date: '02.11.2026', items: ['Expédition de l’Arche devient un vrai jeu d’envahisseurs : formation qui descend par à-coups et accélère, abris destructibles, vaisseau mystère, plongeurs, vaisseau-mère toutes les 5 vagues, bonus à ramasser', 'Partie libre et sauvegardée : une partie interrompue reprend au début de la vague, et chaque vaisseau-mère vaincu débloque un nouveau point de départ', 'Hangar : 5 emplacements (canon, module, coque, réacteur, puce) et 17 objets de 5 raretés à gagner, améliorer ou recycler', 'Atelier : améliorations permanentes payées en éclats ✦ ; des gemmes à chaque nouveau record', 'Les mini-jeux retrouvent leurs graphismes d’origine'] },
   { v: '7.2', date: '02.11.2026', items: ['Les 12 ennemis de la Rouille en figurines rendues dans Blender : machines rouillées en lévitation, 16 directions de déplacement, anneau au sol à la couleur de leur type', 'Le noyau de l’Arche et le portail de la Rouille en figurines', 'Le réglage « Tourelles et ennemis (vue 2D) » permet toujours de revenir au style néon'] },
