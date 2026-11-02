@@ -4251,6 +4251,22 @@ const activeLoadout = slot => slot.loadout.filter(id => slot.relics[id]).slice(0
    On les obtient en fin de niveau, dans les quêtes et dans la boutique.
    ===================================================================== */
 /* 7 raretés (même ordre que l'Expédition). Au niveau maximum, un objet Mythique gagne jusqu'à 12 étoiles. */
+/* Chances de rareté communes à tout le jeu (équipage, Expédition, Course des Toits).
+   Plus le niveau L monte, plus les raretés hautes gagnent du terrain, lentement ; la chance d'objet profite surtout aux hautes raretés.
+   Index : 0 Commun … 6 Mythique, 7 Set (même chance que le Mythique). */
+function rarityWeights(L, luck) {
+  const B = [60, 28, 10, 5, 2.5, 0.9, 0.25], K = [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06], lk = Math.max(1, luck || 1);
+  const w = B.map((b, i) => b * (1 + K[i] * Math.max(0, L)) * Math.pow(lk, i / 3));
+  w.push(w[6]);
+  return w;
+}
+function pickRarity(L, luck, min, rng, noSet) {
+  const w = rarityWeights(L, luck), ok = i => i === 7 ? !noSet : i >= (min || 0);
+  let t = 0; for (let i = 0; i < 8; i++) if (ok(i)) t += w[i];
+  let x = (rng || Math.random)() * t;
+  for (let i = 0; i < 8; i++) { if (!ok(i)) continue; x -= w[i]; if (x <= 0) return i; }
+  return min || 0;
+}
 const RARITY = [
   { name: 'Commun', color: '#b8c2d8', mul: 1, scrap: 2, price: 30 },
   { name: 'Magique', color: '#4fa3ff', mul: 1.6, scrap: 6, price: 90 },
@@ -4357,12 +4373,11 @@ const Gear = {
   },
   statText(st, v) { const d = GEAR_STATS[st]; return d.flat ? `+${v} ${d.label}` : `+${pct(v)} ${d.label}`; },
   /* Tirage d'un objet : la rareté dépend du monde atteint et d'un minimum garanti. */
-  roll(slot, min, rng) {
+  /* Tirage d'un objet : la rareté dépend du niveau atteint (voir rarityWeights) ; les sets ont la chance du Mythique. */
+  roll(slot, min, rng, noSet) {
     rng = rng || Math.random;
-    const w = maxWorld(slot), weights = [60, 28, 9 + w * 0.6, 4 + w * 0.4, 2 + w * 0.25, 1.2 + w * 0.15, 0.3 + w * 0.06];
-    let tot = 0; for (let i = min; i < 7; i++) tot += weights[i];
-    let x = rng() * tot, r = min;
-    for (let i = min; i < 7; i++) { x -= weights[i]; if (x <= 0) { r = i; break; } }
+    const r = pickRarity(slot.unlocked || 1, 1, min, rng, noSet);
+    if (r === GEAR_SET_R) return this.rollSet(slot);
     const t = GEAR[Math.floor(rng() * GEAR.length)];
     return { t: t.id, r, l: 1 };
   },
@@ -6196,14 +6211,11 @@ function makeGearData(C) { return {
   roll(s, wave, luck, minR, setChance) {
     const e = this.get(s);
     let it;
-    if (setChance && Math.random() < setChance) {
+    const r = pickRarity(wave, luck, minR || 0); void setChance; // les sets ont la même chance que le Mythique
+    if (r === C.setR) {
       const S = C.sets[Math.floor(Math.random() * C.sets.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)];
       it = { uid: e.next++, b: S.id + '_' + p[0], r: C.setR, lvl: 1, n: 1 };
     } else {
-      const w = [60, 28, 10, 5, 2.5, 0.9, 0.25].map((x, i) => i ? x * (1 + wave * 0.04) * luck : x);
-      let r = 0, t = Math.random() * w.reduce((a, b) => a + b, 0);
-      for (let i = 0; i < w.length; i++) { t -= w[i]; if (t <= 0) { r = i; break; } }
-      r = Math.max(r, minR || 0);
       const b = C.gear[Math.floor(Math.random() * C.gear.length)];
       it = { uid: e.next++, b: b.id, r, lvl: 1, n: 1 };
       if (e.items.length >= 80) { const g = this.recycleValue(it); e[C.cur] += g; return { it, auto: g }; }
@@ -6419,7 +6431,7 @@ const EXP_CFG = {
   invTab: 'Hangar', unitLabel: 'Ton vaisseau', rar: EXP_RAR, stat: EXP_STAT, slots: EXP_SLOTS, gear: EXP_GEAR, byId: EXP_GEAR_BY_ID, sets: EXP_SETS, setById: EXP_SET_BY_ID,
   ups: EXP_UPS, topR: EXP_TOP_R, setR: EXP_SET_R, stars: EXP_STARS, mulKeys: ['dmg', 'eclats', 'luck', 'power', 'rate', 'speed', 'inv'],
   emptyHint: 'Aucun objet pour l’instant : abats les Colosses et les ennemis d’élite (cercle doré) pour en gagner.',
-  setHint: 'Les objets de set (verts) sont rares : Colosses et ennemis d’élite peuvent en laisser à partir du secteur 5.',
+  setHint: 'Les objets de set (verts) sont aussi rares que les Mythiques : Colosses et ennemis d’élite peuvent en laisser.',
   get(s) {
     const m = Minigames.data(s);
     if (!m.exp || !m.exp.v) {
@@ -6528,7 +6540,7 @@ function crewMilestone(lv) {
   if (lv < 10 || lv % 10) return [];
   const s = App.slot, out = [], step = lv / 10; Gear.migrate(s);
   const give = base => { const it = Gear.give(s, base); out.push(it); };
-  const crew = r => { const b = Gear.roll(s, Math.min(r, GEAR_TOP)); b.r = r; give(b); };
+  const crew = r => { const b = Gear.roll(s, Math.min(r, GEAR_TOP), null, true); b.r = r; give(b); };
   if (step <= 6) crew(step - 1);
   else if (step === 7) { if (Math.random() < 0.5) give(Gear.rollSet(s)); else crew(GEAR_TOP); }
   else { give(Gear.rollSet(s)); crew(GEAR_TOP); }
@@ -6958,7 +6970,7 @@ const PLT_CFG = {
   invTab: 'Vestiaire', unitLabel: 'Pip', rar: EXP_RAR, stat: PLT_STAT, slots: PLT_SLOTS, gear: PLT_GEAR, byId: PLT_GEAR_BY_ID, sets: PLT_SETS, setById: PLT_SET_BY_ID,
   ups: PLT_UPS, topR: EXP_TOP_R, setR: EXP_SET_R, stars: EXP_STARS, mulKeys: ['dmg', 'rate', 'speed', 'jump', 'inv', 'bolts', 'luck', 'magnet', 'stomp'],
   emptyHint: 'Aucun objet pour l’instant : bats les gardiens (tous les 5 niveaux), écrase les ennemis d’élite (cercle doré) et ouvre les caisses dorées.',
-  setHint: 'Les objets de set (verts) sont rares : gardiens, élites et caisses dorées peuvent en laisser à partir du niveau 5.',
+  setHint: 'Les objets de set (verts) sont aussi rares que les Mythiques : gardiens, élites et caisses dorées peuvent en laisser.',
   get(s) {
     const m = Minigames.data(s);
     if (!m.plat) m.plat = { v: 1, bolts: 0, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
@@ -9486,8 +9498,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.13';
+const APP_VERSION = '7.14';
 const CHANGELOG = [
+  { v: '7.14', date: '02.11.2026', items: ['Raretés revues partout (équipage, Expédition, Course des Toits) : plus le niveau monte, plus les objets Rares, Exceptionnels, Épiques, Légendaires et Mythiques deviennent fréquents, lentement ; la chance d’objet profite surtout aux hautes raretés', 'Les objets de set ont maintenant exactement la même chance de tomber que les Mythiques, y compris pour l’équipage'] },
   { v: '7.13', date: '02.11.2026', items: ['Équipage : 10 sets verts de 3 pièces (arme, blindage, module) avec des bonus à 2 et 3 pièces portées par le même personnage. Les pièces de set montent au niveau 25 et gagnent jusqu’à 12 étoiles', 'Expédition et Course des Toits : tous les 10 niveaux, un objet pour l’équipage. Commun au niveau 10, Magique à 20, Rare à 30, Exceptionnel à 40, Épique à 50, Légendaire à 60, pièce de set ou Mythique à 70, puis une pièce de set et un Mythique tous les 10 niveaux'] },
   { v: '7.12.1', date: '02.11.2026', items: ['Course des Toits : la balise d’une salle secrète te ramène dans le niveau, devant la porte, avec ce que tu as ramassé', 'Outil de développement : bouton « Réinitialiser ce mini-jeu » (Expédition, Course des Toits) et, en bas des Événements, réinitialisation de chaque mini-jeu ou de tous'] },
   { v: '7.12', date: '02.11.2026', items: ['Course des Toits : carte deux fois plus haute (la caméra suit Pip vers le haut), un étage supérieur de plateformes avec boulons, caisses et monstres, et des sauts plus hauts', 'Mécanismes : levier en hauteur qui lève une herse, plaque de pression qui ne l’ouvre que quelques secondes, clé à aller chercher pour une porte verrouillée, interrupteur qui coupe les barrières laser', 'Trampolines, ponts qui s’effondrent sous les pieds et plateformes mobiles au-dessus de grands trous'] },
