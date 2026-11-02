@@ -5956,14 +5956,14 @@ const EXP_GEAR = [
 const EXP_GEAR_BY_ID = Object.fromEntries(EXP_GEAR.map(g => [g.id, g]));
 /* Améliorations permanentes de l'Atelier (payées en éclats). */
 const EXP_UPS = [
-  { id: 'dmg', name: 'Canon principal', desc: '+12 % de dégâts', max: 10, cost: 40, k: 1.45 },
-  { id: 'rate', name: 'Chargeur', desc: '+8 % de cadence', max: 8, cost: 50, k: 1.45 },
-  { id: 'lives', name: 'Coque', desc: '+1 vie', max: 3, cost: 200, k: 2.5 },
-  { id: 'speed', name: 'Propulseurs', desc: '+8 % de vitesse', max: 5, cost: 40, k: 1.5 },
-  { id: 'shield', name: 'Générateur de bouclier', desc: '+1 bouclier, rechargé à chaque secteur', max: 3, cost: 120, k: 2.2 },
-  { id: 'eclats', name: 'Aimant', desc: '+10 % d’éclats', max: 6, cost: 60, k: 1.5 },
-  { id: 'luck', name: 'Radar à butin', desc: '+15 % de chance d’objet', max: 5, cost: 90, k: 1.6 },
-  { id: 'power', name: 'Batteries', desc: '+15 % de durée des bonus', max: 4, cost: 60, k: 1.6 }
+  { id: 'dmg', name: 'Canon principal', desc: '+12 % de dégâts', max: 10, cost: 40, k: 1.45, tot: l => `+${12 * l} % de dégâts` },
+  { id: 'rate', name: 'Chargeur', desc: '+8 % de cadence', max: 8, cost: 50, k: 1.45, tot: l => `+${8 * l} % de cadence` },
+  { id: 'lives', name: 'Coque', desc: '+1 point de coque au départ', max: 3, cost: 200, k: 2.5, tot: l => `${3 + l} points de coque` },
+  { id: 'speed', name: 'Propulseurs', desc: '+8 % de vitesse', max: 5, cost: 40, k: 1.5, tot: l => `+${8 * l} % de vitesse` },
+  { id: 'shield', name: 'Générateur de bouclier', desc: '+1 bouclier, rechargé à chaque secteur', max: 3, cost: 120, k: 2.2, tot: l => `${l} bouclier${l > 1 ? 's' : ''}` },
+  { id: 'eclats', name: 'Collecteur', desc: '+10 % d’éclats', max: 6, cost: 60, k: 1.5, tot: l => `+${10 * l} % d’éclats` },
+  { id: 'luck', name: 'Radar à butin', desc: '+15 % de chance d’objet', max: 5, cost: 90, k: 1.6, tot: l => `+${15 * l} % de chance d’objet` },
+  { id: 'power', name: 'Batteries', desc: '+15 % de durée des bonus', max: 4, cost: 60, k: 1.6, tot: l => `+${15 * l} % de durée des bonus` }
 ];
 const ExpData = {
   get(s) {
@@ -6048,10 +6048,12 @@ const ExpHub = {
       <button class="btn small" id="expClose" type="button">Fermer</button></div>
       <div class="expwallet"><span class="expec">${EXC} <b>${fmtBig(e.eclats)}</b> éclats</span><span>Record : secteur <b>${e.best}</b></span><span>Meilleur score <b>${fmtBig(e.score)}</b></span></div>
       <div class="row exptabs">${tabs.map(([id, l]) => `<button class="btn small ${this.tab === id ? 'primary' : ''}" data-tab="${id}" type="button">${l}</button>`).join('')}</div>`;
+    const old = el.querySelector('.expdig'), keep = old && this.lastTab === this.tab ? old.scrollTop : 0; this.lastTab = this.tab;
     if (this.tab === 'play') h += this.playHtml(s, e, st);
     else if (this.tab === 'hangar') h += this.hangarHtml(s, e);
     else h += this.atelierHtml(s, e);
     el.innerHTML = h + '</div>';
+    if (keep) el.querySelector('.expdig').scrollTop = keep;
     $('expClose').onclick = () => this.close();
     el.querySelectorAll('[data-tab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.tab; if (this.tab === 'hangar') { e.fresh = 0; Store.touch(s); } this.sel = null; this.render(); }; });
     this.bind(s, e);
@@ -6106,7 +6108,7 @@ const ExpHub = {
   atelierHtml(s, e) {
     return '<p class="hint">Améliorations permanentes : elles servent pour toutes tes prochaines parties.</p><div class="explist">' + EXP_UPS.map(u => {
       const lv = e.ups[u.id] || 0, cost = ExpData.upCost(u, lv), max = lv >= u.max;
-      return `<div class="expup"><span><b>${u.name}</b> <small>niv. ${lv} / ${u.max}</small><em>${u.desc}</em></span>${max ? '<small>Maximum</small>' : `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-up="${u.id}" type="button" ${e.eclats >= cost ? '' : 'disabled'}>${cost} ${EXC}</button>`}</div>`;
+      return `<div class="expup"><span><b>${u.name}</b> <small>niv. ${lv} / ${u.max}</small><em>${max ? '' : 'Prochain niveau : ' + u.desc}</em>${lv ? `<em style="color:#5dff9a">Actuel : ${u.tot(lv)}</em>` : ''}</span>${max ? '<small>Maximum</small>' : `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-up="${u.id}" type="button" ${e.eclats >= cost ? '' : 'disabled'}>${cost} ${EXC}</button>`}</div>`;
     }).join('') + '</div>';
   },
   bind(s, e) {
@@ -7998,8 +8000,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.4.1';
+const APP_VERSION = '7.4.2';
 const CHANGELOG = [
+  { v: '7.4.2', date: '02.11.2026', items: ['Expédition, Atelier : la liste ne remonte plus en haut après chaque achat', 'Chaque amélioration affiche son effet actuel et celui du prochain niveau', 'L’amélioration « Aimant » de l’Atelier devient « Collecteur » pour ne plus se confondre avec le bonus Aimant'] },
   { v: '7.4.1', date: '02.11.2026', items: ['Expédition de l’Arche : un ennemi qui sort par le bas de l’écran ne retire plus de coque, il revient par le haut', 'Le tir des tireurs d’élite et sa ligne de visée passent en orange pour ne plus se confondre avec tes tirs', 'Chaque dégât est maintenant signalé : flash rouge et « −1 coque » au-dessus de l’Arche'] },
   { v: '7.4', date: '02.11.2026', items: ['Expédition de l’Arche retrouve son jeu d’origine et ses graphismes néon : l’Arche se pilote dans tout l’écran et tire seule', 'Secteurs sans fin, Colosse tous les 5 secteurs, nouveaux ennemis (plongeurs, scissipares, tireurs d’élite) et ennemis d’élite', 'Après chaque secteur : 3 améliorations au choix parmi 21 (14 armes : missiles, rayon, arc électrique, onde de choc, mines, drones, canons latéraux et arrière…, plus boucliers, coque, propulseurs, butin)', 'On garde la sauvegarde, le Hangar et l’Atelier : la partie reprend au début du secteur avec toutes ses améliorations'] },
   { v: '7.3', date: '02.11.2026', items: ['Expédition de l’Arche devient un vrai jeu d’envahisseurs : formation qui descend par à-coups et accélère, abris destructibles, vaisseau mystère, plongeurs, vaisseau-mère toutes les 5 vagues, bonus à ramasser', 'Partie libre et sauvegardée : une partie interrompue reprend au début de la vague, et chaque vaisseau-mère vaincu débloque un nouveau point de départ', 'Hangar : 5 emplacements (canon, module, coque, réacteur, puce) et 17 objets de 5 raretés à gagner, améliorer ou recycler', 'Atelier : améliorations permanentes payées en éclats ✦ ; des gemmes à chaque nouveau record', 'Les mini-jeux retrouvent leurs graphismes d’origine'] },
