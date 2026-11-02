@@ -751,7 +751,8 @@ html.da body.hub .gcard{border-radius:14px;border-width:3px;box-shadow:inset 0 3
 .expdetail{grid-column:1/-1;border-color:var(--rc)}.expdetail ul{margin:0;padding-left:18px;font-size:.82rem}.expdetail small{color:var(--muted)}.expnext{color:var(--cyan);font-weight:700}
 .exppick{display:flex;flex-direction:column;gap:6px}.exprow{display:flex;gap:6px;align-items:center}.exprow>.expitem{flex:1;min-width:0}.exprow>.btn,.exprow>.hint{flex:none}
 .expset{border-color:rgba(61,220,90,.45)}.expsetname{color:#3ddc5a}.expsetname small{color:var(--muted);font-weight:400}
-.exppieces{display:flex;flex-wrap:wrap;gap:4px}.exppieces span{font-size:.72rem;padding:2px 6px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}.exppieces span.own{color:var(--fg)}.exppieces span.on{color:#3ddc5a;border-color:#3ddc5a}
+.exppieces{display:flex;flex-wrap:wrap;gap:4px}.exppieces button{all:unset;box-sizing:border-box;cursor:pointer;font-size:.74rem;padding:4px 8px;border-radius:7px;border:1px solid var(--line);color:var(--muted)}.exppieces button.own{color:var(--fg)}.exppieces button.on{color:#3ddc5a;border-color:#3ddc5a}.exppieces button.sel{background:rgba(61,220,90,.16);border-color:#3ddc5a;color:#fff}
+.exppiece{border:1px solid rgba(61,220,90,.5);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px;background:rgba(61,220,90,.05)}.exppiece>b{color:#3ddc5a}.exppiece small{color:var(--muted)}.exppiece table{border-collapse:collapse;font-size:.76rem;width:100%}.exppiece th{color:var(--muted);font-weight:600;text-align:right;padding:2px 4px}.exppiece td{text-align:right;padding:2px 4px;border-top:1px solid var(--line);white-space:nowrap}.exppiece td:first-child{white-space:normal}.exppiece td:first-child{text-align:left;color:var(--fg)}.exppiece .mine{color:#3ddc5a}
 .expbonus{margin:0;padding-left:18px;font-size:.78rem;color:var(--muted)}.expbonus li.on{color:#3ddc5a}.expspec b{color:#3ddc5a}
 .expitem.expitem{position:relative}.expitem.myth{border-left-color:transparent}.expitem.myth::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:5px;border-radius:10px 0 0 10px;background:linear-gradient(180deg,#ff4a5a,#ffd84a,#5dff9a,#5ef0ff,#c58bff,#ff7ae0)}
 .expitem.myth b,.expdetail.myth .expname{background:linear-gradient(90deg,#ff4a5a,#ffd84a,#5dff9a,#5ef0ff,#c58bff,#ff7ae0);-webkit-background-clip:text;background-clip:text;color:transparent!important}
@@ -6277,13 +6278,27 @@ function makeGearHub(C, D) { return {
     const c = D.setCounts(e)[S.id] || 0, n = S.pieces.length;
     const own = new Set(e.items.map(x => x.b)), eqb = new Set(Object.values(e.eq).map(u => (e.items.find(x => x.uid === u) || {}).b));
     let h = `<div class="expbox expset"><b class="expsetname">${esc(S.name)} <small>${c}/${n} équipées</small></b>`;
-    if (!compact) h += `<div class="exppieces">${S.pieces.map(([sl, name]) => { const id = S.id + '_' + sl, st = eqb.has(id) ? 'on' : own.has(id) ? 'own' : ''; return `<span class="${st}">${C.slots.find(x => x.id === sl).icon} ${esc(name)}${st === 'on' ? ' · équipée' : st === 'own' ? ' · possédée' : ''}</span>`; }).join('')}</div>`;
+    if (!compact) {
+      h += `<div class="exppieces">${S.pieces.map(([sl, name]) => { const id = S.id + '_' + sl, st = eqb.has(id) ? 'on' : own.has(id) ? 'own' : ''; return `<button type="button" data-piece="${id}" class="${st}${this.piece === id ? ' sel' : ''}">${C.slots.find(x => x.id === sl).icon} ${esc(name)}${st === 'on' ? ' · équipée' : st === 'own' ? ' · possédée' : ''}</button>`; }).join('')}</div>`;
+      const pc = S.pieces.find(([sl]) => S.id + '_' + sl === this.piece);
+      if (pc) h += this.pieceHtml(e, S, pc);
+    }
     h += `<ul class="expbonus">${Object.keys(S.bonus).map(k => `<li class="${c >= +k ? 'on' : ''}"><b>${k} pièces</b> : ${S.bonus[k].map(([kk, v]) => esc(D.fmt(kk, v))).join(' · ')}</li>`).join('')}</ul></div>`;
     return h;
   },
+  /* Fiche d'une pièce de set : statistiques au niveau 1, au niveau maximum et avec 12 étoiles, exemplaires possédés. */
+  pieceHtml(e, S, [sl, name]) {
+    const id = S.id + '_' + sl, mk = (lvl, st) => D.vals({ b: id, r: C.setR, lvl, st }), max = 25;
+    const v1 = mk(1, 0), vm = mk(max, 0), vs = mk(max, C.stars), mine = e.items.filter(x => x.b === id).sort((a, b) => (b.st || 0) - (a.st || 0) || b.lvl - a.lvl);
+    const best = mine[0], vb = best ? D.vals(best) : null;
+    const row = (k) => `<tr><td>${esc(C.stat[k].txt ? C.stat[k].txt(v1[k]) : C.stat[k].l)}</td><td>${D.short(k, v1[k])}</td><td>${D.short(k, vm[k])}</td><td>${D.short(k, vs[k])}</td>${vb ? `<td class="mine">${D.short(k, vb[k])}</td>` : ''}</tr>`;
+    return `<div class="exppiece"><b>${C.slots.find(x => x.id === sl).icon} ${esc(name)}</b><small>${C.slots.find(x => x.id === sl).name} · pièce du set ${esc(S.name)} · ${mine.length ? `tu en as ${mine.length}${best ? ` (meilleure : niv. ${best.lvl}${best.st ? ' ' + D.stars(best) : ''})` : ''}` : 'pas encore trouvée'}</small>
+      <table><tr><th></th><th>Niv. 1</th><th>Niv. ${max}</th><th>${C.stars} ★</th>${vb ? '<th class="mine">La tienne</th>' : ''}</tr>${Object.keys(v1).map(row).join('')}</table>
+      ${best ? `<div class="row"><button class="btn small" data-seeit="${best.uid}" type="button">Voir dans le ${C.invTab.toLowerCase()}</button></div>` : ''}</div>`;
+  },
   setsHtml(e) {
     const own = C.sets.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
-    return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent. Une pièce de set au niveau 25 peut encore gagner 12 étoiles.</p>` +
+    return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent. Une pièce de set au niveau 25 peut encore gagner 12 étoiles. Touche une pièce pour voir ses statistiques.</p>` +
       C.sets.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
   },
   atelierHtml(s, e) {
@@ -6301,6 +6316,8 @@ function makeGearHub(C, D) { return {
       else if (g === 'new') { e.run = null; this.launch({ wave: +b.dataset.w }); }
     }; });
     el.querySelectorAll('[data-slot]').forEach(b => { b.onclick = () => { this.pick = b.dataset.slot; this.sel = null; this.render(); }; });
+    el.querySelectorAll('[data-piece]').forEach(b => { b.onclick = () => { this.piece = this.piece === b.dataset.piece ? null : b.dataset.piece; this.render(); }; });
+    el.querySelectorAll('[data-seeit]').forEach(b => { b.onclick = () => { const it = e.items.find(x => x.uid === +b.dataset.seeit); if (!it) return; this.tab = 'hangar'; this.pick = D.model(it).slot; this.sel = it.uid; this.render(); }; });
     el.querySelectorAll('[data-it]').forEach(b => { b.onclick = () => { this.sel = this.sel === +b.dataset.it ? null : +b.dataset.it; this.render(); }; });
     el.querySelectorAll('[data-eq]').forEach(b => { b.onclick = () => {
       const it = e.items.find(x => x.uid === +b.dataset.eq); if (!it) return;
@@ -8937,8 +8954,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.8';
+const APP_VERSION = '7.8.1';
 const CHANGELOG = [
+  { v: '7.8.1', date: '02.11.2026', items: ['Onglet Sets (Expédition et Course des Toits) : touche une pièce pour voir ses statistiques au niveau 1, au niveau 25 et avec 12 étoiles, et celles de ton exemplaire'] },
   { v: '7.8', date: '02.11.2026', items: ['Nouvel événement : Course des Toits, un jeu de plateforme. Guide Pip de toit en toit, écrase les ennemis, frappe les caisses ⚡, bats un gardien tous les 5 niveaux. Partie sauvegardée avec le même équipement que l’Expédition : Vestiaire (5 emplacements), 7 raretés, 10 sets, fusion, étoiles et Atelier', 'Les événements se débloquent un par un, tous les 10 niveaux : Expédition dès le départ, Course des Toits au niveau 11, puis Plongée (21), Percée (31), Code du Coffre (41), Triage (51), Chute de Plasma (61) et Fouille (71)'] },
   { v: '7.7', date: '02.11.2026', items: ['Équipement de l’équipage : mêmes 7 raretés que l’Expédition (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique arc-en-ciel). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques, les anciens Épiques deviennent Rares', 'Équipement de l’équipage : un objet Mythique au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % par étoile), payées en ferraille', 'La Caisse de l’Arche donne maintenant un objet Exceptionnel ou mieux', 'Expédition : tous les 10 secteurs franchis, un objet d’équipement pour l’équipage de Neon Bastion (Rare ou mieux à 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40)'] },
   { v: '7.6', date: '02.11.2026', items: ['Expédition : 7 raretés dans l’ordre Commun (gris), Magique (bleu), Rare (jaune), Exceptionnel (orange), Épique (violet), Légendaire (rouge), Mythique (arc-en-ciel), plus les objets de set (verts). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques et les anciens Épiques deviennent Rares', 'Étoiles : un objet Mythique ou de set au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % à ses valeurs par étoile, +1 niveau d’arme toutes les 3 étoiles)', 'La fusion de 3 objets identiques va maintenant jusqu’à Mythique'] },
