@@ -456,6 +456,7 @@ body.d2 .btn.primary *{color:#1a0e04}
 .mgpick{display:flex;flex-direction:column;gap:8px;margin-top:10px;text-align:left}
 body.mg-on{overflow:hidden}
 .mgcard{border-left:3px solid var(--mc)}
+.mgcard.mglock{opacity:.55;filter:grayscale(.6)}
 .mghead{display:flex;gap:12px;align-items:flex-start}.mghead canvas{width:72px;height:72px;border-radius:10px;flex:none;background:var(--panel-2)}
 .mghead h3{margin:2px 0 4px;color:var(--mc)}
 .mgrew{font-size:.85rem;color:var(--muted);margin:6px 0}
@@ -5305,7 +5306,7 @@ const Hub = {
     const m = Minigames.data(s), badge = {
       shop: !!Gear.offers(s).find(o => !o.sold && s.gems >= RARITY[o.r].price) && false,
       crew: !!(s.gear && s.gear.fresh), map: Meta.claimables(s) > 0,
-      events: Object.keys(MG_TICKETS).some(id => m.tickets[id] > 0) || m.picks > 0 || m.balls > 0, codex: false
+      events: Object.keys(MG_TICKETS).some(id => Minigames.open(s, id) && m.tickets[id] > 0) || (Minigames.open(s, 'dig') && m.picks > 0) || (Minigames.open(s, 'plinko') && m.balls > 0), codex: false
     };
     $('hubNav').querySelectorAll('[data-tab]').forEach(b => { b.querySelector('.hbadge').hidden = !badge[b.dataset.tab]; });
   }
@@ -5507,7 +5508,7 @@ function renderCamp() {
 }
 
 /* ---------- Fenêtres d'accueil : annonces du jour, connexion sur 7 jours, nouveautés ---------- */
-const GAME_COL = { exp: '#3a8ae0', dive: '#1aa0c8', run: '#ff8a3d', code: '#ff3b6b', tri: '#a454e8', plinko: '#e0b020', dig: '#3ab06a' };
+const GAME_COL = { exp: '#3a8ae0', plat: '#e0568a', dive: '#1aa0c8', run: '#ff8a3d', code: '#ff3b6b', tri: '#a454e8', plinko: '#e0b020', dig: '#3ab06a' };
 /* Bannière illustrée : fond dégradé à rayons et personnage en pied à droite. */
 function toyBanner(cv, who, col) {
   const g = cv.getContext('2d'), W0 = cv.width, H0 = cv.height; col = col || (CAST[who] || {}).color || '#3a8ae0';
@@ -5803,6 +5804,9 @@ const Minigames = {
     { id: 'exp', who: 'volta', title: 'Expédition de l’Arche', btn: 'Ouvrir le hangar', tag: 'Action', free: true,
       desc: 'Pilote l’Arche à travers les secteurs de la Rouille et choisis une amélioration après chacun. Partie libre et sauvegardée : gagne des éclats et des objets, équipe ton vaisseau et va plus loin à chaque partie.',
       rew: m => { const e = m.exp && m.exp.v ? m.exp : { best: 0, eclats: 0 }; return `Record : secteur <b>${e.best}</b> · ${fmtBig(e.eclats)} ${EXC} éclats · gemmes à chaque nouveau record`; } },
+    { id: 'plat', who: 'brann', title: 'Course des Toits', btn: 'Ouvrir le vestiaire', tag: 'Plateforme', free: true,
+      desc: 'Guide Pip de toit en toit : saute, écrase les ennemis, frappe les caisses et rejoins la balise. Un gardien tous les 5 niveaux. Partie libre et sauvegardée : boulons, objets, sets et étoiles comme pour l’Expédition.',
+      rew: m => { const e = m.plat || { best: 0, bolts: 0 }; return `Record : niveau <b>${e.best}</b> · ${fmtBig(e.bolts)} ${PLC} boulons · gemmes à chaque nouveau record`; } },
     { id: 'dive', who: 'iris', title: 'Plongée des Abysses', btn: 'Plonger', tag: 'Adresse',
       desc: 'Harponne les poissons de données avant de manquer d’oxygène. Plus c’est profond, plus ça rapporte. Remonte à temps pour garder toute ta prise.',
       rew: m => `Record : <b>${m.best.dive || 0}</b> points · 1 ${GEM} pour 6 points · un objet par lanterne dorée` },
@@ -5827,17 +5831,20 @@ const Minigames = {
     $('mgGems').textContent = fmtBig(s.gems);
     let h = `<div class="mgwallet"><span>⛏ <b>${m.picks}</b> pioche${m.picks > 1 ? 's' : ''}</span><span>● <b>${m.balls}</b> bille${m.balls > 1 ? 's' : ''}</span><span class="gem">${fmtBig(s.gems)} ${GEM}</span></div>` +
       '<p class="hint">Activités à part, pour souffler entre deux batailles. Les tickets 🎟 reviennent chaque jour. Pioches et billes se gagnent en remportant des niveaux, ou s’achètent avec des gemmes.</p><div class="mggrid">';
+    let idx = 0;
     for (const g of this.GAMES) {
       if (!CAST[g.who]) continue;
+      const req = this.req(g.id), locked = !this.open(s, g.id); idx++;
       let play, more = '';
-      if (g.free) play = `<button class="btn primary" data-play="${g.id}" type="button">${g.btn}</button>`;
+      if (locked) play = `<button class="btn" type="button" disabled>🔒 Se débloque au niveau ${req}</button>`;
+      else if (g.free) play = `<button class="btn primary" data-play="${g.id}" type="button">${g.btn}</button>`;
       else if (g.cur) { const n = m[g.cur]; play = `<button class="btn primary" data-play="${g.id}" type="button">${g.btn} · ${g.cur === 'picks' ? '⛏' : '●'} ${n}</button>`; }
       else {
         const t = m.tickets[g.id];
         play = `<button class="btn primary" data-play="${g.id}" type="button" ${t ? '' : 'disabled'}>${g.btn} <span class="mgtk">${'🎟'.repeat(Math.min(5, t))}${t ? '' : 'plus de ticket'}</span></button>`;
         if (!t) more = this.buyBtn('ticket:' + g.id, '+1 ticket', MG_TICKET_PRICE);
       }
-      h += `<section class="panel mgcard" style="--mc:${GAME_COL[g.id] || CAST[g.who].color}"><div class="mgbanart"><canvas width="480" height="220" data-banner="${g.who}" data-col="${GAME_COL[g.id] || ''}"></canvas><div class="mgbantx"><h3>${g.title}</h3><small>${esc(g.tag)} · ${esc(CAST[g.who].name)} propose</small></div></div>` +
+      h += `<section class="panel mgcard${locked ? ' mglock' : ''}" style="--mc:${GAME_COL[g.id] || CAST[g.who].color}"><div class="mgbanart"><canvas width="480" height="220" data-banner="${g.who}" data-col="${GAME_COL[g.id] || ''}"></canvas><div class="mgbantx"><h3>${g.title}</h3><small>${esc(g.tag)} · ${esc(CAST[g.who].name)} propose</small></div></div>` +
         `<p class="hint">${g.desc}</p><p class="mgrew">${g.rew(m)}</p><div class="row">${play}${more}</div></section>`;
     }
     h += '</div>';
@@ -5848,8 +5855,13 @@ const Minigames = {
     body.querySelectorAll('[data-play]').forEach(bt => { bt.onclick = () => this.start(bt.dataset.play); });
     this.bindBuy(body, () => this.renderHub());
   },
+  /* Un événement de plus tous les 10 niveaux : le 1er dès le départ, le 2e au niveau 11, le 3e au niveau 21… */
+  req(id) { const vis = this.GAMES.filter(g => CAST[g.who]); return 10 * Math.max(0, vis.findIndex(g => g.id === id)) + 1; },
+  open(s, id) { return (s.unlocked || 1) >= this.req(id); },
   start(id) {
     const s = App.slot, m = this.data(s);
+    if (!this.open(s, id)) return;
+    if (id === 'plat') { PlatHub.open('play'); return; }
     if (id === 'dig') { Dig.open(); return; }
     if (id === 'plinko') { this.run(Plinko); return; }
     if (id === 'exp') { ExpHub.open('play'); return; }
@@ -6057,32 +6069,20 @@ const EXP_UPS = [
   { id: 'luck', name: 'Radar à butin', desc: '+15 % de chance d’objet', max: 5, cost: 90, k: 1.6, tot: l => `+${15 * l} % de chance d’objet` },
   { id: 'power', name: 'Batteries', desc: '+15 % de durée des bonus', max: 4, cost: 60, k: 1.6, tot: l => `+${15 * l} % de durée des bonus` }
 ];
-const ExpData = {
-  get(s) {
-    const m = Minigames.data(s);
-    if (!m.exp || !m.exp.v) {
-      const old = m.best.exp || 0;
-      m.exp = { v: 3, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
-      m.best.exp = 0;
-    }
-    const e = m.exp;
-    if (e.ups.bunker) { e.ups.shield = Math.min(3, e.ups.bunker); delete e.ups.bunker; }
-    // v2 : la rareté Exceptionnel s'insère entre Épique et Légendaire
-    if (e.v < 2) { for (const it of e.items) if (it.r >= 3) it.r++; e.v = 2; }
-    // v3 : 7 raretés (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique) + Set ; Légendaire, Mythique et Set gardent leur nom
-    if (e.v < 3) { for (const it of e.items) it.r = [0, 1, 2, 3, 5, 6, 7][it.r] ?? it.r; e.v = 3; }
-    return e;
-  },
+/* Système d'équipement partagé (Expédition de l'Arche, Course des Toits) : raretés, sets, fusion, étoiles. */
+function makeGearData(C) { return {
+  C,
+  get(s) { return C.get(s); },
   upCost(u, lv) { return Math.round(u.cost * Math.pow(u.k, lv)); },
-  model(it) { return EXP_GEAR_BY_ID[it.b]; },
-  isSet(it) { return !!EXP_GEAR_BY_ID[it.b].set; },
-  rar(it) { return EXP_RAR[it.r]; },
+  model(it) { return C.byId[it.b]; },
+  isSet(it) { return !!C.byId[it.b].set; },
+  rar(it) { return C.rar[it.r]; },
   maxLevel(it) { return this.isSet(it) ? 25 : 5 + 5 * it.r; },
   /* Valeurs d'un objet : principale + secondaire (dès Rare ; toujours pour un objet de set), selon la rareté et le niveau. */
   vals(it) {
-    const b = this.model(it), set = !!b.set, R = EXP_RAR[it.r], st0 = it.st || 0, mul = R.mul * (1 + 0.1 * st0), lvk = 1 + 0.08 * (it.lvl - 1), out = {};
+    const b = this.model(it), set = !!b.set, R = C.rar[it.r], st0 = it.st || 0, mul = R.mul * (1 + 0.1 * st0), lvk = 1 + 0.08 * (it.lvl - 1), out = {};
     const add = (k, base, sub) => {
-      const st = EXP_STAT[k];
+      const st = C.stat[k];
       let v;
       if (st.lv) v = sub ? 1 + Math.floor((it.lvl - 1) / 10) : R.lv + Math.floor((it.lvl - 1) / 5) + Math.floor(st0 / 3);
       else if (st.flat) v = base * (sub ? 1 : (set ? 2 : 1 + (it.r >= 3 ? 1 : 0) + (it.r >= 6 ? 1 : 0)) + (st0 >= 6 ? 1 : 0) + (st0 >= 12 ? 1 : 0));
@@ -6090,28 +6090,28 @@ const ExpData = {
       out[k] = (out[k] || 0) + v;
     };
     add(b.main[0], b.main[1], false);
-    if (b.sub && (set || it.r >= 1)) { const [k, v] = b.sub; if (set || !EXP_STAT[k].flat || it.r >= 2) add(k, v, true); }
-    for (const k in out) if (EXP_STAT[k].flat) out[k] = Math.round(out[k]);
+    if (b.sub && (set || it.r >= 1)) { const [k, v] = b.sub; if (set || !C.stat[k].flat || it.r >= 2) add(k, v, true); }
+    for (const k in out) if (C.stat[k].flat) out[k] = Math.round(out[k]);
     return out;
   },
   fmt(k, v) {
-    const st = EXP_STAT[k];
+    const st = C.stat[k];
     if (st.txt) return st.txt(v);
     if (st.lv) return `${st.l} niv. ${v}`;
     if (st.flat) return `+${v} ${v > 1 ? (st.pl || st.l + (k === 'pierce' ? '' : 's')) : st.l}`;
     return `+${Math.round(v * 100)} % ${st.l}`;
   },
-  short(k, v) { const st = EXP_STAT[k]; return st.lv ? `niv. ${v}` : st.flat ? `+${v}` : `+${Math.round(v * 100)} %`; },
+  short(k, v) { const st = C.stat[k]; return st.lv ? `niv. ${v}` : st.flat ? `+${v}` : `+${Math.round(v * 100)} %`; },
   desc(it) { const v = this.vals(it); return Object.keys(v).map(k => this.fmt(k, v[k])).join(' · '); },
   /* Pièces de set équipées, par set. */
   setCounts(e) {
     const c = {};
-    for (const sl of EXP_SLOTS) { const it = e.items.find(x => x.uid === e.eq[sl.id]), b = it && this.model(it); if (b && b.set) c[b.set] = (c[b.set] || 0) + 1; }
+    for (const sl of C.slots) { const it = e.items.find(x => x.uid === e.eq[sl.id]), b = it && this.model(it); if (b && b.set) c[b.set] = (c[b.set] || 0) + 1; }
     return c;
   },
   addStat(st, k, v) {
-    const S = EXP_STAT[k];
-    if (['dmg', 'eclats', 'luck', 'power', 'rate', 'speed', 'inv'].includes(k)) st[k] *= 1 + v;
+    const S = C.stat[k];
+    if (C.mulKeys.includes(k)) st[k] *= 1 + v;
     else if (S.min) st[k] = st[k] ? Math.min(st[k], v) : v;
     else if (S.max) st[k] = Math.max(st[k] || 0, v);
     else st[k] = (st[k] || 0) + v;
@@ -6119,17 +6119,14 @@ const ExpData = {
   /* Statistiques du vaisseau : base + Atelier + équipement + bonus de set. */
   stats(s) {
     const e = this.get(s), u = id => e.ups[id] || 0;
-    const st = { dmg: 1 + 0.12 * u('dmg'), rate: 3 * (1 + 0.08 * u('rate')), multi: 1, pierce: 0, lives: 3 + u('lives'), shield: u('shield'), regen: 0,
-      speed: 200 * (1 + 0.08 * u('speed')), inv: 1.4, eclats: 1 + 0.1 * u('eclats'), luck: 1 + 0.15 * u('luck'), crit: 0.03, power: 1 + 0.15 * u('power'),
-      missile: 0, lateral: 0, drone: 0, laser: 0, arc: 0, nova: 0, mine: 0, orb: 0, rear: 0, slow: 0,
-      bossDmg: 0, vamp: 0, shieldRegen: 0, revive: 0, critMul: 0, execute: 0, eslow: 0 };
-    for (const sl of EXP_SLOTS) {
+    const st = C.base(e, u);
+    for (const sl of C.slots) {
       const it = e.items.find(x => x.uid === e.eq[sl.id]); if (!it) continue;
       const v = this.vals(it);
       for (const k in v) this.addStat(st, k, v[k]);
     }
     const c = this.setCounts(e);
-    for (const S of EXP_SETS) for (const n in S.bonus) if ((c[S.id] || 0) >= +n) for (const [k, v] of S.bonus[n]) this.addStat(st, k, v);
+    for (const S of C.sets) for (const n in S.bonus) if ((c[S.id] || 0) >= +n) for (const [k, v] of S.bonus[n]) this.addStat(st, k, v);
     return st;
   },
   /* Nouvel objet : la rareté s'améliore avec le secteur atteint et la chance. Les objets de set sont rares. */
@@ -6137,30 +6134,30 @@ const ExpData = {
     const e = this.get(s);
     let it;
     if (setChance && Math.random() < setChance) {
-      const S = EXP_SETS[Math.floor(Math.random() * EXP_SETS.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)];
-      it = { uid: e.next++, b: S.id + '_' + p[0], r: EXP_SET_R, lvl: 1, n: 1 };
+      const S = C.sets[Math.floor(Math.random() * C.sets.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)];
+      it = { uid: e.next++, b: S.id + '_' + p[0], r: C.setR, lvl: 1, n: 1 };
     } else {
       const w = [60, 28, 10, 5, 2.5, 0.9, 0.25].map((x, i) => i ? x * (1 + wave * 0.04) * luck : x);
       let r = 0, t = Math.random() * w.reduce((a, b) => a + b, 0);
       for (let i = 0; i < w.length; i++) { t -= w[i]; if (t <= 0) { r = i; break; } }
       r = Math.max(r, minR || 0);
-      const b = EXP_GEAR[Math.floor(Math.random() * EXP_GEAR.length)];
+      const b = C.gear[Math.floor(Math.random() * C.gear.length)];
       it = { uid: e.next++, b: b.id, r, lvl: 1, n: 1 };
-      if (e.items.length >= 80) { const g = this.recycleValue(it); e.eclats += g; return { it, auto: g }; }
+      if (e.items.length >= 80) { const g = this.recycleValue(it); e[C.cur] += g; return { it, auto: g }; }
     }
     e.items.push(it); e.fresh++;
     return { it };
   },
   costR(it) { return this.isSet(it) ? 4 : it.r; },
   /* Étoiles : une fois l'objet Mythique (ou de set) au niveau maximum, 12 étoiles de plus. Chaque étoile : +10 % aux valeurs ; tous les 3 : +1 niveau d'arme. */
-  canStar(it) { return (it.r === EXP_TOP_R || this.isSet(it)) && it.lvl >= this.maxLevel(it) && (it.st || 0) < EXP_STARS; },
+  canStar(it) { return (it.r === C.topR || this.isSet(it)) && it.lvl >= this.maxLevel(it) && (it.st || 0) < C.stars; },
   starCost(it) { return Math.round(250 * Math.pow(1.45, it.st || 0) * (this.isSet(it) ? 0.8 : 1)); },
   stars(it) { return it.st ? '★'.repeat(it.st) : ''; },
   recycleValue(it) { return Math.round(6 * Math.pow(this.costR(it) + 1, 2) + 4 * (it.lvl - 1) + 60 * (it.st || 0)); },
   upgradeCost(it) { return Math.round((12 + it.lvl * 8) * (1 + this.costR(it) * 0.6)); },
   /* Fusion : 3 exemplaires du même objet et de la même rareté donnent la rareté suivante (comme pour l'équipage). */
   mergeGroup(e, it) {
-    if (this.isSet(it) || it.r >= EXP_TOP_R) return [];
+    if (this.isSet(it) || it.r >= C.topR) return [];
     const eqd = new Set(Object.values(e.eq));
     const same = e.items.filter(x => x.b === it.b && x.r === it.r);
     if (same.length < 3) return [];
@@ -6176,12 +6173,13 @@ const ExpData = {
     return keep;
   },
   remove(e, it) { for (const k in e.eq) if (e.eq[k] === it.uid) e.eq[k] = null; e.items = e.items.filter(x => x !== it); },
-  score(it) { const v = this.vals(it); return (it.st || 0) * 4 + Object.keys(v).reduce((a, k) => a + (EXP_STAT[k].pct ? v[k] * 100 : v[k] * 12), 0) + (this.isSet(it) ? 15 : 0); },
+  score(it) { const v = this.vals(it); return (it.st || 0) * 4 + Object.keys(v).reduce((a, k) => a + (C.stat[k].pct ? v[k] * 100 : v[k] * 12), 0) + (this.isSet(it) ? 15 : 0); },
   name(it) { return this.model(it).name; }
-};
+}; }
 
-/* ---------- Écran du Hangar (hors partie) ---------- */
-const ExpHub = {
+
+/* ---------- Écran d'équipement (hors partie), partagé ---------- */
+function makeGearHub(C, D) { return {
   tab: 'play', sel: null, filter: 'all', pick: null,
   open(tab) {
     if (tab) this.tab = tab;
@@ -6189,11 +6187,11 @@ const ExpHub = {
   },
   close() { Minigames.closeDom(); },
   render() {
-    const s = App.slot, e = ExpData.get(s), st = ExpData.stats(s), el = $('mgDig');
-    const tabs = [['play', 'Partie'], ['hangar', 'Hangar' + (e.fresh ? ` (${e.fresh})` : '')], ['sets', 'Sets'], ['atelier', 'Atelier']];
-    let h = `<div class="card mgdig expdig"><div class="row" style="justify-content:space-between;align-items:center"><div><p class="eyebrow">Secteurs de la Rouille</p><h2>Expédition de l’Arche</h2></div>
+    const s = App.slot, e = D.get(s), st = D.stats(s), el = $('mgDig');
+    const tabs = [['play', 'Partie'], ['hangar', C.invTab + (e.fresh ? ` (${e.fresh})` : '')], ['sets', 'Sets'], ['atelier', 'Atelier']];
+    let h = `<div class="card mgdig expdig"><div class="row" style="justify-content:space-between;align-items:center"><div><p class="eyebrow">${C.eyebrow}</p><h2>${C.title}</h2></div>
       <button class="btn small" id="expClose" type="button">Fermer</button></div>
-      <div class="expwallet"><span class="expec">${EXC} <b>${fmtBig(e.eclats)}</b> éclats</span><span>Record : secteur <b>${e.best}</b></span><span>Meilleur score <b>${fmtBig(e.score)}</b></span></div>
+      <div class="expwallet"><span class="expec">${C.sym} <b>${fmtBig(e[C.cur])}</b> ${C.curName}</span><span>Record : ${C.unit} <b>${e.best}</b></span><span>Meilleur score <b>${fmtBig(e.score)}</b></span></div>
       <div class="row exptabs">${tabs.map(([id, l]) => `<button class="btn small ${this.tab === id ? 'primary' : ''}" data-tab="${id}" type="button">${l}</button>`).join('')}</div>`;
     const view = this.tab + '|' + (this.tab === 'hangar' ? this.pick || '' : '');
     const old = el.querySelector('.expdig'), keep = old && this.lastView === view ? old.scrollTop : 0; this.lastView = view;
@@ -6207,57 +6205,36 @@ const ExpHub = {
     el.querySelectorAll('[data-tab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.tab; if (this.tab === 'hangar') { e.fresh = 0; Store.touch(s); } this.sel = null; this.pick = null; this.render(); }; });
     this.bind(s, e);
   },
-  shipStats(st) {
-    const mods = ['missile', 'lateral', 'drone', 'laser', 'arc', 'nova', 'mine', 'orb', 'rear', 'slow'].filter(k => st[k]).map(k => `${EXP_STAT[k].l} ${st[k]}`);
-    const spec = ['bossDmg', 'vamp', 'shieldRegen', 'revive', 'critMul', 'execute', 'eslow'].filter(k => st[k]).map(k => ExpData.fmt(k, st[k]));
-    return `<div class="expstats">
-      <span>Dégâts <b>×${st.dmg.toFixed(2)}</b></span><span>Cadence <b>${st.rate.toFixed(1)}/s</b></span><span>Projectiles <b>${st.multi}</b></span>
-      <span>Coque <b>${st.lives}</b></span><span>Boucliers <b>${st.shield}</b></span><span>Vitesse <b>${Math.round(st.speed)}</b></span>
-      ${st.pierce ? `<span>Perforation <b>${st.pierce}</b></span>` : ''}${st.crit > 0.031 ? `<span>Critique <b>${Math.round(st.crit * 100)} %</b></span>` : ''}
-      ${mods.length ? `<span class="wide">Armes : <b>${mods.join(' · ')}</b></span>` : ''}
-      ${spec.length ? `<span class="wide expspec">Spécial : <b>${spec.join(' · ')}</b></span>` : ''}</div>`;
-  },
-  playHtml(s, e, st) {
-    const cps = [1]; for (let w = 6; w <= e.best + 1; w += 5) cps.push(w);
-    let h = '';
-    if (e.run) h += `<div class="expbox"><b>Partie en cours</b><p class="hint">Secteur ${e.run.wave} · ${e.run.hp} point${e.run.hp > 1 ? 's' : ''} de coque · ${Object.values(e.run.ups || {}).reduce((a, b) => a + b, 0)} améliorations · score ${fmtBig(e.run.score)}. Tu reprends au début du secteur.</p>
-      <div class="row"><button class="btn primary" data-go="resume" type="button">Reprendre · secteur ${e.run.wave}</button><button class="btn small" data-go="drop" type="button">Abandonner cette partie</button></div></div>`;
-    h += `<div class="expbox"><b>Nouvelle partie</b><p class="hint">Point de départ : chaque Colosse vaincu (secteurs 5, 10, 15…) débloque le départ suivant, avec des améliorations tirées au sort pour rattraper les secteurs sautés.</p>
-      <div class="row">${cps.map(w => `<button class="btn ${e.run ? '' : 'primary'}" data-go="new" data-w="${w}" type="button">${w === 1 ? 'Départ · secteur 1' : 'Secteur ' + w}</button>`).join('')}</div></div>`;
-    h += `<div class="expbox"><b>Ton vaisseau</b>${this.shipStats(st)}</div>
-      <p class="hint">Maintiens le doigt (ou les flèches) pour piloter l’Arche dans tout l’écran : elle tire seule sur l’ennemi le plus proche. Après chaque secteur, choisis une amélioration parmi trois.
-      Les ennemis deviennent plus nombreux, plus résistants et plus variés au fil des secteurs : équipe-toi au Hangar et renforce ton équipement.
-      Tous les 10 secteurs franchis, un objet d’équipement pour ton équipage de Neon Bastion (Rare ou mieux au secteur 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40). Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent aussi des objets, parfois des pièces de set (vertes). Nouveau record : des gemmes ${GEM}.</p>`;
-    return h;
-  },
+  shipStats(st) { return C.statsHtml(st, D); },
+  playHtml(s, e, st) { return C.playHtml(s, e, st, this); },
   tag(it) {
-    const b = ExpData.model(it), R = ExpData.rar(it);
-    return b.set ? `Set · ${EXP_SET_BY_ID[b.set].name}` : R.name;
+    const b = D.model(it), R = D.rar(it);
+    return b.set ? `Set · ${C.setById[b.set].name}` : R.name;
   },
   itemCard(it, eqd, div) {
-    const R = ExpData.rar(it), b = ExpData.model(it), el = div ? 'div' : 'button';
+    const R = D.rar(it), b = D.model(it), el = div ? 'div' : 'button';
     return `<${el} class="expitem${eqd ? ' eq' : ''}${this.sel === it.uid ? ' sel' : ''}${b.set ? ' set' : ''}${R.rainbow ? ' myth' : ''}" ${div ? '' : `data-it="${it.uid}" type="button"`} style="--rc:${R.color}">
-      <i>${EXP_SLOTS.find(x => x.id === b.slot).icon}</i><span><b>${esc(b.name)}</b><small>${esc(this.tag(it))} · niv. ${it.lvl}${eqd ? ' · équipé' : ''}${it.st ? ` <span class="expstar">${ExpData.stars(it)}</span>` : ''}</small><em>${esc(ExpData.desc(it))}</em></span></${el}>`;
+      <i>${C.slots.find(x => x.id === b.slot).icon}</i><span><b>${esc(b.name)}</b><small>${esc(this.tag(it))} · niv. ${it.lvl}${eqd ? ' · équipé' : ''}${it.st ? ` <span class="expstar">${D.stars(it)}</span>` : ''}</small><em>${esc(D.desc(it))}</em></span></${el}>`;
   },
   /* Fiche d'un objet : valeurs actuelles → niveau suivant, amélioration, fusion, recyclage. */
   detailHtml(e, it) {
-    const b = ExpData.model(it), R = ExpData.rar(it), eqd = e.eq[b.slot] === it.uid, max = ExpData.maxLevel(it), cost = ExpData.upgradeCost(it), rv = ExpData.recycleValue(it);
-    const star = ExpData.canStar(it), sc = star ? ExpData.starCost(it) : 0;
-    const v = ExpData.vals(it), nv = it.lvl < max ? ExpData.vals({ ...it, lvl: it.lvl + 1 }) : star ? ExpData.vals({ ...it, st: (it.st || 0) + 1 }) : null, grp = ExpData.mergeGroup(e, it);
-    const canSt = it.r === EXP_TOP_R || b.set;
-    let h = `<div class="expbox expdetail${R.rainbow ? ' myth' : ''}" style="--rc:${R.color}"><b class="expname" style="color:${R.color}">${esc(b.name)}</b><small>${esc(this.tag(it))} · ${EXP_SLOTS.find(x => x.id === b.slot).name} · niveau ${it.lvl} / ${max}${canSt ? ` · étoiles ${it.st || 0} / ${EXP_STARS}` : ''}</small>
-      ${canSt ? `<div class="expstars">${Array.from({ length: EXP_STARS }, (_, i) => `<i class="${i < (it.st || 0) ? 'on' : ''}">★</i>`).join('')}</div>` : ''}
-      <ul>${Object.keys(v).map(k => `<li>${esc(ExpData.fmt(k, v[k]))}${nv && nv[k] !== v[k] ? ` <span class="expnext">→ ${ExpData.short(k, nv[k])}</span>` : ''}</li>`).join('')}</ul>`;
-    if (b.set) h += this.setBlock(e, EXP_SET_BY_ID[b.set], true);
-    if (canSt && it.lvl < max) h += `<p class="hint">Au niveau ${max}, l’objet peut gagner jusqu’à ${EXP_STARS} étoiles : +10 % à ses valeurs par étoile, +1 niveau d’arme toutes les 3 étoiles.</p>`;
-    if (b.set) {} else if (it.r < EXP_TOP_R) {
+    const b = D.model(it), R = D.rar(it), eqd = e.eq[b.slot] === it.uid, max = D.maxLevel(it), cost = D.upgradeCost(it), rv = D.recycleValue(it);
+    const star = D.canStar(it), sc = star ? D.starCost(it) : 0;
+    const v = D.vals(it), nv = it.lvl < max ? D.vals({ ...it, lvl: it.lvl + 1 }) : star ? D.vals({ ...it, st: (it.st || 0) + 1 }) : null, grp = D.mergeGroup(e, it);
+    const canSt = it.r === C.topR || b.set;
+    let h = `<div class="expbox expdetail${R.rainbow ? ' myth' : ''}" style="--rc:${R.color}"><b class="expname" style="color:${R.color}">${esc(b.name)}</b><small>${esc(this.tag(it))} · ${C.slots.find(x => x.id === b.slot).name} · niveau ${it.lvl} / ${max}${canSt ? ` · étoiles ${it.st || 0} / ${C.stars}` : ''}</small>
+      ${canSt ? `<div class="expstars">${Array.from({ length: C.stars }, (_, i) => `<i class="${i < (it.st || 0) ? 'on' : ''}">★</i>`).join('')}</div>` : ''}
+      <ul>${Object.keys(v).map(k => `<li>${esc(D.fmt(k, v[k]))}${nv && nv[k] !== v[k] ? ` <span class="expnext">→ ${D.short(k, nv[k])}</span>` : ''}</li>`).join('')}</ul>`;
+    if (b.set) h += this.setBlock(e, C.setById[b.set], true);
+    if (canSt && it.lvl < max) h += `<p class="hint">Au niveau ${max}, l’objet peut gagner jusqu’à ${C.stars} étoiles : +10 % à ses valeurs par étoile, +1 niveau aux capacités toutes les 3 étoiles.</p>`;
+    if (b.set) {} else if (it.r < C.topR) {
       const n = e.items.filter(x => x.b === it.b && x.r === it.r).length;
-      h += `<p class="hint">Fusion : 3 × ${esc(b.name)} ${R.name.toLowerCase()} → 1 ${EXP_RAR[it.r + 1].name.toLowerCase()} (tu en as ${n}/3). Le niveau le plus haut est gardé.</p>`;
+      h += `<p class="hint">Fusion : 3 × ${esc(b.name)} ${R.name.toLowerCase()} → 1 ${C.rar[it.r + 1].name.toLowerCase()} (tu en as ${n}/3). Le niveau le plus haut est gardé.</p>`;
     }
     h += `<div class="row">${eqd ? `<button class="btn small" data-act="unequip" type="button">Retirer</button>` : `<button class="btn small primary" data-act="equip" type="button">Équiper</button>`}
-      ${it.lvl < max ? `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-act="up" type="button" ${e.eclats >= cost ? '' : 'disabled'}>Améliorer · ${cost} ${EXC}</button>` : star ? `<button class="btn small ${e.eclats >= sc ? 'gold' : ''}" data-act="star" type="button" ${e.eclats >= sc ? '' : 'disabled'}>★ Étoile ${(it.st || 0) + 1} · ${fmtBig(sc)} ${EXC}</button>` : `<span class="hint">${canSt ? 'Toutes les étoiles' : 'Niveau maximum'}</span>`}
-      ${grp.length >= 3 ? `<button class="btn small violet" data-act="merge" type="button">Fusionner ×3 → ${EXP_RAR[it.r + 1].name}</button>` : ''}
-      ${eqd ? '' : `<button class="btn small" data-act="recycle" type="button">Recycler · +${rv} ${EXC}</button>`}</div></div>`;
+      ${it.lvl < max ? `<button class="btn small ${e[C.cur] >= cost ? 'gold' : ''}" data-act="up" type="button" ${e[C.cur] >= cost ? '' : 'disabled'}>Améliorer · ${cost} ${C.sym}</button>` : star ? `<button class="btn small ${e[C.cur] >= sc ? 'gold' : ''}" data-act="star" type="button" ${e[C.cur] >= sc ? '' : 'disabled'}>★ Étoile ${(it.st || 0) + 1} · ${fmtBig(sc)} ${C.sym}</button>` : `<span class="hint">${canSt ? 'Toutes les étoiles' : 'Niveau maximum'}</span>`}
+      ${grp.length >= 3 ? `<button class="btn small violet" data-act="merge" type="button">Fusionner ×3 → ${C.rar[it.r + 1].name}</button>` : ''}
+      ${eqd ? '' : `<button class="btn small" data-act="recycle" type="button">Recycler · +${rv} ${C.sym}</button>`}</div></div>`;
     return h;
   },
   listHtml(e, list) {
@@ -6266,25 +6243,25 @@ const ExpHub = {
   },
   hangarHtml(s, e, st) {
     let h = '<p class="hint">Touche un emplacement pour choisir son équipement, ou un objet pour l’améliorer, le fusionner ou le recycler.</p><div class="expslots">';
-    for (const sl of EXP_SLOTS) {
-      const it = e.items.find(x => x.uid === e.eq[sl.id]), n = e.items.filter(x => ExpData.model(x).slot === sl.id).length;
+    for (const sl of C.slots) {
+      const it = e.items.find(x => x.uid === e.eq[sl.id]), n = e.items.filter(x => D.model(x).slot === sl.id).length;
       h += `<button class="expslot" data-slot="${sl.id}" type="button"><small>${sl.icon} ${sl.name} · ${n} objet${n > 1 ? 's' : ''} › choisir</small>${it ? this.itemCard(it, true, true) : '<div class="expempty">Vide · toucher pour équiper</div>'}</button>`;
     }
     h += '</div>';
-    const c = ExpData.setCounts(e), act = EXP_SETS.filter(S => c[S.id]);
+    const c = D.setCounts(e), act = C.sets.filter(S => c[S.id]);
     if (act.length) h += act.map(S => this.setBlock(e, S, true)).join('');
-    h += `<div class="expbox"><b>Ton vaisseau</b>${this.shipStats(st)}</div>`;
-    const list = e.items.filter(it => this.filter === 'all' || ExpData.model(it).slot === this.filter).sort((a, b) => ExpData.isSet(b) - ExpData.isSet(a) || b.r - a.r || b.lvl - a.lvl);
+    h += `<div class="expbox"><b>${C.unitLabel}</b>${this.shipStats(st)}</div>`;
+    const list = e.items.filter(it => this.filter === 'all' || D.model(it).slot === this.filter).sort((a, b) => D.isSet(b) - D.isSet(a) || b.r - a.r || b.lvl - a.lvl);
     const commons = e.items.filter(x => x.r === 0 && !Object.values(e.eq).includes(x.uid)).length;
-    h += `<div class="row exptabs"><button class="btn small ${this.filter === 'all' ? 'primary' : ''}" data-f="all" type="button">Tout (${e.items.length}/80)</button>${EXP_SLOTS.map(sl => `<button class="btn small ${this.filter === sl.id ? 'primary' : ''}" data-f="${sl.id}" type="button">${sl.icon}</button>`).join('')}
+    h += `<div class="row exptabs"><button class="btn small ${this.filter === 'all' ? 'primary' : ''}" data-f="all" type="button">Tout (${e.items.length}/80)</button>${C.slots.map(sl => `<button class="btn small ${this.filter === sl.id ? 'primary' : ''}" data-f="${sl.id}" type="button">${sl.icon}</button>`).join('')}
       ${commons ? `<button class="btn small" data-act="recycleCommons" type="button">Recycler les communs (${commons})</button>` : ''}</div>`;
-    h += list.length ? this.listHtml(e, list) : '<p class="hint">Aucun objet pour l’instant : abats les Colosses et les ennemis d’élite (cercle doré) pour en gagner.</p>';
+    h += list.length ? this.listHtml(e, list) : `<p class="hint">${C.emptyHint}</p>`;
     return h;
   },
   /* Choix de l'équipement d'un emplacement. */
   pickHtml(s, e) {
-    const sl = EXP_SLOTS.find(x => x.id === this.pick), cur = e.items.find(x => x.uid === e.eq[sl.id]);
-    const list = e.items.filter(it => ExpData.model(it).slot === sl.id).sort((a, b) => ExpData.score(b) - ExpData.score(a));
+    const sl = C.slots.find(x => x.id === this.pick), cur = e.items.find(x => x.uid === e.eq[sl.id]);
+    const list = e.items.filter(it => D.model(it).slot === sl.id).sort((a, b) => D.score(b) - D.score(a));
     let h = `<div class="row" style="justify-content:space-between;align-items:center"><b>${sl.icon} Choisir : ${sl.name}</b><button class="btn small" data-act="back" type="button">‹ Retour</button></div>`;
     h += cur ? `<p class="hint">Équipé actuellement :</p>${this.itemCard(cur, true)}${this.sel === cur.uid ? this.detailHtml(e, cur) : ''}` : '<p class="hint">Rien d’équipé ici.</p>';
     if (cur) list.splice(list.indexOf(cur), 1);
@@ -6297,22 +6274,22 @@ const ExpHub = {
     return h + '</div>';
   },
   setBlock(e, S, compact) {
-    const c = ExpData.setCounts(e)[S.id] || 0, n = S.pieces.length;
+    const c = D.setCounts(e)[S.id] || 0, n = S.pieces.length;
     const own = new Set(e.items.map(x => x.b)), eqb = new Set(Object.values(e.eq).map(u => (e.items.find(x => x.uid === u) || {}).b));
     let h = `<div class="expbox expset"><b class="expsetname">${esc(S.name)} <small>${c}/${n} équipées</small></b>`;
-    if (!compact) h += `<div class="exppieces">${S.pieces.map(([sl, name]) => { const id = S.id + '_' + sl, st = eqb.has(id) ? 'on' : own.has(id) ? 'own' : ''; return `<span class="${st}">${EXP_SLOTS.find(x => x.id === sl).icon} ${esc(name)}${st === 'on' ? ' · équipée' : st === 'own' ? ' · possédée' : ''}</span>`; }).join('')}</div>`;
-    h += `<ul class="expbonus">${Object.keys(S.bonus).map(k => `<li class="${c >= +k ? 'on' : ''}"><b>${k} pièces</b> : ${S.bonus[k].map(([kk, v]) => esc(ExpData.fmt(kk, v))).join(' · ')}</li>`).join('')}</ul></div>`;
+    if (!compact) h += `<div class="exppieces">${S.pieces.map(([sl, name]) => { const id = S.id + '_' + sl, st = eqb.has(id) ? 'on' : own.has(id) ? 'own' : ''; return `<span class="${st}">${C.slots.find(x => x.id === sl).icon} ${esc(name)}${st === 'on' ? ' · équipée' : st === 'own' ? ' · possédée' : ''}</span>`; }).join('')}</div>`;
+    h += `<ul class="expbonus">${Object.keys(S.bonus).map(k => `<li class="${c >= +k ? 'on' : ''}"><b>${k} pièces</b> : ${S.bonus[k].map(([kk, v]) => esc(D.fmt(kk, v))).join(' · ')}</li>`).join('')}</ul></div>`;
     return h;
   },
   setsHtml(e) {
-    const own = EXP_SETS.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
-    return `<p class="hint">Les objets de set (verts) sont rares : Colosses et ennemis d’élite peuvent en laisser à partir du secteur 5. Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent. Une pièce de set au niveau 25 peut encore gagner 12 étoiles.</p>` +
-      EXP_SETS.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
+    const own = C.sets.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
+    return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent. Une pièce de set au niveau 25 peut encore gagner 12 étoiles.</p>` +
+      C.sets.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
   },
   atelierHtml(s, e) {
-    return '<p class="hint">Améliorations permanentes : elles servent pour toutes tes prochaines parties.</p><div class="explist">' + EXP_UPS.map(u => {
-      const lv = e.ups[u.id] || 0, cost = ExpData.upCost(u, lv), max = lv >= u.max;
-      return `<div class="expup"><span><b>${u.name}</b> <small>niv. ${lv} / ${u.max}</small><em>${max ? '' : 'Prochain niveau : ' + u.desc}</em>${lv ? `<em style="color:#5dff9a">Actuel : ${u.tot(lv)}</em>` : ''}</span>${max ? '<small>Maximum</small>' : `<button class="btn small ${e.eclats >= cost ? 'gold' : ''}" data-up="${u.id}" type="button" ${e.eclats >= cost ? '' : 'disabled'}>${cost} ${EXC}</button>`}</div>`;
+    return '<p class="hint">Améliorations permanentes : elles servent pour toutes tes prochaines parties.</p><div class="explist">' + C.ups.map(u => {
+      const lv = e.ups[u.id] || 0, cost = D.upCost(u, lv), max = lv >= u.max;
+      return `<div class="expup"><span><b>${u.name}</b> <small>niv. ${lv} / ${u.max}</small><em>${max ? '' : 'Prochain niveau : ' + u.desc}</em>${lv ? `<em style="color:#5dff9a">Actuel : ${u.tot(lv)}</em>` : ''}</span>${max ? '<small>Maximum</small>' : `<button class="btn small ${e[C.cur] >= cost ? 'gold' : ''}" data-up="${u.id}" type="button" ${e[C.cur] >= cost ? '' : 'disabled'}>${cost} ${C.sym}</button>`}</div>`;
     }).join('') + '</div>';
   },
   bind(s, e) {
@@ -6327,33 +6304,89 @@ const ExpHub = {
     el.querySelectorAll('[data-it]').forEach(b => { b.onclick = () => { this.sel = this.sel === +b.dataset.it ? null : +b.dataset.it; this.render(); }; });
     el.querySelectorAll('[data-eq]').forEach(b => { b.onclick = () => {
       const it = e.items.find(x => x.uid === +b.dataset.eq); if (!it) return;
-      e.eq[ExpData.model(it).slot] = it.uid; this.pick = null; this.sel = null; done('build');
+      e.eq[D.model(it).slot] = it.uid; this.pick = null; this.sel = null; done('build');
     }; });
     el.querySelectorAll('[data-f]').forEach(b => { b.onclick = () => { this.filter = b.dataset.f; this.render(); }; });
     el.querySelectorAll('[data-act]').forEach(b => { b.onclick = () => {
       const a = b.dataset.act;
       if (a === 'back') { this.pick = null; this.sel = null; this.render(); return; }
       if (a === 'recycleCommons') {
-        let g = 0; for (const it of e.items.filter(x => x.r === 0 && !Object.values(e.eq).includes(x.uid))) { g += ExpData.recycleValue(it); ExpData.remove(e, it); }
-        e.eclats += g; this.sel = null; done('sell'); return;
+        let g = 0; for (const it of e.items.filter(x => x.r === 0 && !Object.values(e.eq).includes(x.uid))) { g += D.recycleValue(it); D.remove(e, it); }
+        e[C.cur] += g; this.sel = null; done('sell'); return;
       }
       const it = e.items.find(x => x.uid === this.sel); if (!it) return;
-      const slot = ExpData.model(it).slot;
+      const slot = D.model(it).slot;
       if (a === 'equip') { e.eq[slot] = it.uid; if (this.pick) { this.pick = null; this.sel = null; } done('build'); }
       else if (a === 'unequip') { e.eq[slot] = null; done(); }
-      else if (a === 'up') { const c = ExpData.upgradeCost(it); if (e.eclats < c) return; e.eclats -= c; it.lvl++; done('up'); }
-      else if (a === 'star') { if (!ExpData.canStar(it)) return; const c = ExpData.starCost(it); if (e.eclats < c) return; e.eclats -= c; it.st = (it.st || 0) + 1; done('up'); }
-      else if (a === 'merge') { if (ExpData.merge(e, it)) { this.sel = it.uid; done('up'); } }
-      else if (a === 'recycle') { e.eclats += ExpData.recycleValue(it); ExpData.remove(e, it); this.sel = null; done('sell'); }
+      else if (a === 'up') { const c = D.upgradeCost(it); if (e[C.cur] < c) return; e[C.cur] -= c; it.lvl++; done('up'); }
+      else if (a === 'star') { if (!D.canStar(it)) return; const c = D.starCost(it); if (e[C.cur] < c) return; e[C.cur] -= c; it.st = (it.st || 0) + 1; done('up'); }
+      else if (a === 'merge') { if (D.merge(e, it)) { this.sel = it.uid; done('up'); } }
+      else if (a === 'recycle') { e[C.cur] += D.recycleValue(it); D.remove(e, it); this.sel = null; done('sell'); }
     }; });
     el.querySelectorAll('[data-up]').forEach(b => { b.onclick = () => {
-      const u = EXP_UPS.find(x => x.id === b.dataset.up), lv = e.ups[u.id] || 0, c = ExpData.upCost(u, lv);
-      if (lv >= u.max || e.eclats < c) return;
-      e.eclats -= c; e.ups[u.id] = lv + 1; done('up');
+      const u = C.ups.find(x => x.id === b.dataset.up), lv = e.ups[u.id] || 0, c = D.upCost(u, lv);
+      if (lv >= u.max || e[C.cur] < c) return;
+      e[C.cur] -= c; e.ups[u.id] = lv + 1; done('up');
     }; });
   },
-  launch(opts) { Expedition.opts = opts; $('mgDig').hidden = true; $('mgDig').innerHTML = ''; Minigames.run(Expedition); }
+  launch(opts) { $('mgDig').hidden = true; $('mgDig').innerHTML = ''; C.launch(opts); }
+}; }
+
+/* Configuration de l'équipement de l'Expédition de l'Arche. */
+const EXP_CFG = {
+  key: 'exp', cur: 'eclats', sym: EXC, curName: 'éclats', unit: 'secteur', title: 'Expédition de l’Arche', eyebrow: 'Secteurs de la Rouille',
+  invTab: 'Hangar', unitLabel: 'Ton vaisseau', rar: EXP_RAR, stat: EXP_STAT, slots: EXP_SLOTS, gear: EXP_GEAR, byId: EXP_GEAR_BY_ID, sets: EXP_SETS, setById: EXP_SET_BY_ID,
+  ups: EXP_UPS, topR: EXP_TOP_R, setR: EXP_SET_R, stars: EXP_STARS, mulKeys: ['dmg', 'eclats', 'luck', 'power', 'rate', 'speed', 'inv'],
+  emptyHint: 'Aucun objet pour l’instant : abats les Colosses et les ennemis d’élite (cercle doré) pour en gagner.',
+  setHint: 'Les objets de set (verts) sont rares : Colosses et ennemis d’élite peuvent en laisser à partir du secteur 5.',
+  get(s) {
+    const m = Minigames.data(s);
+    if (!m.exp || !m.exp.v) {
+      const old = m.best.exp || 0;
+      m.exp = { v: 3, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
+      m.best.exp = 0;
+    }
+    const e = m.exp;
+    if (e.ups.bunker) { e.ups.shield = Math.min(3, e.ups.bunker); delete e.ups.bunker; }
+    // v2 : la rareté Exceptionnel s'insère entre Épique et Légendaire
+    if (e.v < 2) { for (const it of e.items) if (it.r >= 3) it.r++; e.v = 2; }
+    // v3 : 7 raretés (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique) + Set ; Légendaire, Mythique et Set gardent leur nom
+    if (e.v < 3) { for (const it of e.items) it.r = [0, 1, 2, 3, 5, 6, 7][it.r] ?? it.r; e.v = 3; }
+    return e;
+  },
+  base(e, u) {
+    return { dmg: 1 + 0.12 * u('dmg'), rate: 3 * (1 + 0.08 * u('rate')), multi: 1, pierce: 0, lives: 3 + u('lives'), shield: u('shield'), regen: 0,
+      speed: 200 * (1 + 0.08 * u('speed')), inv: 1.4, eclats: 1 + 0.1 * u('eclats'), luck: 1 + 0.15 * u('luck'), crit: 0.03, power: 1 + 0.15 * u('power'),
+      missile: 0, lateral: 0, drone: 0, laser: 0, arc: 0, nova: 0, mine: 0, orb: 0, rear: 0, slow: 0,
+      bossDmg: 0, vamp: 0, shieldRegen: 0, revive: 0, critMul: 0, execute: 0, eslow: 0 };
+  },
+  statsHtml(st, D) {
+    const mods = ['missile', 'lateral', 'drone', 'laser', 'arc', 'nova', 'mine', 'orb', 'rear', 'slow'].filter(k => st[k]).map(k => `${EXP_STAT[k].l} ${st[k]}`);
+    const spec = ['bossDmg', 'vamp', 'shieldRegen', 'revive', 'critMul', 'execute', 'eslow'].filter(k => st[k]).map(k => D.fmt(k, st[k]));
+    return `<div class="expstats">
+      <span>Dégâts <b>×${st.dmg.toFixed(2)}</b></span><span>Cadence <b>${st.rate.toFixed(1)}/s</b></span><span>Projectiles <b>${st.multi}</b></span>
+      <span>Coque <b>${st.lives}</b></span><span>Boucliers <b>${st.shield}</b></span><span>Vitesse <b>${Math.round(st.speed)}</b></span>
+      ${st.pierce ? `<span>Perforation <b>${st.pierce}</b></span>` : ''}${st.crit > 0.031 ? `<span>Critique <b>${Math.round(st.crit * 100)} %</b></span>` : ''}
+      ${mods.length ? `<span class="wide">Armes : <b>${mods.join(' · ')}</b></span>` : ''}
+      ${spec.length ? `<span class="wide expspec">Spécial : <b>${spec.join(' · ')}</b></span>` : ''}</div>`;
+  },
+  playHtml(s, e, st, H) {
+    const cps = [1]; for (let w = 6; w <= e.best + 1; w += 5) cps.push(w);
+    let h = '';
+    if (e.run) h += `<div class="expbox"><b>Partie en cours</b><p class="hint">Secteur ${e.run.wave} · ${e.run.hp} point${e.run.hp > 1 ? 's' : ''} de coque · ${Object.values(e.run.ups || {}).reduce((a, b) => a + b, 0)} améliorations · score ${fmtBig(e.run.score)}. Tu reprends au début du secteur.</p>
+      <div class="row"><button class="btn primary" data-go="resume" type="button">Reprendre · secteur ${e.run.wave}</button><button class="btn small" data-go="drop" type="button">Abandonner cette partie</button></div></div>`;
+    h += `<div class="expbox"><b>Nouvelle partie</b><p class="hint">Point de départ : chaque Colosse vaincu (secteurs 5, 10, 15…) débloque le départ suivant, avec des améliorations tirées au sort pour rattraper les secteurs sautés.</p>
+      <div class="row">${cps.map(w => `<button class="btn ${e.run ? '' : 'primary'}" data-go="new" data-w="${w}" type="button">${w === 1 ? 'Départ · secteur 1' : 'Secteur ' + w}</button>`).join('')}</div></div>`;
+    h += `<div class="expbox"><b>Ton vaisseau</b>${H.shipStats(st)}</div>
+      <p class="hint">Maintiens le doigt (ou les flèches) pour piloter l’Arche dans tout l’écran : elle tire seule sur l’ennemi le plus proche. Après chaque secteur, choisis une amélioration parmi trois.
+      Les ennemis deviennent plus nombreux, plus résistants et plus variés au fil des secteurs : équipe-toi au Hangar et renforce ton équipement.
+      Tous les 10 secteurs franchis, un objet d’équipement pour ton équipage de Neon Bastion (Rare ou mieux au secteur 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40). Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent aussi des objets, parfois des pièces de set (vertes). Nouveau record : des gemmes ${GEM}.</p>`;
+    return h;
+  },
+  launch(opts) { Expedition.opts = opts; Minigames.run(Expedition); }
 };
+const ExpData = makeGearData(EXP_CFG);
+const ExpHub = makeGearHub(EXP_CFG, ExpData);
 
 /* ---------- Bonus à ramasser pendant la partie ---------- */
 const EXP_POWERS = {
@@ -6734,6 +6767,637 @@ const Expedition = {
     return { best: e.best, summary: parts.join(' · '), title: cleared > prev ? 'Nouveau record !' : 'Fin de l’expédition', text: `Secteurs franchis : ${cleared} · score ${fmtBig(r.score)} · ${r.kills} ennemis détruits.` };
   },
   afterClose() { ExpHub.open(); }
+};
+
+/* ---------- Course des Toits : plateforme à défilement, équipement partagé avec l'Expédition ----------
+   Pip, coursier de la Rouille, court de toit en toit : saute, écrase les ennemis, son blaster tire seul.
+   Un gardien tous les 5 niveaux. Boulons ⬢ pour l'Atelier, objets (7 raretés + sets verts) au Vestiaire. */
+const PLC = '⬢';
+const PLT_SLOTS = [
+  { id: 'blaster', name: 'Blaster', icon: '🔫' }, { id: 'casque', name: 'Casque', icon: '⛑' }, { id: 'armure', name: 'Armure', icon: '🛡' },
+  { id: 'bottes', name: 'Bottes', icon: '👢' }, { id: 'puce', name: 'Puce', icon: '💾' }
+];
+const PLT_STAT = {
+  dmg: { l: 'dégâts du blaster', pct: true }, rate: { l: 'cadence', pct: true }, multi: { l: 'tir', flat: true }, pierce: { l: 'perforation', flat: true },
+  hp: { l: 'cœur', flat: true, pl: 'cœurs' }, shield: { l: 'bouclier', flat: true }, regen: { l: 'cœur réparé en fin de niveau', pct: true },
+  speed: { l: 'vitesse', pct: true }, jump: { l: 'hauteur de saut', pct: true }, airjump: { l: 'saut en l’air', lv: true }, drone: { l: 'drone tireur', lv: true },
+  inv: { l: 'invulnérabilité après un choc', pct: true }, bolts: { l: 'boulons', pct: true }, luck: { l: 'chance d’objet', pct: true },
+  crit: { l: 'coup critique', pct: true }, magnet: { l: 'portée d’aimant', pct: true }, stomp: { l: 'dégâts d’écrasement', pct: true },
+  bossDmg: { l: 'dégâts contre les gardiens', pct: true },
+  vamp: { txt: v => `1 cœur réparé tous les ${v} ennemis détruits`, min: true },
+  shieldRegen: { txt: v => `1 bouclier rechargé toutes les ${v} s`, min: true },
+  revive: { txt: () => 'Survit une fois par partie à un coup fatal' },
+  critMul: { txt: () => 'Coups critiques ×3 au lieu de ×2' },
+  shock: { txt: () => 'Écraser un ennemi déclenche une onde de choc' },
+  float: { txt: () => 'Plane en gardant le saut appuyé' }
+};
+const PLT_GEAR = [
+  { id: 'plasma', slot: 'blaster', name: 'Blaster à plasma', main: ['dmg', 0.1], sub: ['rate', 0.04] },
+  { id: 'rapide', slot: 'blaster', name: 'Blaster rapide', main: ['rate', 0.08], sub: ['dmg', 0.04] },
+  { id: 'double', slot: 'blaster', name: 'Blaster double', main: ['multi', 1], sub: ['dmg', 0.04] },
+  { id: 'perce', slot: 'blaster', name: 'Fusil perforant', main: ['pierce', 1], sub: ['dmg', 0.05] },
+  { id: 'visee', slot: 'casque', name: 'Casque de visée', main: ['crit', 0.04], sub: ['dmg', 0.04] },
+  { id: 'radar', slot: 'casque', name: 'Casque radar', main: ['luck', 0.12], sub: ['bolts', 0.05] },
+  { id: 'aimant', slot: 'casque', name: 'Casque aimanté', main: ['magnet', 0.2], sub: ['bolts', 0.05] },
+  { id: 'lourde', slot: 'armure', name: 'Armure lourde', main: ['hp', 1], sub: ['shield', 1] },
+  { id: 'champ', slot: 'armure', name: 'Armure à champ', main: ['shield', 1], sub: ['regen', 0.08] },
+  { id: 'nano', slot: 'armure', name: 'Nanocombinaison', main: ['regen', 0.15], sub: ['hp', 1] },
+  { id: 'ressort', slot: 'bottes', name: 'Bottes à ressort', main: ['jump', 0.05], sub: ['speed', 0.04] },
+  { id: 'course', slot: 'bottes', name: 'Bottes de course', main: ['speed', 0.07], sub: ['jump', 0.03] },
+  { id: 'reacteur', slot: 'bottes', name: 'Bottes à réacteur', main: ['airjump', 1], sub: ['jump', 0.03] },
+  { id: 'acier', slot: 'bottes', name: 'Semelles d’acier', main: ['stomp', 0.25], sub: ['hp', 1] },
+  { id: 'recup', slot: 'puce', name: 'Puce de récupération', main: ['bolts', 0.1], sub: ['luck', 0.06] },
+  { id: 'reflexe', slot: 'puce', name: 'Puce de réflexe', main: ['inv', 0.2], sub: ['speed', 0.04] },
+  { id: 'combat', slot: 'puce', name: 'Puce de combat', main: ['dmg', 0.08], sub: ['crit', 0.02] }
+];
+const PLT_SETS = [
+  { id: 'toits', name: 'Coureur des toits', pieces: [
+      ['bottes', 'Bottes de gouttière', ['speed', 0.08], ['jump', 0.03]], ['casque', 'Lunettes de course', ['luck', 0.08], ['speed', 0.03]],
+      ['puce', 'Puce d’élan', ['jump', 0.05], ['speed', 0.03]], ['armure', 'Veste légère', ['hp', 1], ['inv', 0.1]]],
+    bonus: { 2: [['speed', 0.15]], 3: [['airjump', 1]], 4: [['float', 1], ['jump', 0.15]] } },
+  { id: 'pilon', name: 'Pilonneur', pieces: [
+      ['bottes', 'Bottes-marteaux', ['stomp', 0.3], ['hp', 1]], ['armure', 'Plastron de choc', ['hp', 1], ['stomp', 0.1]], ['blaster', 'Canon à recul', ['dmg', 0.1], ['stomp', 0.1]]],
+    bonus: { 2: [['stomp', 0.5]], 3: [['shock', 1]] } },
+  { id: 'elite', name: 'Tireur d’élite', pieces: [
+      ['blaster', 'Long canon', ['dmg', 0.12], ['crit', 0.03]], ['casque', 'Viseur stellaire', ['crit', 0.05], ['dmg', 0.04]],
+      ['puce', 'Puce balistique', ['dmg', 0.1], ['crit', 0.02]], ['bottes', 'Bottes stables', ['speed', 0.06], ['crit', 0.02]]],
+    bonus: { 2: [['crit', 0.08]], 3: [['dmg', 0.25]], 4: [['critMul', 1], ['pierce', 1]] } },
+  { id: 'rempart', name: 'Rempart', pieces: [
+      ['armure', 'Cuirasse-rempart', ['hp', 1], ['shield', 1]], ['casque', 'Heaume de garde', ['shield', 1], ['hp', 1]],
+      ['puce', 'Puce de barrière', ['regen', 0.15], ['inv', 0.1]], ['bottes', 'Bottes ancrées', ['hp', 1], ['jump', 0.03]]],
+    bonus: { 2: [['shield', 1]], 3: [['shieldRegen', 15]], 4: [['revive', 1], ['hp', 1]] } },
+  { id: 'or', name: 'Chercheur de boulons', pieces: [
+      ['casque', 'Détecteur de métaux', ['bolts', 0.12], ['luck', 0.05]], ['puce', 'Puce du ferrailleur', ['luck', 0.12], ['bolts', 0.05]], ['armure', 'Gilet à poches', ['hp', 1], ['magnet', 0.1]]],
+    bonus: { 2: [['bolts', 0.3]], 3: [['luck', 0.4], ['magnet', 0.5]] } },
+  { id: 'mitraille', name: 'Mitrailleur', pieces: [
+      ['blaster', 'Mitrailleuse de poing', ['rate', 0.08], ['dmg', 0.05]], ['puce', 'Puce de cadence', ['rate', 0.06], ['crit', 0.02]],
+      ['armure', 'Harnais à munitions', ['hp', 1], ['rate', 0.03]], ['casque', 'Casque de tir', ['crit', 0.04], ['rate', 0.03]], ['bottes', 'Bottes de recul', ['speed', 0.06], ['rate', 0.03]]],
+    bonus: { 2: [['rate', 0.15]], 3: [['multi', 1]], 4: [['rate', 0.2]], 5: [['multi', 1], ['dmg', 0.25]] } },
+  { id: 'phenix', name: 'Phénix des toits', pieces: [
+      ['armure', 'Plumes de braise', ['regen', 0.15], ['hp', 1]], ['puce', 'Puce des cendres', ['regen', 0.08], ['inv', 0.1]],
+      ['bottes', 'Bottes de flamme', ['jump', 0.05], ['speed', 0.03]], ['casque', 'Couronne ardente', ['hp', 1], ['luck', 0.05]]],
+    bonus: { 2: [['regen', 0.25]], 3: [['vamp', 20]], 4: [['hp', 2], ['revive', 1]] } },
+  { id: 'chasseur', name: 'Chasseur de gardiens', pieces: [
+      ['blaster', 'Brise-gardien', ['dmg', 0.12], ['crit', 0.03]], ['casque', 'Œil du chasseur', ['bossDmg', 0.15], ['crit', 0.02]], ['bottes', 'Bottes de traque', ['speed', 0.07], ['dmg', 0.04]]],
+    bonus: { 2: [['bossDmg', 0.4]], 3: [['bossDmg', 0.6], ['crit', 0.1]] } },
+  { id: 'ombre', name: 'Ombre des toits', pieces: [
+      ['bottes', 'Chaussons d’ombre', ['speed', 0.08], ['inv', 0.1]], ['puce', 'Puce furtive', ['inv', 0.2], ['luck', 0.05]], ['armure', 'Cape de suie', ['hp', 1], ['inv', 0.1]]],
+    bonus: { 2: [['inv', 0.5]], 3: [['speed', 0.2], ['float', 1]] } },
+  { id: 'inge', name: 'Ingénieur volant', pieces: [
+      ['blaster', 'Blaster bricolé', ['dmg', 0.1], ['rate', 0.04]], ['casque', 'Casque à antenne', ['drone', 1], ['dmg', 0.03]],
+      ['armure', 'Bleu de travail', ['hp', 1], ['shield', 1]], ['puce', 'Puce de pilotage', ['rate', 0.06], ['dmg', 0.03]], ['bottes', 'Bottes magnétiques', ['magnet', 0.2], ['speed', 0.03]]],
+    bonus: { 2: [['dmg', 0.15]], 3: [['shield', 1]], 4: [['drone', 1]], 5: [['drone', 1], ['rate', 0.2]] } }
+];
+const PLT_SET_BY_ID = Object.fromEntries(PLT_SETS.map(S => [S.id, S]));
+const PLT_GEAR_BY_ID = Object.fromEntries(PLT_GEAR.map(g => [g.id, g]));
+for (const S of PLT_SETS) for (const [slot, name, main, sub] of S.pieces) PLT_GEAR_BY_ID[S.id + '_' + slot] = { id: S.id + '_' + slot, slot, name, main, sub, set: S.id };
+const PLT_UPS = [
+  { id: 'dmg', name: 'Canon du blaster', desc: '+10 % de dégâts', max: 10, cost: 40, k: 1.45, tot: l => `+${10 * l} % de dégâts` },
+  { id: 'rate', name: 'Chargeur', desc: '+8 % de cadence', max: 8, cost: 50, k: 1.45, tot: l => `+${8 * l} % de cadence` },
+  { id: 'hp', name: 'Cœur de réserve', desc: '+1 cœur au départ', max: 3, cost: 200, k: 2.5, tot: l => `${3 + l} cœurs` },
+  { id: 'speed', name: 'Servomoteurs', desc: '+6 % de vitesse', max: 5, cost: 40, k: 1.5, tot: l => `+${6 * l} % de vitesse` },
+  { id: 'jump', name: 'Ressorts', desc: '+5 % de hauteur de saut', max: 4, cost: 60, k: 1.6, tot: l => `+${5 * l} % de saut` },
+  { id: 'shield', name: 'Générateur de bouclier', desc: '+1 bouclier, rechargé à chaque niveau', max: 2, cost: 150, k: 2.4, tot: l => `${l} bouclier${l > 1 ? 's' : ''}` },
+  { id: 'bolts', name: 'Collecteur', desc: '+10 % de boulons', max: 6, cost: 60, k: 1.5, tot: l => `+${10 * l} % de boulons` },
+  { id: 'luck', name: 'Radar à butin', desc: '+15 % de chance d’objet', max: 5, cost: 90, k: 1.6, tot: l => `+${15 * l} % de chance d’objet` }
+];
+const PLT_CFG = {
+  key: 'plat', cur: 'bolts', sym: PLC, curName: 'boulons', unit: 'niveau', title: 'Course des Toits', eyebrow: 'Toits de la Rouille',
+  invTab: 'Vestiaire', unitLabel: 'Pip', rar: EXP_RAR, stat: PLT_STAT, slots: PLT_SLOTS, gear: PLT_GEAR, byId: PLT_GEAR_BY_ID, sets: PLT_SETS, setById: PLT_SET_BY_ID,
+  ups: PLT_UPS, topR: EXP_TOP_R, setR: EXP_SET_R, stars: EXP_STARS, mulKeys: ['dmg', 'rate', 'speed', 'jump', 'inv', 'bolts', 'luck', 'magnet', 'stomp'],
+  emptyHint: 'Aucun objet pour l’instant : bats les gardiens (tous les 5 niveaux), écrase les ennemis d’élite (cercle doré) et ouvre les caisses dorées.',
+  setHint: 'Les objets de set (verts) sont rares : gardiens, élites et caisses dorées peuvent en laisser à partir du niveau 5.',
+  get(s) {
+    const m = Minigames.data(s);
+    if (!m.plat) m.plat = { v: 1, bolts: 0, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
+    return m.plat;
+  },
+  base(e, u) {
+    return { dmg: 1 + 0.1 * u('dmg'), rate: 2.5 * (1 + 0.08 * u('rate')), multi: 1, pierce: 0, hp: 3 + u('hp'), shield: u('shield'), regen: 0,
+      speed: 1 + 0.06 * u('speed'), jump: 1 + 0.05 * u('jump'), airjump: 0, drone: 0, inv: 1.2, bolts: 1 + 0.1 * u('bolts'), luck: 1 + 0.15 * u('luck'),
+      crit: 0.03, magnet: 1, stomp: 1, bossDmg: 0, vamp: 0, shieldRegen: 0, revive: 0, critMul: 0, shock: 0, float: 0 };
+  },
+  statsHtml(st, D) {
+    const spec = ['airjump', 'drone', 'bossDmg', 'vamp', 'shieldRegen', 'revive', 'critMul', 'shock', 'float'].filter(k => st[k]).map(k => D.fmt(k, st[k]));
+    return `<div class="expstats">
+      <span>Dégâts <b>×${st.dmg.toFixed(2)}</b></span><span>Cadence <b>${st.rate.toFixed(1)}/s</b></span><span>Tirs <b>${st.multi}</b></span>
+      <span>Cœurs <b>${st.hp}</b></span><span>Boucliers <b>${st.shield}</b></span><span>Vitesse <b>×${st.speed.toFixed(2)}</b></span>
+      <span>Saut <b>×${st.jump.toFixed(2)}</b></span><span>Écrasement <b>×${st.stomp.toFixed(2)}</b></span>${st.crit > 0.031 ? `<span>Critique <b>${Math.round(st.crit * 100)} %</b></span>` : ''}
+      ${spec.length ? `<span class="wide expspec">Spécial : <b>${spec.join(' · ')}</b></span>` : ''}</div>`;
+  },
+  playHtml(s, e, st, H) {
+    const cps = [1]; for (let w = 6; w <= e.best + 1; w += 5) cps.push(w);
+    let h = '';
+    if (e.run) h += `<div class="expbox"><b>Partie en cours</b><p class="hint">Niveau ${e.run.lvl} · ${e.run.hp} cœur${e.run.hp > 1 ? 's' : ''} · score ${fmtBig(e.run.score)}. Tu reprends au début du niveau.</p>
+      <div class="row"><button class="btn primary" data-go="resume" type="button">Reprendre · niveau ${e.run.lvl}</button><button class="btn small" data-go="drop" type="button">Abandonner cette partie</button></div></div>`;
+    h += `<div class="expbox"><b>Nouvelle partie</b><p class="hint">Point de départ : chaque gardien vaincu (niveaux 5, 10, 15…) débloque le départ suivant.</p>
+      <div class="row">${cps.map(w => `<button class="btn ${e.run ? '' : 'primary'}" data-go="new" data-w="${w}" type="button">${w === 1 ? 'Départ · niveau 1' : 'Niveau ' + w}</button>`).join('')}</div></div>`;
+    h += `<div class="expbox"><b>Pip</b>${H.shipStats(st)}</div>
+      <p class="hint">Boutons ◀ ▶ pour courir, gros bouton pour sauter (plus tu le gardes, plus tu sautes haut ; flèches et espace au clavier). Saute sur les ennemis pour les écraser ; ton blaster tire seul sur le plus proche. Les piquants ne s’écrasent pas : tire-leur dessus.
+      Frappe les caisses ⚡ par en dessous. Rejoins la balise au bout de chaque niveau. Les boulons ${PLC} d’un niveau sont gardés à sa fin. Nouveau record : des gemmes ${GEM}.</p>`;
+    return h;
+  },
+  launch(opts) { Plat.opts = opts; Minigames.run(Plat); }
+};
+const PlatData = makeGearData(PLT_CFG);
+const PlatHub = makeGearHub(PLT_CFG, PlatData);
+
+if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r); this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r); this.closePath(); return this; };
+/* Ennemis de la Course des Toits : [pv, vitesse, largeur, hauteur, couleur, boulons, écrasable] */
+const PLT_EN = {
+  crawl: [20, 45, 22, 16, '#ffcf4a', 1, true], hop: [24, 60, 18, 18, '#7dff6a', 1, true], fly: [18, 50, 20, 14, '#5ef0ff', 2, true],
+  spike: [40, 40, 22, 18, '#ff4a5a', 2, false], turret: [36, 0, 20, 22, '#ff8a3d', 2, true], armor: [70, 30, 26, 22, '#c58bff', 3, true],
+  bomber: [30, 70, 24, 14, '#ffd84a', 2, true], charger: [45, 40, 24, 18, '#ff4fa3', 3, true]
+};
+const PLT_SPAWN = [
+  { t: 'crawl', from: 1, w: 3 }, { t: 'hop', from: 3, w: 1.4, name: 'Sauteur' }, { t: 'fly', from: 5, w: 1.2, name: 'Drone volant' },
+  { t: 'spike', from: 7, w: 1, name: 'Hérisson de fer (ne s’écrase pas)' }, { t: 'turret', from: 9, w: 0.9, name: 'Tourelle' },
+  { t: 'armor', from: 12, w: 0.8, name: 'Blindé (deux écrasements)' }, { t: 'bomber', from: 15, w: 0.7, name: 'Largueur' }, { t: 'charger', from: 18, w: 0.8, name: 'Fonceur' }
+];
+const PLT_POW = { triple: { c: '#5ef0ff', l: 'T', name: 'Tir triple', d: 10 }, aimant: { c: '#c58bff', l: 'A', name: 'Super-aimant', d: 12 } };
+const Plat = {
+  id: 'plat', title: 'Course des Toits', W: 360, H: 640, quitLabel: 'Pause · quitter', closeLabel: 'Retour au vestiaire', opts: null,
+  T: 30, ROWS: 16, VY: 46, CTRL: 532,
+  init() {
+    const s = App.slot, st = PlatData.stats(s), o = this.opts || { lvl: 1 }, r = o.resume;
+    this.opts = null;
+    Object.assign(this, { st, t: 0, over: false, paused: false, kills: r ? r.kills : 0, score: r ? r.score : 0, runEc: r ? r.ec : 0, runItems: r ? r.items : 0,
+      startLvl: r ? r.startLvl || r.lvl : o.wave || 1, lvl: (r ? r.lvl : o.wave || 1) - 1, cleared: 0, touches: new Map(), fx: [],
+      dmg: 10 * st.dmg, rate: 1 / st.rate, multi: st.multi, pierce: st.pierce, maxHp: st.hp, hp: st.hp, shieldMax: st.shield, crit: st.crit, critMul: 2 + st.critMul,
+      spd: 165 * Math.min(2, st.speed), jumpV: 620 * Math.sqrt(1 + Math.min(0.6, st.jump - 1)), airMax: Math.min(3, st.airjump), invT: st.inv, ecMul: st.bolts, luck: st.luck,
+      magnet: st.magnet, stompK: st.stomp, bossDmg: st.bossDmg, vamp: st.vamp, vampK: 0, shieldRegen: st.shieldRegen, shT: 0, revive: st.revive, shock: st.shock,
+      float: st.float, droneN: Math.min(3, st.drone), regen: st.regen });
+    if (r) this.hp = Math.min(this.maxHp, r.hp || this.maxHp);
+    this.bindTouch();
+    this.nextLevel(true);
+  },
+  /* Commandes tactiles à plusieurs doigts : ◀ ▶ à gauche, saut à droite. */
+  bindTouch() {
+    const cv = $('mgCv'); if (!cv) return;
+    const pos = ev => { const r = cv.getBoundingClientRect(); return [(ev.clientX - r.left) / r.width * this.W, (ev.clientY - r.top) / r.height * this.H]; };
+    const set = ev => { const [x, y] = pos(ev); this.touches.set(ev.pointerId, { x, y }); };
+    cv.addEventListener('pointerdown', set); cv.addEventListener('pointermove', ev => { if (this.touches.has(ev.pointerId)) set(ev); });
+    const del = ev => this.touches.delete(ev.pointerId);
+    cv.addEventListener('pointerup', del); cv.addEventListener('pointercancel', del); cv.addEventListener('pointerleave', del);
+  },
+  input(keys) {
+    let L = !!(keys.ArrowLeft || keys.q || keys.a), R = !!(keys.ArrowRight || keys.d), J = !!(keys[' '] || keys.ArrowUp || keys.z || keys.w);
+    for (const p of this.touches.values()) {
+      if (p.y < this.CTRL - 30) { if (p.x > 200) J = true; continue; }
+      if (p.x < 90) L = true; else if (p.x < 185) R = true; else if (p.x > 220) J = true;
+    }
+    return { L, R, J };
+  },
+  snapshot() {
+    const e = PlatData.get(App.slot);
+    e.run = { lvl: this.lvl, hp: this.hp, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, startLvl: this.startLvl };
+    Store.touch(App.slot);
+  },
+  rng: null,
+  /* ---------- Génération d'un niveau ---------- */
+  nextLevel(first) {
+    this.lvl++;
+    const lvl = this.lvl, T = this.T, R = this.ROWS, rng = mulberry32(hashStr('toits' + lvl + ':' + (Math.random() * 1e9 | 0)));
+    const boss = lvl % 5 === 0, run = boss ? 34 + Math.min(20, lvl) : 56 + Math.min(110, lvl * 5), arena = boss ? 20 : 0, L = run + arena + 12;
+    const g = new Uint8Array(L * R), set = (c, r, v) => { if (c >= 0 && c < L && r >= 0 && r < R) g[c * R + r] = v; };
+    const ground = (c, gh) => { for (let r = gh; r < R; r++) set(c, r, 1); };
+    const en = [], bolts = [], pows = [];
+    const pool = PLT_SPAWN.filter(t => lvl >= t.from), tot = pool.reduce((a, t) => a + t.w, 0);
+    const pick = () => { let x = rng() * tot; for (const t of pool) { x -= t.w; if (x <= 0) return t.t; } return 'crawl'; };
+    const dens = Math.min(0.75, 0.25 + lvl * 0.02);
+    let c = 0, gh = 12, gold = lvl >= 3 && rng() < 0.3 * this.luck;
+    for (; c < 8; c++) ground(c, gh);
+    while (c < run) {
+      const k = rng();
+      if (k < 0.22 && c > 10) { // trou
+        const w = 2 + Math.floor(rng() * (1 + Math.min(2, lvl / 6)));
+        for (let i = 0; i < w; i++) bolts.push({ x: (c + i + 0.5) * T, y: (gh - 2.2 - Math.sin((i + 0.5) / w * Math.PI) * 1.4) * T });
+        c += w;
+        if (rng() < 0.5) gh = clamp(gh + (rng() < 0.5 ? -1 : 1), 9, 13);
+        for (let i = 0; i < 2; i++) ground(c++, gh);
+      } else if (k < 0.38) { // marche
+        gh = clamp(gh + (rng() < 0.5 ? -1 : 1) * (1 + (rng() < 0.3 ? 1 : 0)), 8, 13);
+        const len = 3 + Math.floor(rng() * 4); for (let i = 0; i < len; i++) ground(c++, gh);
+      } else if (k < 0.6) { // plateforme flottante avec caisses
+        const len = 4 + Math.floor(rng() * 4), py = gh - 4;
+        for (let i = 0; i < len; i++) ground(c + i, gh);
+        const pl = 3 + Math.floor(rng() * 2), p0 = c + 1;
+        for (let i = 0; i < pl; i++) { const crate = rng() < 0.35; set(p0 + i, py, gold && crate ? 4 : crate ? 2 : 1); if (gold && crate) gold = false; bolts.push({ x: (p0 + i + 0.5) * T, y: (py - 1) * T + 10 }); }
+        if (rng() < dens) en.push({ t: pick(), c: c + len - 1, gh });
+        c += len;
+      } else if (k < 0.72 && lvl >= 4) { // piquants
+        const len = 5 + Math.floor(rng() * 3);
+        for (let i = 0; i < len; i++) ground(c + i, gh);
+        const sp = 1 + Math.floor(rng() * Math.min(3, 1 + lvl / 8));
+        for (let i = 0; i < sp; i++) set(c + 2 + i, gh, 5);
+        for (let i = 0; i < sp + 2; i++) bolts.push({ x: (c + 1.5 + i) * T, y: (gh - 2.6) * T });
+        c += len;
+      } else { // plat avec ennemis
+        const len = 5 + Math.floor(rng() * 5);
+        for (let i = 0; i < len; i++) ground(c + i, gh);
+        if (rng() < 0.4) { set(c + 2, gh - 4, rng() < 0.5 ? 2 : 1); }
+        const n = rng() < dens ? 1 + (rng() < dens * 0.6 ? 1 : 0) : 0;
+        for (let i = 0; i < n; i++) en.push({ t: pick(), c: c + 2 + Math.floor(rng() * (len - 3)), gh });
+        if (rng() < 0.5) for (let i = 0; i < 3; i++) bolts.push({ x: (c + 1.5 + i) * T, y: (gh - 1.6) * T });
+        c += len;
+      }
+    }
+    const arenaStart = c;
+    for (; c < L; c++) ground(c, 12);
+    if (boss) for (let r = 0; r < 12; r++) { set(arenaStart + arena + 1, r, 1); }
+    Object.assign(this, { L, g, boss, arenaStart, arenaEnd: arenaStart + arena, bossOn: false, bossObj: null,
+      beacon: { x: (boss ? arenaStart + arena - 3 : L - 5) * T, y: 12 * T, on: !boss },
+      en: [], shots: [], eshots: [], bolts: bolts.map(b => ({ ...b, a: 0 })), pows, drops: [], power: {},
+      px: 2 * T, py: 12 * T - 26, vx: 0, vy: 0, w: 18, h: 26, face: 1, onG: false, coyote: 0, jbuf: 0, airLeft: this.airMax, jHeld: false,
+      inv: 1, cd: 0.5, droneCd: 0.6, camX: 0, safe: { x: 2 * T, y: 12 * T - 26 }, safeT: 0, lvEc: 0, lvItems: [], done: false, walk: 0 });
+    this.shields = this.shieldMax;
+    for (const e of en) this.spawn(e.t, (e.c + 0.5) * T, e.gh * T);
+    this.banner = { text: boss ? `Niveau ${lvl} · Gardien !` : `Niveau ${lvl}`, sub: '', t: 1.8 };
+    const fresh = PLT_SPAWN.find(t => t.from === lvl && t.from > 1);
+    if (fresh) this.banner.sub = `Nouvel ennemi : ${fresh.name}`;
+    this.snapshot();
+  },
+  hk() { const l = this.lvl; return (1 + 0.22 * (l - 1)) * Math.pow(1.045, l - 1); },
+  spawn(t, x, groundY) {
+    const b = PLT_EN[t], elite = Math.random() < Math.min(0.2, 0.03 + this.lvl * 0.003), hp = b[0] * this.hk() * (elite ? 3 : 1);
+    const fly = t === 'fly' || t === 'bomber';
+    this.en.push({ t, x: x - b[2] / 2, y: fly ? groundY - 110 - Math.random() * 40 : groundY - b[3], w: b[2] * (elite ? 1.2 : 1), h: b[3] * (elite ? 1.2 : 1), vx: (Math.random() < 0.5 ? -1 : 1) * b[1] * (1 + Math.min(0.6, this.lvl * 0.015)), vy: 0,
+      hp, max: hp, c: b[4], ec: b[5], stomp: b[6], elite, fly, y0: groundY - 120, ph: Math.random() * 6, fire: 1.5 + Math.random() * 2, hitT: 0, onG: false });
+  },
+  tile(c, r) { if (c < 0) return 1; if (c >= this.L || r >= this.ROWS) return 0; if (r < 0) return 0; return this.g[c * this.ROWS + r]; },
+  solid(c, r) { const v = this.tile(c, r); return v === 1 || v === 2 || v === 3 || v === 4 || v === 5; },
+  /* Déplacement d'une boîte avec collisions sur la grille. */
+  move(o, dt, onHead) {
+    const T = this.T;
+    o.x += o.vx * dt;
+    const r0 = Math.floor(o.y / T), r1 = Math.floor((o.y + o.h - 1) / T);
+    if (o.vx > 0) { const c = Math.floor((o.x + o.w) / T); for (let r = r0; r <= r1; r++) if (this.solid(c, r)) { o.x = c * T - o.w - 0.01; o.vx = 0; o.wall = 1; break; } }
+    else if (o.vx < 0) { const c = Math.floor(o.x / T); for (let r = r0; r <= r1; r++) if (this.solid(c, r)) { o.x = (c + 1) * T + 0.01; o.vx = 0; o.wall = -1; break; } }
+    o.y += o.vy * dt; o.onG = false;
+    const c0 = Math.floor(o.x / T), c1 = Math.floor((o.x + o.w - 1) / T);
+    if (o.vy > 0) { const r = Math.floor((o.y + o.h) / T); for (let c = c0; c <= c1; c++) if (this.solid(c, r)) { o.y = r * T - o.h; o.vy = 0; o.onG = true; o.gt = this.tile(c, r); break; } }
+    else if (o.vy < 0) { const r = Math.floor(o.y / T); for (let c = c0; c <= c1; c++) if (this.solid(c, r)) { o.y = (r + 1) * T; o.vy = 0; if (onHead) onHead(c, r); break; } }
+  },
+  hitCrate(c, r) {
+    const v = this.tile(c, r), T = this.T;
+    if (v !== 2 && v !== 4) return;
+    this.g[c * this.ROWS + r] = 3;
+    const x = (c + 0.5) * T, y = r * T - 6;
+    this.fx.push({ ring: true, x, y: y + 6, c: v === 4 ? '#ffd84a' : '#ff9b3d', r: 18, t: 0.3 });
+    Sound.sfx && Sound.sfx('build');
+    if (v === 4) { this.dropItem(1, x, y); return; }
+    const k = Math.random();
+    if (k < 0.62) for (let i = 0; i < 5; i++) this.bolts.push({ x: x + (i - 2) * 6, y, vx: (i - 2) * 40, vy: -260 - Math.random() * 80, a: 1, fall: true });
+    else { const opts = ['triple', 'aimant', 'bouclier']; if (this.hp < this.maxHp) opts.push('coeur', 'coeur'); this.pows.push({ k: opts[Math.floor(Math.random() * opts.length)], x, y, vy: -200 }); }
+  },
+  dropItem(minR, x, y) {
+    const setChance = this.lvl >= 5 ? (minR ? 0.15 : 0.03) * this.luck : 0;
+    const res = PlatData.roll(App.slot, this.lvl, this.luck, minR, setChance), R = PlatData.rar(res.it);
+    this.lvItems.push(res.it); if (res.auto) this.lvEc += res.auto;
+    this.fx.push({ txt: `${PlatData.isSet(res.it) ? 'Set' : R.name} : ${PlatData.name(res.it)}`, c: R.color, x: clamp(x - this.camX, 90, 270), y: 200, t: 2.6, screen: true });
+  },
+  gain(n) { this.lvEc += n * this.ecMul; },
+  hurt(pit) {
+    if (this.over || (!pit && this.inv > 0)) return;
+    if (!pit && this.shields > 0) { this.shields--; this.inv = 0.8; this.fx.push({ ring: true, x: this.px + 9, y: this.py + 13, c: '#4fa3ff', r: 26, t: 0.4 }); Sound.sfx && Sound.sfx('build'); return; }
+    if (this.hp <= 1 && this.revive > 0) { this.revive--; this.inv = 2.5; this.hitFx = 0.35; this.fx.push({ txt: 'Sursaut de survie !', c: '#3ddc5a', x: 180, y: 220, t: 2, screen: true }); if (pit) this.respawn(); return; }
+    this.hp--; this.inv = this.invT; this.hitFx = 0.35; buzz(60); Sound.sfx && Sound.sfx('alarm');
+    this.fx.push({ txt: '−1 cœur', c: '#ff5468', x: this.px + 9, y: this.py - 10, t: 1 });
+    if (pit) this.respawn();
+    if (this.hp <= 0) this.gameOver();
+  },
+  respawn() { this.px = this.safe.x; this.py = this.safe.y - 4; this.vx = 0; this.vy = 0; this.inv = Math.max(this.inv, 1.5); },
+  damage(e, v, direct) {
+    if (e.dead) return;
+    const crit = direct && Math.random() < this.crit;
+    e.hp -= v * (crit ? this.critMul : 1) * (e.boss || e.elite ? 1 + this.bossDmg : 1); e.hitT = 0.12;
+    if (crit) this.fx.push({ txt: 'Critique', c: '#ffcf4a', x: e.x + e.w / 2, y: e.y - 6, t: 0.5, small: true });
+    if (e.hp <= 0) this.kill(e);
+  },
+  kill(e) {
+    e.dead = true; this.kills++; this.score += Math.round(e.max) * this.lvl;
+    this.gain(e.ec * (e.elite ? 4 : 1));
+    const cx = e.x + e.w / 2, cy = e.y + e.h / 2;
+    this.fx.push({ ring: true, x: cx, y: cy, c: e.c, r: e.w, t: 0.35 });
+    for (let i = 0; i < 8; i++) { const a = Math.random() * TAU, sp = 40 + Math.random() * 120; this.fx.push({ p: true, x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: e.c, t: 0.5 }); }
+    if (this.vamp && ++this.vampK >= this.vamp) { this.vampK = 0; if (this.hp < this.maxHp) { this.hp++; this.fx.push({ txt: '+1 cœur', c: '#5dff9a', x: this.px + 9, y: this.py - 12, t: 1 }); } }
+    if (e.boss) { this.gain(30 + 5 * this.lvl); this.dropItem(this.lvl >= 15 ? 2 : this.lvl >= 10 ? 1 : 0, cx, cy); this.beacon.on = true; this.bossObj = null; buzz(120); Sound.sfx && Sound.sfx('boom'); this.fx.push({ txt: 'Gardien vaincu : la balise s’allume', c: '#3ef2c8', x: 180, y: 160, t: 2.6, screen: true }); }
+    else { if (e.elite && Math.random() < 0.35 * this.luck) this.dropItem(0, cx, cy); Sound.sfx && Sound.sfx('build'); }
+  },
+  nearest() {
+    let best = null, bd = 260 * 260; const cx = this.px + 9, cy = this.py + 10;
+    for (const e of this.en) { if (e.dead) continue; const ex = e.x + e.w / 2, ey = e.y + e.h / 2; if (ex < this.camX - 10 || ex > this.camX + 370) continue; const d = (ex - cx) ** 2 + (ey - cy) ** 2; if (d < bd) { bd = d; best = e; } }
+    return best;
+  },
+  shoot(x, y, a, dmg, o) { this.shots.push(Object.assign({ x, y, vx: Math.cos(a) * 480, vy: Math.sin(a) * 480, dmg, p: this.pierce, hit: new Set(), life: 0.7 }, o || {})); },
+  /* ---------- Boucle de jeu ---------- */
+  update(dt, P, keys) {
+    this.t += dt;
+    for (const f of this.fx) { f.t -= dt; if (f.p) { f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 0.94; f.vy *= 0.94; } }
+    this.fx = this.fx.filter(f => f.t > 0);
+    if (this.over || this.paused) return;
+    if (this.banner) { this.banner.t -= dt; if (this.banner.t <= 0) this.banner = null; }
+    if (this.hitFx > 0) this.hitFx -= dt;
+    for (const k in this.power) this.power[k] -= dt;
+    let steps = Math.ceil(dt / (1 / 60)); const h = dt / steps;
+    while (steps-- > 0 && !this.over && !this.done) this.step(h, keys);
+  },
+  step(dt, keys) {
+    const T = this.T, inp = this.input(keys);
+    // Pip
+    const want = (inp.R ? 1 : 0) - (inp.L ? 1 : 0);
+    const acc = this.onG ? 1400 : 900;
+    if (want) { this.vx += want * acc * dt; this.face = want; } else { const f = (this.onG ? 1600 : 500) * dt; this.vx = Math.abs(this.vx) <= f ? 0 : this.vx - Math.sign(this.vx) * f; }
+    this.vx = clamp(this.vx, -this.spd, this.spd);
+    if (inp.J && !this.jHeld) this.jbuf = 0.12;
+    this.jbuf -= dt; this.coyote -= dt;
+    if (this.jbuf > 0) {
+      if (this.onG || this.coyote > 0) { this.vy = -this.jumpV; this.jbuf = 0; this.coyote = 0; Sound.sfx && Sound.sfx('ui'); }
+      else if (this.airLeft > 0) { this.airLeft--; this.vy = -this.jumpV * 0.85; this.jbuf = 0; this.fx.push({ ring: true, x: this.px + 9, y: this.py + 26, c: '#9afff0', r: 12, t: 0.25 }); }
+    }
+    if (!inp.J && this.vy < -220) this.vy *= 0.6;
+    this.jHeld = inp.J;
+    this.vy = Math.min(this.vy + 1800 * dt, this.float && inp.J && this.vy > 0 ? 90 : 900);
+    const wasG = this.onG;
+    const box = { x: this.px, y: this.py, w: this.w, h: this.h, vx: this.vx, vy: this.vy };
+    this.move(box, dt, (c, r) => this.hitCrate(c, r));
+    Object.assign(this, { px: box.x, py: box.y, vx: box.vx, vy: box.vy, onG: box.onG });
+    if (this.onG) { this.coyote = 0.08; this.airLeft = this.airMax; if (box.gt === 5) { this.hurt(); this.vy = -480; this.onG = false; } }
+    else if (wasG && this.vy >= 0) this.coyote = 0.08;
+    if (this.onG && box.gt !== 5) { this.safeT -= dt; const c0 = Math.floor(this.px / T), c1 = Math.floor((this.px + this.w) / T), r = Math.floor((this.py + this.h + 2) / T); if (this.safeT <= 0 && this.solid(c0 - 1, r) && this.solid(c1 + 1, r) && this.tile(c0, r) !== 5) { this.safe = { x: this.px, y: this.py }; this.safeT = 0.4; } }
+    if (this.py > this.ROWS * T + 40) this.hurt(true);
+    if (this.over) return;
+    this.walk += Math.abs(this.vx) * dt;
+    if (this.inv > 0) this.inv -= dt;
+    if (this.shieldRegen && this.shields < this.shieldMax) { this.shT += dt; if (this.shT >= this.shieldRegen) { this.shT = 0; this.shields++; } } else this.shT = 0;
+    // Caméra
+    const maxCam = this.boss && this.bossOn ? (this.arenaEnd + 2) * T - 360 : this.L * T - 360;
+    this.camX += (clamp(this.px - 140, this.boss && this.bossOn ? this.arenaStart * T - 20 : 0, Math.max(0, maxCam)) - this.camX) * Math.min(1, dt * 8);
+    // Gardien
+    if (this.boss && !this.bossOn && this.px > (this.arenaStart + 2) * T) {
+      this.bossOn = true;
+      const hp = 380 * this.hk() * (1 + 0.15 * (this.lvl / 5 - 1));
+      const b = { t: 'boss', boss: true, x: (this.arenaEnd - 5) * T, y: 12 * T - 56, w: 54, h: 56, vx: 0, vy: 0, hp, max: hp, c: '#ff3355', ec: 0, stomp: true, ph: 0, fire: 1.6, mode: 0, hitT: 0, sInv: 0 };
+      this.en.push(b); this.bossObj = b; this.banner = { text: 'Le gardien du toit !', sub: '', t: 1.6 };
+      for (let r = 0; r < 12; r++) this.g[(this.arenaStart - 1) * this.ROWS + r] = this.g[(this.arenaStart - 1) * this.ROWS + r] || 0;
+    }
+    // Tir automatique
+    this.cd -= dt;
+    const tgt = this.nearest();
+    if (this.cd <= 0 && tgt) {
+      this.cd = this.rate;
+      const cx = this.px + 9, cy = this.py + 10, a = Math.atan2(tgt.y + tgt.h / 2 - cy, tgt.x + tgt.w / 2 - cx), n = this.multi + (this.power.triple > 0 ? 2 : 0);
+      for (let i = 0; i < n; i++) this.shoot(cx, cy, a + (i - (n - 1) / 2) * 0.12, this.dmg);
+      this.face = Math.cos(a) >= 0 ? 1 : -1;
+    }
+    if (this.droneN && tgt) { this.droneCd -= dt; if (this.droneCd <= 0) { this.droneCd = 0.9; for (let i = 0; i < this.droneN; i++) { const [dx, dy] = this.dronePos(i), a = Math.atan2(tgt.y + tgt.h / 2 - dy, tgt.x + tgt.w / 2 - dx); this.shoot(dx, dy, a, this.dmg * 0.6, { side: true }); } } }
+    for (const s of this.shots) {
+      s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
+      if (s.life <= 0 || this.solid(Math.floor(s.x / T), Math.floor((s.y - this.VY * 0) / T))) { s.dead = true; continue; }
+      for (const e of this.en) { if (e.dead || s.hit.has(e)) continue; if (s.x > e.x && s.x < e.x + e.w && s.y > e.y && s.y < e.y + e.h) { s.hit.add(e); this.damage(e, s.dmg, true); if (s.p-- <= 0) { s.dead = true; break; } } }
+    }
+    this.shots = this.shots.filter(s => !s.dead);
+    // Ennemis
+    const pcx = this.px + 9;
+    for (const e of this.en) {
+      if (e.dead) continue;
+      e.ph += dt; if (e.hitT > 0) e.hitT -= dt; if (e.sInv > 0) e.sInv -= dt;
+      if (Math.abs(e.x - this.px) > 520 && !e.boss) continue;
+      if (e.boss) this.bossAI(e, dt);
+      else if (e.fly) {
+        e.x += e.vx * dt; if (this.solid(Math.floor((e.x + (e.vx > 0 ? e.w : 0)) / T), Math.floor((e.y + e.h / 2) / T)) || Math.abs(e.x - e.x0 || 0) > 140) e.vx *= -1;
+        if (e.x0 === undefined) e.x0 = e.x;
+        e.y = e.y0 + Math.sin(e.ph * 1.6) * 24;
+        if (e.t === 'bomber') { e.fire -= dt; if (e.fire <= 0 && Math.abs(e.x + e.w / 2 - pcx) < 40) { e.fire = 2.2; this.eshots.push({ x: e.x + e.w / 2, y: e.y + e.h, vx: 0, vy: 60, g: 600, r: 6, bomb: true }); } }
+      } else {
+        e.vy = Math.min(e.vy + 1800 * dt, 900);
+        if (e.t === 'hop' && e.onG) { e.fire -= dt; if (e.fire <= 0) { e.vy = -480; e.vx = Math.sign(pcx - e.x - e.w / 2) * 90; e.fire = 1.2 + Math.random(); } }
+        if (e.t === 'charger') { const dx = pcx - e.x - e.w / 2; if (!e.dash && Math.abs(dx) < 200 && Math.abs(this.py - e.y) < 50) { e.dash = 1.2; e.vx = Math.sign(dx) * 260; } if (e.dash) { e.dash -= dt; if (e.dash <= 0) { e.dash = 0; e.vx = Math.sign(e.vx || 1) * 40; } } }
+        if (e.t === 'turret') { e.vx = 0; e.fire -= dt; if (e.fire <= 0 && Math.abs(pcx - e.x) < 320) { e.fire = Math.max(1.2, 2.6 - this.lvl * 0.04); const a = Math.atan2(this.py + 13 - e.y, pcx - e.x - e.w / 2), v = 170 * (1 + Math.min(0.5, this.lvl * 0.01)); this.eshots.push({ x: e.x + e.w / 2, y: e.y + 4, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 4 }); } }
+        const vx0 = e.vx; e.wall = 0;
+        this.move(e, dt);
+        if (e.wall) e.vx = -vx0;
+        if (e.onG && e.t !== 'hop' && !e.dash) { const fc = Math.floor((e.vx > 0 ? e.x + e.w + 2 : e.x - 2) / T), r = Math.floor((e.y + e.h + 2) / T); if (!this.solid(fc, r)) e.vx = -e.vx; }
+        if (e.y > this.ROWS * T + 60) e.dead = true;
+      }
+      // Contact avec Pip : écrasement ou choc
+      if (this.px < e.x + e.w && this.px + this.w > e.x && this.py < e.y + e.h && this.py + this.h > e.y) {
+        const fromTop = this.vy > 60 && this.py + this.h - e.y < 16;
+        if (fromTop && e.stomp && !(e.sInv > 0)) {
+          this.vy = -this.jumpV * 0.7; this.airLeft = this.airMax;
+          if (e.boss) { e.sInv = 0.6; this.damage(e, e.max * 0.06 * this.stompK); }
+          else this.damage(e, e.max * (e.t === 'armor' ? 0.55 : 1) * Math.min(1.5, this.stompK) / (e.elite ? 3 : 1));
+          if (this.shock) { for (const o of this.en) if (o !== e && !o.dead && Math.abs(o.x - e.x) < 80 && Math.abs(o.y - e.y) < 60) this.damage(o, o.boss ? o.max * 0.02 : o.max * 0.5); this.fx.push({ ring: true, x: e.x + e.w / 2, y: e.y + e.h, c: '#ffd84a', r: 70, t: 0.35 }); }
+          this.fx.push({ ring: true, x: e.x + e.w / 2, y: e.y, c: '#fff', r: 14, t: 0.25 });
+        } else if (!fromTop || !e.stomp) { this.hurt(); if (this.inv > 0) this.vx = Math.sign(this.px - e.x) * 200; }
+      }
+    }
+    this.en = this.en.filter(e => !e.dead);
+    // Tirs ennemis
+    for (const s of this.eshots) {
+      if (s.g) s.vy += s.g * dt;
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      if (this.solid(Math.floor(s.x / T), Math.floor(s.y / T)) || s.y > this.ROWS * T) { s.dead = true; if (s.bomb) this.fx.push({ ring: true, x: s.x, y: s.y, c: '#ffd84a', r: 24, t: 0.3 }); continue; }
+      if (s.x > this.px - 2 && s.x < this.px + this.w + 2 && s.y > this.py && s.y < this.py + this.h) { s.dead = true; this.hurt(); }
+    }
+    this.eshots = this.eshots.filter(s => !s.dead && Math.abs(s.x - this.px) < 600);
+    // Boulons et bonus
+    const mr = 46 * this.magnet * (this.power.aimant > 0 ? 3 : 1);
+    for (const b of this.bolts) {
+      if (b.fall) { b.vy += 1400 * dt; b.x += b.vx * dt; b.y += b.vy * dt; if (this.solid(Math.floor(b.x / T), Math.floor((b.y + 5) / T))) { b.y = Math.floor((b.y + 5) / T) * T - 5; b.fall = false; } if (b.y > this.ROWS * T) b.dead = true; }
+      const dx = pcx - b.x, dy = this.py + 13 - b.y, d = Math.hypot(dx, dy);
+      if (d < mr) { b.x += dx / d * 300 * dt; b.y += dy / d * 300 * dt; b.fall = false; }
+      if (d < 16) { b.dead = true; this.gain(1); this.score += 5 * this.lvl; }
+    }
+    this.bolts = this.bolts.filter(b => !b.dead);
+    for (const p of this.pows) {
+      p.vy = Math.min(p.vy + 1200 * dt, 400); p.y += p.vy * dt;
+      if (this.solid(Math.floor(p.x / T), Math.floor((p.y + 9) / T))) { p.y = Math.floor((p.y + 9) / T) * T - 9; p.vy = 0; }
+      if (Math.abs(p.x - pcx) < 18 && Math.abs(p.y - this.py - 13) < 22) {
+        p.dead = true; Sound.sfx && Sound.sfx('up');
+        if (p.k === 'coeur') { this.hp = Math.min(this.maxHp, this.hp + 1); this.fx.push({ txt: '+1 cœur', c: '#ff5468', x: pcx, y: this.py - 10, t: 1 }); }
+        else if (p.k === 'bouclier') { this.shields++; this.fx.push({ txt: 'Bouclier', c: '#4fa3ff', x: pcx, y: this.py - 10, t: 1 }); }
+        else { this.power[p.k] = PLT_POW[p.k].d; this.fx.push({ txt: PLT_POW[p.k].name, c: PLT_POW[p.k].c, x: pcx, y: this.py - 10, t: 1 }); }
+      }
+    }
+    this.pows = this.pows.filter(p => !p.dead && p.y < this.ROWS * T);
+    // Balise de fin
+    if (this.beacon.on && Math.abs(pcx - this.beacon.x) < 20 && this.py + this.h > this.beacon.y - 90) this.finishLevel();
+  },
+  bossAI(e, dt) {
+    const T = this.T, pcx = this.px + 9;
+    e.vy = Math.min(e.vy + 1800 * dt, 900);
+    e.fire -= dt;
+    if (e.onG) e.vx *= 0.9;
+    if (e.fire <= 0 && e.onG) {
+      e.mode = (e.mode + 1) % 3;
+      if (e.mode === 0) { e.vy = -720; e.vx = clamp((pcx - e.x - e.w / 2) * 1.1, -260, 260); e.jumping = true; e.fire = 1.6; }
+      else if (e.mode === 1) { const v = 190 * (1 + Math.min(0.5, this.lvl * 0.01)); for (let i = -2; i <= 2; i++) { const a = Math.atan2(this.py + 13 - e.y - 20, pcx - e.x - e.w / 2) + i * 0.16; this.eshots.push({ x: e.x + e.w / 2, y: e.y + 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 5 }); } e.fire = 1.5; }
+      else { if (this.en.length < 8) for (const dx of [-30, 30]) this.spawn(this.lvl >= 7 && Math.random() < 0.4 ? 'spike' : 'crawl', e.x + e.w / 2 + dx, 12 * T); e.fire = 2; }
+    }
+    const was = e.onG;
+    this.move(e, dt);
+    e.x = clamp(e.x, this.arenaStart * T, (this.arenaEnd - 1) * T - e.w);
+    if (!was && e.onG && e.jumping) {
+      e.jumping = false; this.fx.push({ ring: true, x: e.x + e.w / 2, y: e.y + e.h, c: '#ff3355', r: 90, t: 0.4 }); buzz(40);
+      if (this.onG && Math.abs(pcx - e.x - e.w / 2) < 110) this.hurt();
+    }
+  },
+  dronePos(i) { return [this.px + 9 - this.face * (22 + i * 14), this.py - 14 - i * 6 + Math.sin(this.t * 4 + i) * 3]; },
+  finishLevel() {
+    if (this.done) return;
+    this.done = true; this.cleared = this.lvl;
+    this.gain(5 + this.lvl);
+    if (this.regen && Math.random() < this.regen && this.hp < this.maxHp) this.hp++;
+    this.bank();
+    Sound.sfx && Sound.sfx('up');
+    this.fx.push({ txt: `Niveau ${this.lvl} terminé !`, c: '#3ef2c8', x: 180, y: 220, t: 1.4, screen: true });
+    setTimeout(() => { if (!this.over && Minigames.cur === this) this.nextLevel(); }, 1100);
+  },
+  bank() {
+    const e = PlatData.get(App.slot), ec = Math.round(this.lvEc);
+    e.bolts += ec; this.runEc += ec; this.runItems += this.lvItems.length; this.lvEc = 0; this.lvItems = [];
+    Store.touch(App.slot);
+  },
+  gameOver() {
+    if (this.over) return;
+    this.over = true; this.bank();
+    const e = PlatData.get(App.slot); e.run = null; e.runs++; e.kills += this.kills; Store.touch(App.slot);
+    setTimeout(() => Minigames.finish(this.result()), 900);
+  },
+  /* ---------- Dessin ---------- */
+  draw(g) {
+    const T = this.T, VY = this.VY, cam = this.camX, W = 360;
+    const pal = [['#140c2a', '#2a1650', '#ff4fa3'], ['#071a24', '#0e3346', '#3ef2c8'], ['#1d0f0a', '#3a1e12', '#ff9b3d'], ['#0b0f24', '#1a2250', '#7aa7ff']][Math.floor((this.lvl - 1) / 10) % 4];
+    const sky = g.createLinearGradient(0, 0, 0, this.CTRL); sky.addColorStop(0, pal[0]); sky.addColorStop(1, pal[1]);
+    g.fillStyle = sky; g.fillRect(0, 0, W, this.CTRL);
+    g.fillStyle = 'rgba(255,240,220,.85)'; g.beginPath(); g.arc(290, 90, 22, 0, TAU); g.fill();
+    // Silhouettes de la ville (parallaxe)
+    for (const [k, base, col] of [[0.2, 330, 'rgba(0,0,0,.35)'], [0.45, 380, 'rgba(0,0,0,.5)']]) {
+      const off = cam * k;
+      for (let i = Math.floor(off / 46) - 1; i < Math.floor(off / 46) + 10; i++) {
+        const hh = 60 + ((i * 7919) % 97) * (k > 0.3 ? 1.2 : 0.8), x = i * 46 - off;
+        g.fillStyle = col; g.fillRect(x, base - hh, 40, hh + 200);
+        if (k > 0.3) { g.fillStyle = pal[2] + '55'; for (let wy = base - hh + 8; wy < base; wy += 14) for (let wx = 6; wx < 36; wx += 10) if (((i * 31 + wy * 7 + wx) % 5) === 0) g.fillRect(x + wx, wy, 4, 6); }
+      }
+    }
+    g.save(); g.translate(-Math.round(cam), VY);
+    // Tuiles
+    const c0 = Math.max(0, Math.floor(cam / T) - 1), c1 = Math.min(this.L - 1, c0 + 14);
+    for (let c = c0; c <= c1; c++) for (let r = 0; r < this.ROWS; r++) {
+      const v = this.g[c * this.ROWS + r]; if (!v) continue;
+      const x = c * T, y = r * T, top = !this.solid(c, r - 1);
+      if (v === 1) { g.fillStyle = '#0c1220'; g.fillRect(x, y, T, T); if (top) { g.fillStyle = pal[2]; g.fillRect(x, y, T, 3); g.fillStyle = 'rgba(255,255,255,.06)'; g.fillRect(x, y + 3, T, 6); } g.strokeStyle = 'rgba(255,255,255,.05)'; g.strokeRect(x + 0.5, y + 0.5, T - 1, T - 1); }
+      else if (v === 5) { g.fillStyle = '#0c1220'; g.fillRect(x, y, T, T); g.fillStyle = '#ff4a5a'; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(x + i * 10, y + 2); g.lineTo(x + i * 10 + 5, y - 9); g.lineTo(x + i * 10 + 10, y + 2); g.fill(); } }
+      else { const gold = v === 4, used = v === 3; g.fillStyle = used ? '#1a1f2e' : gold ? '#3a2c08' : '#2a1608'; g.fillRect(x + 1, y + 1, T - 2, T - 2); g.strokeStyle = used ? '#3a4258' : gold ? '#ffd84a' : '#ff9b3d'; g.lineWidth = 2; g.strokeRect(x + 2, y + 2, T - 4, T - 4);
+        if (!used) { g.fillStyle = gold ? '#ffd84a' : '#ffcf4a'; g.beginPath(); g.moveTo(x + 17, y + 6); g.lineTo(x + 10, y + 16); g.lineTo(x + 15, y + 16); g.lineTo(x + 12, y + 24); g.lineTo(x + 20, y + 13); g.lineTo(x + 15, y + 13); g.closePath(); g.fill(); } }
+    }
+    // Balise
+    const bx = this.beacon.x, by = this.beacon.y;
+    g.strokeStyle = this.beacon.on ? '#3ef2c8' : '#3a4258'; g.lineWidth = 3; g.beginPath(); g.moveTo(bx, by); g.lineTo(bx, by - 96); g.stroke();
+    if (this.beacon.on) { const pr = 10 + 4 * Math.sin(this.t * 5); g.fillStyle = 'rgba(62,242,200,.18)'; g.fillRect(bx - 12, 0, 24, by - 96); g.fillStyle = '#3ef2c8'; g.beginPath(); g.arc(bx, by - 100, pr * 0.6, 0, TAU); g.fill(); g.strokeStyle = 'rgba(62,242,200,.6)'; g.beginPath(); g.arc(bx, by - 100, pr + 6, 0, TAU); g.stroke(); }
+    // Boulons
+    for (const b of this.bolts) { g.save(); g.translate(b.x, b.y); g.rotate(this.t * 2); g.fillStyle = '#ffd84a'; polygonPath(g, 0, 0, 6, 6, 0); g.fill(); g.fillStyle = '#5a4210'; g.beginPath(); g.arc(0, 0, 2.2, 0, TAU); g.fill(); g.restore(); }
+    for (const p of this.pows) { const c = p.k === 'coeur' ? '#ff5468' : p.k === 'bouclier' ? '#4fa3ff' : PLT_POW[p.k].c, l = p.k === 'coeur' ? '♥' : p.k === 'bouclier' ? 'B' : PLT_POW[p.k].l; g.save(); g.shadowColor = c; g.shadowBlur = 10; g.strokeStyle = c; g.lineWidth = 2; g.fillStyle = '#05070d'; g.beginPath(); g.arc(p.x, p.y, 9, 0, TAU); g.fill(); g.stroke(); g.restore(); g.fillStyle = c; g.font = '800 11px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(l, p.x, p.y + 1); g.textBaseline = 'alphabetic'; }
+    // Ennemis
+    for (const e of this.en) {
+      const x = e.x, y = e.y, w = e.w, h = e.h;
+      g.save(); g.shadowColor = e.c; g.shadowBlur = 8; g.fillStyle = e.hitT > 0 ? '#fff' : '#0a0e18'; g.strokeStyle = e.c; g.lineWidth = 2.5;
+      if (e.boss) {
+        g.beginPath(); g.roundRect(x, y + 8, w, h - 8, 8); g.fill(); g.stroke();
+        g.fillStyle = e.c; g.fillRect(x + 8, y + 18, w - 16, 8); g.fillStyle = '#fff'; g.fillRect(x + 12 + (Math.sin(this.t * 3) + 1) * 12, y + 19, 6, 6);
+        g.strokeStyle = e.c; g.beginPath(); g.moveTo(x + 10, y + 8); g.lineTo(x + 4, y - 4); g.moveTo(x + w - 10, y + 8); g.lineTo(x + w - 4, y - 4); g.stroke();
+      } else if (e.t === 'crawl') { g.beginPath(); g.ellipse(x + w / 2, y + h * 0.6, w / 2, h * 0.5, 0, Math.PI, 0); g.lineTo(x + w, y + h); g.lineTo(x, y + h); g.closePath(); g.fill(); g.stroke(); }
+      else if (e.t === 'hop') { g.beginPath(); g.arc(x + w / 2, y + h / 2, w / 2, 0, TAU); g.fill(); g.stroke(); }
+      else if (e.t === 'fly' || e.t === 'bomber') { g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, TAU); g.fill(); g.stroke(); g.beginPath(); g.moveTo(x - 4, y + 2 + Math.sin(this.t * 30) * 2); g.lineTo(x + w + 4, y + 2 - Math.sin(this.t * 30) * 2); g.stroke(); }
+      else if (e.t === 'spike') { g.beginPath(); g.roundRect(x, y + 6, w, h - 6, 4); g.fill(); g.stroke(); g.fillStyle = e.c; for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(x + i * w / 4, y + 7); g.lineTo(x + i * w / 4 + w / 8, y - 3); g.lineTo(x + (i + 1) * w / 4, y + 7); g.fill(); } }
+      else if (e.t === 'turret') { g.beginPath(); g.roundRect(x, y + 8, w, h - 8, 3); g.fill(); g.stroke(); const a = Math.atan2(this.py - y, this.px - x); g.beginPath(); g.moveTo(x + w / 2, y + 10); g.lineTo(x + w / 2 + Math.cos(a) * 14, y + 10 + Math.sin(a) * 14); g.stroke(); }
+      else if (e.t === 'armor') { g.beginPath(); g.roundRect(x, y, w, h, 5); g.fill(); g.stroke(); g.strokeStyle = e.c; g.beginPath(); g.moveTo(x + 4, y + h / 2); g.lineTo(x + w - 4, y + h / 2); g.stroke(); }
+      else if (e.t === 'charger') { g.beginPath(); const d = Math.sign(e.vx || 1); g.moveTo(x + (d > 0 ? w + 4 : -4), y + h / 2); g.lineTo(x + (d > 0 ? 0 : w), y); g.lineTo(x + (d > 0 ? 0 : w), y + h); g.closePath(); g.fill(); g.stroke(); }
+      g.shadowBlur = 0;
+      if (!e.boss) { g.fillStyle = e.c; g.fillRect(x + w / 2 - 5 + Math.sign(this.px - x) * 3, y + h * 0.42, 3, 3); g.fillRect(x + w / 2 + 2 + Math.sign(this.px - x) * 3, y + h * 0.42, 3, 3); }
+      g.restore();
+      if (e.elite) { g.strokeStyle = '#ffcf4a'; g.lineWidth = 1.5; g.setLineDash([2, 3]); g.beginPath(); g.arc(x + w / 2, y + h / 2, Math.max(w, h) * 0.75, 0, TAU); g.stroke(); g.setLineDash([]); }
+      if (e.max > 25 && e.hp < e.max && !e.boss) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x, y - 7, w, 3); g.fillStyle = e.c; g.fillRect(x, y - 7, w * Math.max(0, e.hp / e.max), 3); }
+    }
+    for (const s of this.eshots) { g.fillStyle = s.bomb ? '#ffd84a' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.r || 4, 0, TAU); g.fill(); }
+    for (const s of this.shots) { g.fillStyle = s.side ? '#9afff0' : '#5ef0ff'; g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx)); g.fillRect(-5, -1.5, 10, 3); g.restore(); }
+    for (let i = 0; i < this.droneN; i++) { const [dx, dy] = this.dronePos(i); g.fillStyle = '#9afff0'; g.beginPath(); g.arc(dx, dy, 4, 0, TAU); g.fill(); g.strokeStyle = 'rgba(154,255,240,.5)'; g.beginPath(); g.moveTo(dx - 7, dy - 4); g.lineTo(dx + 7, dy - 4); g.stroke(); }
+    // Pip
+    if (!this.over && !(this.inv > 0 && Math.floor(this.t * 12) % 2)) this.drawPip(g);
+    for (const f of this.fx) {
+      if (f.screen) continue;
+      if (f.p) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.fillRect(f.x - 1.5, f.y - 1.5, 3, 3); g.globalAlpha = 1; }
+      else if (f.ring) { g.globalAlpha = Math.min(1, f.t / 0.35); g.strokeStyle = f.c; g.lineWidth = 3; g.beginPath(); g.arc(f.x, f.y, f.r * (1.4 - f.t), 0, TAU); g.stroke(); g.globalAlpha = 1; }
+      else if (f.txt) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.font = `700 ${f.small ? 10 : 13}px "Chakra Petch", sans-serif`; g.textAlign = 'center'; g.fillText(f.txt, f.x, f.y - (1 - Math.min(1, f.t)) * 10); g.globalAlpha = 1; }
+    }
+    g.restore();
+    // Interface
+    if (this.hitFx > 0) { g.fillStyle = `rgba(255,40,70,${(this.hitFx / 0.35 * 0.25).toFixed(3)})`; g.fillRect(0, 0, W, this.CTRL); }
+    for (let i = 0; i < this.maxHp; i++) this.heart(g, 16 + i * 20, 18, i < this.hp);
+    for (let i = 0; i < this.shields; i++) { g.strokeStyle = '#4fa3ff'; g.lineWidth = 2; g.beginPath(); g.arc(16 + i * 18, 38, 6, 0, TAU); g.stroke(); }
+    g.font = '700 12px "JetBrains Mono", monospace'; g.textAlign = 'right'; g.fillStyle = '#ffd84a'; g.fillText(`${PLC} ${Math.round(this.runEc + this.lvEc)}`, 350, 22);
+    let py = 40; for (const k in this.power) if (this.power[k] > 0) { g.fillStyle = PLT_POW[k].c; g.fillText(`${PLT_POW[k].name} ${Math.ceil(this.power[k])} s`, 350, py); py += 15; }
+    if (this.bossObj) { const b = this.bossObj; g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(60, 56, 240, 8); g.fillStyle = '#ff3355'; g.fillRect(60, 56, 240 * Math.max(0, b.hp / b.max), 8); g.strokeStyle = '#ff3355'; g.strokeRect(60.5, 56.5, 240, 8); }
+    for (const f of this.fx) if (f.screen) { g.globalAlpha = Math.min(1, f.t * 2); g.fillStyle = f.c; g.font = '700 15px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(f.txt, f.x, f.y); g.globalAlpha = 1; }
+    if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t * 2); g.fillStyle = '#e4ecfb'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 150); if (this.banner.sub) { g.fillStyle = '#ff8a3d'; g.font = '700 14px "Chakra Petch", sans-serif'; g.fillText(this.banner.sub, 180, 176); } g.globalAlpha = 1; }
+    // Commandes
+    const inp = this.input(Minigames.keys || {});
+    g.fillStyle = '#070a12'; g.fillRect(0, this.CTRL, W, this.H - this.CTRL);
+    g.strokeStyle = 'rgba(255,255,255,.08)'; g.beginPath(); g.moveTo(0, this.CTRL + 0.5); g.lineTo(W, this.CTRL + 0.5); g.stroke();
+    const btn = (x, y, w, h, on, draw) => { g.fillStyle = on ? 'rgba(94,240,255,.28)' : 'rgba(255,255,255,.06)'; g.strokeStyle = on ? '#5ef0ff' : 'rgba(255,255,255,.18)'; g.lineWidth = 2; g.beginPath(); g.roundRect(x, y, w, h, 16); g.fill(); g.stroke(); g.fillStyle = on ? '#5ef0ff' : '#c9d3ea'; draw(x + w / 2, y + h / 2); };
+    const cy = this.CTRL + 14;
+    btn(8, cy, 76, 84, inp.L, (x, y) => { g.beginPath(); g.moveTo(x - 12, y); g.lineTo(x + 10, y - 14); g.lineTo(x + 10, y + 14); g.closePath(); g.fill(); });
+    btn(94, cy, 76, 84, inp.R, (x, y) => { g.beginPath(); g.moveTo(x + 12, y); g.lineTo(x - 10, y - 14); g.lineTo(x - 10, y + 14); g.closePath(); g.fill(); });
+    btn(228, cy, 124, 84, inp.J, (x, y) => { g.font = '800 16px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('SAUTER', x, y); g.textBaseline = 'alphabetic'; });
+    if (this.lvl === this.startLvl && this.t < 5) { g.font = '600 12px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillStyle = 'rgba(228,236,251,.85)'; g.fillText('◀ ▶ pour courir · SAUTER (garde-le pour sauter plus haut)', 180, 470); g.fillText('Écrase les ennemis ; ton blaster tire seul', 180, 488); }
+    if (this.over) { g.fillStyle = 'rgba(5,7,13,.55)'; g.fillRect(0, 0, W, this.CTRL); g.fillStyle = '#ff5468'; g.font = '800 24px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('FIN DE LA COURSE', 180, 250); }
+  },
+  heart(g, x, y, on) {
+    g.fillStyle = on ? '#ff5468' : '#24314f';
+    g.beginPath(); g.moveTo(x, y + 6); g.bezierCurveTo(x - 9, y, x - 7, y - 8, x, y - 3); g.bezierCurveTo(x + 7, y - 8, x + 9, y, x, y + 6); g.fill();
+  },
+  /* Pip, petit robot coursier (personnage original). */
+  drawPip(g) {
+    const x = this.px, y = this.py, f = this.face, run = this.onG && Math.abs(this.vx) > 20, ph = this.walk / 9;
+    g.save(); g.translate(x + 9, y); g.scale(f, 1);
+    // écharpe
+    g.strokeStyle = '#3ef2c8'; g.lineWidth = 3; g.beginPath(); g.moveTo(-2, 12); g.quadraticCurveTo(-10, 10 + Math.sin(this.t * 10) * 3, -16, 14 + Math.sin(this.t * 10 + 1) * 4); g.stroke();
+    // jambes
+    g.strokeStyle = '#c9d3ea'; g.lineWidth = 3; g.lineCap = 'round';
+    const l1 = run ? Math.sin(ph) * 5 : 0, airy = this.onG ? 0 : -3;
+    g.beginPath(); g.moveTo(-4, 20); g.lineTo(-4 + l1, 26 + airy); g.moveTo(4, 20); g.lineTo(4 - l1, 26 + airy); g.stroke();
+    // corps
+    g.fillStyle = '#ff9b3d'; g.strokeStyle = '#ffd8a8'; g.lineWidth = 1.5;
+    g.beginPath(); g.roundRect(-9, 4, 18, 17, 6); g.fill(); g.stroke();
+    // visière
+    g.fillStyle = '#0a0e18'; g.beginPath(); g.roundRect(-5, 7, 13, 7, 3); g.fill();
+    g.fillStyle = '#5ef0ff'; g.fillRect(1, 9, 5, 3);
+    // antenne
+    g.strokeStyle = '#ffd8a8'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-3, 4); g.lineTo(-5, -3); g.stroke();
+    g.fillStyle = Math.floor(this.t * 3) % 2 ? '#ff5468' : '#ffd84a'; g.beginPath(); g.arc(-5, -4, 2.2, 0, TAU); g.fill();
+    // blaster
+    g.fillStyle = '#5ef0ff'; g.fillRect(7, 13, 7, 3);
+    g.restore();
+  },
+  info() { return `Niveau ${this.lvl} · ${this.kills} détruits`; },
+  quit() { if (this.over) return; this.paused = true; this.quitting = true; Minigames.finish(this.result()); },
+  result() { return { lvl: this.lvl, cleared: this.cleared, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, quit: !!this.quitting }; },
+  reward(r) {
+    const s = App.slot, e = PlatData.get(s);
+    this.quitting = false;
+    if (r.quit) return { summary: 'partie sauvegardée', title: 'Partie en pause', text: `Tu reprendras au début du niveau ${r.lvl}. Les boulons de ce niveau n’étaient pas encore gagnés.` };
+    const cleared = r.cleared, prev = e.best;
+    let gems = 0;
+    if (cleared > prev) { gems = (cleared - prev) * 3; for (let k = Math.floor(prev / 5) + 1; k * 5 <= cleared; k++) gems += 20; e.best = cleared; }
+    e.score = Math.max(e.score, r.score);
+    Store.touch(s);
+    const parts = [`${fmtBig(r.ec)} ${PLC} boulons`];
+    if (r.items) parts.push(`${r.items} objet${r.items > 1 ? 's' : ''} pour le vestiaire`);
+    if (gems) parts.push(mgGrant(s, { gems }));
+    return { best: e.best, summary: parts.join(' · '), title: cleared > prev ? 'Nouveau record !' : 'Fin de la course', text: `Niveaux franchis : ${cleared} · score ${fmtBig(r.score)} · ${r.kills} ennemis détruits.` };
+  },
+  afterClose() { PlatHub.open(); }
 };
 
 /* ---------- Plongée des Abysses ---------- */
@@ -8273,8 +8937,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.7';
+const APP_VERSION = '7.8';
 const CHANGELOG = [
+  { v: '7.8', date: '02.11.2026', items: ['Nouvel événement : Course des Toits, un jeu de plateforme. Guide Pip de toit en toit, écrase les ennemis, frappe les caisses ⚡, bats un gardien tous les 5 niveaux. Partie sauvegardée avec le même équipement que l’Expédition : Vestiaire (5 emplacements), 7 raretés, 10 sets, fusion, étoiles et Atelier', 'Les événements se débloquent un par un, tous les 10 niveaux : Expédition dès le départ, Course des Toits au niveau 11, puis Plongée (21), Percée (31), Code du Coffre (41), Triage (51), Chute de Plasma (61) et Fouille (71)'] },
   { v: '7.7', date: '02.11.2026', items: ['Équipement de l’équipage : mêmes 7 raretés que l’Expédition (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique arc-en-ciel). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques, les anciens Épiques deviennent Rares', 'Équipement de l’équipage : un objet Mythique au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % par étoile), payées en ferraille', 'La Caisse de l’Arche donne maintenant un objet Exceptionnel ou mieux', 'Expédition : tous les 10 secteurs franchis, un objet d’équipement pour l’équipage de Neon Bastion (Rare ou mieux à 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40)'] },
   { v: '7.6', date: '02.11.2026', items: ['Expédition : 7 raretés dans l’ordre Commun (gris), Magique (bleu), Rare (jaune), Exceptionnel (orange), Épique (violet), Légendaire (rouge), Mythique (arc-en-ciel), plus les objets de set (verts). Tes objets gardent leur puissance : les anciens Rares deviennent Magiques et les anciens Épiques deviennent Rares', 'Étoiles : un objet Mythique ou de set au niveau maximum peut gagner jusqu’à 12 étoiles (+10 % à ses valeurs par étoile, +1 niveau d’arme toutes les 3 étoiles)', 'La fusion de 3 objets identiques va maintenant jusqu’à Mythique'] },
   { v: '7.5', date: '02.11.2026', items: ['Expédition, Hangar : touche un emplacement pour choisir son équipement parmi les objets compatibles', 'Fiche d’objet comme pour l’équipage : valeurs actuelles → niveau suivant, amélioration, fusion de 3 objets identiques vers la rareté suivante, recyclage (et recyclage des communs en un geste)', 'Nouvelle rareté Exceptionnel (orange), entre Épique et Légendaire', '12 sets d’objets verts (3 à 5 pièces) : bonus spéciaux selon le nombre de pièces équipées (arc électrique, survie au coup fatal, recharge de bouclier, achèvement, dégâts contre les Colosses…). Nouvel onglet Sets', 'Difficulté nettement relevée : ennemis plus résistants, plus d’élites, tirs plus rapides et plus fréquents au fil des secteurs', '7 nouveaux ennemis : Tisseur (10), Porte-essaim (12), Soigneur (15), Poseur de mines (18), Spectre (21), Chasseur (24), Bombardier (27)'] },
