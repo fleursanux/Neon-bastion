@@ -931,6 +931,8 @@ body.fsgame.fsland.sheet .side{transform:none}
 .gcard small{font-size:.62rem;color:var(--rc);font-weight:700}
 .gcard .gstat{font-size:.6rem;color:var(--muted);line-height:1.3}
 .gcard.big{min-height:150px}
+.gsetbox{border:1px solid rgba(61,220,90,.5);border-radius:10px;padding:8px;text-align:left;width:100%;box-sizing:border-box}.gsetbox>b{color:#3ddc5a}.gsetbox small{color:var(--muted)}.gsetp{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}.gsetp span{font-size:.72rem;padding:2px 6px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}.gsetp span.own{color:#3ddc5a;border-color:#3ddc5a}.gsetbox ul{margin:0;padding-left:18px;font-size:.78rem;color:var(--muted)}.gsetbox li.on{color:#3ddc5a}
+.gcard.r7{box-shadow:0 0 12px rgba(61,220,90,.35)}
 .gcard.r5,.gcard.r6{box-shadow:0 0 14px color-mix(in srgb,var(--rc) 35%,transparent)}
 .gcard.r6,.rv.r6{animation:rainbowGlow 3s linear infinite}.gcard.r6 .gicon,.rv.r6 .gicon,.gdetail.r6 .gicon{animation:hueSpin 3s linear infinite}
 .gcard.r6 small:not(.gstars),.rv.r6 small,.gdetail.r6 .grname{background:linear-gradient(90deg,#ff4a5a,#ffd84a,#5dff9a,#5ef0ff,#c58bff,#ff7ae0);-webkit-background-clip:text;background-clip:text;color:transparent!important}
@@ -4256,9 +4258,10 @@ const RARITY = [
   { name: 'Exceptionnel', color: '#ff8a3d', mul: 3.0, scrap: 25, price: 400 },
   { name: 'Épique', color: '#c58bff', mul: 3.4, scrap: 40, price: 600 },
   { name: 'Légendaire', color: '#ff4a5a', mul: 3.9, scrap: 70, price: 1000 },
-  { name: 'Mythique', color: '#ff7ae0', mul: 5.2, scrap: 120, price: 1800, rainbow: true }
+  { name: 'Mythique', color: '#ff7ae0', mul: 5.2, scrap: 120, price: 1800, rainbow: true },
+  { name: 'Set', color: '#3ddc5a', mul: 3.6, scrap: 90, price: 1500, set: true }
 ];
-const GEAR_TOP = 6, GEAR_STARS = 12;
+const GEAR_TOP = 6, GEAR_STARS = 12, GEAR_SET_R = 7;
 const GEAR_SLOTS = [
   { id: 'arme', name: 'Arme', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
   { id: 'blindage', name: 'Blindage', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
@@ -4297,6 +4300,31 @@ if (D2) {
     lame: 'Rune Ist', moteur: 'Cube Horadrique', eclat: 'Fragment de la Pierre-Monde', givre: 'Pierre de givre', cle: 'Clé de la Terreur' });
 }
 const GEAR_BY_ID = Object.fromEntries(GEAR.map(g => [g.id, g]));
+/* Sets de l'équipage : 3 pièces (arme, blindage, module) portées par le même personnage. Bonus à 2 et 3 pièces. */
+const GEAR_SETS = [
+  { id: 'forge', name: 'Forge ardente', pieces: [['arme', 'Marteau-forge', 'power', 0.05, 'rate'], ['blindage', 'Tablier de fonderie', 'power', 0.03, 'hunter'], ['module', 'Creuset vivant', 'crit', 0.012, 'power']],
+    bonus: { 2: [['power', 0.15]], 3: [['power', 0.15], ['crit', 0.05]] } },
+  { id: 'tempete', name: 'Œil de la tempête', pieces: [['arme', 'Arc-bobine', 'rate', 0.04, 'power'], ['blindage', 'Cape ionisée', 'rate', 0.025, 'range'], ['module', 'Condensateur d’orage', 'crit', 0.012, 'rate']],
+    bonus: { 2: [['rate', 0.15]], 3: [['rate', 0.15], ['crit', 0.04]] } },
+  { id: 'vigie', name: 'Vigie lointaine', pieces: [['arme', 'Lunette de siège', 'range', 0.04, 'power'], ['blindage', 'Mât d’observation', 'range', 0.03, 'hunter'], ['module', 'Carte des vents', 'crit', 0.012, 'range']],
+    bonus: { 2: [['range', 0.15]], 3: [['range', 0.1], ['hunter', 0.25]] } },
+  { id: 'titans', name: 'Chasseur de titans', pieces: [['arme', 'Harpon lourd', 'power', 0.05, 'hunter'], ['blindage', 'Bouclier de traque', 'hunter', 0.06, 'power'], ['module', 'Trophée de titan', 'hunter', 0.05, 'crit']],
+    bonus: { 2: [['hunter', 0.3]], 3: [['hunter', 0.4], ['pen', 0.1]] } },
+  { id: 'brise', name: 'Brise-armure', pieces: [['arme', 'Foreuse à plasma', 'power', 0.045, 'pen'], ['blindage', 'Plaques perforantes', 'pen', 0.025, 'power'], ['module', 'Puce de faille', 'pen', 0.02, 'crit']],
+    bonus: { 2: [['pen', 0.1]], 3: [['pen', 0.15], ['power', 0.1]] } },
+  { id: 'tresor', name: 'Trésor de la Rouille', pieces: [['arme', 'Pistolet doré', 'power', 0.04, 'bounty'], ['blindage', 'Gilet à poches', 'bounty', 0.04, 'gold'], ['module', 'Coffre portatif', 'gold', 0.07, 'bounty']],
+    bonus: { 2: [['gold', 0.2]], 3: [['bounty', 0.25], ['gold', 0.2]] } },
+  { id: 'rempart', name: 'Rempart du Noyau', pieces: [['arme', 'Canon de garde', 'power', 0.04, 'range'], ['blindage', 'Muraille portative', 'range', 0.025, 'hunter'], ['module', 'Cœur de secours', 'lives', 1, 'wave']],
+    bonus: { 2: [['lives', 2]], 3: [['lives', 3], ['wave', 0.15]] } },
+  { id: 'vagues', name: 'Maître des vagues', pieces: [['arme', 'Lance-marée', 'rate', 0.03, 'power'], ['blindage', 'Combinaison de houle', 'power', 0.03, 'rate'], ['module', 'Sablier de l’Arche', 'wave', 0.07, 'gold']],
+    bonus: { 2: [['wave', 0.2]], 3: [['wave', 0.25], ['rate', 0.1]] } },
+  { id: 'precision', name: 'Précision absolue', pieces: [['arme', 'Fusil de précision', 'power', 0.05, 'range'], ['blindage', 'Viseur blindé', 'range', 0.025, 'power'], ['module', 'Puce balistique', 'crit', 0.015, 'power']],
+    bonus: { 2: [['crit', 0.04]], 3: [['crit', 0.06], ['power', 0.2]] } },
+  { id: 'phenix', name: 'Phénix d’acier', pieces: [['arme', 'Bec de braise', 'power', 0.045, 'rate'], ['blindage', 'Plumage blindé', 'power', 0.03, 'range'], ['module', 'Œuf de cendres', 'lives', 1, 'gold']],
+    bonus: { 2: [['power', 0.12], ['rate', 0.08]], 3: [['lives', 2], ['hunter', 0.2]] } }
+];
+const GEAR_SET_BY_ID = Object.fromEntries(GEAR_SETS.map(S => [S.id, S]));
+for (const S of GEAR_SETS) for (const [slot, name, stat, base, sub] of S.pieces) GEAR_BY_ID['set_' + S.id + '_' + slot] = { id: 'set_' + S.id + '_' + slot, slot, name, stat, base, sub, set: S.id };
 const CHESTS = [
   { id: 'c1', name: 'Caisse de ferraille', price: 50, n: 1, min: 0, desc: '1 objet · Commun ou mieux' },
   { id: 'c2', name: 'Caisse renforcée', price: 150, n: 1, min: 1, desc: '1 objet · Magique ou mieux' },
@@ -4311,10 +4339,10 @@ const Gear = {
     // v2 : 7 raretés. Légendaire et Mythique gardent leur nom ; Rare devient Magique, Épique devient Rare (même puissance)
     if (!s.gear.v) { const M = [0, 1, 2, 5, 6]; for (const it of s.gear.items) it.r = M[it.r] ?? it.r; for (const o of s.gear.offers || []) o.r = M[o.r] ?? o.r; s.gear.v = 2; }
   },
-  canStar: it => it.r === GEAR_TOP && it.l >= 5 + 5 * it.r && (it.st || 0) < GEAR_STARS,
+  canStar: it => (it.r === GEAR_TOP || it.r === GEAR_SET_R) && it.l >= Gear.maxLevel(it.r) && (it.st || 0) < GEAR_STARS,
   starCost: it => Math.round(1000 * Math.pow(1.4, it.st || 0)),
   starText: it => it.st ? '★'.repeat(it.st) : '',
-  maxLevel: r => 5 + 5 * r,
+  maxLevel: r => r === GEAR_SET_R ? 25 : 5 + 5 * r,
   upCost: it => Math.ceil(4 * it.l * (it.r + 1)),
   /* Valeur d'une statistique pour un objet donné. */
   value(it, sub) {
@@ -4344,7 +4372,17 @@ const Gear = {
     g.items.push(item); g.fresh++;
     return item;
   },
-  label(it) { return `${RARITY[it.r].name} : ${GEAR_BY_ID[it.t].name}`; },
+  label(it) { const t = GEAR_BY_ID[it.t]; return t.set ? `Set ${GEAR_SET_BY_ID[t.set].name} : ${t.name}` : `${RARITY[it.r].name} : ${t.name}`; },
+  /* Sets : pièces portées par un personnage et bonus actifs. */
+  setCount(slot, c) { const n = {}; for (const sl of GEAR_SLOTS) { const it = this.find(slot, slot.gear.equip[c][sl.id]), t = it && GEAR_BY_ID[it.t]; if (t && t.set) n[t.set] = (n[t.set] || 0) + 1; } return n; },
+  setBonus(slot, c) { const n = this.setCount(slot, c), out = []; for (const S of GEAR_SETS) for (const k in S.bonus) if ((n[S.id] || 0) >= +k) out.push(...S.bonus[k]); return out; },
+  /* Pièce de set au hasard (récompense de palier). */
+  setHtml(slot, S, c) {
+    const n = this.setCount(slot, c)[S.id] || 0, own = new Set(slot.gear.items.map(x => x.t));
+    return `<div class="gsetbox"><b>${esc(S.name)}</b> <small>${n}/3 sur ${esc(CAST[c] ? CAST[c].name : '')}</small><div class="gsetp">${S.pieces.map(([sl, nm]) => `<span class="${own.has('set_' + S.id + '_' + sl) ? 'own' : ''}">${esc(nm)}</span>`).join('')}</div>` +
+      `<ul>${Object.keys(S.bonus).map(k => `<li class="${n >= +k ? 'on' : ''}"><b>${k} pièces</b> : ${S.bonus[k].map(([st, v]) => esc(this.statText(st, GEAR_STATS[st].flat ? v : v))).join(' · ')}</li>`).join('')}</ul><p class="hint">Les bonus comptent quand les pièces sont portées par le même personnage.</p></div>`;
+  },
+  rollSet(slot) { const S = GEAR_SETS[Math.floor(Math.random() * GEAR_SETS.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)]; return { t: 'set_' + S.id + '_' + p[0], r: GEAR_SET_R, l: 1 }; },
   owner(slot, uid) {
     for (const c of CREW_IDS) for (const sl of GEAR_SLOTS) if (slot.gear.equip[c][sl.id] === uid) return { c, s: sl.id };
     return null;
@@ -4364,6 +4402,7 @@ const Gear = {
           else global[st] = (global[st] || 0) + v;
         }
       }
+      for (const [st, v] of this.setBonus(slot, c)) { if (GEAR_STATS[st].crew) own[st] = (own[st] || 0) + v; else global[st] = (global[st] || 0) + v; }
       for (const tid of CREW_TOWERS[c]) crew[tid] = own;
     }
     return { global, crew };
@@ -4375,6 +4414,7 @@ const Gear = {
       if (!it) continue;
       for (const [st, v] of this.stats(it)) { const o = GEAR_STATS[st].crew ? own : glob; o[st] = (o[st] || 0) + v; }
     }
+    for (const [st, v] of this.setBonus(slot, c)) { const o = GEAR_STATS[st].crew ? own : glob; o[st] = (o[st] || 0) + v; }
     return { own, glob };
   },
 
@@ -4439,7 +4479,7 @@ function gearCard(slot, it, opts) {
   const t = GEAR_BY_ID[it.t], R = RARITY[it.r], o = Gear.owner(slot, it.uid), merge = Gear.mergeGroup(slot, it).length >= 3;
   return `<button class="gcard r${it.r} ${opts && opts.big ? 'big' : ''}" type="button" data-item="${it.uid}" style="--rc:${R.color}">` +
     gearIcon(it, opts && opts.big ? 54 : 38) +
-    `<b>${esc(t.name)}</b><small>${R.name} · niv. ${it.l}</small>${it.st ? `<small class="gstars">${Gear.starText(it)}</small>` : ''}` +
+    `<b>${esc(t.name)}</b><small>${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : R.name} · niv. ${it.l}</small>${it.st ? `<small class="gstars">${Gear.starText(it)}</small>` : ''}` +
     `<span class="gstat">${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join('<br>')}</span>` +
     (o ? `<span class="gown" title="Équipé par ${esc(CAST[o.c].name)}">${esc(CAST[o.c].name[0])}</span>` : '') +
     (merge ? '<span class="gmerge" title="Fusion possible">×3</span>' : '') + '</button>';
@@ -6421,7 +6461,7 @@ const EXP_CFG = {
     h += `<div class="expbox"><b>Ton vaisseau</b>${H.shipStats(st)}</div>
       <p class="hint">Maintiens le doigt (ou les flèches) pour piloter l’Arche dans tout l’écran : elle tire seule sur l’ennemi le plus proche. Après chaque secteur, choisis une amélioration parmi trois.
       Les ennemis deviennent plus nombreux, plus résistants et plus variés au fil des secteurs : équipe-toi au Hangar et renforce ton équipement.
-      Tous les 10 secteurs franchis, un objet d’équipement pour ton équipage de Neon Bastion (Rare ou mieux au secteur 10, Exceptionnel à 20, Épique à 30, Légendaire dès 40). Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent aussi des objets, parfois des pièces de set (vertes). Nouveau record : des gemmes ${GEM}.</p>`;
+      Tous les 10 secteurs franchis, de l’équipement pour ton équipage de Neon Bastion : Commun au secteur 10, Magique à 20, Rare à 30, Exceptionnel à 40, Épique à 50, Légendaire à 60, une pièce de set ou un Mythique à 70, puis une pièce de set et un Mythique tous les 10 secteurs. Les Colosses (tous les 5 secteurs) et les ennemis d’élite donnent aussi des objets, parfois des pièces de set (vertes). Nouveau record : des gemmes ${GEM}.</p>`;
     return h;
   },
   launch(opts) { Expedition.opts = opts; Minigames.run(Expedition); }
@@ -6482,6 +6522,22 @@ const EXP_ACT = {
 };
 
 /* ---------- La partie : l'Arche se déplace librement et tire seule ---------- */
+/* Paliers des mini-jeux (Expédition, Course des Toits) : tous les 10 niveaux, de l'équipement pour l'équipage de Neon Bastion.
+   10 : Commun · 20 : Magique · 30 : Rare · 40 : Exceptionnel · 50 : Épique · 60 : Légendaire · 70 : pièce de set ou Mythique · dès 80 : une pièce de set et un Mythique. */
+function crewMilestone(lv) {
+  if (lv < 10 || lv % 10) return [];
+  const s = App.slot, out = [], step = lv / 10; Gear.migrate(s);
+  const give = base => { const it = Gear.give(s, base); out.push(it); };
+  const crew = r => { const b = Gear.roll(s, Math.min(r, GEAR_TOP)); b.r = r; give(b); };
+  if (step <= 6) crew(step - 1);
+  else if (step === 7) { if (Math.random() < 0.5) give(Gear.rollSet(s)); else crew(GEAR_TOP); }
+  else { give(Gear.rollSet(s)); crew(GEAR_TOP); }
+  Store.touch(s);
+  return out;
+}
+function crewMilestoneHtml(lv, items) {
+  return items.map(it => `<div class="mgpalier" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 40)}<span><small>Palier ${lv} · objet pour l’équipage de Neon Bastion</small><b>${esc(Gear.label(it))}</b></span></div>`).join('');
+}
 const Expedition = {
   id: 'exp', title: 'Expédition de l’Arche', W: 360, H: 640, quitLabel: 'Pause · quitter', closeLabel: 'Retour au hangar', opts: null,
   init() {
@@ -6672,12 +6728,7 @@ const Expedition = {
       this.cleared = this.wave;
       this.gainEc(5 + this.wave);
       // Palier : tous les 10 secteurs franchis, un objet d'équipement pour l'équipage de Neon Bastion (rareté minimale croissante)
-      if (this.wave % 10 === 0) {
-        const sl = App.slot; Gear.migrate(sl);
-        const it = Gear.give(sl, Gear.roll(sl, Math.min(5, 1 + this.wave / 10)));
-        this.crewItems = (this.crewItems || 0) + 1; Store.touch(sl); this.palier = it;
-        this.fx.push({ txt: `Palier ${this.wave} · pour l’équipage :`, c: '#e4ecfb', x: 180, y: 280, t: 3 }, { txt: Gear.label(it), c: RARITY[it.r].color, x: 180, y: 300, t: 3 });
-      }
+      { const got = crewMilestone(this.wave); if (got.length) { this.crewItems = (this.crewItems || 0) + got.length; this.palier = got; } }
       if (this.regen && Math.random() < this.regen && this.hp < this.maxHp) { this.hp++; this.fx.push({ txt: 'Coque réparée', c: '#5dff9a', x: 180, y: 360, t: 1.4 }); }
       this.bankWave();
       this.eshots = []; this.paused = true;
@@ -6686,7 +6737,7 @@ const Expedition = {
       for (const u of pool) { if (pick.length >= 3) break; if (!pick.some(p => p.cat === u.cat) || pick.length >= 2) pick.push(u); }
       Minigames.choose(`Secteur ${this.wave} nettoyé · choisis une amélioration`, pick.map(u => ({ id: u.id, name: `${u.name}${this.ups[u.id] && u.max < 99 ? ' · niv. ' + (this.ups[u.id] + 1) : ''}`, desc: `${u.cat} · ${u.desc}` })),
         u => { this.applyUp(u.id); Sound.sfx && Sound.sfx('up'); this.paused = false; this.nextWave(); },
-        this.palier ? `<div class="mgpalier" style="--rc:${RARITY[this.palier.r].color}">${gearIcon(this.palier, 40)}<span><small>Palier ${this.wave} · objet pour l’équipage</small><b>${esc(Gear.label(this.palier))}</b></span></div>` : '');
+        this.palier ? crewMilestoneHtml(this.wave, this.palier) : '');
       this.palier = null;
     }
   },
@@ -6935,7 +6986,7 @@ const PLT_CFG = {
       <div class="row">${cps.map(w => `<button class="btn ${e.run ? '' : 'primary'}" data-go="new" data-w="${w}" type="button">${w === 1 ? 'Départ · niveau 1' : 'Niveau ' + w}</button>`).join('')}</div></div>`;
     h += `<div class="expbox"><b>Pip</b>${H.shipStats(st)}</div>
       <p class="hint">Pouce gauche : un joystick apparaît où tu poses le doigt sur la moitié gauche de l’écran (gauche/droite pour courir, bas pour tomber plus vite, haut pour freiner la descente). Pouce droit : SAUTER, ou n’importe où à droite ; re-touche en l’air pour un double, triple, quadruple saut… sans limite. Plus tu gardes le doigt, plus le saut est haut (flèches et espace au clavier). Saute sur les ennemis pour les écraser ; ton blaster tire seul sur le plus proche. Les piquants ne s’écrasent pas : tire-leur dessus.
-      Frappe les caisses ⚡ par en dessous. Rejoins la balise au bout de chaque niveau. Les boulons ${PLC} d’un niveau sont gardés à sa fin. Nouveau record : des gemmes ${GEM}.</p>`;
+      Frappe les caisses ⚡ par en dessous. Rejoins la balise au bout de chaque niveau. Les boulons ${PLC} d’un niveau sont gardés à sa fin. Tous les 10 niveaux, de l’équipement pour ton équipage de Neon Bastion : Commun au niveau 10, Magique à 20, Rare à 30, Exceptionnel à 40, Épique à 50, Légendaire à 60, une pièce de set ou un Mythique à 70, puis une pièce de set et un Mythique tous les 10 niveaux. Nouveau record : des gemmes ${GEM}.</p>`;
     return h;
   },
   launch(opts) { Plat.opts = opts; Minigames.run(Plat); }
@@ -7674,9 +7725,10 @@ const Plat = {
       // une arme n'est proposée que tous les 3 niveaux (et après chaque gardien) ; sinon des améliorations
       const wTurn = this.lvl % 3 === 0 || this.boss, w = pool.filter(u => u.w), o = pool.filter(u => !u.w), pick = wTurn ? [...w.slice(0, 2), ...o.slice(0, 1)] : o.slice(0, 3);
       for (const u of pool) if (pick.length < 3 && !pick.includes(u)) pick.push(u);
+      const got = crewMilestone(this.lvl); this.crewItems = (this.crewItems || 0) + got.length;
       if (!pick.length) { this.paused = false; this.nextLevel(); return; }
       Minigames.choose(`Niveau ${this.lvl} terminé · ${wTurn ? 'choisis une arme ou une amélioration' : 'choisis une amélioration'}`, pick.map(u => ({ id: u.id, name: u.name, desc: u.desc })),
-        u => { this.applyRun(u.id); Sound.sfx && Sound.sfx('up'); this.paused = false; this.nextLevel(); });
+        u => { this.applyRun(u.id); Sound.sfx && Sound.sfx('up'); this.paused = false; this.nextLevel(); }, got.length ? crewMilestoneHtml(this.lvl, got) : '');
     }, 1100);
   },
   bank() {
@@ -7876,7 +7928,7 @@ const Plat = {
   },
   info() { return `Niveau ${this.lvl} · ${this.kills} détruits`; },
   quit() { if (this.over) return; this.paused = true; this.quitting = true; Minigames.finish(this.result()); },
-  result() { return { lvl: this.lvl, cleared: this.cleared, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, gems: this.runGems, quit: !!this.quitting }; },
+  result() { return { lvl: this.lvl, cleared: this.cleared, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, gems: this.runGems, crew: this.crewItems || 0, quit: !!this.quitting }; },
   reward(r) {
     const s = App.slot, e = PlatData.get(s);
     this.quitting = false;
@@ -7889,6 +7941,7 @@ const Plat = {
     const parts = [`${fmtBig(r.ec)} ${PLC} boulons`];
     if (r.items) parts.push(`${r.items} objet${r.items > 1 ? 's' : ''} pour le vestiaire`);
     if (r.gems) parts.push(`${r.gems} ${GEM} ramassées`);
+    if (r.crew) parts.push(`${r.crew} objet${r.crew > 1 ? 's' : ''} pour l’équipage`);
     if (gems) parts.push(mgGrant(s, { gems }));
     return { best: e.best, summary: parts.join(' · '), title: cleared > prev ? 'Nouveau record !' : 'Fin de la course', text: `Niveaux franchis : ${cleared} · score ${fmtBig(r.score)} · ${r.kills} ennemis détruits.` };
   },
@@ -8595,9 +8648,10 @@ const CrewView = {
     const s = App.slot, it = Gear.find(s, uid);
     if (!it) return;
     const t = GEAR_BY_ID[it.t], o = Gear.owner(s, uid), max = Gear.maxLevel(it.r), cost = Gear.upCost(it), grp = Gear.mergeGroup(s, it);
-    const star = Gear.canStar(it), sc = star ? Gear.starCost(it) : 0, top = it.r === GEAR_TOP;
+    const star = Gear.canStar(it), sc = star ? Gear.starCost(it) : 0, top = it.r === GEAR_TOP || it.r === GEAR_SET_R;
     const next = it.l < max ? Gear.stats({ ...it, l: it.l + 1 }) : star ? Gear.stats({ ...it, st: (it.st || 0) + 1 }) : null;
-    const html = `<div class="gdetail r${it.r}" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b class="grname" style="color:${RARITY[it.r].color}">${RARITY[it.r].name}</b> · ${GEAR_SLOTS.find(x => x.id === t.slot).name} · niveau ${it.l} / ${max}${top ? ` · étoiles ${it.st || 0} / ${GEAR_STARS}` : ''}</p>` +
+    const html = `<div class="gdetail r${it.r}" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b class="grname" style="color:${RARITY[it.r].color}">${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : RARITY[it.r].name}</b> · ${GEAR_SLOTS.find(x => x.id === t.slot).name} · niveau ${it.l} / ${max}${top ? ` · étoiles ${it.st || 0} / ${GEAR_STARS}` : ''}</p>` +
+      (t.set ? Gear.setHtml(s, GEAR_SET_BY_ID[t.set], o ? o.c : this.char) : '') +
       (top ? `<div class="expstars">${Array.from({ length: GEAR_STARS }, (_, i) => `<i class="${i < (it.st || 0) ? 'on' : ''}">★</i>`).join('')}</div>` : '') +
       (top && it.l < max ? `<p class="hint">Au niveau ${max}, l’objet peut gagner jusqu’à ${GEAR_STARS} étoiles : +10 % à ses valeurs par étoile.</p>` : '') +
       `<ul class="traits" style="text-align:left">${Gear.stats(it).map(([st, v], i) => `<li>${esc(Gear.statText(st, v))}${next ? ` <span style="color:var(--cyan)">→ ${esc(Gear.statText(st, next[i][1]).split(' ')[0])}</span>` : ''}${GEAR_STATS[st].crew ? ' <span class="muted">(tourelles du porteur)</span>' : ''}</li>`).join('')}</ul>` +
@@ -9432,8 +9486,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.12.1';
+const APP_VERSION = '7.13';
 const CHANGELOG = [
+  { v: '7.13', date: '02.11.2026', items: ['Équipage : 10 sets verts de 3 pièces (arme, blindage, module) avec des bonus à 2 et 3 pièces portées par le même personnage. Les pièces de set montent au niveau 25 et gagnent jusqu’à 12 étoiles', 'Expédition et Course des Toits : tous les 10 niveaux, un objet pour l’équipage. Commun au niveau 10, Magique à 20, Rare à 30, Exceptionnel à 40, Épique à 50, Légendaire à 60, pièce de set ou Mythique à 70, puis une pièce de set et un Mythique tous les 10 niveaux'] },
   { v: '7.12.1', date: '02.11.2026', items: ['Course des Toits : la balise d’une salle secrète te ramène dans le niveau, devant la porte, avec ce que tu as ramassé', 'Outil de développement : bouton « Réinitialiser ce mini-jeu » (Expédition, Course des Toits) et, en bas des Événements, réinitialisation de chaque mini-jeu ou de tous'] },
   { v: '7.12', date: '02.11.2026', items: ['Course des Toits : carte deux fois plus haute (la caméra suit Pip vers le haut), un étage supérieur de plateformes avec boulons, caisses et monstres, et des sauts plus hauts', 'Mécanismes : levier en hauteur qui lève une herse, plaque de pression qui ne l’ouvre que quelques secondes, clé à aller chercher pour une porte verrouillée, interrupteur qui coupe les barrières laser', 'Trampolines, ponts qui s’effondrent sous les pieds et plateformes mobiles au-dessus de grands trous'] },
   { v: '7.11.1', date: '02.11.2026', items: ['Course des Toits : les passages dans les murs font au moins 2 cases, 3 cases quand ils sont bordés de pics (en haut seulement) ; les pics ne blessent qu’au vrai contact', 'Salles secrètes beaucoup plus rares (dès le niveau 4)', 'Armes plus lentes à gagner : proposées tous les 3 niveaux et après chaque gardien, caisses d’arme bien plus rares (plus dans les caisses ⚡ ni dans les salles secrètes)'] },
