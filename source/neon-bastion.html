@@ -747,7 +747,7 @@ html.da body.hub .gcard{border-radius:14px;border-width:3px;box-shadow:inset 0 3
 .exptabs{flex-wrap:wrap;gap:6px}
 .expbox{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,.02)}.expbox p{margin:0}
 .expstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 10px;font-size:.78rem;color:var(--muted)}.expstats b{color:var(--fg)}.expstats .wide{grid-column:1/-1}
-.expslots{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.expslots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.expslots .expitem em{display:none}
 .expslot{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:12px;border:1px dashed var(--line);background:rgba(255,255,255,.02)}.expslot:active,.expslot:hover{border-color:var(--cyan)}.expslot>small{color:var(--muted);font-size:.72rem}
 .expdetail{grid-column:1/-1;border-color:var(--rc)}.expdetail ul{margin:0;padding-left:18px;font-size:.82rem}.expdetail small{color:var(--muted)}.expnext{color:var(--cyan);font-weight:700}
 .exppick{display:flex;flex-direction:column;gap:6px}.exprow{display:flex;gap:6px;align-items:center}.exprow>.expitem{flex:1;min-width:0}.exprow>.btn,.exprow>.hint{flex:none}
@@ -6151,6 +6151,19 @@ const EXP_UPS = [
 function makeGearData(C) { return {
   C,
   get(s) { return C.get(s); },
+  /* 10 emplacements : deux par type (pour porter deux sets complets). */
+  eqSlots() { return this._eqs || (this._eqs = C.slots.flatMap(sl => [{ key: sl.id, type: sl.id, icon: sl.icon, name: sl.name + ' 1' }, { key: sl.id + '2', type: sl.id, icon: sl.icon, name: sl.name + ' 2' }])); },
+  eqKeyOf(e, uid) { return Object.keys(e.eq).find(k => e.eq[k] === uid) || null; },
+  /* Équipe un objet : dans l'emplacement demandé, sinon le premier libre de son type, sinon à la place du moins bon. */
+  equip(e, it, key) {
+    const type = this.model(it).slot, keys = this.eqSlots().filter(x => x.type === type).map(x => x.key);
+    for (const k in e.eq) if (e.eq[k] === it.uid) e.eq[k] = null;
+    if (!key || !keys.includes(key)) {
+      key = keys.find(k => !e.items.some(x => x.uid === e.eq[k]));
+      if (!key) { const sc = k => { const x = e.items.find(y => y.uid === e.eq[k]); return x ? this.score(x) : -1; }; key = keys.reduce((a, b) => sc(b) < sc(a) ? b : a); }
+    }
+    e.eq[key] = it.uid;
+  },
   upCost(u, lv) { return Math.round(u.cost * Math.pow(u.k, lv)); },
   model(it) { return C.byId[it.b]; },
   isSet(it) { return !!C.byId[it.b].set; },
@@ -6184,7 +6197,8 @@ function makeGearData(C) { return {
   /* Pièces de set équipées, par set. */
   setCounts(e) {
     const c = {};
-    for (const sl of C.slots) { const it = e.items.find(x => x.uid === e.eq[sl.id]), b = it && this.model(it); if (b && b.set) c[b.set] = (c[b.set] || 0) + 1; }
+    const seen = new Set(); // une même pièce portée deux fois ne compte qu'une fois
+    for (const sl of this.eqSlots()) { const it = e.items.find(x => x.uid === e.eq[sl.key]), b = it && this.model(it); if (b && b.set && !seen.has(b.id)) { seen.add(b.id); c[b.set] = (c[b.set] || 0) + 1; } }
     return c;
   },
   addStat(st, k, v) {
@@ -6198,8 +6212,8 @@ function makeGearData(C) { return {
   stats(s) {
     const e = this.get(s), u = id => e.ups[id] || 0;
     const st = C.base(e, u);
-    for (const sl of C.slots) {
-      const it = e.items.find(x => x.uid === e.eq[sl.id]); if (!it) continue;
+    for (const sl of this.eqSlots()) {
+      const it = e.items.find(x => x.uid === e.eq[sl.key]); if (!it) continue;
       const v = this.vals(it);
       for (const k in v) this.addStat(st, k, v[k]);
     }
@@ -6295,7 +6309,7 @@ function makeGearHub(C, D) { return {
   },
   /* Fiche d'un objet : valeurs actuelles → niveau suivant, amélioration, fusion, recyclage. */
   detailHtml(e, it) {
-    const b = D.model(it), R = D.rar(it), eqd = e.eq[b.slot] === it.uid, max = D.maxLevel(it), cost = D.upgradeCost(it), rv = D.recycleValue(it);
+    const b = D.model(it), R = D.rar(it), eqd = Object.values(e.eq).includes(it.uid), max = D.maxLevel(it), cost = D.upgradeCost(it), rv = D.recycleValue(it);
     const star = D.canStar(it), sc = star ? D.starCost(it) : 0;
     const v = D.vals(it), nv = it.lvl < max ? D.vals({ ...it, lvl: it.lvl + 1 }) : star ? D.vals({ ...it, st: (it.st || 0) + 1 }) : null, grp = D.mergeGroup(e, it);
     const canSt = it.r === C.topR || b.set;
@@ -6320,9 +6334,9 @@ function makeGearHub(C, D) { return {
   },
   hangarHtml(s, e, st) {
     let h = '<p class="hint">Touche un emplacement pour choisir son équipement, ou un objet pour l’améliorer, le fusionner ou le recycler.</p><div class="expslots">';
-    for (const sl of C.slots) {
-      const it = e.items.find(x => x.uid === e.eq[sl.id]), n = e.items.filter(x => D.model(x).slot === sl.id).length;
-      h += `<button class="expslot" data-slot="${sl.id}" type="button"><small>${sl.icon} ${sl.name} · ${n} objet${n > 1 ? 's' : ''} › choisir</small>${it ? this.itemCard(it, true, true) : '<div class="expempty">Vide · toucher pour équiper</div>'}</button>`;
+    for (const sl of D.eqSlots()) {
+      const it = e.items.find(x => x.uid === e.eq[sl.key]), n = e.items.filter(x => D.model(x).slot === sl.type).length;
+      h += `<button class="expslot" data-slot="${sl.key}" type="button"><small>${sl.icon} ${sl.name} · ${n} objet${n > 1 ? 's' : ''} › choisir</small>${it ? this.itemCard(it, true, true) : '<div class="expempty">Vide · toucher pour équiper</div>'}</button>`;
     }
     h += '</div>';
     const c = D.setCounts(e), act = C.sets.filter(S => c[S.id]);
@@ -6337,8 +6351,9 @@ function makeGearHub(C, D) { return {
   },
   /* Choix de l'équipement d'un emplacement. */
   pickHtml(s, e) {
-    const sl = C.slots.find(x => x.id === this.pick), cur = e.items.find(x => x.uid === e.eq[sl.id]);
-    const list = e.items.filter(it => D.model(it).slot === sl.id).sort((a, b) => D.score(b) - D.score(a));
+    const sl = D.eqSlots().find(x => x.key === this.pick) || D.eqSlots()[0], cur = e.items.find(x => x.uid === e.eq[sl.key]);
+    const other = new Set(Object.entries(e.eq).filter(([k]) => k !== sl.key).map(([, u]) => u));
+    const list = e.items.filter(it => D.model(it).slot === sl.type && !other.has(it.uid)).sort((a, b) => D.score(b) - D.score(a));
     let h = `<div class="row" style="justify-content:space-between;align-items:center"><b>${sl.icon} Choisir : ${sl.name}</b><button class="btn small" data-act="back" type="button">‹ Retour</button></div>`;
     h += cur ? `<p class="hint">Équipé actuellement :</p>${this.itemCard(cur, true)}${this.sel === cur.uid ? this.detailHtml(e, cur) : ''}` : '<p class="hint">Rien d’équipé ici.</p>';
     if (cur) list.splice(list.indexOf(cur), 1);
@@ -6374,7 +6389,7 @@ function makeGearHub(C, D) { return {
   },
   setsHtml(e) {
     const own = C.sets.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
-    return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par emplacement ; plus tu en équipes, plus les bonus s’ajoutent. Une pièce de set au niveau 25 peut encore gagner 12 étoiles. Touche une pièce pour voir ses statistiques.</p>` +
+    return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par type d’emplacement ; avec 2 emplacements de chaque type, tu peux porter deux sets complets en même temps. Une pièce de set au niveau 25 peut encore gagner 12 étoiles. Touche une pièce pour voir ses statistiques.</p>` +
       C.sets.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
   },
   atelierHtml(s, e) {
@@ -6393,11 +6408,11 @@ function makeGearHub(C, D) { return {
     }; });
     el.querySelectorAll('[data-slot]').forEach(b => { b.onclick = () => { this.pick = b.dataset.slot; this.sel = null; this.render(); }; });
     el.querySelectorAll('[data-piece]').forEach(b => { b.onclick = () => { this.piece = this.piece === b.dataset.piece ? null : b.dataset.piece; this.render(); }; });
-    el.querySelectorAll('[data-seeit]').forEach(b => { b.onclick = () => { const it = e.items.find(x => x.uid === +b.dataset.seeit); if (!it) return; this.tab = 'hangar'; this.pick = D.model(it).slot; this.sel = it.uid; this.render(); }; });
+    el.querySelectorAll('[data-seeit]').forEach(b => { b.onclick = () => { const it = e.items.find(x => x.uid === +b.dataset.seeit); if (!it) return; this.tab = 'hangar'; this.pick = D.eqKeyOf(e, it.uid) || D.model(it).slot; this.sel = it.uid; this.render(); }; });
     el.querySelectorAll('[data-it]').forEach(b => { b.onclick = () => { this.sel = this.sel === +b.dataset.it ? null : +b.dataset.it; this.render(); }; });
     el.querySelectorAll('[data-eq]').forEach(b => { b.onclick = () => {
       const it = e.items.find(x => x.uid === +b.dataset.eq); if (!it) return;
-      e.eq[D.model(it).slot] = it.uid; this.pick = null; this.sel = null; done('build');
+      D.equip(e, it, this.pick); this.pick = null; this.sel = null; done('build');
     }; });
     el.querySelectorAll('[data-f]').forEach(b => { b.onclick = () => { this.filter = b.dataset.f; this.render(); }; });
     el.querySelectorAll('[data-act]').forEach(b => { b.onclick = () => {
@@ -6409,8 +6424,8 @@ function makeGearHub(C, D) { return {
       }
       const it = e.items.find(x => x.uid === this.sel); if (!it) return;
       const slot = D.model(it).slot;
-      if (a === 'equip') { e.eq[slot] = it.uid; if (this.pick) { this.pick = null; this.sel = null; } done('build'); }
-      else if (a === 'unequip') { e.eq[slot] = null; done(); }
+      if (a === 'equip') { D.equip(e, it, this.pick); if (this.pick) { this.pick = null; this.sel = null; } done('build'); }
+      else if (a === 'unequip') { const k = D.eqKeyOf(e, it.uid); if (k) e.eq[k] = null; done(); }
       else if (a === 'up') { const c = D.upgradeCost(it); if (e[C.cur] < c) return; e[C.cur] -= c; it.lvl++; done('up'); }
       else if (a === 'star') { if (!D.canStar(it)) return; const c = D.starCost(it); if (e[C.cur] < c) return; e[C.cur] -= c; it.st = (it.st || 0) + 1; done('up'); }
       else if (a === 'merge') { if (D.merge(e, it)) { this.sel = it.uid; done('up'); } }
@@ -9498,8 +9513,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.14';
+const APP_VERSION = '7.15';
 const CHANGELOG = [
+  { v: '7.15', date: '02.11.2026', items: ['Expédition et Course des Toits : 10 emplacements d’équipement (2 de chaque type), pour porter deux sets complets en même temps'] },
   { v: '7.14', date: '02.11.2026', items: ['Raretés revues partout (équipage, Expédition, Course des Toits) : plus le niveau monte, plus les objets Rares, Exceptionnels, Épiques, Légendaires et Mythiques deviennent fréquents, lentement ; la chance d’objet profite surtout aux hautes raretés', 'Les objets de set ont maintenant exactement la même chance de tomber que les Mythiques, y compris pour l’équipage'] },
   { v: '7.13', date: '02.11.2026', items: ['Équipage : 10 sets verts de 3 pièces (arme, blindage, module) avec des bonus à 2 et 3 pièces portées par le même personnage. Les pièces de set montent au niveau 25 et gagnent jusqu’à 12 étoiles', 'Expédition et Course des Toits : tous les 10 niveaux, un objet pour l’équipage. Commun au niveau 10, Magique à 20, Rare à 30, Exceptionnel à 40, Épique à 50, Légendaire à 60, pièce de set ou Mythique à 70, puis une pièce de set et un Mythique tous les 10 niveaux'] },
   { v: '7.12.1', date: '02.11.2026', items: ['Course des Toits : la balise d’une salle secrète te ramène dans le niveau, devant la porte, avec ce que tu as ramassé', 'Outil de développement : bouton « Réinitialiser ce mini-jeu » (Expédition, Course des Toits) et, en bas des Événements, réinitialisation de chaque mini-jeu ou de tous'] },
