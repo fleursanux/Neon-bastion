@@ -6925,14 +6925,21 @@ const PLT_EN = {
   crawl: [20, 45, 22, 16, '#ffcf4a', 1, true], hop: [24, 60, 18, 18, '#7dff6a', 1, true], fly: [18, 50, 20, 14, '#5ef0ff', 2, true],
   spike: [40, 40, 22, 18, '#ff4a5a', 2, false], turret: [36, 0, 20, 22, '#ff8a3d', 2, true], armor: [70, 30, 26, 22, '#c58bff', 3, true],
   bomber: [30, 70, 24, 14, '#ffd84a', 2, true], charger: [45, 40, 24, 18, '#ff4fa3', 3, true],
-  swarm: [10, 90, 12, 10, '#e4ecfb', 1, true], golem: [140, 25, 34, 30, '#9cff57', 5, true]
+  swarm: [10, 90, 12, 10, '#e4ecfb', 1, true], golem: [140, 25, 34, 30, '#9cff57', 5, true],
+  sniper: [30, 0, 18, 22, '#5ef0ff', 3, true], jelly: [26, 35, 20, 20, '#ff7ae0', 2, false], mole: [34, 0, 22, 18, '#c8a27a', 2, true],
+  shielder: [50, 35, 22, 24, '#7aa7ff', 3, true], splitter: [44, 40, 24, 20, '#7dff6a', 2, true]
 };
 const PLT_SPAWN = [
   { t: 'crawl', from: 1, w: 3 }, { t: 'hop', from: 3, w: 1.4, name: 'Sauteur' }, { t: 'fly', from: 5, w: 1.2, name: 'Drone volant' },
-  { t: 'spike', from: 7, w: 1, name: 'Hérisson de fer (ne s’écrase pas)' }, { t: 'swarm', from: 8, w: 0.8, name: 'Nuée de mouches' }, { t: 'turret', from: 9, w: 0.9, name: 'Tourelle' },
-  { t: 'armor', from: 12, w: 0.8, name: 'Blindé (deux écrasements)' }, { t: 'bomber', from: 15, w: 0.7, name: 'Largueur' }, { t: 'charger', from: 18, w: 0.8, name: 'Fonceur' }, { t: 'golem', from: 22, w: 0.5, name: 'Golem de ferraille (trois écrasements)' }
+  { t: 'spike', from: 7, w: 1, name: 'Hérisson de fer (ne s’écrase pas)' }, { t: 'swarm', from: 8, w: 0.8, name: 'Nuée de mouches' }, { t: 'turret', from: 9, w: 0.9, name: 'Tourelle' }, { t: 'sniper', from: 11, w: 0.7, name: 'Tireur embusqué (vise avant de tirer)' },
+  { t: 'armor', from: 12, w: 0.8, name: 'Blindé (deux écrasements)' }, { t: 'jelly', from: 14, w: 0.7, name: 'Méduse électrique (ne s’écrase pas)' }, { t: 'bomber', from: 15, w: 0.7, name: 'Largueur' }, { t: 'mole', from: 16, w: 0.8, name: 'Taupe de fer (sort du sol)' }, { t: 'charger', from: 18, w: 0.8, name: 'Fonceur' }, { t: 'shielder', from: 20, w: 0.7, name: 'Porte-bouclier (tire-lui dans le dos ou écrase-le)' }, { t: 'golem', from: 22, w: 0.5, name: 'Golem de ferraille (trois écrasements)' }, { t: 'splitter', from: 25, w: 0.7, name: 'Scissipare (se divise en deux)' }
 ];
-const PLT_POW = { triple: { c: '#5ef0ff', l: 'T', name: 'Tir triple', d: 10 }, aimant: { c: '#c58bff', l: 'A', name: 'Super-aimant', d: 12 } };
+const PLT_POW = {
+  triple: { c: '#5ef0ff', l: 'T', name: 'Tir triple', d: 10, from: 1 }, aimant: { c: '#c58bff', l: 'A', name: 'Super-aimant', d: 12, from: 1 },
+  turbo: { c: '#ffe14f', l: '»', name: 'Turbo', d: 8, from: 3 }, vol: { c: '#3ef2c8', l: '✈', name: 'Réacteur dorsal', d: 7, from: 4 },
+  pluie: { c: '#ffd84a', l: '⬢', name: 'Boulons ×2', d: 10, from: 5 }, surcharge: { c: '#ff4fa3', l: '★', name: 'Surcharge', d: 6, from: 6 },
+  chrono: { c: '#7aa7ff', l: '◷', name: 'Ralenti', d: 8, from: 8 }, impulsion: { c: '#fff27a', l: '✺', name: 'Impulsion', from: 10, now: true }
+};
 /* Armes gagnées pendant la Course des Toits (niveau 1 à 5). Elles s'ajoutent au blaster et tirent toutes seules. */
 const PLT_WPN = {
   mitraille: { name: 'Mitraillette', c: '#ffe14f', desc: 'Rafales rapides de petites balles' },
@@ -7067,6 +7074,7 @@ const Plat = {
   },
   explode(s) {
     this.fx.push({ ring: true, x: s.x, y: s.y, c: s.col || '#ff9b3d', r: s.splash, t: 0.35 });
+    { const T = this.T, rr = Math.ceil(s.splash / T); for (let dc = -rr; dc <= rr; dc++) for (let dr = -rr; dr <= rr; dr++) this.hitTile(Math.floor(s.x / T) + dc, Math.floor(s.y / T) + dr, s.dmg); }
     for (const e of this.en) if (!e.dead && Math.hypot(e.x + e.w / 2 - s.x, e.y + e.h / 2 - s.y) < s.splash + e.w / 2) { this.damage(e, s.dmg); this.status(e, s); }
   },
   dot(e, v) { if (e.dead) return; e.hp -= v; if (e.hp <= 0) this.kill(e); },
@@ -7083,28 +7091,33 @@ const Plat = {
   nextLevel(first) {
     this.lvl++;
     const lvl = this.lvl, T = this.T, R = this.ROWS, rng = mulberry32(hashStr('toits' + lvl + ':' + (Math.random() * 1e9 | 0)));
-    const boss = lvl % 5 === 0, run = boss ? 34 + Math.min(20, lvl) : 56 + Math.min(110, lvl * 5), arena = boss ? 20 : 0, L = run + arena + 12;
+    const boss = lvl % 5 === 0, run = boss ? 34 + Math.min(20, lvl) : 60 + Math.min(110, lvl * 5), arena = boss ? 20 : 0, L = run + arena + 12;
     const g = new Uint8Array(L * R), set = (c, r, v) => { if (c >= 0 && c < L && r >= 0 && r < R) g[c * R + r] = v; };
     const ground = (c, gh) => { for (let r = gh; r < R; r++) set(c, r, 1); };
-    const en = [], bolts = [], pows = [];
+    const tall = new Set(), haz = [], en = [], bolts = [], pows = [];
     const pool = PLT_SPAWN.filter(t => lvl >= t.from), tot = pool.reduce((a, t) => a + t.w, 0);
     const pick = () => { let x = rng() * tot; for (const t of pool) { x -= t.w; if (x <= 0) return t.t; } return 'crawl'; };
     const dens = Math.min(0.95, 0.42 + lvl * 0.03);
-    let c = 0, gh = 12, gold = lvl >= 3 && rng() < 0.3 * this.luck;
+    // Morceaux de niveau disponibles selon le niveau, avec leur fréquence
+    const SEG = [['gap', 1, 2], ['step', 1, 1.2], ['plat', 1, 1.8], ['flat', 1, 1.8], ['wall', 2, 1.5], ['spikes', 4, 1.1], ['brk', 3, 1.1],
+      ['tunnel', 5, 1], ['saws', 6, 1], ['gates', 7, 0.9], ['jets', 8, 0.8], ['press', 10, 0.8]].filter(x => lvl >= x[1]);
+    const segTot = SEG.reduce((a, x) => a + x[2], 0);
+    let c = 0, gh = 12, gold = lvl >= 3 && rng() < 0.3 * this.luck, secret = lvl >= 3 && !boss && rng() < 0.4;
     for (; c < 8; c++) ground(c, gh);
     while (c < run) {
-      const k = rng();
-      if (k < 0.22 && c > 10) { // trou
-        const w = 2 + Math.floor(rng() * (1 + Math.min(2, lvl / 6)));
+      let x = rng() * segTot, k = 'flat'; for (const s of SEG) { x -= s[2]; if (x <= 0) { k = s[0]; break; } }
+      if (k === 'gap' && c > 10) { // trou, plus large et parfois gardé par une scie
+        const w = 2 + Math.floor(rng() * (1 + Math.min(4, lvl / 5)));
         for (let i = 0; i < w; i++) bolts.push({ x: (c + i + 0.5) * T, y: (gh - 2.2 - Math.sin((i + 0.5) / w * Math.PI) * 1.4) * T });
-        if (lvl >= 5 && rng() < dens * 0.5) en.push({ t: lvl >= 8 && rng() < 0.4 ? 'swarm' : 'fly', c: c + 1, gh });
+        if (lvl >= 6 && rng() < 0.5) haz.push({ k: 'saw', x0: (c + w / 2) * T, y0: (gh - 3) * T, ax: 0, ay: 2.2 * T, sp: 1.6 + lvl * 0.02, ph: rng() * 6, r: 13 });
+        else if (lvl >= 5 && rng() < dens * 0.5) en.push({ t: lvl >= 8 && rng() < 0.4 ? 'swarm' : 'fly', c: c + 1, gh });
         c += w;
         if (rng() < 0.5) gh = clamp(gh + (rng() < 0.5 ? -1 : 1), 9, 13);
         for (let i = 0; i < 2; i++) ground(c++, gh);
-      } else if (k < 0.38) { // marche
+      } else if (k === 'step') {
         gh = clamp(gh + (rng() < 0.5 ? -1 : 1) * (1 + (rng() < 0.3 ? 1 : 0)), 8, 13);
         const len = 3 + Math.floor(rng() * 4); for (let i = 0; i < len; i++) ground(c++, gh);
-      } else if (k < 0.6) { // plateforme flottante avec caisses
+      } else if (k === 'plat') { // plateforme flottante avec caisses
         const len = 4 + Math.floor(rng() * 4), py = gh - 4;
         for (let i = 0; i < len; i++) ground(c + i, gh);
         const pl = 3 + Math.floor(rng() * 2), p0 = c + 1;
@@ -7112,17 +7125,58 @@ const Plat = {
         if (rng() < dens) en.push({ t: pick(), c: c + len - 1, gh });
         if (rng() < dens * 0.5) en.push({ t: pick(), c: c + 1, gh });
         c += len;
-      } else if (k < 0.72 && lvl >= 4) { // piquants
+      } else if (k === 'wall') { // mur vertical avec un passage étroit (bordé de pics plus tard)
+        for (let i = 0; i < 3; i++) ground(c + i, gh);
+        const gapH = lvl >= 15 ? 1 : lvl >= 6 ? 2 : 3, g0 = 2 + Math.floor(rng() * Math.max(1, gh - 4 - gapH));
+        for (const cc of [c + 3, c + 4]) { ground(cc, gh); tall.add(cc); for (let r = 0; r < gh; r++) if (r < g0 || r >= g0 + gapH) set(cc, r, 1); }
+        if (lvl >= 9) { set(c + 3, g0 - 1, 7); set(c + 4, g0 - 1, 7); }
+        if (lvl >= 14) { set(c + 3, g0 + gapH, 7); set(c + 4, g0 + gapH, 7); }
+        bolts.push({ x: (c + 4) * T, y: (g0 + gapH / 2) * T });
+        c += 5; for (let i = 0; i < 3; i++) ground(c++, gh);
+      } else if (k === 'spikes') {
         const len = 5 + Math.floor(rng() * 3);
         for (let i = 0; i < len; i++) ground(c + i, gh);
-        const sp = 1 + Math.floor(rng() * Math.min(3, 1 + lvl / 8));
+        const sp = 1 + Math.floor(rng() * Math.min(4, 1 + lvl / 6));
         for (let i = 0; i < sp; i++) set(c + 2 + i, gh, 5);
+        if (lvl >= 8) for (let i = 0; i < sp; i++) set(c + 2 + i, gh - 5, 7); // plafond de pics au-dessus
         for (let i = 0; i < sp + 2; i++) bolts.push({ x: (c + 1.5 + i) * T, y: (gh - 2.6) * T });
+        c += len;
+      } else if (k === 'brk') { // mur à détruire au blaster
+        for (let i = 0; i < 3; i++) ground(c + i, gh);
+        for (const cc of [c + 3, c + 4]) { ground(cc, gh); tall.add(cc); for (let r = 0; r < gh; r++) set(cc, r, 6); }
+        if (lvl >= 12) for (let r = 0; r < gh; r += 3) set(c + 3, r, 7);
+        c += 5; const len = 4 + Math.floor(rng() * 3); for (let i = 0; i < len; i++) ground(c + i, gh);
+        if (rng() < dens) en.push({ t: pick(), c: c + 2, gh }); c += len;
+      } else if (k === 'tunnel') { // tunnel au plafond hérissé de pics
+        const len = 8 + Math.floor(rng() * 5);
+        for (let i = 0; i < len; i++) { ground(c + i, gh); tall.add(c + i); for (let r = 0; r <= gh - 4; r++) set(c + i, r, r === gh - 4 && lvl >= 7 && i > 0 && i < len - 1 ? 7 : 1); }
+        const n = 1 + (rng() < dens ? 1 : 0); for (let i = 0; i < n; i++) en.push({ t: rng() < 0.5 ? 'crawl' : pick(), c: c + 3 + i * 3, gh });
+        for (let i = 1; i < len - 1; i += 2) bolts.push({ x: (c + i + 0.5) * T, y: (gh - 1.5) * T });
+        c += len;
+      } else if (k === 'saws') { // scies qui montent et descendent
+        const len = 9; for (let i = 0; i < len; i++) ground(c + i, gh);
+        for (let i = 0; i < 2 + (lvl >= 12 ? 1 : 0); i++) haz.push({ k: 'saw', x0: (c + 2 + i * 3) * T, y0: (gh - 3) * T, ax: 0, ay: 2.6 * T, sp: 1.8 + lvl * 0.02, ph: i * 1.6, r: 13 });
+        if (lvl >= 9) haz.push({ k: 'saw', x0: (c + len / 2) * T, y0: (gh - 0.45) * T, ax: 3.5 * T, ay: 0, sp: 1.2, ph: 0, r: 11 });
+        c += len;
+      } else if (k === 'gates') { // barrières laser sur toute la hauteur, à passer au bon moment
+        const n = 2 + (lvl >= 12 ? 1 : 0), len = 4 * n + 3; for (let i = 0; i < len; i++) ground(c + i, gh);
+        const per = Math.max(1.8, 2.8 - lvl * 0.03);
+        for (let i = 0; i < n; i++) haz.push({ k: 'gate', x: (c + 2 + i * 4) * T + T / 2, yb: gh * T, per, ph: i * per * 0.33 });
+        c += len;
+      } else if (k === 'jets') { // jets de flammes sortant du sol
+        const len = 9; for (let i = 0; i < len; i++) ground(c + i, gh);
+        for (let i = 0; i < 3; i++) haz.push({ k: 'jet', x: (c + 2 + i * 2.5) * T, yb: gh * T, per: 2.4, ph: i * 0.8, hgt: 110 + Math.min(150, lvl * 4) });
+        c += len;
+      } else if (k === 'press') { // presses qui écrasent tout, du haut de l'écran jusqu'au sol
+        const n = 1 + (lvl >= 14 ? 1 : 0), len = 4 + 4 * n; for (let i = 0; i < len; i++) ground(c + i, gh);
+        for (let i = 0; i < n; i++) haz.push({ k: 'press', x: (c + 2 + i * 4) * T, w: 2 * T, yb: gh * T, up: (gh - 4) * T, y: (gh - 4) * T, st: 0, t: i * 1.2 });
         c += len;
       } else { // plat avec ennemis
         const len = 5 + Math.floor(rng() * 5);
         for (let i = 0; i < len; i++) ground(c + i, gh);
-        if (rng() < 0.4) { set(c + 2, gh - 4, rng() < 0.5 ? 2 : 1); }
+        if (secret && len >= 7) { // porte secrète sur une corniche tout en haut
+          secret = false; const sc = c + 3; set(sc, 3, 1); set(sc + 1, 3, 1); set(sc, 2, 8);
+        } else if (rng() < 0.4) set(c + 2, gh - 4, rng() < 0.5 ? 2 : 1);
         const n = rng() < dens ? 1 + (rng() < dens * 0.7 ? 1 : 0) + (rng() < dens * 0.4 ? 1 : 0) : 0;
         for (let i = 0; i < n; i++) en.push({ t: pick(), c: c + 2 + Math.floor(rng() * (len - 3)), gh });
         if (rng() < 0.5) for (let i = 0; i < 3; i++) bolts.push({ x: (c + 1.5 + i) * T, y: (gh - 1.6) * T });
@@ -7132,28 +7186,62 @@ const Plat = {
     const arenaStart = c;
     for (; c < L; c++) ground(c, 12);
     if (boss) for (let r = 0; r < 12; r++) { set(arenaStart + arena + 1, r, 1); }
-    Object.assign(this, { L, g, boss, arenaStart, arenaEnd: arenaStart + arena, bossOn: false, bossObj: null,
-      beacon: { x: (boss ? arenaStart + arena - 3 : L - 5) * T, y: 12 * T, on: !boss },
-      en: [], shots: [], eshots: [], bolts: bolts.map(b => ({ ...b, a: 0 })), pows, drops: [], power: {},
-      px: 2 * T, py: 12 * T - 26, vx: 0, vy: 0, w: 18, h: 26, face: 1, onG: false, coyote: 0, jbuf: 0, jHeld: false,
-      inv: 1, cd: 0.5, droneCd: 0.6, camX: 0, safe: { x: 2 * T, y: 12 * T - 26 }, safeT: 0, lvEc: 0, lvItems: [], done: false, walk: 0 });
-    this.shields = this.shieldMax;
+    this.setMap({ L, g, tall, haz, boss, arenaStart, arenaEnd: arenaStart + arena, bolts, pows, beacon: { x: (boss ? arenaStart + arena - 3 : L - 5) * T, y: 12 * T, on: !boss } });
     for (const e of en) this.spawn(e.t, (e.c + 0.5) * T, e.gh * T);
     this.banner = { text: boss ? `Niveau ${lvl} · Gardien !` : `Niveau ${lvl}`, sub: '', t: 1.8 };
     const fresh = PLT_SPAWN.find(t => t.from === lvl && t.from > 1);
     if (fresh) this.banner.sub = `Nouvel ennemi : ${fresh.name}`;
     this.snapshot();
   },
-  hk() { const l = this.lvl; return (1 + 0.22 * (l - 1)) * Math.pow(1.045, l - 1); },
+  setMap(o) {
+    const T = this.T;
+    Object.assign(this, { L: o.L, g: o.g, tall: o.tall || new Set(), haz: o.haz || [], tileHp: new Map(), boss: !!o.boss, arenaStart: o.arenaStart || 0, arenaEnd: o.arenaEnd || 0, bossOn: false, bossObj: null,
+      beacon: o.beacon, secretRoom: !!o.secretRoom, en: [], shots: [], eshots: [], bolts: o.bolts.map(b => ({ ...b, a: 0 })), pows: o.pows || [], drops: [], power: {},
+      px: 2 * T, py: 12 * T - 26, vx: 0, vy: 0, w: 18, h: 26, face: 1, onG: false, coyote: 0, jbuf: 0, jHeld: false,
+      inv: 1, cd: 0.5, droneCd: 0.6, camX: 0, safe: { x: 2 * T, y: 12 * T - 26 }, safeT: 0, lvEc: 0, lvItems: [], done: false, walk: 0 });
+    this.shields = this.shieldMax;
+  },
+  /* Salle secrète : boulons, gemmes et caisses ; sa balise termine le niveau en cours (raccourci). */
+  enterSecret() {
+    const T = this.T, R = this.ROWS, L = 34, g = new Uint8Array(L * R), set = (c, r, v) => { if (c >= 0 && c < L && r >= 0 && r < R) g[c * R + r] = v; };
+    for (let c = 0; c < L; c++) for (let r = 12; r < R; r++) set(c, r, 1);
+    const bolts = [], pows = [];
+    for (let c = 4; c < L - 6; c++) for (let r = 0; r < 3; r++) if ((c + r) % 2 === 0) bolts.push({ x: (c + 0.5) * T, y: (8 + r * 1.2) * T });
+    for (const c of [8, 16, 24]) { set(c, 7, 4); set(c + 1, 7, 2); }
+    for (let i = 0; i < 3 + (this.luck > 1.3 ? 1 : 0); i++) pows.push({ k: 'gemme', n: 2, x: (6 + i * 6) * T, y: 10 * T, vy: 0 });
+    pows.push({ k: 'arme', x: 20 * T, y: 10 * T, vy: 0 });
+    const keepEc = this.lvEc, keepIt = this.lvItems;
+    this.setMap({ L, g, bolts, pows, secretRoom: true, beacon: { x: (L - 4) * T, y: 12 * T, on: true } });
+    this.lvEc = keepEc; this.lvItems = keepIt; this.inv = 1;
+    this.banner = { text: 'Salle secrète !', sub: 'Sa balise termine le niveau', t: 2.2 };
+    Sound.sfx && Sound.sfx('up');
+  },
+  hk() { const l = this.lvl; return (1 + 0.28 * (l - 1)) * Math.pow(1.055, l - 1); },
+  /* Murs destructibles : chaque bloc a des points de vie. */
+  hitTile(c, r, d) {
+    if (this.tile(c, r) !== 6) return false;
+    const k = c * this.ROWS + r, hp = (this.tileHp.get(k) ?? 30 * this.hk()) - d;
+    if (hp > 0) { this.tileHp.set(k, hp); return true; }
+    this.g[k] = 0; this.tileHp.delete(k); const x = (c + 0.5) * this.T, y = (r + 0.5) * this.T;
+    for (let i = 0; i < 6; i++) { const a = Math.random() * TAU, sp = 60 + Math.random() * 120; this.fx.push({ p: true, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: '#c8925a', t: 0.5 }); }
+    if (Math.random() < 0.25) this.bolts.push({ x, y, vx: 0, vy: -150, a: 1, fall: true });
+    Sound.sfx && Sound.sfx('build'); return true;
+  },
+  /* Cible de secours : un bloc destructible devant Pip quand aucun ennemi n'est à portée. */
+  brkTarget() {
+    const T = this.T, c0 = Math.floor((this.px + 9) / T), r0 = Math.floor((this.py + 11) / T);
+    for (let dc = 0; dc <= 7; dc++) for (const dr of [0, -1, 1, -2, 2]) { const c = c0 + dc * this.face, r = r0 + dr; if (this.tile(c, r) === 6) return { x: c * T, y: r * T, w: T, h: T, dead: false, tile: true }; }
+    return null;
+  },
   spawn(t, x, groundY) {
     const b = PLT_EN[t], elite = Math.random() < Math.min(0.2, 0.03 + this.lvl * 0.003), hp = b[0] * this.hk() * (elite ? 3 : 1);
     if (t === 'swarm' && !this._sw) { this._sw = true; for (let i = 0; i < 3; i++) this.spawn('swarm', x + (i - 1) * 22, groundY - i * 12); this._sw = false; return; }
-    const fly = t === 'fly' || t === 'bomber' || t === 'swarm';
+    const fly = t === 'fly' || t === 'bomber' || t === 'swarm' || t === 'jelly';
     this.en.push({ t, x: x - b[2] / 2, y: fly ? groundY - 110 - Math.random() * 40 : groundY - b[3], w: b[2] * (elite ? 1.2 : 1), h: b[3] * (elite ? 1.2 : 1), vx: (Math.random() < 0.5 ? -1 : 1) * b[1] * (1 + Math.min(0.6, this.lvl * 0.015)), vy: 0,
       hp, max: hp, c: b[4], ec: b[5], stomp: b[6], elite, fly, y0: groundY - 120, ph: Math.random() * 6, fire: 1.5 + Math.random() * 2, hitT: 0, onG: false });
   },
   tile(c, r) { if (c < 0) return 1; if (c >= this.L || r >= this.ROWS) return 0; if (r < 0) return 0; return this.g[c * this.ROWS + r]; },
-  solid(c, r) { if (r < 0 && this.boss && c === this.arenaEnd + 1) return true; const v = this.tile(c, r); return v === 1 || v === 2 || v === 3 || v === 4 || v === 5; },
+  solid(c, r) { if (r < 0) return (this.boss && c === this.arenaEnd + 1) || (this.tall && this.tall.has(c)); const v = this.tile(c, r); return v >= 1 && v <= 7; },
   /* Déplacement d'une boîte avec collisions sur la grille. */
   move(o, dt, onHead) {
     const T = this.T;
@@ -7176,7 +7264,7 @@ const Plat = {
     if (v === 4) { this.dropItem(1, x, y); return; }
     const k = Math.random();
     if (k < 0.62) for (let i = 0; i < 5; i++) this.bolts.push({ x: x + (i - 2) * 6, y, vx: (i - 2) * 40, vy: -260 - Math.random() * 80, a: 1, fall: true });
-    else { const opts = ['triple', 'aimant', 'bouclier', 'arme', 'arme']; if (this.hp < this.maxHp) opts.push('coeur', 'coeur'); this.pows.push({ k: opts[Math.floor(Math.random() * opts.length)], x, y, vy: -200 }); }
+    else { const opts = ['bouclier', 'arme', ...Object.keys(PLT_POW).filter(k => this.lvl >= PLT_POW[k].from)]; if (this.hp < this.maxHp) opts.push('coeur'); this.pows.push({ k: opts[Math.floor(Math.random() * opts.length)], x, y, vy: -200 }); }
   },
   dropItem(minR, x, y) {
     const setChance = this.lvl >= 5 ? (minR ? 0.15 : 0.03) * this.luck : 0;
@@ -7184,9 +7272,9 @@ const Plat = {
     this.lvItems.push(res.it); if (res.auto) this.lvEc += res.auto;
     this.fx.push({ txt: `${PlatData.isSet(res.it) ? 'Set' : R.name} : ${PlatData.name(res.it)}`, c: R.color, x: clamp(x - this.camX, 90, 270), y: 200, t: 2.6, screen: true });
   },
-  gain(n) { this.lvEc += n * this.ecMul; },
+  gain(n) { this.lvEc += n * this.ecMul * (this.power.pluie > 0 ? 2 : 1); },
   hurt(pit) {
-    if (this.over || (!pit && this.inv > 0)) return;
+    if (this.over || (!pit && (this.inv > 0 || this.power.surcharge > 0))) return;
     if (!pit && this.shields > 0) { this.shields--; this.inv = 0.8; this.fx.push({ ring: true, x: this.px + 9, y: this.py + 13, c: '#4fa3ff', r: 26, t: 0.4 }); Sound.sfx && Sound.sfx('build'); return; }
     if (this.hp <= 1 && this.revive > 0) { this.revive--; this.inv = 2.5; this.hitFx = 0.35; this.fx.push({ txt: 'Sursaut de survie !', c: '#3ddc5a', x: 180, y: 220, t: 2, screen: true }); if (pit) this.respawn(); return; }
     this.hp--; this.inv = this.invT; this.hitFx = 0.35; buzz(60); Sound.sfx && Sound.sfx('alarm');
@@ -7212,16 +7300,18 @@ const Plat = {
     if (e.boss) { this.pows.push({ k: 'arme', x: cx - 14, y: cy, vy: -260 }, { k: 'gemme', n: 5, x: cx + 14, y: cy, vy: -260 }); this.gain(30 + 5 * this.lvl); this.dropItem(this.lvl >= 15 ? 2 : this.lvl >= 10 ? 1 : 0, cx, cy); this.beacon.on = true; this.bossObj = null; buzz(120); Sound.sfx && Sound.sfx('boom'); this.fx.push({ txt: 'Gardien vaincu : la balise s’allume', c: '#3ef2c8', x: 180, y: 160, t: 2.6, screen: true }); }
     else {
       if (e.elite && Math.random() < 0.35 * this.luck) this.dropItem(0, cx, cy);
+      if (e.t === 'splitter') for (const dx of [-12, 12]) { this.spawn('crawl', cx + dx, e.y + e.h); const m = this.en[this.en.length - 1]; m.w *= 0.7; m.h *= 0.7; m.y += 5; m.hp = m.max = e.max * 0.3; m.c = '#7dff6a'; }
       // Butin des monstres : boulons, parfois des gemmes ou une caisse d'arme
       for (let i = 0; i < (Math.random() < 0.5 ? 1 : 2); i++) this.bolts.push({ x: cx, y: cy, vx: (Math.random() - 0.5) * 160, vy: -200 - Math.random() * 120, a: 1, fall: true });
       if (Math.random() < (e.elite ? 0.3 : 0.025) * this.luck) this.pows.push({ k: 'gemme', n: e.elite ? 2 : 1, x: cx, y: cy, vy: -220 });
-      if (Math.random() < (e.elite ? 0.25 : 0.035)) this.pows.push({ k: 'arme', x: cx, y: cy, vy: -220 });
+      if (Math.random() < (e.elite ? 0.2 : 0.015)) this.pows.push({ k: 'arme', x: cx, y: cy, vy: -220 });
+      else if (Math.random() < 0.02) { const ks = Object.keys(PLT_POW).filter(k => this.lvl >= PLT_POW[k].from); this.pows.push({ k: ks[Math.floor(Math.random() * ks.length)], x: cx, y: cy, vy: -220 }); }
       Sound.sfx && Sound.sfx('build');
     }
   },
   nearest() {
     let best = null, bd = 260 * 260; const cx = this.px + 9, cy = this.py + 10;
-    for (const e of this.en) { if (e.dead) continue; const ex = e.x + e.w / 2, ey = e.y + e.h / 2; if (ex < this.camX - 10 || ex > this.camX + 370) continue; const d = (ex - cx) ** 2 + (ey - cy) ** 2; if (d < bd) { bd = d; best = e; } }
+    for (const e of this.en) { if (e.dead || e.hid) continue; const ex = e.x + e.w / 2, ey = e.y + e.h / 2; if (ex < this.camX - 10 || ex > this.camX + 370) continue; const d = (ex - cx) ** 2 + (ey - cy) ** 2; if (d < bd) { bd = d; best = e; } }
     return best;
   },
   shoot(x, y, a, dmg, o) { this.shots.push(Object.assign({ x, y, vx: Math.cos(a) * 480, vy: Math.sin(a) * 480, dmg, p: this.pierce, hit: new Map(), life: 0.7 }, o || {})); },
@@ -7243,7 +7333,7 @@ const Plat = {
     const want = inp.mx, tv = want * this.spd;
     const acc = this.onG ? 1600 : 1100;
     if (want) { this.vx += clamp(tv - this.vx, -acc * dt, acc * dt); this.face = Math.sign(want); } else { const f = (this.onG ? 1600 : 500) * dt; this.vx = Math.abs(this.vx) <= f ? 0 : this.vx - Math.sign(this.vx) * f; }
-    this.vx = clamp(this.vx, -this.spd, this.spd);
+    { const sp = this.spd * (this.power.turbo > 0 ? 1.5 : 1) * (this.power.vol > 0 ? 1.25 : 1); if (want) this.vx = clamp(this.vx + clamp(want * sp - this.vx, -1600 * dt, 1600 * dt), -sp, sp); else this.vx = clamp(this.vx, -sp, sp); }
     if (inp.J && !this.jHeld) this.jbuf = 0.12;
     this.jbuf -= dt; this.coyote -= dt;
     if (this.jbuf > 0) {
@@ -7253,6 +7343,7 @@ const Plat = {
     if (!inp.J && this.vy < -220) this.vy *= 0.6;
     this.jHeld = inp.J;
     // joystick vers le bas : chute rapide ; vers le haut : descente freinée
+    if (this.power.vol > 0) { const ty = inp.J || inp.my < -0.4 ? -240 : inp.my > 0.4 ? 260 : 20; this.vy += (ty - this.vy) * Math.min(1, 7 * dt); this.jbuf = 0; } else
     this.vy = Math.min(this.vy + (1800 + (inp.my > 0.5 && !this.onG ? 1600 : 0)) * dt, this.float && inp.J && this.vy > 0 ? 90 : inp.my < -0.5 && this.vy > 0 ? 220 : inp.my > 0.5 ? 1200 : 900);
     const wasG = this.onG;
     const box = { x: this.px, y: this.py, w: this.w, h: this.h, vx: this.vx, vy: this.vy };
@@ -7261,6 +7352,14 @@ const Plat = {
     if (this.py < -28) { this.py = -28; if (this.vy < 0) this.vy = 0; } // plafond : Pip reste visible
     if (this.onG) { this.coyote = 0.08; if (box.gt === 5) { this.hurt(); this.vy = -480; this.onG = false; } }
     else if (wasG && this.vy >= 0) this.coyote = 0.08;
+    { // blocs à pics : blessent au moindre contact
+      const c0 = Math.floor((this.px - 2) / T), c1 = Math.floor((this.px + this.w + 2) / T), r0 = Math.floor((this.py - 2) / T), r1 = Math.floor((this.py + this.h + 2) / T);
+      for (let cc = c0; cc <= c1; cc++) for (let rr = r0; rr <= r1; rr++) if (this.tile(cc, rr) === 7 && this.inv <= 0 && !(this.power.surcharge > 0)) { const mx = (cc + 0.5) * T, my = (rr + 0.5) * T; this.hurt(); this.vx = Math.sign(this.px + 9 - mx || 1) * 220; this.vy = Math.sign(this.py + 13 - my || 1) * 300; }
+      // porte secrète : joystick vers le bas (ou flèche bas) devant elle
+      const dc = Math.floor((this.px + 9) / T), dr = Math.floor((this.py + 13) / T);
+      if (this.tile(dc, dr) === 8 && (inp.my > 0.5)) { this.enterSecret(); return; }
+    }
+    this.updHaz(dt);
     if (this.onG && box.gt !== 5) { this.safeT -= dt; const c0 = Math.floor(this.px / T), c1 = Math.floor((this.px + this.w) / T), r = Math.floor((this.py + this.h + 2) / T); if (this.safeT <= 0 && this.solid(c0 - 1, r) && this.solid(c1 + 1, r) && this.tile(c0, r) !== 5) { this.safe = { x: this.px, y: this.py }; this.safeT = 0.4; } }
     if (this.py > this.ROWS * T + 40) this.hurt(true);
     if (this.over) return;
@@ -7280,7 +7379,7 @@ const Plat = {
     }
     // Tir automatique
     this.cd -= dt;
-    const tgt = this.nearest();
+    const tgt = this.nearest() || this.brkTarget();
     if (this.cd <= 0 && tgt) {
       this.cd = this.rate;
       const cx = this.px + 9, cy = this.py + 10, a = Math.atan2(tgt.y + tgt.h / 2 - cy, tgt.x + tgt.w / 2 - cx), n = this.multi + (this.power.triple > 0 ? 2 : 0);
@@ -7302,16 +7401,18 @@ const Plat = {
       s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
       if (s.life <= 0) { if (s.splash) this.explode(s); s.dead = true; continue; }
       if (s.boom === undefined && s.kind !== 'plasma' && this.solid(Math.floor(s.x / T), Math.floor(s.y / T))) {
+        if (this.hitTile(Math.floor(s.x / T), Math.floor(s.y / T), s.dmg) && !s.splash) { s.dead = true; continue; }
         if (s.bounce > 0) { s.bounce--; s.vy = -Math.abs(s.vy) * 0.55; s.vx *= 0.8; s.y -= 4; }
         else { if (s.splash) this.explode(s); s.dead = true; continue; }
       }
       const rr = s.r || 2;
       for (const e of this.en) {
-        if (e.dead) continue;
+        if (e.dead || e.hid) continue;
         const last = s.hit.get(e); if (last !== undefined && (!s.rehit || this.t - last < s.rehit)) continue;
         if (s.x + rr > e.x && s.x - rr < e.x + e.w && s.y + rr > e.y && s.y - rr < e.y + e.h) {
           s.hit.set(e, this.t);
           if (s.splash) { this.explode(s); s.dead = true; break; }
+          if (e.t === 'shielder' && Math.sign(s.vx) === -e.dir && !e.boss) { s.dead = true; this.fx.push({ ring: true, x: s.x, y: s.y, c: '#7aa7ff', r: 8, t: 0.2 }); break; }
           this.damage(e, s.dmg, true); this.status(e, s);
           if (s.p-- <= 0) { s.dead = true; break; }
         }
@@ -7326,18 +7427,22 @@ const Plat = {
       if (e.burn > 0) { e.burn -= dt; this.dot(e, e.burnD * dt); } if (e.acid > 0) { e.acid -= dt; this.dot(e, e.acidD * dt); }
       if (e.slowT > 0) e.slowT -= dt; if (e.frozen > 0) e.frozen -= dt;
       if (e.dead) continue;
-      const edt = dt * (e.frozen > 0 ? 0 : e.slowT > 0 ? 0.45 : 1);
+      const edt = dt * (e.frozen > 0 ? 0 : e.slowT > 0 ? 0.45 : 1) * (this.power.chrono > 0 ? 0.45 : 1);
       if (Math.abs(e.x - this.px) > 520 && !e.boss) continue;
       if (e.boss) this.bossAI(e, edt);
       else if (e.fly) {
         e.x += e.vx * edt; if (this.solid(Math.floor((e.x + (e.vx > 0 ? e.w : 0)) / T), Math.floor((e.y + e.h / 2) / T)) || Math.abs(e.x - e.x0 || 0) > 140) e.vx *= -1;
         if (e.x0 === undefined) e.x0 = e.x;
         e.y = e.y0 + Math.sin(e.ph * 1.6) * 24;
+        if (e.t === 'jelly') { e.x += Math.sign(pcx - e.x - e.w / 2) * 30 * edt; e.y0 += clamp(this.py - 10 - e.y0, -1, 1) * 25 * edt; e.x0 = e.x; }
         if (e.t === 'bomber') { e.fire -= edt; if (e.fire <= 0 && Math.abs(e.x + e.w / 2 - pcx) < 40) { e.fire = 2.2; this.eshots.push({ x: e.x + e.w / 2, y: e.y + e.h, vx: 0, vy: 60, g: 600, r: 6, bomb: true }); } }
       } else {
         e.vy = Math.min(e.vy + 1800 * edt, 900);
         if (e.t === 'hop' && e.onG) { e.fire -= edt; if (e.fire <= 0) { e.vy = -480; e.vx = Math.sign(pcx - e.x - e.w / 2) * 90; e.fire = 1.2 + Math.random(); } }
         if (e.t === 'charger') { const dx = pcx - e.x - e.w / 2; if (!e.dash && Math.abs(dx) < 200 && Math.abs(this.py - e.y) < 50) { e.dash = 1.2; e.vx = Math.sign(dx) * 260; } if (e.dash) { e.dash -= edt; if (e.dash <= 0) { e.dash = 0; e.vx = Math.sign(e.vx || 1) * 40; } } }
+        if (e.t === 'sniper') { e.vx = 0; e.fire -= edt; if (e.fire <= 0 && Math.abs(pcx - e.x) < 330) { if (!e.aim) { e.aim = 0.9; e.ax = pcx; e.ay = this.py + 13; } e.aim -= edt; if (e.aim <= 0.01) { const a = Math.atan2(e.ay - e.y - 6, e.ax - e.x - e.w / 2); this.eshots.push({ x: e.x + e.w / 2, y: e.y + 6, vx: Math.cos(a) * 440, vy: Math.sin(a) * 440, r: 4, fast: true }); e.aim = 0; e.fire = Math.max(1.8, 3.2 - this.lvl * 0.03); } } }
+        if (e.t === 'mole') { e.vx = 0; e.mt = (e.mt || 0) + edt; const f = e.mt % 3.4; const was = e.hid; e.hid = f < 1.8; if (was && !e.hid) { const a = Math.atan2(this.py - e.y - 60, pcx - e.x), v = 260; this.eshots.push({ x: e.x + e.w / 2, y: e.y, vx: Math.sign(pcx - e.x) * 120, vy: -360, g: 900, r: 5, rock: true }); } }
+        if (e.t === 'shielder') e.dir = Math.sign(pcx - e.x - e.w / 2) || 1;
         if (e.t === 'turret') { e.vx = 0; e.fire -= edt; if (e.fire <= 0 && Math.abs(pcx - e.x) < 320) { e.fire = Math.max(1.2, 2.6 - this.lvl * 0.04); const a = Math.atan2(this.py + 13 - e.y, pcx - e.x - e.w / 2), v = 170 * (1 + Math.min(0.5, this.lvl * 0.01)); this.eshots.push({ x: e.x + e.w / 2, y: e.y + 4, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 4 }); } }
         const vx0 = e.vx; e.wall = 0;
         this.move(e, edt);
@@ -7346,6 +7451,8 @@ const Plat = {
         if (e.y > this.ROWS * T + 60) e.dead = true;
       }
       // Contact avec Pip : écrasement ou choc
+      if (e.hid) continue;
+      if (this.power.surcharge > 0 && this.px < e.x + e.w && this.px + this.w > e.x && this.py < e.y + e.h && this.py + this.h > e.y) { if (e.boss) { if (!(e.sInv > 0)) { e.sInv = 0.5; this.damage(e, e.max * 0.03); } } else this.kill(e); continue; }
       if (this.px < e.x + e.w && this.px + this.w > e.x && this.py < e.y + e.h && this.py + this.h > e.y) {
         const fromTop = this.vy > 60 && this.py + this.h - e.y < 16;
         if (fromTop && e.stomp && !(e.sInv > 0)) {
@@ -7360,8 +7467,9 @@ const Plat = {
     this.en = this.en.filter(e => !e.dead);
     // Tirs ennemis
     for (const s of this.eshots) {
-      if (s.g) s.vy += s.g * dt;
-      s.x += s.vx * dt; s.y += s.vy * dt;
+      const sdt = this.power.chrono > 0 ? dt * 0.45 : dt;
+      if (s.g) s.vy += s.g * sdt;
+      s.x += s.vx * sdt; s.y += s.vy * sdt;
       if (this.solid(Math.floor(s.x / T), Math.floor(s.y / T)) || s.y > this.ROWS * T) { s.dead = true; if (s.bomb) this.fx.push({ ring: true, x: s.x, y: s.y, c: '#ffd84a', r: 24, t: 0.3 }); continue; }
       if (s.x > this.px - 2 && s.x < this.px + this.w + 2 && s.y > this.py && s.y < this.py + this.h) { s.dead = true; this.hurt(); }
     }
@@ -7384,12 +7492,28 @@ const Plat = {
         else if (p.k === 'bouclier') { this.shields++; this.fx.push({ txt: 'Bouclier', c: '#4fa3ff', x: pcx, y: this.py - 10, t: 1 }); }
         else if (p.k === 'gemme') { this.lvGems += p.n; this.fx.push({ txt: `+${p.n} ${GEM}`, c: '#5ef0ff', x: pcx, y: this.py - 10, t: 1 }); }
         else if (p.k === 'arme') this.giveWeapon();
+        else if (p.k === 'impulsion') { for (const e of this.en) if (!e.dead && Math.abs(e.x - this.px) < 380) this.damage(e, e.boss ? e.max * 0.05 : e.max * 0.6); this.eshots = []; this.fx.push({ ring: true, x: pcx, y: this.py + 13, c: '#fff27a', r: 200, t: 0.5 }, { txt: 'Impulsion !', c: '#fff27a', x: pcx, y: this.py - 10, t: 1 }); buzz(60); }
         else { this.power[p.k] = PLT_POW[p.k].d; this.fx.push({ txt: PLT_POW[p.k].name, c: PLT_POW[p.k].c, x: pcx, y: this.py - 10, t: 1 }); }
       }
     }
     this.pows = this.pows.filter(p => !p.dead && p.y < this.ROWS * T);
     // Balise de fin
     if (this.beacon.on && Math.abs(pcx - this.beacon.x) < 20 && this.py + this.h > this.beacon.y - 90) this.finishLevel();
+  },
+  updHaz(dt) {
+    const px = this.px, py = this.py, w = this.w, h = this.h, pc = px + w / 2, pm = py + h / 2, hit = () => { if (!(this.power.surcharge > 0)) this.hurt(); };
+    for (const z of this.haz) {
+      z.t = (z.t || 0) + dt;
+      if (z.k === 'saw') { z.x = z.x0 + Math.sin(z.ph + z.t * z.sp) * z.ax; z.y = z.y0 + Math.sin(z.ph + z.t * z.sp) * z.ay * 0.5; if (Math.hypot(pc - z.x, pm - z.y) < z.r + 10) hit(); }
+      else if (z.k === 'gate') { const f = ((z.t + z.ph) % z.per) / z.per; z.on = f < 0.5; z.warn = f > 0.38 && f < 0.5 ? 0 : f > 0.85; if (z.on && Math.abs(pc - z.x) < w / 2 + 3) hit(); }
+      else if (z.k === 'jet') { const f = ((z.t + z.ph) % z.per) / z.per; z.on = f < 0.4; z.warn = f > 0.8; if (z.on && Math.abs(pc - z.x) < 14 && py + h > z.yb - z.hgt) hit(); }
+      else if (z.k === 'press') {
+        const cyc = 3, f = (z.t % cyc) / cyc, top = -60;
+        z.y = f < 0.4 ? z.up : f < 0.47 ? z.up + (z.yb - z.up) * ((f - 0.4) / 0.07) : f < 0.62 ? z.yb : z.yb - (z.yb - z.up) * Math.min(1, (f - 0.62) / 0.3);
+        z.warn = f > 0.3 && f < 0.4;
+        if (pc > z.x - 6 && pc < z.x + z.w + 6 && py < z.y && py + h > top) hit();
+      }
+    }
   },
   bossAI(e, dt) {
     const T = this.T, pcx = this.px + 9;
@@ -7465,9 +7589,20 @@ const Plat = {
       const v = this.g[c * this.ROWS + r]; if (!v) continue;
       const x = c * T, y = r * T, top = !this.solid(c, r - 1);
       if (v === 1) { g.fillStyle = '#0c1220'; g.fillRect(x, y, T, T); if (top) { g.fillStyle = pal[2]; g.fillRect(x, y, T, 3); g.fillStyle = 'rgba(255,255,255,.06)'; g.fillRect(x, y + 3, T, 6); } g.strokeStyle = 'rgba(255,255,255,.05)'; g.strokeRect(x + 0.5, y + 0.5, T - 1, T - 1); }
+      else if (v === 6) { const hp = this.tileHp.get(c * this.ROWS + r), dmg = hp === undefined ? 0 : 1 - hp / (30 * this.hk()); g.fillStyle = '#3a2416'; g.fillRect(x, y, T, T); g.strokeStyle = '#c8925a'; g.lineWidth = 1.5; g.strokeRect(x + 1, y + 1, T - 2, T - 2); g.beginPath(); g.moveTo(x + 1, y + T / 2); g.lineTo(x + T - 1, y + T / 2); g.moveTo(x + T / 2, y + 1); g.lineTo(x + T / 2, y + T / 2); g.moveTo(x + T / 4, y + T / 2); g.lineTo(x + T / 4, y + T - 1); g.stroke(); if (dmg > 0.3) { g.strokeStyle = '#ffd8a8'; g.beginPath(); g.moveTo(x + 6, y + 4); g.lineTo(x + 14, y + 14); g.lineTo(x + 10, y + 24); if (dmg > 0.65) { g.moveTo(x + 24, y + 6); g.lineTo(x + 16, y + 16); } g.stroke(); } }
+      else if (v === 7) { g.fillStyle = '#1a0c14'; g.fillRect(x, y, T, T); g.fillStyle = '#ff4a5a'; const sp = (dx, dy, ax, ay) => { for (let i = 0; i < 3; i++) { const o = i * 10 + 5; g.beginPath(); if (ay) { g.moveTo(x + o - 5, y + dy); g.lineTo(x + o, y + dy + ay * 8); g.lineTo(x + o + 5, y + dy); } else { g.moveTo(x + dx, y + o - 5); g.lineTo(x + dx + ax * 8, y + o); g.lineTo(x + dx, y + o + 5); } g.fill(); } };
+        if (!this.solid(c, r - 1)) sp(0, 0, 0, -1); if (!this.solid(c, r + 1)) sp(0, T, 0, 1); if (!this.solid(c - 1, r)) sp(0, 0, -1, 0); if (!this.solid(c + 1, r)) sp(T, 0, 1, 0); g.strokeStyle = '#ff4a5a'; g.lineWidth = 1; g.strokeRect(x + 0.5, y + 0.5, T - 1, T - 1); }
+      else if (v === 8) { const near = Math.abs(this.px - x) < 150; g.strokeStyle = near ? `rgba(255,216,74,${0.5 + 0.3 * Math.sin(this.t * 5)})` : 'rgba(255,255,255,.12)'; g.lineWidth = 2; g.beginPath(); g.roundRect(x + 5, y + 2, T - 10, T - 2, 6); g.stroke(); if (near) { g.fillStyle = 'rgba(255,216,74,.18)'; g.fill(); if (Math.random() < 0.2) this.fx.push({ p: true, x: x + Math.random() * T, y: y + Math.random() * T, vx: 0, vy: -20, c: '#ffd84a', t: 0.5 }); } }
       else if (v === 5) { g.fillStyle = '#0c1220'; g.fillRect(x, y, T, T); g.fillStyle = '#ff4a5a'; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(x + i * 10, y + 2); g.lineTo(x + i * 10 + 5, y - 9); g.lineTo(x + i * 10 + 10, y + 2); g.fill(); } }
       else { const gold = v === 4, used = v === 3; g.fillStyle = used ? '#1a1f2e' : gold ? '#3a2c08' : '#2a1608'; g.fillRect(x + 1, y + 1, T - 2, T - 2); g.strokeStyle = used ? '#3a4258' : gold ? '#ffd84a' : '#ff9b3d'; g.lineWidth = 2; g.strokeRect(x + 2, y + 2, T - 4, T - 4);
         if (!used) { g.fillStyle = gold ? '#ffd84a' : '#ffcf4a'; g.beginPath(); g.moveTo(x + 17, y + 6); g.lineTo(x + 10, y + 16); g.lineTo(x + 15, y + 16); g.lineTo(x + 12, y + 24); g.lineTo(x + 20, y + 13); g.lineTo(x + 15, y + 13); g.closePath(); g.fill(); } }
+    }
+    // Dangers
+    for (const z of this.haz) {
+      if (z.k === 'saw') { g.save(); g.translate(z.x, z.y); g.rotate(this.t * 12); g.fillStyle = '#c9d3ea'; g.beginPath(); for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, rr = i % 2 ? z.r * 0.7 : z.r; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.closePath(); g.fill(); g.fillStyle = '#3a4258'; g.beginPath(); g.arc(0, 0, 4, 0, TAU); g.fill(); g.restore(); if (z.ay) { g.strokeStyle = 'rgba(255,255,255,.08)'; g.beginPath(); g.moveTo(z.x0, z.y0 - z.ay * 0.5); g.lineTo(z.x0, z.y0 + z.ay * 0.5); g.stroke(); } }
+      else if (z.k === 'gate') { g.fillStyle = '#2a3048'; g.fillRect(z.x - 6, z.yb - 8, 12, 8); g.fillRect(z.x - 6, -40, 12, 30); if (z.on) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,79,163,.35)'; g.fillRect(z.x - 6, -10, 12, z.yb); g.fillStyle = '#ff9bd0'; g.fillRect(z.x - 1.5, -10, 3, z.yb); g.globalCompositeOperation = 'source-over'; } else if (z.warn) { g.strokeStyle = 'rgba(255,79,163,.5)'; g.setLineDash([4, 6]); g.beginPath(); g.moveTo(z.x, -10); g.lineTo(z.x, z.yb); g.stroke(); g.setLineDash([]); } }
+      else if (z.k === 'jet') { g.fillStyle = '#3a2416'; g.fillRect(z.x - 9, z.yb - 5, 18, 5); if (z.on) { for (let i = 0; i < 6; i++) { const yy = z.yb - Math.random() * z.hgt; g.fillStyle = i % 2 ? '#ff7a2a' : '#ffd84a'; g.globalAlpha = 0.7; g.beginPath(); g.arc(z.x + (Math.random() - 0.5) * 10, yy, 6 + Math.random() * 6, 0, TAU); g.fill(); } g.globalAlpha = 1; } else if (z.warn) { g.fillStyle = 'rgba(255,122,42,.5)'; g.beginPath(); g.arc(z.x, z.yb - 6, 5, 0, TAU); g.fill(); } }
+      else if (z.k === 'press') { g.fillStyle = '#20263a'; g.fillRect(z.x, -60, z.w, z.y + 60); g.fillStyle = z.warn ? '#ff5468' : '#8a93ad'; g.fillRect(z.x, z.y - 10, z.w, 10); g.strokeStyle = '#3a4258'; for (let yy = -60; yy < z.y - 10; yy += 14) { g.beginPath(); g.moveTo(z.x, yy); g.lineTo(z.x + z.w, yy + 7); g.stroke(); } }
     }
     // Balise
     const bx = this.beacon.x, by = this.beacon.y;
@@ -7490,6 +7625,11 @@ const Plat = {
       else if (e.t === 'spike') { g.beginPath(); g.roundRect(x, y + 6, w, h - 6, 4); g.fill(); g.stroke(); g.fillStyle = e.c; for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(x + i * w / 4, y + 7); g.lineTo(x + i * w / 4 + w / 8, y - 3); g.lineTo(x + (i + 1) * w / 4, y + 7); g.fill(); } }
       else if (e.t === 'turret') { g.beginPath(); g.roundRect(x, y + 8, w, h - 8, 3); g.fill(); g.stroke(); const a = Math.atan2(this.py - y, this.px - x); g.beginPath(); g.moveTo(x + w / 2, y + 10); g.lineTo(x + w / 2 + Math.cos(a) * 14, y + 10 + Math.sin(a) * 14); g.stroke(); }
       else if (e.t === 'armor') { g.beginPath(); g.roundRect(x, y, w, h, 5); g.fill(); g.stroke(); g.strokeStyle = e.c; g.beginPath(); g.moveTo(x + 4, y + h / 2); g.lineTo(x + w - 4, y + h / 2); g.stroke(); }
+      else if (e.t === 'sniper') { g.beginPath(); g.roundRect(x, y + 6, w, h - 6, 4); g.fill(); g.stroke(); g.beginPath(); g.moveTo(x + w / 2, y + 10); g.lineTo(x + w / 2 + Math.sign(this.px - x) * 14, y + 6); g.stroke(); if (e.aim > 0) { g.restore(); g.save(); g.strokeStyle = `rgba(94,240,255,${0.4 + (0.9 - e.aim)})`; g.lineWidth = 1.5; g.setLineDash([6, 5]); g.beginPath(); g.moveTo(x + w / 2, y + 6); g.lineTo(e.ax, e.ay); g.stroke(); g.setLineDash([]); } }
+      else if (e.t === 'jelly') { g.globalAlpha = 0.85; g.beginPath(); g.arc(x + w / 2, y + h * 0.45, w / 2, Math.PI, 0); g.lineTo(x + w, y + h * 0.55); g.lineTo(x, y + h * 0.55); g.closePath(); g.fill(); g.stroke(); for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(x + 4 + i * 6, y + h * 0.55); g.lineTo(x + 4 + i * 6 + Math.sin(this.t * 6 + i) * 3, y + h + 4); g.stroke(); } if (Math.random() < 0.08) this.zaps.push({ pts: [[x + w / 2, y + h / 2], [x + w / 2 + (Math.random() - 0.5) * 30, y + h / 2 + (Math.random() - 0.5) * 30]], t: 0.08 }); }
+      else if (e.t === 'mole') { if (e.hid) { g.restore(); g.fillStyle = 'rgba(200,162,122,.5)'; g.beginPath(); g.ellipse(x + w / 2, y + h, w / 2, 3, 0, 0, TAU); g.fill(); continue; } g.beginPath(); g.arc(x + w / 2, y + h, w / 2 + 2, Math.PI, 0); g.closePath(); g.fill(); g.stroke(); }
+      else if (e.t === 'shielder') { g.beginPath(); g.roundRect(x, y, w, h, 5); g.fill(); g.stroke(); g.strokeStyle = '#cfe0ff'; g.lineWidth = 4; const sx = e.dir > 0 ? x + w + 3 : x - 3; g.beginPath(); g.moveTo(sx, y - 2); g.lineTo(sx, y + h + 1); g.stroke(); }
+      else if (e.t === 'splitter') { g.beginPath(); g.ellipse(x + w / 2, y + h / 2 + 2, w / 2, h / 2, 0, 0, TAU); g.fill(); g.stroke(); g.beginPath(); g.moveTo(x + w / 2, y + 2); g.lineTo(x + w / 2, y + h); g.stroke(); }
       else if (e.t === 'swarm') { const d = Math.sign(e.vx || 1); g.beginPath(); g.moveTo(x + (d > 0 ? w : 0), y + h / 2); g.lineTo(x + (d > 0 ? 0 : w), y - 2 + Math.sin(this.t * 40) * 2); g.lineTo(x + (d > 0 ? 0 : w), y + h + 2); g.closePath(); g.fill(); g.stroke(); }
       else if (e.t === 'golem') { g.beginPath(); g.roundRect(x, y, w, h, 7); g.fill(); g.stroke(); g.strokeStyle = e.c; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x + 5, y + h * 0.65); g.lineTo(x + w - 5, y + h * 0.65); g.moveTo(x + w / 2, y + 4); g.lineTo(x + w / 2, y + h * 0.3); g.stroke(); }
       else if (e.t === 'charger') { g.beginPath(); const d = Math.sign(e.vx || 1); g.moveTo(x + (d > 0 ? w + 4 : -4), y + h / 2); g.lineTo(x + (d > 0 ? 0 : w), y); g.lineTo(x + (d > 0 ? 0 : w), y + h); g.closePath(); g.fill(); g.stroke(); }
@@ -7502,14 +7642,16 @@ const Plat = {
       if (e.acid > 0 && Math.random() < 0.3) this.fx.push({ p: true, x: x + Math.random() * w, y: y + h, vx: 0, vy: 40, c: '#9cff57', t: 0.3 });
       if (e.max > 25 && e.hp < e.max && !e.boss) { g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x, y - 7, w, 3); g.fillStyle = e.c; g.fillRect(x, y - 7, w * Math.max(0, e.hp / e.max), 3); }
     }
-    for (const s of this.eshots) { g.fillStyle = s.bomb ? '#ffd84a' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.r || 4, 0, TAU); g.fill(); }
+    for (const s of this.eshots) { g.fillStyle = s.bomb ? '#ffd84a' : s.rock ? '#c8a27a' : s.fast ? '#5ef0ff' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.r || 4, 0, TAU); g.fill(); if (s.fast) { g.strokeStyle = 'rgba(94,240,255,.5)'; g.lineWidth = 2; g.beginPath(); g.moveTo(s.x, s.y); g.lineTo(s.x - s.vx * 0.04, s.y - s.vy * 0.04); g.stroke(); } }
     for (const s of this.shots) this.drawShot(g, s);
     if (this.beam) { const b = this.beam, y = this.py + 11, x0 = this.px + 9, len = 330 * b.dir; g.globalCompositeOperation = 'lighter'; g.fillStyle = `rgba(255,79,163,${0.35 + b.t})`; g.fillRect(Math.min(x0, x0 + len), y - b.w / 2, Math.abs(len), b.w); g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(Math.min(x0, x0 + len), y - 1, Math.abs(len), 2); g.globalCompositeOperation = 'source-over'; }
     for (const z of this.zaps) { g.strokeStyle = '#fff27a'; g.lineWidth = 2.5; g.globalAlpha = Math.min(1, z.t * 5); g.beginPath(); z.pts.forEach(([x, y], i) => { const j = i ? (Math.random() - 0.5) * 10 : 0; i ? g.lineTo(x + j, y + j) : g.moveTo(x, y); }); g.stroke(); g.globalAlpha = 1; }
     if (this.wpn.orbe) { const n = this.wpn.orbe + 1; for (let i = 0; i < n; i++) { const a = this.t * 3 + i * TAU / n, ox = this.px + 9 + Math.cos(a) * 40, oy = this.py + 13 + Math.sin(a) * 40; g.save(); g.shadowColor = '#7aa7ff'; g.shadowBlur = 10; g.fillStyle = '#7aa7ff'; g.beginPath(); g.arc(ox, oy, 6, 0, TAU); g.fill(); g.restore(); } }
     for (let i = 0; i < this.droneN; i++) { const [dx, dy] = this.dronePos(i); g.fillStyle = '#9afff0'; g.beginPath(); g.arc(dx, dy, 4, 0, TAU); g.fill(); g.strokeStyle = 'rgba(154,255,240,.5)'; g.beginPath(); g.moveTo(dx - 7, dy - 4); g.lineTo(dx + 7, dy - 4); g.stroke(); }
     // Pip
-    if (!this.over && !(this.inv > 0 && Math.floor(this.t * 12) % 2)) this.drawPip(g);
+    if (!this.over && this.power.surcharge > 0) { g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = `hsla(${(this.t * 600) % 360},100%,60%,.45)`; g.beginPath(); g.arc(this.px + 9, this.py + 13, 20, 0, TAU); g.fill(); g.restore(); }
+    if (!this.over && this.power.vol > 0) { for (let i = 0; i < 2; i++) this.fx.push({ p: true, x: this.px + 9 - this.face * 8, y: this.py + 22, vx: (Math.random() - 0.5) * 30, vy: 120 + Math.random() * 60, c: i ? '#3ef2c8' : '#ffd84a', t: 0.25 }); }
+    if (!this.over && !(this.inv > 0 && !(this.power.surcharge > 0) && Math.floor(this.t * 12) % 2)) this.drawPip(g);
     if (!this.over && this.shields > 0) { // bulle de bouclier bien visible
       const bx = this.px + 9, by = this.py + 13, br = 24 + Math.sin(this.t * 4) * 1.5;
       const gr = g.createRadialGradient(bx, by, br * 0.4, bx, by, br); gr.addColorStop(0, 'rgba(79,163,255,0)'); gr.addColorStop(0.8, 'rgba(79,163,255,.18)'); gr.addColorStop(1, 'rgba(120,190,255,.45)');
@@ -9150,8 +9292,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.10';
+const APP_VERSION = '7.11';
 const CHANGELOG = [
+  { v: '7.11', date: '02.11.2026', items: ['Course des Toits plus exigeante : murs verticaux à franchir par un passage étroit (bordé de pics plus loin), murs de briques à détruire au blaster, blocs et plafonds à pics, tunnels, scies, barrières laser, jets de flammes et presses à passer au bon moment', 'Portes secrètes (dès le niveau 3) : une lueur dorée en haut du niveau ; joystick vers le bas devant elle pour entrer dans une salle secrète pleine de boulons, gemmes et caisses, dont la balise termine le niveau', '5 nouveaux monstres : Tireur embusqué (11), Méduse électrique (14), Taupe de fer (16), Porte-bouclier (20), Scissipare (25)', 'Nouveaux bonus au fil des niveaux : Turbo (3), Réacteur dorsal pour voler (4), Boulons ×2 (5), Surcharge invincible qui détruit tout au contact (6), Ralenti (8), Impulsion qui frappe tout l’écran (10)', 'Ennemis plus résistants au fil des niveaux et caisses d’arme plus rares'] },
   { v: '7.10', date: '02.11.2026', items: ['Course des Toits : 13 armes à gagner pendant la partie, qui s’ajoutent au blaster et tirent toutes seules (niveau 1 à 5) : mitraillette, fusil à pompe, lance-flammes (brûlure), pistolet cryo (ralentit, gèle), pistolet à acide (ronge et affaiblit), lance foudroyante (éclair en chaîne), lance-roquettes, lance-grenades, rayon laser, disque boomerang, missiles chercheurs, orbes gardiens, canon à plasma', 'Après chaque niveau : choisis une arme ou une amélioration parmi trois (puissance, cadence, cœur, réparation, vitesse, aimant, bouclier)', 'Les monstres laissent des boulons, parfois des gemmes ◆ ou une caisse d’arme ⚔ ; les caisses ⚡ aussi', 'Bulle de bouclier bien visible autour de Pip', 'Plus de monstres, et deux nouveaux : Nuée de mouches (niveau 8) et Golem de ferraille (niveau 22)'] },
   { v: '7.9', date: '02.11.2026', items: ['Course des Toits : joystick pour le pouce gauche (il apparaît où tu poses le doigt : courir, bas pour tomber plus vite, haut pour freiner la descente) et saut pour le pouce droit', 'Course des Toits : sauts en l’air illimités, re-touche SAUTER pour enchaîner double, triple, quadruple saut… Les objets « saut en l’air » augmentent maintenant la puissance de ces sauts'] },
   { v: '7.8.1', date: '02.11.2026', items: ['Onglet Sets (Expédition et Course des Toits) : touche une pièce pour voir ses statistiques au niveau 1, au niveau 25 et avec 12 étoiles, et celles de ton exemplaire'] },
