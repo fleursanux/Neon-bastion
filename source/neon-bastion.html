@@ -457,6 +457,7 @@ body.d2 .btn.primary *{color:#1a0e04}
 body.mg-on{overflow:hidden}
 .mgcard{border-left:3px solid var(--mc)}
 .mgcard.mglock{opacity:.55;filter:grayscale(.6)}
+.mgdev{margin-top:12px}.mgdev summary{cursor:pointer;font-weight:700;color:var(--muted)}.mgdev[open] summary{margin-bottom:8px}
 .mghead{display:flex;gap:12px;align-items:flex-start}.mghead canvas{width:72px;height:72px;border-radius:10px;flex:none;background:var(--panel-2)}
 .mghead h3{margin:2px 0 4px;color:var(--mc)}
 .mgrew{font-size:.85rem;color:var(--muted);margin:6px 0}
@@ -5849,12 +5850,33 @@ const Minigames = {
         `<p class="hint">${g.desc}</p><p class="mgrew">${g.rew(m)}</p><div class="row">${play}${more}</div></section>`;
     }
     h += '</div>';
+    h += `<details class="panel mgdev"><summary>Outils de développement</summary><p class="hint">Remet un mini-jeu à zéro pour le retester depuis le début (progression, records, équipement). Les gemmes déjà gagnées sont gardées.</p>
+      <div class="row" style="flex-wrap:wrap;gap:6px">${this.GAMES.filter(g => CAST[g.who]).map(g => `<button class="btn small" data-reset="${g.id}" type="button">${esc(g.title)}</button>`).join('')}<button class="btn small danger" data-reset="all" type="button">Tous les mini-jeux</button></div></details>`;
     const body = $('mgBody');
+    const devOpen = body.querySelector('.mgdev') && body.querySelector('.mgdev').open;
     body.innerHTML = h;
+    if (devOpen) body.querySelector('.mgdev').open = true;
+    body.querySelectorAll('[data-reset]').forEach(bt => { bt.onclick = () => this.confirmReset(bt.dataset.reset, () => this.renderHub()); });
     body.querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
     body.querySelectorAll('[data-banner]').forEach(cv => toyBanner(cv, cv.dataset.banner, cv.dataset.col));
     body.querySelectorAll('[data-play]').forEach(bt => { bt.onclick = () => this.start(bt.dataset.play); });
     this.bindBuy(body, () => this.renderHub());
+  },
+  /* Outil de développement : remettre un mini-jeu (ou tous) à zéro. */
+  resetGame(id) {
+    const s = App.slot, m = this.data(s), ids = id === 'all' ? this.GAMES.map(g => g.id) : [id];
+    for (const k of ids) {
+      m.best[k] = 0; m.stats[k] = 0;
+      if (MG_TICKETS[k] !== undefined) m.tickets[k] = MG_TICKETS[k];
+      if (k === 'exp') delete m.exp; else if (k === 'plat') delete m.plat; else if (k === 'run') m.stage = 1;
+      else if (k === 'dig') { m.dig = null; m.picks = 3; } else if (k === 'plinko') m.balls = 5;
+    }
+    Store.touch(s);
+  },
+  confirmReset(id, after) {
+    const g = this.GAMES.find(x => x.id === id), name = id === 'all' ? 'tous les mini-jeux' : g ? g.title : id;
+    Modal.open({ title: 'Réinitialiser ?', text: `${name} : progression, records, équipement et améliorations repartent de zéro. Les gemmes déjà gagnées sont gardées.`,
+      actions: [{ label: 'Annuler' }, { label: 'Réinitialiser', cls: 'danger', fn: () => { this.resetGame(id); Toast2.show(`${name} : remis à zéro`); after && after(); } }] });
   },
   /* Un événement de plus tous les 10 niveaux : le 1er dès le départ, le 2e au niveau 11, le 3e au niveau 21… */
   req(id) { const vis = this.GAMES.filter(g => CAST[g.who]); return 10 * Math.max(0, vis.findIndex(g => g.id === id)) + 1; },
@@ -6200,9 +6222,11 @@ function makeGearHub(C, D) { return {
     else if (this.tab === 'hangar') h += this.pick ? this.pickHtml(s, e) : this.hangarHtml(s, e, st);
     else if (this.tab === 'sets') h += this.setsHtml(e);
     else h += this.atelierHtml(s, e);
+    if (this.tab === 'play') h += `<div class="row" style="justify-content:center;margin-top:6px"><button class="btn small danger" id="gearReset" type="button">Réinitialiser ce mini-jeu</button></div>`;
     el.innerHTML = h + '</div>';
     if (keep) el.querySelector('.expdig').scrollTop = keep;
     $('expClose').onclick = () => this.close();
+    if ($('gearReset')) $('gearReset').onclick = () => Minigames.confirmReset(C.key, () => { this.sel = null; this.pick = null; this.render(); });
     el.querySelectorAll('[data-tab]').forEach(b => { b.onclick = () => { this.tab = b.dataset.tab; if (this.tab === 'hangar') { e.fresh = 0; Store.touch(s); } this.sel = null; this.pick = null; this.render(); }; });
     this.bind(s, e);
   },
@@ -7260,11 +7284,23 @@ const Plat = {
     for (let c = 4; c < L - 6; c++) for (let r = 0; r < 3; r++) if ((c + r) % 2 === 0) bolts.push({ x: (c + 0.5) * T, y: (G - 4 + r * 1.2) * T });
     for (const c of [8, 16, 24]) { set(c, G - 5, 4); set(c + 1, G - 5, 2); }
     for (let i = 0; i < 3 + (this.luck > 1.3 ? 1 : 0); i++) pows.push({ k: 'gemme', n: 2, x: (6 + i * 6) * T, y: (G - 2) * T, vy: 0 });
-    const keepEc = this.lvEc, keepIt = this.lvItems;
+    const keepEc = this.lvEc, keepIt = this.lvItems, dc = Math.floor((this.px + 9) / T), dr = Math.floor((this.py + 13) / T);
+    // on garde le niveau tel quel pour y revenir devant la porte
+    this.mainSave = { L: this.L, g: this.g, tall: this.tall, haz: this.haz, mech: this.mech, gates: this.gates, movs: this.movs, crumb: this.crumb, tileHp: this.tileHp,
+      boss: this.boss, arenaStart: this.arenaStart, arenaEnd: this.arenaEnd, bossOn: this.bossOn, bossObj: this.bossObj, beacon: this.beacon, en: this.en, bolts: this.bolts, pows: this.pows,
+      key: this.key, power: this.power, safe: this.safe, door: [dc, dr], px: this.px, py: this.py };
     this.setMap({ L, g, bolts, pows, secretRoom: true, beacon: { x: (L - 4) * T, y: G * T, on: true } });
     this.lvEc = keepEc; this.lvItems = keepIt; this.inv = 1;
-    this.banner = { text: 'Salle secrète !', sub: 'Sa balise termine le niveau', t: 2.2 };
+    this.banner = { text: 'Salle secrète !', sub: 'Sa balise te ramène dans le niveau', t: 2.2 };
     Sound.sfx && Sound.sfx('up');
+  },
+  exitSecret() {
+    const M = this.mainSave, T = this.T; if (!M) return;
+    const { door, px, py, ...rest } = M; Object.assign(this, rest);
+    this.g[door[0] * this.ROWS + door[1]] = 0; // la porte est refermée
+    Object.assign(this, { mainSave: null, secretRoom: false, px, py, vx: 0, vy: 0, inv: 1.2, shots: [], eshots: [], onMov: null, done: false });
+    this.camX = clamp(px - 140, 0, Math.max(0, this.L * T - 360)); this.camY = clamp(py - 250, 0, this.ROWS * T - 480);
+    this.banner = { text: 'Retour dans le niveau', sub: '', t: 1.4 }; Sound.sfx && Sound.sfx('up');
   },
   hk() { const l = this.lvl; return (1 + 0.28 * (l - 1)) * Math.pow(1.055, l - 1); },
   /* Murs destructibles : chaque bloc a des points de vie. */
@@ -7564,7 +7600,7 @@ const Plat = {
     }
     this.pows = this.pows.filter(p => !p.dead && p.y < this.ROWS * T);
     // Balise de fin
-    if (this.beacon.on && Math.abs(pcx - this.beacon.x) < 20) this.finishLevel(); // la balise compte sur toute la hauteur
+    if (this.beacon.on && Math.abs(pcx - this.beacon.x) < 20) { if (this.secretRoom) { this.exitSecret(); return; } this.finishLevel(); } // la balise compte sur toute la hauteur
   },
   /* Mécanismes : levier, plaque de pression, clé, interrupteur des lasers. */
   openGate(id, on) {
@@ -9396,11 +9432,12 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.12';
+const APP_VERSION = '7.12.1';
 const CHANGELOG = [
+  { v: '7.12.1', date: '02.11.2026', items: ['Course des Toits : la balise d’une salle secrète te ramène dans le niveau, devant la porte, avec ce que tu as ramassé', 'Outil de développement : bouton « Réinitialiser ce mini-jeu » (Expédition, Course des Toits) et, en bas des Événements, réinitialisation de chaque mini-jeu ou de tous'] },
   { v: '7.12', date: '02.11.2026', items: ['Course des Toits : carte deux fois plus haute (la caméra suit Pip vers le haut), un étage supérieur de plateformes avec boulons, caisses et monstres, et des sauts plus hauts', 'Mécanismes : levier en hauteur qui lève une herse, plaque de pression qui ne l’ouvre que quelques secondes, clé à aller chercher pour une porte verrouillée, interrupteur qui coupe les barrières laser', 'Trampolines, ponts qui s’effondrent sous les pieds et plateformes mobiles au-dessus de grands trous'] },
   { v: '7.11.1', date: '02.11.2026', items: ['Course des Toits : les passages dans les murs font au moins 2 cases, 3 cases quand ils sont bordés de pics (en haut seulement) ; les pics ne blessent qu’au vrai contact', 'Salles secrètes beaucoup plus rares (dès le niveau 4)', 'Armes plus lentes à gagner : proposées tous les 3 niveaux et après chaque gardien, caisses d’arme bien plus rares (plus dans les caisses ⚡ ni dans les salles secrètes)'] },
-  { v: '7.11', date: '02.11.2026', items: ['Course des Toits plus exigeante : murs verticaux à franchir par un passage étroit (bordé de pics plus loin), murs de briques à détruire au blaster, blocs et plafonds à pics, tunnels, scies, barrières laser, jets de flammes et presses à passer au bon moment', 'Portes secrètes (dès le niveau 3) : une lueur dorée en haut du niveau ; joystick vers le bas devant elle pour entrer dans une salle secrète pleine de boulons, gemmes et caisses, dont la balise termine le niveau', '5 nouveaux monstres : Tireur embusqué (11), Méduse électrique (14), Taupe de fer (16), Porte-bouclier (20), Scissipare (25)', 'Nouveaux bonus au fil des niveaux : Turbo (3), Réacteur dorsal pour voler (4), Boulons ×2 (5), Surcharge invincible qui détruit tout au contact (6), Ralenti (8), Impulsion qui frappe tout l’écran (10)', 'Ennemis plus résistants au fil des niveaux et caisses d’arme plus rares'] },
+  { v: '7.11', date: '02.11.2026', items: ['Course des Toits plus exigeante : murs verticaux à franchir par un passage étroit (bordé de pics plus loin), murs de briques à détruire au blaster, blocs et plafonds à pics, tunnels, scies, barrières laser, jets de flammes et presses à passer au bon moment', 'Portes secrètes (dès le niveau 3) : une lueur dorée en haut du niveau ; joystick vers le bas devant elle pour entrer dans une salle secrète pleine de boulons, gemmes et caisses', '5 nouveaux monstres : Tireur embusqué (11), Méduse électrique (14), Taupe de fer (16), Porte-bouclier (20), Scissipare (25)', 'Nouveaux bonus au fil des niveaux : Turbo (3), Réacteur dorsal pour voler (4), Boulons ×2 (5), Surcharge invincible qui détruit tout au contact (6), Ralenti (8), Impulsion qui frappe tout l’écran (10)', 'Ennemis plus résistants au fil des niveaux et caisses d’arme plus rares'] },
   { v: '7.10', date: '02.11.2026', items: ['Course des Toits : 13 armes à gagner pendant la partie, qui s’ajoutent au blaster et tirent toutes seules (niveau 1 à 5) : mitraillette, fusil à pompe, lance-flammes (brûlure), pistolet cryo (ralentit, gèle), pistolet à acide (ronge et affaiblit), lance foudroyante (éclair en chaîne), lance-roquettes, lance-grenades, rayon laser, disque boomerang, missiles chercheurs, orbes gardiens, canon à plasma', 'Après chaque niveau : choisis une arme ou une amélioration parmi trois (puissance, cadence, cœur, réparation, vitesse, aimant, bouclier)', 'Les monstres laissent des boulons, parfois des gemmes ◆ ou une caisse d’arme ⚔ ; les caisses ⚡ aussi', 'Bulle de bouclier bien visible autour de Pip', 'Plus de monstres, et deux nouveaux : Nuée de mouches (niveau 8) et Golem de ferraille (niveau 22)'] },
   { v: '7.9', date: '02.11.2026', items: ['Course des Toits : joystick pour le pouce gauche (il apparaît où tu poses le doigt : courir, bas pour tomber plus vite, haut pour freiner la descente) et saut pour le pouce droit', 'Course des Toits : sauts en l’air illimités, re-touche SAUTER pour enchaîner double, triple, quadruple saut… Les objets « saut en l’air » augmentent maintenant la puissance de ces sauts'] },
   { v: '7.8.1', date: '02.11.2026', items: ['Onglet Sets (Expédition et Course des Toits) : touche une pièce pour voir ses statistiques au niveau 1, au niveau 25 et avec 12 étoiles, et celles de ton exemplaire'] },
