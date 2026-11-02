@@ -6035,8 +6035,9 @@ const Minigames = {
    objets (6 raretés + objets de set verts) à équiper, améliorer et fusionner dans le Hangar. */
 const EXC = '✦';
 const EXP_SLOTS = [
-  { id: 'canon', name: 'Canon', icon: '🔫' }, { id: 'module', name: 'Module', icon: '🛰' }, { id: 'coque', name: 'Coque', icon: '🛡' },
-  { id: 'reacteur', name: 'Réacteur', icon: '🔥' }, { id: 'puce', name: 'Puce', icon: '💾' }
+  { id: 'canon', name: 'Canon principal', icon: '🔫' }, { id: 'tourelle', name: 'Tourelle auxiliaire', icon: '🎯' }, { id: 'module', name: 'Module', icon: '🛰' },
+  { id: 'coque', name: 'Coque', icon: '🛡' }, { id: 'cockpit', name: 'Cockpit', icon: '💺' }, { id: 'ailes', name: 'Ailerons', icon: '✈' },
+  { id: 'reacteur', name: 'Réacteur', icon: '🔥' }, { id: 'radar', name: 'Radar', icon: '📡' }, { id: 'soute', name: 'Soute', icon: '📦' }, { id: 'puce', name: 'Puce', icon: '💾' }
 ];
 /* Raretés propres à l'Expédition. Les objets de set (verts) forment une catégorie à part : ils ne se fusionnent pas. */
 const EXP_RAR = [
@@ -6068,6 +6069,21 @@ const EXP_STAT = {
   eslow: { txt: v => `Tirs ennemis ${Math.round(v * 100)} % plus lents`, max: true }
 };
 const EXP_GEAR = [
+  { id: 'flanc', slot: 'tourelle', name: 'Tourelle de flanc', main: ['lateral', 1], sub: ['rate', 0.03] },
+  { id: 'arriere', slot: 'tourelle', name: 'Tourelle arrière', main: ['rear', 1], sub: ['dmg', 0.03] },
+  { id: 'tarc', slot: 'tourelle', name: 'Tourelle à arc', main: ['arc', 1], sub: ['crit', 0.02] },
+  { id: 'agiles', slot: 'ailes', name: 'Ailerons agiles', main: ['speed', 0.08], sub: ['inv', 0.1] },
+  { id: 'ablinde', slot: 'ailes', name: 'Ailerons blindés', main: ['lives', 1], sub: ['speed', 0.04] },
+  { id: 'amines', slot: 'ailes', name: 'Ailerons à mines', main: ['mine', 1], sub: ['speed', 0.03] },
+  { id: 'rcible', slot: 'radar', name: 'Radar de ciblage', main: ['crit', 0.04], sub: ['dmg', 0.04] },
+  { id: 'rbutin', slot: 'radar', name: 'Radar à butin', main: ['luck', 0.12], sub: ['eclats', 0.05] },
+  { id: 'rstase', slot: 'radar', name: 'Radar de stase', main: ['slow', 1], sub: ['power', 0.08] },
+  { id: 'sdrone', slot: 'soute', name: 'Soute à drones', main: ['drone', 1], sub: ['dmg', 0.03] },
+  { id: 'sorbe', slot: 'soute', name: 'Soute à orbes', main: ['orb', 1], sub: ['dmg', 0.03] },
+  { id: 'srecup', slot: 'soute', name: 'Soute de récupération', main: ['eclats', 0.1], sub: ['luck', 0.05] },
+  { id: 'cblinde', slot: 'cockpit', name: 'Cockpit blindé', main: ['shield', 1], sub: ['lives', 1] },
+  { id: 'ccombat', slot: 'cockpit', name: 'Cockpit de combat', main: ['dmg', 0.1], sub: ['rate', 0.04] },
+  { id: 'conde', slot: 'cockpit', name: 'Cockpit à onde', main: ['nova', 1], sub: ['inv', 0.1] },
   { id: 'ion', slot: 'canon', name: 'Canon ionique', main: ['dmg', 0.1], sub: ['rate', 0.04] },
   { id: 'rafale', slot: 'canon', name: 'Canon à rafales', main: ['rate', 0.08], sub: ['dmg', 0.04] },
   { id: 'jumeau', slot: 'canon', name: 'Canon jumelé', main: ['multi', 1], sub: ['dmg', 0.04] },
@@ -6133,6 +6149,13 @@ const EXP_SETS = [
       ['puce', 'Puce de cendres', ['power', 0.15], ['regen', 0.08]], ['module', 'Orbe de flamme', ['orb', 1], ['dmg', 0.04]]],
     bonus: { 2: [['regen', 0.25]], 3: [['vamp', 25]], 4: [['lives', 2], ['revive', 1]] } }
 ];
+/* La moitié des sets passe sur les nouveaux emplacements : un set « classique » et un « nouveau » se portent ensemble. */
+const EXP_SET_MOVE = { canon: 'tourelle', module: 'soute', coque: 'cockpit', reacteur: 'ailes', puce: 'radar' }, EXP_SETS_B = ['prisme', 'sentinelle', 'nuee', 'ombre', 'onde', 'phenix'];
+const EXP_SET_RENAME = { prisme_cockpit: 'Verrière miroir', prisme_ailes: 'Ailerons à photons', prisme_radar: 'Radar de réfraction',
+  sentinelle_tourelle: 'Tourelle de veille', sentinelle_cockpit: 'Cockpit de guet', sentinelle_ailes: 'Ailerons de garde', sentinelle_radar: 'Radar de ciblage fin',
+  nuee_cockpit: 'Cockpit-ruche', nuee_radar: 'Radar d’essaim', ombre_ailes: 'Ailerons silencieux', ombre_cockpit: 'Cockpit furtif', ombre_radar: 'Radar de brouillage', ombre_tourelle: 'Tourelle spectrale',
+  onde_cockpit: 'Cockpit résonant', onde_radar: 'Radar à stase noire', onde_ailes: 'Ailerons sismiques', phenix_cockpit: 'Cockpit de braise', phenix_ailes: 'Ailerons renaissants', phenix_radar: 'Radar de cendres' };
+for (const S of EXP_SETS) if (EXP_SETS_B.includes(S.id)) for (const p of S.pieces) { p[0] = EXP_SET_MOVE[p[0]] || p[0]; p[1] = EXP_SET_RENAME[S.id + '_' + p[0]] || p[1]; }
 const EXP_SET_BY_ID = Object.fromEntries(EXP_SETS.map(S => [S.id, S]));
 const EXP_GEAR_BY_ID = Object.fromEntries(EXP_GEAR.map(g => [g.id, g]));
 for (const S of EXP_SETS) for (const [slot, name, main, sub] of S.pieces) EXP_GEAR_BY_ID[S.id + '_' + slot] = { id: S.id + '_' + slot, slot, name, main, sub, set: S.id };
@@ -6152,7 +6175,7 @@ function makeGearData(C) { return {
   C,
   get(s) { return C.get(s); },
   /* 10 emplacements : deux par type (pour porter deux sets complets). */
-  eqSlots() { return this._eqs || (this._eqs = C.slots.flatMap(sl => [{ key: sl.id, type: sl.id, icon: sl.icon, name: sl.name + ' 1' }, { key: sl.id + '2', type: sl.id, icon: sl.icon, name: sl.name + ' 2' }])); },
+  eqSlots() { return this._eqs || (this._eqs = C.slots.map(sl => ({ key: sl.id, type: sl.id, icon: sl.icon, name: sl.name }))); },
   eqKeyOf(e, uid) { return Object.keys(e.eq).find(k => e.eq[k] === uid) || null; },
   /* Équipe un objet : dans l'emplacement demandé, sinon le premier libre de son type, sinon à la place du moins bon. */
   equip(e, it, key) {
@@ -6389,7 +6412,7 @@ function makeGearHub(C, D) { return {
   },
   setsHtml(e) {
     const own = C.sets.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
-    return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par type d’emplacement ; avec 2 emplacements de chaque type, tu peux porter deux sets complets en même temps. Une pièce de set au niveau 25 peut encore gagner 12 étoiles. Touche une pièce pour voir ses statistiques.</p>` +
+    return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par emplacement ; la moitié des sets utilise les emplacements classiques, l’autre moitié les nouveaux : tu peux porter deux sets complets en même temps. Une pièce de set au niveau 25 peut encore gagner 12 étoiles. Touche une pièce pour voir ses statistiques.</p>` +
       C.sets.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
   },
   atelierHtml(s, e) {
@@ -6451,7 +6474,7 @@ const EXP_CFG = {
     const m = Minigames.data(s);
     if (!m.exp || !m.exp.v) {
       const old = m.best.exp || 0;
-      m.exp = { v: 3, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
+      m.exp = { v: 4, eclats: old * 10, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
       m.best.exp = 0;
     }
     const e = m.exp;
@@ -6460,6 +6483,8 @@ const EXP_CFG = {
     if (e.v < 2) { for (const it of e.items) if (it.r >= 3) it.r++; e.v = 2; }
     // v3 : 7 raretés (Commun, Magique, Rare, Exceptionnel, Épique, Légendaire, Mythique) + Set ; Légendaire, Mythique et Set gardent leur nom
     if (e.v < 3) { for (const it of e.items) it.r = [0, 1, 2, 3, 5, 6, 7][it.r] ?? it.r; e.v = 3; }
+    // v4 : 10 emplacements distincts ; certaines pièces de set changent d'emplacement
+    if (e.v < 4) { for (const it of e.items) { const [sid, sl] = it.b.split('_'); if (sl && EXP_SETS_B.includes(sid) && EXP_SET_MOVE[sl]) it.b = sid + '_' + EXP_SET_MOVE[sl]; } for (const k of Object.keys(e.eq)) if (k.endsWith('2')) delete e.eq[k]; for (const k of Object.keys(e.eq)) { const it = e.items.find(x => x.uid === e.eq[k]); if (it && EXP_GEAR_BY_ID[it.b].slot !== k) e.eq[k] = null; } e.v = 4; }
     return e;
   },
   base(e, u) {
@@ -6893,8 +6918,9 @@ const Expedition = {
    Un gardien tous les 5 niveaux. Boulons ⬢ pour l'Atelier, objets (7 raretés + sets verts) au Vestiaire. */
 const PLC = '⬢';
 const PLT_SLOTS = [
-  { id: 'blaster', name: 'Blaster', icon: '🔫' }, { id: 'casque', name: 'Casque', icon: '⛑' }, { id: 'armure', name: 'Armure', icon: '🛡' },
-  { id: 'bottes', name: 'Bottes', icon: '👢' }, { id: 'puce', name: 'Puce', icon: '💾' }
+  { id: 'blaster', name: 'Blaster principal', icon: '🔫' }, { id: 'auxiliaire', name: 'Blaster auxiliaire', icon: '🔦' }, { id: 'casque', name: 'Casque', icon: '⛑' },
+  { id: 'armure', name: 'Plastron', icon: '🦺' }, { id: 'gants', name: 'Gants', icon: '🧤' }, { id: 'ceinture', name: 'Ceinture', icon: '🔗' },
+  { id: 'pantalon', name: 'Pantalon', icon: '👖' }, { id: 'bottes', name: 'Bottes', icon: '👢' }, { id: 'sac', name: 'Sac à dos', icon: '🎒' }, { id: 'puce', name: 'Puce', icon: '💾' }
 ];
 const PLT_STAT = {
   dmg: { l: 'dégâts du blaster', pct: true }, rate: { l: 'cadence', pct: true }, multi: { l: 'tir', flat: true }, pierce: { l: 'perforation', flat: true },
@@ -6911,6 +6937,21 @@ const PLT_STAT = {
   float: { txt: () => 'Plane en gardant le saut appuyé' }
 };
 const PLT_GEAR = [
+  { id: 'poing', slot: 'auxiliaire', name: 'Blaster de poing', main: ['rate', 0.06], sub: ['dmg', 0.03] },
+  { id: 'flechettes', slot: 'auxiliaire', name: 'Lance-fléchettes', main: ['pierce', 1], sub: ['rate', 0.03] },
+  { id: 'minicanon', slot: 'auxiliaire', name: 'Mini-canon', main: ['dmg', 0.08], sub: ['crit', 0.02] },
+  { id: 'gtir', slot: 'gants', name: 'Gants de tir', main: ['crit', 0.04], sub: ['rate', 0.03] },
+  { id: 'gaimant', slot: 'gants', name: 'Gants magnétiques', main: ['magnet', 0.2], sub: ['bolts', 0.05] },
+  { id: 'gforce', slot: 'gants', name: 'Gants de force', main: ['dmg', 0.08], sub: ['stomp', 0.1] },
+  { id: 'coutils', slot: 'ceinture', name: 'Ceinture à outils', main: ['bolts', 0.1], sub: ['luck', 0.04] },
+  { id: 'cgrappin', slot: 'ceinture', name: 'Ceinture à grappin', main: ['jump', 0.05], sub: ['speed', 0.03] },
+  { id: 'cbouclier', slot: 'ceinture', name: 'Ceinture-bouclier', main: ['shield', 1], sub: ['hp', 1] },
+  { id: 'prenforce', slot: 'pantalon', name: 'Pantalon renforcé', main: ['hp', 1], sub: ['inv', 0.1] },
+  { id: 'pcourse', slot: 'pantalon', name: 'Pantalon de course', main: ['speed', 0.07], sub: ['jump', 0.03] },
+  { id: 'pressorts', slot: 'pantalon', name: 'Jambières à ressorts', main: ['stomp', 0.25], sub: ['jump', 0.03] },
+  { id: 'sdrone', slot: 'sac', name: 'Sac à drone', main: ['drone', 1], sub: ['dmg', 0.03] },
+  { id: 'ssurvie', slot: 'sac', name: 'Sac de survie', main: ['regen', 0.15], sub: ['hp', 1] },
+  { id: 'sreacteur', slot: 'sac', name: 'Sac à réacteur', main: ['airjump', 1], sub: ['speed', 0.03] },
   { id: 'plasma', slot: 'blaster', name: 'Blaster à plasma', main: ['dmg', 0.1], sub: ['rate', 0.04] },
   { id: 'rapide', slot: 'blaster', name: 'Blaster rapide', main: ['rate', 0.08], sub: ['dmg', 0.04] },
   { id: 'double', slot: 'blaster', name: 'Blaster double', main: ['multi', 1], sub: ['dmg', 0.04] },
@@ -6935,7 +6976,7 @@ const PLT_SETS = [
       ['puce', 'Puce d’élan', ['jump', 0.05], ['speed', 0.03]], ['armure', 'Veste légère', ['hp', 1], ['inv', 0.1]]],
     bonus: { 2: [['speed', 0.15]], 3: [['airjump', 1]], 4: [['float', 1], ['jump', 0.15]] } },
   { id: 'pilon', name: 'Pilonneur', pieces: [
-      ['bottes', 'Bottes-marteaux', ['stomp', 0.3], ['hp', 1]], ['armure', 'Plastron de choc', ['hp', 1], ['stomp', 0.1]], ['blaster', 'Canon à recul', ['dmg', 0.1], ['stomp', 0.1]]],
+      ['pantalon', 'Jambières-marteaux', ['stomp', 0.3], ['hp', 1]], ['sac', 'Sac de lest', ['hp', 1], ['stomp', 0.1]], ['auxiliaire', 'Canon à recul', ['dmg', 0.1], ['stomp', 0.1]]],
     bonus: { 2: [['stomp', 0.5]], 3: [['shock', 1]] } },
   { id: 'elite', name: 'Tireur d’élite', pieces: [
       ['blaster', 'Long canon', ['dmg', 0.12], ['crit', 0.03]], ['casque', 'Viseur stellaire', ['crit', 0.05], ['dmg', 0.04]],
@@ -6946,25 +6987,25 @@ const PLT_SETS = [
       ['puce', 'Puce de barrière', ['regen', 0.15], ['inv', 0.1]], ['bottes', 'Bottes ancrées', ['hp', 1], ['jump', 0.03]]],
     bonus: { 2: [['shield', 1]], 3: [['shieldRegen', 15]], 4: [['revive', 1], ['hp', 1]] } },
   { id: 'or', name: 'Chercheur de boulons', pieces: [
-      ['casque', 'Détecteur de métaux', ['bolts', 0.12], ['luck', 0.05]], ['puce', 'Puce du ferrailleur', ['luck', 0.12], ['bolts', 0.05]], ['armure', 'Gilet à poches', ['hp', 1], ['magnet', 0.1]]],
+      ['gants', 'Gants détecteurs', ['bolts', 0.12], ['luck', 0.05]], ['ceinture', 'Ceinture du ferrailleur', ['luck', 0.12], ['bolts', 0.05]], ['sac', 'Sac à poches', ['hp', 1], ['magnet', 0.1]]],
     bonus: { 2: [['bolts', 0.3]], 3: [['luck', 0.4], ['magnet', 0.5]] } },
   { id: 'mitraille', name: 'Mitrailleur', pieces: [
-      ['blaster', 'Mitrailleuse de poing', ['rate', 0.08], ['dmg', 0.05]], ['puce', 'Puce de cadence', ['rate', 0.06], ['crit', 0.02]],
-      ['armure', 'Harnais à munitions', ['hp', 1], ['rate', 0.03]], ['casque', 'Casque de tir', ['crit', 0.04], ['rate', 0.03]], ['bottes', 'Bottes de recul', ['speed', 0.06], ['rate', 0.03]]],
+      ['auxiliaire', 'Mitrailleuse de poing', ['rate', 0.08], ['dmg', 0.05]], ['ceinture', 'Ceinture de cartouches', ['rate', 0.06], ['crit', 0.02]],
+      ['sac', 'Sac à munitions', ['hp', 1], ['rate', 0.03]], ['gants', 'Gants de tir rapide', ['crit', 0.04], ['rate', 0.03]], ['pantalon', 'Pantalon de recul', ['speed', 0.06], ['rate', 0.03]]],
     bonus: { 2: [['rate', 0.15]], 3: [['multi', 1]], 4: [['rate', 0.2]], 5: [['multi', 1], ['dmg', 0.25]] } },
   { id: 'phenix', name: 'Phénix des toits', pieces: [
       ['armure', 'Plumes de braise', ['regen', 0.15], ['hp', 1]], ['puce', 'Puce des cendres', ['regen', 0.08], ['inv', 0.1]],
       ['bottes', 'Bottes de flamme', ['jump', 0.05], ['speed', 0.03]], ['casque', 'Couronne ardente', ['hp', 1], ['luck', 0.05]]],
     bonus: { 2: [['regen', 0.25]], 3: [['vamp', 20]], 4: [['hp', 2], ['revive', 1]] } },
   { id: 'chasseur', name: 'Chasseur de gardiens', pieces: [
-      ['blaster', 'Brise-gardien', ['dmg', 0.12], ['crit', 0.03]], ['casque', 'Œil du chasseur', ['bossDmg', 0.15], ['crit', 0.02]], ['bottes', 'Bottes de traque', ['speed', 0.07], ['dmg', 0.04]]],
+      ['auxiliaire', 'Brise-gardien', ['dmg', 0.12], ['crit', 0.03]], ['gants', 'Gants du chasseur', ['bossDmg', 0.15], ['crit', 0.02]], ['pantalon', 'Pantalon de traque', ['speed', 0.07], ['dmg', 0.04]]],
     bonus: { 2: [['bossDmg', 0.4]], 3: [['bossDmg', 0.6], ['crit', 0.1]] } },
   { id: 'ombre', name: 'Ombre des toits', pieces: [
       ['bottes', 'Chaussons d’ombre', ['speed', 0.08], ['inv', 0.1]], ['puce', 'Puce furtive', ['inv', 0.2], ['luck', 0.05]], ['armure', 'Cape de suie', ['hp', 1], ['inv', 0.1]]],
     bonus: { 2: [['inv', 0.5]], 3: [['speed', 0.2], ['float', 1]] } },
   { id: 'inge', name: 'Ingénieur volant', pieces: [
-      ['blaster', 'Blaster bricolé', ['dmg', 0.1], ['rate', 0.04]], ['casque', 'Casque à antenne', ['drone', 1], ['dmg', 0.03]],
-      ['armure', 'Bleu de travail', ['hp', 1], ['shield', 1]], ['puce', 'Puce de pilotage', ['rate', 0.06], ['dmg', 0.03]], ['bottes', 'Bottes magnétiques', ['magnet', 0.2], ['speed', 0.03]]],
+      ['auxiliaire', 'Blaster bricolé', ['dmg', 0.1], ['rate', 0.04]], ['sac', 'Sac à antenne', ['drone', 1], ['dmg', 0.03]],
+      ['pantalon', 'Bleu de travail', ['hp', 1], ['shield', 1]], ['ceinture', 'Ceinture d’ingénieur', ['rate', 0.06], ['dmg', 0.03]], ['gants', 'Gants magnétiques', ['magnet', 0.2], ['speed', 0.03]]],
     bonus: { 2: [['dmg', 0.15]], 3: [['shield', 1]], 4: [['drone', 1]], 5: [['drone', 1], ['rate', 0.2]] } }
 ];
 const PLT_SET_BY_ID = Object.fromEntries(PLT_SETS.map(S => [S.id, S]));
@@ -6988,8 +7029,18 @@ const PLT_CFG = {
   setHint: 'Les objets de set (verts) sont aussi rares que les Mythiques : gardiens, élites et caisses dorées peuvent en laisser.',
   get(s) {
     const m = Minigames.data(s);
-    if (!m.plat) m.plat = { v: 1, bolts: 0, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
-    return m.plat;
+    if (!m.plat) m.plat = { v: 2, bolts: 0, ups: {}, items: [], eq: {}, next: 1, best: 0, score: 0, run: null, runs: 0, kills: 0, fresh: 0 };
+    const e = m.plat;
+    if (e.v < 2) { // 10 emplacements distincts : certaines pièces de set changent d'emplacement
+      const MV = { pilon: { bottes: 'pantalon', armure: 'sac', blaster: 'auxiliaire' }, or: { casque: 'gants', puce: 'ceinture', armure: 'sac' },
+        mitraille: { blaster: 'auxiliaire', puce: 'ceinture', armure: 'sac', casque: 'gants', bottes: 'pantalon' }, chasseur: { blaster: 'auxiliaire', casque: 'gants', bottes: 'pantalon' },
+        inge: { blaster: 'auxiliaire', casque: 'sac', armure: 'pantalon', puce: 'ceinture', bottes: 'gants' } };
+      for (const it of e.items) { const [sid, sl] = it.b.split('_'); if (sl && MV[sid] && MV[sid][sl]) it.b = sid + '_' + MV[sid][sl]; }
+      for (const k of Object.keys(e.eq)) if (k.endsWith('2')) delete e.eq[k];
+      for (const k of Object.keys(e.eq)) { const it = e.items.find(x => x.uid === e.eq[k]); if (it && PLT_GEAR_BY_ID[it.b].slot !== k) e.eq[k] = null; }
+      e.v = 2;
+    }
+    return e;
   },
   base(e, u) {
     return { dmg: 1 + 0.1 * u('dmg'), rate: 2.5 * (1 + 0.08 * u('rate')), multi: 1, pierce: 0, hp: 3 + u('hp'), shield: u('shield'), regen: 0,
@@ -9513,8 +9564,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.15';
+const APP_VERSION = '7.16';
 const CHANGELOG = [
+  { v: '7.16', date: '02.11.2026', items: ['Course des Toits : 10 emplacements avec leurs propres objets (blaster principal, blaster auxiliaire, casque, plastron, gants, ceinture, pantalon, bottes, sac à dos, puce)', 'Expédition : 10 emplacements avec leurs propres objets (canon principal, tourelle auxiliaire, module, coque, cockpit, ailerons, réacteur, radar, soute, puce)', 'La moitié des sets passe sur les nouveaux emplacements : un set classique et un nouveau se portent ensemble'] },
   { v: '7.15', date: '02.11.2026', items: ['Expédition et Course des Toits : 10 emplacements d’équipement (2 de chaque type), pour porter deux sets complets en même temps'] },
   { v: '7.14', date: '02.11.2026', items: ['Raretés revues partout (équipage, Expédition, Course des Toits) : plus le niveau monte, plus les objets Rares, Exceptionnels, Épiques, Légendaires et Mythiques deviennent fréquents, lentement ; la chance d’objet profite surtout aux hautes raretés', 'Les objets de set ont maintenant exactement la même chance de tomber que les Mythiques, y compris pour l’équipage'] },
   { v: '7.13', date: '02.11.2026', items: ['Équipage : 10 sets verts de 3 pièces (arme, blindage, module) avec des bonus à 2 et 3 pièces portées par le même personnage. Les pièces de set montent au niveau 25 et gagnent jusqu’à 12 étoiles', 'Expédition et Course des Toits : tous les 10 niveaux, un objet pour l’équipage. Commun au niveau 10, Magique à 20, Rare à 30, Exceptionnel à 40, Épique à 50, Légendaire à 60, pièce de set ou Mythique à 70, puis une pièce de set et un Mythique tous les 10 niveaux'] },
