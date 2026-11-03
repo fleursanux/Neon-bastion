@@ -1285,7 +1285,8 @@ const CONFIG = {
   padGrowth: 1.14,         // chaque case achetée rend la suivante 14 % plus chère
   dmgGrowth: 1.32,        // dégâts ×1,32 par niveau d'amélioration
   upCostBase: 0.65,       // 1re amélioration = 65 % du prix de la tourelle
-  upCostGrowth: 1.3,      // chaque amélioration coûte 30 % de plus que la précédente
+  upCostGrowth: 1.3,      // chaque amélioration coûte 30 % de plus que la précédente…
+  upCostGrowth2: 1.42,    // … et 42 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus
   fusionLevel: (typeof NB_MODE !== 'undefined' ? NB_MODE === 'd2' : (() => { try { return localStorage.getItem('nb-mode') === 'd2'; } catch (e) { return false; } })()) ? Infinity : 50,   // niveau de jeu à partir duquel la fusion est possible (pas de fusion en mode Diablo II)
   // ---- Difficulté ----
   lvlHpWorld1: 0.2,       // monde 1 : +20 % de PV ennemis par niveau
@@ -1297,7 +1298,7 @@ const CONFIG = {
   startGold: 160,         // or de départ au niveau 1…
   startGoldStep: 40,      // … +40 par niveau du monde 1
   budgetBase: 6.5,          // taille d'une vague : base…
-  budgetPerWave: 2.4,     // … + ce montant par vague
+  budgetPerWave: 3.2,     // … + ce montant par vague
   freePads1: 8,           // cases gratuites au niveau 1 (une de moins tous les 3 niveaux)
   waveBudgetCap: 30,      // au-delà de 30 vagues, le nombre d'ennemis n'augmente plus (seule leur force augmente)
   eventChance: 0.32       // chance qu'une vague déclenche un événement surprise
@@ -1341,7 +1342,7 @@ const MAX_LEVEL = D2 ? worldLast(WORLD_MAX) : Infinity;
 const worldLabel = w => D2 ? `Acte ${roman((w - 1) % 5 + 1)}${w > 5 ? ' · ' + D2_DIFFS[Math.floor((w - 1) / 5)] : ''}` : `Monde ${w}`;
 /* Nombre de vagues d'un niveau : 10 au niveau 1, 60 au niveau 50, puis toujours plus. */
 const wavesFor = n => {
-  if (!D2) return 10 + Math.round((n - 1) * 50 / 49);
+  if (!D2) return Math.min(20, 10 + Math.floor((n - 1) / 2)) + (n % 10 === 0 ? 2 : 0);
   const base = (n - 1) % D2_CYCLE + 1, diff = Math.floor((n - 1) / D2_CYCLE), w = worldOf(n), idx = n - worldFirst(w) + 1;
   return 10 + Math.round((base - 1) * 0.55) + diff * 5 + (idx === worldSize(w) ? 3 : 0);
 };
@@ -2029,7 +2030,7 @@ function getLevel(n) {
     waves: wavesFor(n),
     gold: Math.round((CONFIG.startGold + CONFIG.startGoldStep * Math.min(n - 1, 9)) * econ),
     freePads: n <= 10 ? CONFIG.freePads1 - Math.floor((n - 1) / 3) : Math.max(4, CONFIG.freePads1 - 2 - Math.floor((world - 2) / 2)),
-    elite: n <= 10 ? 0 : Math.min(0.08 * (world - 1), 0.5),
+    elite: n <= 10 ? 0 : Math.min(0.1 * (world - 1) + 0.01 * (idx - 1), 0.5),
     speedBonus: n <= 10 ? 1 : Math.min(1 + 0.006 * (n - 10), 1.3),
     color: worldInfo(world).color
   };
@@ -2110,7 +2111,8 @@ function buildWave(level, w) {
   const usable = w === 1 ? pool.filter(e => e.cost <= 1) : pool;
   let budget = (CONFIG.budgetBase + Math.min(w, CONFIG.waveBudgetCap) * CONFIG.budgetPerWave) * (1 + 0.05 * Math.min(level.n - 1, 40));
   if (w === level.waves) budget *= 1.4;
-  const ids = [];
+  const ids = [], menace = waveMenace(level, w);
+  if (menace) { budget *= 1.3; const m = MENACES[menace]; const pool2 = usable.filter(e => m.ids.includes(e.id)); if (pool2.length) { let bud = budget * 0.7; let g = 0; while (bud > 0.5 && g++ < 200) { const e = pool2[Math.floor(rng() * pool2.length)]; ids.push(e.id); bud -= e.cost; budget -= e.cost; } } }
   const newest = level.n <= 10 ? ENEMIES.find(e => e.unlock === level.n && !e.boss) : null;
   if (newest && w >= 2) {
     const n = Math.min(1 + Math.floor(w / 3), 6);
@@ -2126,15 +2128,33 @@ function buildWave(level, w) {
   shuffle(ids, rng);
   const spawns = ids.map(id => ({ id, elite: w > 1 && rng() < level.elite }));
   if (level.boss && w === level.waves) for (let i = 0; i < 1 + Math.floor((level.world - 1) / 3); i++) spawns.push({ id: 'colosse', elite: false });
-  return finishWave(level, w, rng, spawns);
+  return finishWave(level, w, rng, spawns, menace);
 }
-function finishWave(level, w, rng, spawns) {
-  for (const s of spawns) s.delay = clamp(55 / ENEMY_BY_ID[s.id].speed, 0.35, 1.3) * (0.8 + rng() * 0.4) * (w === 1 ? 1.4 : 1);
+/* Vagues de pression : toutes les 5 vagues (sauf la dernière), un thème annoncé une vague à l'avance. */
+const MENACES = {
+  blindes: { name: 'Blindés', text: 'Des blindés en approche : les ralentissements et les dégâts bruts comptent double', ids: ['blinde', 'givre'], min: 3 },
+  rapides: { name: 'Éclaireurs', text: 'Une nuée d’éclaireurs rapides : couvre le début du chemin', ids: ['eclaireur'], min: 2, speed: 1.25 },
+  spectres: { name: 'Spectres', text: 'Des spectres intangibles : seuls les dégâts de zone et les ondes les touchent en phase', ids: ['spectre'], min: 6 },
+  soins: { name: 'Soigneurs', text: 'Régénérateurs et médics : concentre le feu pour percer les soins', ids: ['regen', 'medic'], min: 7 },
+  boucliers: { name: 'Boucliers', text: 'Des porte-boucliers : il faut percer avant de blesser', ids: ['bouclier'], min: 4 }
+};
+function waveMenace(level, w) {
+  if (D2 || w < 5 || w % 5 || w >= level.waves) return null;
+  const keys = Object.keys(MENACES).filter(k => MENACES[k].min <= Math.min(level.n, 10));
+  if (!keys.length) return null;
+  const rng = mulberry32(level.n * 48611 + w * 7919), prev = w >= 10 ? waveMenace(level, w - 5) : null;
+  const pool = keys.length > 1 ? keys.filter(k => k !== prev) : keys;
+  return pool[Math.floor(rng() * pool.length)];
+}
+function finishWave(level, w, rng, spawns, menace) {
+  // les deux premières vagues laissent le temps de bâtir (surtout à partir du niveau 15, où les éclaireurs arrivent vite)
+  const slow = w === 1 ? 1.4 : w === 2 ? (level.n >= 15 ? 1.35 : 1.1) : 1;
+  for (const s of spawns) s.delay = clamp(55 / ENEMY_BY_ID[s.id].speed, 0.35, 1.3) * (0.8 + rng() * 0.4) * slow * 0.75; // vagues plus serrées : des niveaux plus courts en temps réel
   return {
     hpMul: waveHp(w) * level.hpScale,
-    rewMul: Math.pow(waveHp(w), CONFIG.waveRewardExp),
-    speedMul: Math.min(1 + 0.02 * (w - 1), 1.35) * level.speedBonus,
-    spawns
+    rewMul: Math.pow(waveHp(w), CONFIG.waveRewardExp) * (menace ? 1.3 : 1),
+    speedMul: Math.min(1 + 0.02 * (w - 1), 1.35) * level.speedBonus * (menace && MENACES[menace].speed ? MENACES[menace].speed : 1),
+    spawns, menace
   };
 }
 
@@ -2471,7 +2491,7 @@ function masteryRank(def, mods) {
 }
 function startLevel(def, mods) { return def.fused ? 1 : 1 + Math.floor(masteryRank(def, mods) / 10); }
 function towerCost(def, mods) { return Math.max(1, Math.round(def.cost * (1 - mods.cheap))); }
-function upgradeCostAt(def, level, mods) { return Math.max(1, Math.round(towerCost(def, mods) * CONFIG.upCostBase * Math.pow(CONFIG.upCostGrowth, level - 1) * (1 - mods.workshop))); }
+function upgradeCostAt(def, level, mods) { const k = level - 1, g = Math.pow(CONFIG.upCostGrowth, Math.min(k, 4)) * Math.pow(CONFIG.upCostGrowth2, Math.max(0, k - 4)); return Math.max(1, Math.round(towerCost(def, mods) * CONFIG.upCostBase * g * (1 - mods.workshop))); }
 
 /* Statistiques d'une tourelle à un niveau donné (améliorations et compétences incluses). */
 function towerStats(def, level, mods) {
@@ -3107,7 +3127,10 @@ class Battle {
     const st = this.stats;
     st.maxChain = Math.max(st.maxChain, this.chain);
     if (this.wave === this.level.waves) this.emit('wave', 'Vague finale !');
+    else if (w.menace) this.emit('wave', `Vague ${this.wave} · ${MENACES[w.menace].name} !`);
     else if (!early) this.emit('wave', `Vague ${this.wave}`);
+    const nextM = waveMenace(this.level, this.wave + 1);
+    if (nextM) this.emit('menace', { w: this.wave + 1, name: MENACES[nextM].name, text: MENACES[nextM].text });
     if (early) {
       // Récompense immédiate pour avoir lancé la vague en avance, croissante avec l'enchaînement
       const bonus = Math.round(this.waveBonus(this.wave) * 0.3 * (1 + 0.25 * Math.max(0, this.chain - 2)));
@@ -5600,9 +5623,10 @@ const Popups = {
   /* Carrousel d'annonces, une fois par jour à l'arrivée sur la Campagne. */
   daily() {
     const s = App.slot, L = this.data(s);
-    if (L.pop === dayKey() || !$('modal').hidden || App.current !== 'map') return;
+    if (L.pop === dayKey() || !$('modal').hidden || App.current !== 'map' || (s.unlocked || 1) <= 1) return;
     L.pop = dayKey(); Store.touch(s);
-    this.carousel(0, () => { if (this.loginReady(s)) this.login(); });
+    const open = this.cards().filter(c => Minigames.open(s, c.id)), start = Math.max(0, open.length - 1);
+    this.carousel(start, () => { if (this.loginReady(s)) this.login(); });
   },
   carousel(i, after) {
     const list = this.cards(), c = list[(i + list.length) % list.length], k = (i + list.length) % list.length, PC = { exp: '#3a8ae0', dive: '#1aa0c8', run: '#ff8a3d', code: '#ff3b6b', tri: '#a454e8', plinko: '#e0b020', dig: '#3ab06a' };
@@ -9582,8 +9606,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.16.1';
+const APP_VERSION = '7.17';
 const CHANGELOG = [
+  { v: '7.17', date: '03.11.2026', items: ['Niveaux plus courts : 10 vagues au niveau 1, 20 au plus (22 sur un boss), avec des vagues plus denses et plus d’élites', 'Vagues de pression toutes les 5 vagues (Blindés, Éclaireurs, Spectres, Soigneurs, Boucliers), annoncées une vague à l’avance par Volta, et mieux payées', 'Les améliorations de tourelle coûtent 42 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus, il faut construire et acheter des cases', 'Les deux premières vagues laissent plus de temps pour bâtir, surtout à partir du niveau 15', 'La vitesse de jeu choisie est gardée d’un niveau à l’autre', 'Plus aucune fenêtre (annonces, connexion) avant la première victoire ; le carrousel s’ouvre sur le dernier événement débloqué'] },
   { v: '7.16.1', date: '03.11.2026', items: ['Course des Toits : les trampolines propulsent vraiment haut (le saut n’est plus coupé quand on lâche SAUTER)', 'Joystick plus fiable : il ne reste plus bloqué dans une direction ; reposer le pouce à gauche reprend toujours la main', 'Murs de briques : ils s’effondrent en entier au premier tir, et Pip vise le mur qui est devant lui plutôt qu’un monstre en hauteur'] },
   { v: '7.16', date: '02.11.2026', items: ['Course des Toits : 10 emplacements avec leurs propres objets (blaster principal, blaster auxiliaire, casque, plastron, gants, ceinture, pantalon, bottes, sac à dos, puce)', 'Expédition : 10 emplacements avec leurs propres objets (canon principal, tourelle auxiliaire, module, coque, cockpit, ailerons, réacteur, radar, soute, puce)', 'La moitié des sets passe sur les nouveaux emplacements : un set classique et un nouveau se portent ensemble'] },
   { v: '7.15', date: '02.11.2026', items: ['Expédition et Course des Toits : 10 emplacements d’équipement (2 de chaque type), pour porter deux sets complets en même temps'] },
@@ -13652,7 +13677,7 @@ const GameView = {
     this.canvas.addEventListener('click', ev => this.onClick(this.toWorld(ev)));
     $('dialog').onclick = () => Talk.next();
     $('btnWave').onclick = () => this.startWave();
-    $('btnSpeed').onclick = () => { this.speed = this.speed >= 5 ? 1 : this.speed + 1; this.setLabels(); };
+    $('btnSpeed').onclick = () => { this.speed = this.speed >= 5 ? 1 : this.speed + 1; GFX.s.speed = this.speed; GFX.save(); this.setLabels(); };
     $('btnPause').onclick = () => this.togglePause();
     $('btnQuit').onclick = () => this.quit();
     window.addEventListener('keydown', ev => {
@@ -13710,7 +13735,7 @@ const GameView = {
     R.reset();
     Events.reset();
     Radial.close();
-    this.speed = 1; this.paused = false;
+    this.speed = GFX.s.speed || 1; this.paused = false;
     this.setLabels();
     $('endOverlay').hidden = true;
     this.cache = {};
@@ -14156,6 +14181,7 @@ const GameView = {
     let listDirty = false, inspDirty = false;
     for (const ev of b.events.splice(0)) {
       if (ev.type === 'toast' || ev.type === 'wave') Toast.show(ev.data);
+      if (ev.type === 'menace') { Toast.show(`Prochaine vague : ${ev.data.name} !`); setTimeout(() => Talk.say('volta', `Vague ${ev.data.w} : ${ev.data.text}.`), 1200); }
       if (ev.type === 'early') { listDirty = true; if (ev.data >= 3) Talk.say('volta', D2 ? (ev.data >= 5 ? `Enchaînement ×${ev.data} ! Même les Horadrims n’allaient pas aussi vite.` : `Enchaînement ×${ev.data}. Garde ce rythme, héros !`) : ev.data >= 5 ? `Enchaînement ×${ev.data} ! Les moteurs n’ont jamais tourné aussi vite.` : `Enchaînement ×${ev.data}. Tiens le rythme, Gardien !`); }
       if (ev.type === 'chaincleared') Talk.say('brann', D2 ? `${ev.data} vagues d’affilée, et le portail tient toujours. Belle lame !` : `${ev.data} vagues d’affilée, et le Noyau tient toujours. Chapeau.`);
       if (ev.type === 'unique') { const u = ENEMY_BY_ID[ev.data]; Toast.show(`${u.name} approche !`); Talk.say('caine', `Attention : ${u.name}. Un monstre unique, bien plus coriace que les autres.`); }
