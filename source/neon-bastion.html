@@ -1307,7 +1307,7 @@ const CONFIG = {
   upCostBase: 0.65,       // 1re amélioration = 65 % du prix de la tourelle
   upCostGrowth: 1.3,      // chaque amélioration coûte 30 % de plus que la précédente…
   upCostGrowth2: 1.36,    // … et 36 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus
-  fusionLevel: (typeof NB_MODE !== 'undefined' ? NB_MODE === 'd2' : (() => { try { return localStorage.getItem('nb-mode') === 'd2'; } catch (e) { return false; } })()) ? Infinity : 1,    // niveau de jeu à partir duquel la fusion est possible (pas de fusion en mode Diablo II)
+  fusionLevel: (typeof NB_MODE !== 'undefined' ? NB_MODE === 'd2' : (() => { try { return localStorage.getItem('nb-mode') === 'd2'; } catch (e) { return false; } })()) ? Infinity : 2,    // niveau de jeu à partir duquel la fusion est possible (pas de fusion en mode Diablo II)
   // ---- Difficulté ----
   lvlHpWorld1: 0.2,       // monde 1 : +20 % de PV ennemis par niveau
   lvlHpGrowth: 1.08,      // ensuite : +8 % de PV ennemis par niveau
@@ -9908,8 +9908,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.21';
+const APP_VERSION = '7.22';
 const CHANGELOG = [
+  { v: '7.22', date: '04.11.2026', items: ['La fusion se débloque au niveau 2, avec un mini-tutoriel en 4 étapes : poser une Stase à côté de la Gatling, ouvrir le menu d’une tourelle et toucher « Fusion », choisir l’autre tourelle, confirmer. Les repères s’affichent sur le plateau en 2D comme en 3D ; on peut annuler et reprendre à tout moment.'] },
   { v: '7.21', date: '04.11.2026', items: ['La fusion de tourelles est possible dès le niveau 1 (au lieu du niveau 50) : deux tourelles de types différents, adjacentes ou non, via le menu de la tourelle. La branche Fusion de l’atelier (Synergie, Résonance) est débloquée d’entrée.'] },
   { v: '7.20.1', date: '03.11.2026', items: ['Deux pouvoirs à poser sur un chemin : la Mine (40 énergie, niveau 14) explose au passage du premier ennemi et inflige 60 % des PV restants à tous les ennemis proches (15 % pour les boss) ; le Leurre (50 énergie, niveau 21) retient pendant 6 s les ennemis qui l’atteignent (les boss et les planeurs passent). Touche le pouvoir, puis un chemin.'] },
   { v: '7.20', date: '03.11.2026', items: ['Chemins multiples : à partir du monde 2, certains niveaux ont 2 chemins, puis 2 ou 3 dès le monde 4 (jusqu’à 4 au monde 6+). Chaque chemin secondaire part d’un bord de la carte et rejoint le chemin principal ; les ennemis se répartissent entre les chemins ouverts.', 'Barricades : touche l’entrée d’un chemin pour le barricader (60 % de l’or de départ, prix ×1,8 à chaque barricade). Il faut toujours laisser au moins un chemin ouvert. Les niveaux à plusieurs chemins donnent plus d’or de départ et de cases gratuites.', 'Pouvoirs : une barre d’énergie se remplit avec les ennemis vaincus et les vagues terminées. Six pouvoirs, débloqués aux niveaux 3, 5, 8, 12, 18 et 25 : Impulsion EMP (paralysie), Grand gel, Nova (dégâts en % des PV), Surcharge (cadence des tourelles), Réparation (+2 vies), Pluie d’or (prime de la vague). La barre se trouve sous le bouton de vague.'] },
@@ -13040,6 +13041,7 @@ const R3 = {
       if (e.poisonT > 0) this.ring(e.x, e.y, e.r * 1.75 / U, '#9cff57', 0.6, 0.025);
       if (e === view.selectedEnemy) this.ring(e.x, e.y, e.r * 2.3 / U, '#ffffff', 1, 0.04);
     }
+    { const tg = Tuto.target(b); if (tg) { const k2 = (time * 1.4) % 1; this.ring(tg.x, tg.y, (tg.r + k2 * 22) / U, Tuto.kind === 'fusion' && Tuto.step ? '#c58bff' : '#3ef2c8', 1.6 * (1 - k2) + 0.3, 0.05); this.ring(tg.x, tg.y, tg.r / U, Tuto.kind === 'fusion' && Tuto.step ? '#c58bff' : '#3ef2c8', 1.2, 0.04); } }
     for (const tr of b.traps) { const pu = 0.5 + 0.5 * Math.sin(time * 6); if (tr.kind === 'mine') this.ring(tr.x, tr.y, 0.3 + 0.05 * pu, '#ff9b3d', 1 + pu, 0.05); else { this.ring(tr.x, tr.y, 0.62, '#c58bff', 1.2 + pu * 0.6, 0.035); this.ring(tr.x, tr.y, 0.25, '#c58bff', 2, 0.08); } }
     if (view.aimPower) for (const pp of b.paths) for (let d = 60; d < pp.length - 60; d += 90) { const q = pp.pointAt(d); this.ring(q.x, q.y, 0.3, POWER_BY_ID[view.aimPower].color, 0.8 + 0.4 * Math.sin(time * 6 + d / 60), 0.03); }
     for (const im of this.inst.values()) if (im.userData.kind === 'tw' || im.userData.kind === 'en') { im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }
@@ -13910,12 +13912,12 @@ const Radial = {
       return;
     }
     const items = [
-      { svg: ICONS.up, text: fmtBig(t.upgradeCost), cost: t.upgradeCost, color: '#3ef2c8', cls: Tuto.active && Tuto.step === 2 ? 'tuto-pulse' : '', label: `Améliorer, ${fmtBig(t.upgradeCost)} or`, fn: () => { if (b.upgrade(t, 1)) this.openTower(t); } },
+      { svg: ICONS.up, text: fmtBig(t.upgradeCost), cost: t.upgradeCost, color: '#3ef2c8', cls: Tuto.active && Tuto.kind === 'base' && Tuto.step === 2 ? 'tuto-pulse' : '', label: `Améliorer, ${fmtBig(t.upgradeCost)} or`, fn: () => { if (b.upgrade(t, 1)) this.openTower(t); } },
       { svg: ICONS.max, text: 'Max', cost: t.upgradeCost, color: '#3ef2c8', label: 'Améliorer au maximum', fn: () => { if (b.upgrade(t, Infinity)) this.openTower(t); } }
     ];
     if (!['aura', 'pulse'].includes(t.def.kind)) items.push({ svg: ICONS.mode, text: MODE_SHORT[t.mode], color: '#7aa7ff', label: 'Changer la cible', fn: () => {
       const o = ['first', 'close', 'strong', 'last']; t.mode = o[(o.indexOf(t.mode) + 1) % o.length]; GameView.saveRun(); this.openTower(t); GameView.renderInspector(); } });
-    if (b.canFuseHere && !t.def.fused) items.push({ svg: ICONS.fuse, text: 'Fusion', color: '#c58bff', label: 'Fusionner', fn: () => { this.close(); GameView.clearSelection(); GameView.fuseFrom = t; GameView.sheetForced = true; GameView.renderInspector(); } });
+    if (b.canFuseHere && !t.def.fused) items.push({ svg: ICONS.fuse, text: 'Fusion', color: '#c58bff', label: 'Fusionner', cls: Tuto.active && Tuto.kind === 'fusion' && Tuto.step === 1 ? 'tuto-pulse' : '', fn: () => { this.close(); GameView.clearSelection(); GameView.fuseFrom = t; GameView.sheetForced = true; GameView.renderInspector(); } });
     items.push({ svg: ICONS.info, text: 'Fiche', color: '#e4ecfb', label: 'Fiche détaillée', fn: () => { GameView.sheetForced = true; GameView.renderInspector(); this.close(); const el = $('insp'); if (el && !el.hidden) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } });
     items.push({ svg: ICONS.sell, text: '+' + fmtBig(t.sellValue), color: '#ff5468', cls: 'danger', label: `Vendre, ${fmtBig(t.sellValue)} or`, fn: bt => {
       if (this.sellArmed) { this.close(); b.sell(t); GameView.clearAll(); return; }
@@ -14030,7 +14032,17 @@ const Events = {
 
 /* Première partie guidée (niveau 1, nouvelle sauvegarde) : construire, lancer, améliorer, enchaîner. */
 const Tuto = {
-  active: false, step: 0, pad: null, t: 0,
+  active: false, step: 0, pad: null, t: 0, kind: 'base',
+  /* Mini-tutoriel du niveau 2 : la fusion. L'étape est recalculée à chaque image (on peut annuler et reprendre). */
+  FUSE: [
+    { title: 'Fusion · 1/4', icon: '🔧', text: 'Nouveau : la Stase ralentit les ennemis. Pose une Stase sur la case qui clignote (garde aussi ta Gatling).',
+      ok: b => new Set(b.towers.filter(t => !t.def.fused).map(t => t.def.id)).size >= 2 || b.stats.fusions >= 1,
+      wait: b => { const need = b.towers.some(t => t.def.id === 'gatling') ? 'stase' : 'gatling', c = b.towerCost(TOWER_BY_ID[need]); return b.gold < c ? `Il te faut ${c} or pour la ${TOWER_BY_ID[need].name}. Lance la vague : chaque ennemi vaincu rapporte de l’or.` : (need === 'gatling' ? (b.towers.length ? 'Pose aussi une Gatling sur la case qui clignote.' : 'Nouveau : la fusion ! Pose d’abord une Gatling sur la case qui clignote, puis une Stase.') : null); } },
+    { title: 'Fusion · 2/4', icon: '✦', text: 'Touche une de tes deux tourelles, puis le bouton violet « Fusion ».', ok: b => !!GameView.fuseFrom || b.stats.fusions >= 1 },
+    { title: 'Fusion · 3/4', icon: '✦', text: 'Touche maintenant l’autre tourelle (entourée en violet) : c’est elle qui sera absorbée.', ok: b => !!GameView.fuseTarget || b.stats.fusions >= 1 },
+    { title: 'Fusion · 4/4', icon: '✔', text: 'Vérifie l’aperçu puis touche « Confirmer la fusion ». La nouvelle tourelle garde le tir de la première et ajoute les effets de la seconde.', ok: b => b.stats.fusions >= 1 }
+  ],
+  get steps() { return this.kind === 'fusion' ? this.FUSE : this.STEPS; },
   STEPS: [
     { title: 'Étape 1 · Construire', icon: '🔧', text: 'Touche la case qui clignote près du chemin, puis choisis la Gatling.', ok: b => b.towers.length >= 1 },
     { title: 'Étape 2 · Lancer', icon: '▶', text: 'Appuie sur « Lancer la vague ». Les ennemis suivent le chemin jusqu’au Noyau.', ok: b => b.wave >= 1 },
@@ -14039,40 +14051,67 @@ const Tuto = {
   ],
   start(b) {
     const s = App.slot;
+    this.kind = 'base';
     this.active = !D2 && !s.tutoDone && b.level.n === 1 && (s.unlocked || 1) <= 1 && b.wave === 0;
+    if (!this.active && !D2 && !s.tutoFuse && b.level.n === CONFIG.fusionLevel && b.wave === 0 && b.canFuseHere && b.availableTowers.length >= 2) { this.active = true; this.kind = 'fusion'; }
     this.step = 0; this.pad = null; this.t = 0;
     if (!this.active) return;
+    this.pad = this.bestPad(b);
+  },
+  bestPad(b) {
     const near = b.pads.filter(p => !p.locked && !p.tower), cov = p => { let k = 0; for (const c of b.path.cells) { const [x, y] = c.split(',').map(Number); if (Math.hypot(x - p.col, y - p.row) <= 2.2) k++; } return k; };
-    this.pad = near.sort((a, c) => cov(c) - cov(a))[0] || null;
+    return near.sort((a, c) => cov(c) - cov(a))[0] || null;
+  },
+  /* Ce qu'il faut montrer sur le plateau à l'étape en cours (ou null). */
+  target(b) {
+    if (!this.active || !$('modal').hidden) return null;
+    if (this.kind === 'fusion') {
+      const plain = b.towers.filter(t => !t.def.fused);
+      if (this.step === 0 && this.pad && !b.stats.fusions) { const st = this.FUSE[0].wait(b); if (!st || !st.startsWith('Il te faut')) return { x: this.pad.x, y: this.pad.y, r: 30 }; return null; }
+      if (this.step === 1 && plain[0]) return { x: plain[0].x, y: plain[0].y, r: 28 };
+      if (this.step === 2 && GameView.fuseFrom) { const t = plain.find(t => !b.fusionBlock(GameView.fuseFrom, t)); if (t) return { x: t.x, y: t.y, r: 28 }; }
+      return null;
+    }
+    if (this.step === 0 && this.pad) return { x: this.pad.x, y: this.pad.y, r: 30 };
+    if (this.step === 2 && b.towers[0] && b.gold >= b.towers[0].upgradeCost) return { x: b.towers[0].x, y: b.towers[0].y, r: 28 };
+    return null;
   },
   stop() { this.active = false; const el = $('tuto'); if (el) el.hidden = true; this.mark(); },
   mark() {
-    const on = this.active && $('modal').hidden;
-    const w = $('btnWave'); if (w) w.classList.toggle('tuto-pulse', on && (this.step === 1 || this.step === 3));
-    const up = document.querySelector('[data-a="up"]'); if (up) up.classList.toggle('tuto-pulse', on && this.step === 2);
+    const on = this.active && $('modal').hidden, base = this.kind === 'base', fu = this.kind === 'fusion';
+    const w = $('btnWave'); if (w) w.classList.toggle('tuto-pulse', on && base && (this.step === 1 || this.step === 3));
+    const up = document.querySelector('[data-a="up"]'); if (up) up.classList.toggle('tuto-pulse', on && base && this.step === 2);
+    for (const el of document.querySelectorAll('#radial .rbtn[aria-label="Fusionner"], [data-a="fuse"]')) el.classList.toggle('tuto-pulse', on && fu && this.step === 1);
+    const fc = document.querySelector('[data-a="fconfirm"]'); if (fc) fc.classList.toggle('tuto-pulse', on && fu && this.step === 3);
   },
   tick(b, dt) {
     if (!this.active) return;
     this.t += dt;
-    while (this.step < this.STEPS.length && this.STEPS[this.step].ok(b)) { this.step++; Sound.sfx && Sound.sfx('up'); }
-    const el = $('tuto');
-    if (this.step >= this.STEPS.length) { this.active = false; App.slot.tutoDone = true; Store.touch(App.slot); el.hidden = true; this.mark(); Talk.say('volta', 'Tu as tout en main, Gardien. Le reste s’apprend en jouant.'); return; }
-    if (this.step === 0 && this.pad && this.pad.tower) this.pad = b.pads.find(p => !p.locked && !p.tower) || this.pad;
-    const st = this.STEPS[this.step], wait = st.wait && st.wait(b), txt = wait || st.text, key = this.step + (wait ? 'w' : '');
+    const S = this.steps, el = $('tuto');
+    if (this.kind === 'fusion') {
+      let k = S.length; if (b.stats.fusions < 1) { k = 0; while (k < S.length && S[k].ok(b)) k++; }
+      if (k > this.step) { Sound.sfx && Sound.sfx('up'); }
+      this.step = k;
+    } else while (this.step < S.length && S[this.step].ok(b)) { this.step++; Sound.sfx && Sound.sfx('up'); }
+    if (this.step >= S.length) {
+      this.active = false; el.hidden = true; this.mark();
+      if (this.kind === 'fusion') { App.slot.tutoFuse = true; Store.touch(App.slot); Talk.say('volta', 'Belle fusion ! Une tourelle fusionnée perd un peu de puissance brute mais cumule deux talents, et elle s’améliore sans limite. On ne peut plus la fusionner une seconde fois.'); }
+      else { App.slot.tutoDone = true; Store.touch(App.slot); Talk.say('volta', 'Tu as tout en main, Gardien. Le reste s’apprend en jouant.'); }
+      return;
+    }
+    if (this.step === 0 && (!this.pad || this.pad.tower)) this.pad = this.bestPad(b) || this.pad;
+    const st = S[this.step], wait = st.wait && st.wait(b), txt = wait || st.text, key = this.kind + this.step + (wait ? 'w' + wait.length : '');
     if (!$('modal').hidden) { el.hidden = true; this.mark(); return; }
     if (el._key !== key) { el._key = key; el.innerHTML = `<i>${st.icon}</i><div><b>${st.title}</b>${esc(txt)}</div>`; }
     el.hidden = false; this.mark();
   },
   /* Repère sur le plateau : case à construire, puis tourelle à améliorer. */
   draw(ctx, b, time) {
-    if (!this.active || !$('modal').hidden) return;
-    let x, y, r;
-    if (this.step === 0 && this.pad) { x = this.pad.x; y = this.pad.y; r = 30; }
-    else if (this.step === 2 && b.towers[0] && b.gold >= b.towers[0].upgradeCost) { x = b.towers[0].x; y = b.towers[0].y; r = 28; }
-    else return;
-    const k = (time * 1.4) % 1;
-    ctx.save(); ctx.strokeStyle = `rgba(62,242,200,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, r + k * 22, 0, TAU); ctx.stroke();
-    ctx.strokeStyle = '#3ef2c8'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.lineDashOffset = -time * 30; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    const tg = this.target(b);
+    if (!tg) return;
+    const { x, y, r } = tg, k = (time * 1.4) % 1, col = this.kind === 'fusion' && this.step ? '197,139,255' : '62,242,200';
+    ctx.save(); ctx.strokeStyle = `rgba(${col},${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, r + k * 22, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = `rgb(${col})`; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.lineDashOffset = -time * 30; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
     ctx.restore();
   }
 };
@@ -14411,7 +14450,7 @@ const GameView = {
       const canMode = !['aura', 'pulse'].includes(t.def.kind);
       icon = t.def; color = t.def.color;
       html = head(esc(t.def.name), `Niveau ${t.level} · ${esc(t.def.specName || t.def.role)}`, t.def.color) +
-        `<div class="upgrid"><button class="btn small primary${Tuto.active && Tuto.step === 2 ? ' tuto-pulse' : ''}" data-a="up" data-cost="${cost}" type="button">Améliorer · ${fmtBig(cost)}</button>` +
+        `<div class="upgrid"><button class="btn small primary${Tuto.active && Tuto.kind === 'base' && Tuto.step === 2 ? ' tuto-pulse' : ''}" data-a="up" data-cost="${cost}" type="button">Améliorer · ${fmtBig(cost)}</button>` +
         `<button class="btn small" data-a="up5" data-cost="${cost5}" type="button">+5 · ${fmtBig(cost5)}</button>` +
         `<button class="btn small" data-a="upmax" data-cost="${cost}" type="button">Max</button></div>` +
         (canMode || b.canFuseHere ? '<div class="row">' + (canMode ? `<button class="btn small" data-a="mode" type="button">Cible : ${modes[t.mode]}</button>` : '') +
