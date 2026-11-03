@@ -403,7 +403,7 @@ body.d2 .btn.primary *{color:#1a0e04}
 .powers button.on::after{content:'';position:absolute;inset:-3px;border-radius:14px;border:2px solid var(--ac);animation:tutoPulse 1s ease-in-out infinite}
 @keyframes powReady{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 body.fsgame .powers{margin:4px 0 0;width:100%}
-body.fsgame .powers button{height:40px}body.fsgame .powers button i{font-size:1rem}
+body.fsgame .powers button{height:40px;border-radius:8px}body.fsgame .powers button i{font-size:.95rem}body.fsgame .powers button small{font-size:.5rem}body.fsgame .powers .plist{gap:3px}
 .nextwave .nwt{font:700 .62rem var(--font-ui);text-transform:uppercase;letter-spacing:.1em;color:var(--pink);margin-right:2px}
 .nwe{display:inline-flex;align-items:center;gap:1px}
 .nwe canvas{width:20px;height:20px}
@@ -2361,6 +2361,7 @@ class Enemy {
       else { m.hp -= this.maxHp * 0.05 * (this.elite ? 1.5 : 1) * dt; if (m.hp <= 0) battle.killMinion(m); return; }
     }
     if (this.stunT > 0) { this.stunT -= dt; return; }   // paralysé par une impulsion EMP
+    if (this.held) return;                              // retenu par un leurre
     this.distance += this.speed * dt * (battle.stormT > 0 ? 1.3 : 1);
     if (this.distance >= this.path.length) { this.distance = this.path.length; this.reachedBase = true; this.alive = false; }
     const p = this.path.pointAt(this.distance);
@@ -3216,7 +3217,9 @@ const POWERS = [
   { id: 'gel', name: 'Grand gel', icon: '❄', cost: 30, unlock: 5, color: '#7fe8ff', desc: 'Ralentit tous les ennemis de 60 % pendant 6 s.' },
   { id: 'nova', name: 'Nova', icon: '✸', cost: 55, unlock: 8, color: '#ff7a2a', desc: 'Frappe tous les ennemis : 30 % de leurs PV restants (10 % pour les boss), ignore la défense.' },
   { id: 'surcharge', name: 'Surcharge', icon: '⟫', cost: 45, unlock: 12, color: '#ffcf4a', desc: 'Toutes les tourelles tirent 60 % plus vite pendant 8 s.' },
+  { id: 'mine', name: 'Mine', icon: '◈', cost: 40, unlock: 14, color: '#ff9b3d', aim: true, desc: 'Se pose sur un chemin. Explose au passage du premier ennemi : 60 % des PV de chaque ennemi proche (15 % pour les boss).' },
   { id: 'reparation', name: 'Réparation', icon: '♥', cost: 80, unlock: 18, color: '#3ef2c8', desc: 'Répare le noyau : +2 vies.' },
+  { id: 'leurre', name: 'Leurre', icon: '◎', cost: 50, unlock: 21, color: '#c58bff', aim: true, desc: 'Se pose sur un chemin. Pendant 6 s, les ennemis qui l’atteignent s’arrêtent pour l’attaquer (les boss passent).' },
   { id: 'pluie', name: 'Pluie d’or', icon: '◉', cost: 60, unlock: 25, color: '#ffd84a', desc: 'Verse immédiatement la prime de la vague en cours.' }
 ];
 const POWER_BY_ID = Object.fromEntries(POWERS.map(p => [p.id, p]));
@@ -3230,6 +3233,7 @@ class Battle {
     this.closed = [];            // indices des chemins barricadés
     this.energy = 0;             // énergie des pouvoirs (0 à 100)
     this.powerT = {};            // pouvoirs actifs (durées restantes)
+    this.traps = [];             // mines et leurres posés sur les chemins
     this.airPath = new Path([this.level.path[0], this.level.path[this.level.path.length - 1]]); // trajet des planeurs
     this.pads = generatePads(this.level, this.path);
     this.startLives = CONFIG.baseLives + this.mods.lives;
@@ -3275,7 +3279,7 @@ class Battle {
       unlocked: this.pads.filter(p => !p.locked).map(p => p.i),
       towers: this.towers.map(t => ({ p: t.pad.i, id: t.id, lv: t.level, spent: t.spent, mode: t.mode, kills: t.kills, sp: t.spec })),
       stats: JSON.parse(JSON.stringify(this.stats)), boosts: this.boosts, allowed: this.allowed || null,
-      closed: this.closed.slice(), energy: Math.round(this.energy)
+      closed: this.closed.slice(), energy: Math.round(this.energy), traps: this.traps.map(t => ({ kind: t.kind, x: t.x, y: t.y, t: t.t }))
     };
   }
   restore(s) {
@@ -3287,6 +3291,7 @@ class Battle {
     this.allowed = s.allowed || null;
     this.closed = (s.closed || []).filter(i => i > 0 && i < this.paths.length || i === 0);
     this.energy = s.energy || 0;
+    this.traps = (s.traps || []).map(t => ({ kind: t.kind, x: t.x, y: t.y, t: t.t, alive: true }));
     for (const p of this.pads) p.locked = true;
     for (const i of s.unlocked || []) if (this.pads[i]) this.pads[i].locked = false;
     for (const t of s.towers || []) {
@@ -3335,9 +3340,47 @@ class Battle {
     if ((id === 'emp' || id === 'gel' || id === 'nova') && !this.enemies.some(e => e.alive)) return 'Aucun ennemi en vue';
     return null;
   }
+  /* Point du chemin le plus proche d'un appui (ou null si l'appui est loin de tout chemin). */
+  pathPointNear(pt, maxD) {
+    let best = null, bd = (maxD || 30) ** 2;
+    for (const p of this.paths) for (let d = 40; d < p.length - 40; d += 8) { const q = p.pointAt(d); const dd = dist2(q.x, q.y, pt.x, pt.y); if (dd < bd) { bd = dd; best = { x: q.x, y: q.y }; } }
+    return best;
+  }
+  /* Pouvoir à poser (mine, leurre) : dépense l'énergie seulement si l'appui est sur un chemin. */
+  placePower(id, pt) {
+    if (this.canPower(id)) return false;
+    const q = this.pathPointNear(pt, 30);
+    if (!q) return false;
+    const p = POWER_BY_ID[id];
+    this.energy -= p.cost;
+    this.stats.powers = (this.stats.powers || 0) + 1;
+    this.traps.push({ kind: id, x: q.x, y: q.y, t: id === 'leurre' ? 6 : 999, alive: true });
+    this.fx(new Effect('ring', q.x, q.y, { color: p.color, radius: 40, life: 0.4, grow: true }));
+    this.emit('power', id);
+    return true;
+  }
+  updateTraps(dt) {
+    for (const tr of this.traps) {
+      if (tr.kind === 'mine') {
+        const hit = this.enemies.find(e => e.alive && !e.type.fly && dist2(e.x, e.y, tr.x, tr.y) <= 26 * 26);
+        if (!hit) continue;
+        tr.alive = false;
+        for (const e of this.enemies) if (e.alive && dist2(e.x, e.y, tr.x, tr.y) <= 75 * 75) this.damageEnemy(e, Math.max(1, (e.hp + e.shield) * (e.type.boss ? 0.15 : 0.6)), { pierce: true, power: true });
+        this.fx(new Effect('burst', tr.x, tr.y, { color: '#ff9b3d', count: 18, life: 0.6 }));
+        this.fx(new Effect('ring', tr.x, tr.y, { color: '#ff9b3d', radius: 75, life: 0.45, grow: true }));
+        this.shake = Math.max(this.shake, 0.2);
+      } else if (tr.kind === 'leurre') {
+        tr.t -= dt;
+        if (tr.t <= 0) { tr.alive = false; this.fx(new Effect('ring', tr.x, tr.y, { color: '#c58bff', radius: 40, life: 0.4, grow: true })); continue; }
+        for (const e of this.enemies) if (e.alive && !e.type.boss && !e.type.fly && dist2(e.x, e.y, tr.x, tr.y) <= 34 * 34) { e.held = true; e.angle = Math.atan2(tr.y - e.y, tr.x - e.x); }
+      }
+    }
+    this.traps = this.traps.filter(t => t.alive);
+  }
   usePower(id) {
     if (this.canPower(id)) return false;
     const p = POWER_BY_ID[id];
+    if (p.aim) return false;   // se pose sur le chemin via placePower
     this.energy -= p.cost;
     this.stats.powers = (this.stats.powers || 0) + 1;
     const live = this.enemies.filter(e => e.alive);
@@ -3721,6 +3764,8 @@ class Battle {
     }
 
     if (D2 && this.minions.length) this.assignBlocks();
+    for (const e of this.enemies) e.held = false;
+    if (this.traps.length) this.updateTraps(dt);
     for (const e of this.enemies.slice()) {
       if (!e.alive) continue;
       e.update(dt, this);
@@ -9863,8 +9908,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.20';
+const APP_VERSION = '7.20.1';
 const CHANGELOG = [
+  { v: '7.20.1', date: '03.11.2026', items: ['Deux pouvoirs à poser sur un chemin : la Mine (40 énergie, niveau 14) explose au passage du premier ennemi et inflige 60 % des PV restants à tous les ennemis proches (15 % pour les boss) ; le Leurre (50 énergie, niveau 21) retient pendant 6 s les ennemis qui l’atteignent (les boss et les planeurs passent). Touche le pouvoir, puis un chemin.'] },
   { v: '7.20', date: '03.11.2026', items: ['Chemins multiples : à partir du monde 2, certains niveaux ont 2 chemins, puis 2 ou 3 dès le monde 4 (jusqu’à 4 au monde 6+). Chaque chemin secondaire part d’un bord de la carte et rejoint le chemin principal ; les ennemis se répartissent entre les chemins ouverts.', 'Barricades : touche l’entrée d’un chemin pour le barricader (60 % de l’or de départ, prix ×1,8 à chaque barricade). Il faut toujours laisser au moins un chemin ouvert. Les niveaux à plusieurs chemins donnent plus d’or de départ et de cases gratuites.', 'Pouvoirs : une barre d’énergie se remplit avec les ennemis vaincus et les vagues terminées. Six pouvoirs, débloqués aux niveaux 3, 5, 8, 12, 18 et 25 : Impulsion EMP (paralysie), Grand gel, Nova (dégâts en % des PV), Surcharge (cadence des tourelles), Réparation (+2 vies), Pluie d’or (prime de la vague). La barre se trouve sous le bouton de vague.'] },
   { v: '7.19', date: '03.11.2026', items: ['Première partie guidée (niveau 1 d’une nouvelle sauvegarde) : quatre étapes montrées sur le plateau, construire, lancer la vague, améliorer, enchaîner les vagues pour le bonus d’or'] },
   { v: '7.18', date: '03.11.2026', items: ['Un nouvel ennemi par monde, dès son premier niveau : Saboteur (monde 2, coupe les tourelles proches), Réflecteur (3, résiste aux projectiles), Brouilleur (4, réduit la portée), Pillard (5, vole de l’or au lieu d’une vie), Planeur (6, vole en ligne droite vers le Noyau)', 'Un boss différent par monde : Colosse, Matriarche (pond des larves, libère des Blindés), Roi spectral (intangible et bondit), Titan brouilleur (coupe les tourelles), Nécro-noyau (soigne et régénère son bouclier) ; puis le cycle recommence', 'Les tourelles coupées par une impulsion sont marquées d’un éclair'] },
@@ -11428,6 +11474,30 @@ function drawEffectFX(ctx, f) {
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 }
 
+/* Mines et leurres posés sur les chemins. */
+function drawTraps(ctx, b, time) {
+  for (const tr of b.traps) {
+    const pulse = 0.5 + 0.5 * Math.sin(time * 6);
+    ctx.save(); ctx.translate(tr.x, tr.y);
+    if (tr.kind === 'mine') {
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.25 + pulse * 0.3; ctx.drawImage(Spr.soft('#ff9b3d'), -26, -26, 52, 52); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#2a1608'; polygonPath(ctx, 0, 0, 11, 6, time * 0.3); ctx.fill();
+      ctx.strokeStyle = '#ff9b3d'; ctx.lineWidth = 2; polygonPath(ctx, 0, 0, 11, 6, time * 0.3); ctx.stroke();
+      ctx.fillStyle = pulse > 0.5 ? '#ffe0a0' : '#ff5468'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, TAU); ctx.fill();
+    } else {
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3 + pulse * 0.2; ctx.drawImage(Spr.soft('#c58bff'), -34, -34, 68, 68); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = rgba('#c58bff', 0.6); ctx.lineWidth = 1.5; ctx.setLineDash([3, 4]); ctx.lineDashOffset = -time * 20; ctx.beginPath(); ctx.arc(0, 0, 30, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+      // hologramme : silhouette de l'Arche qui scintille
+      ctx.globalAlpha = 0.6 + 0.4 * Math.sin(time * 14);
+      ctx.fillStyle = '#c58bff'; ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(10, 6); ctx.lineTo(0, 2); ctx.lineTo(-10, 6); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+      // temps restant
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, 22, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0, tr.t / 6)); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
 /* ---------- Portail, noyau, bouton d'appel de vague ---------- */
 function drawPortal(ctx, b, time) {
   b.paths.forEach((p, i) => { drawPortalOne(ctx, p.entry(), time); drawGateMark(ctx, b, i, time); });
@@ -11829,6 +11899,7 @@ const Light2D = {
     const be = b.path.end; cut(be.x, be.y, 150 + Math.sin(time * 2) * 6, 1);
     for (const pp of b.paths) { const en = pp.entry(); cut(en.x, en.y, 80, 0.6); }
     for (const i of b.closed) { const en = b.paths[i].entry(); cut(en.x + Math.cos(en.angle) * 30, en.y + Math.sin(en.angle) * 30, 70, 0.9); }
+    for (const tr of b.traps) cut(tr.x, tr.y, tr.kind === 'mine' ? 50 : 70, 0.8);
     for (const p of b.projectiles) cut(p.x, p.y, p.splash > 0 ? 50 : 26, 0.5);
     for (const l of this.list) cut(l.x, l.y, l.r, l.a * l.life / l.max);
     for (const t of b.towers) if (t.def.kind === 'beam' && t.beamTarget && t.beamTarget.alive) cut(t.beamTarget.x, t.beamTarget.y, 40, 0.7);
@@ -11972,6 +12043,8 @@ function renderBattle(ctx, b, view) {
 
   if (D2) drawPortal(ctx, b, time); else drawRiftN(ctx, b, time);
   drawCore(ctx, b, time);
+  if (view.aimPower) { const pc = POWER_BY_ID[view.aimPower].color; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = rgba(pc, 0.18 + 0.1 * Math.sin(time * 6)); ctx.lineWidth = 34; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; tracePath(ctx, b.path.points); ctx.stroke(); ctx.restore(); }
+  drawTraps(ctx, b, time);
 
   // Liens d'amplification
   for (const a of b.towers) {
@@ -12966,6 +13039,8 @@ const R3 = {
       if (e.poisonT > 0) this.ring(e.x, e.y, e.r * 1.75 / U, '#9cff57', 0.6, 0.025);
       if (e === view.selectedEnemy) this.ring(e.x, e.y, e.r * 2.3 / U, '#ffffff', 1, 0.04);
     }
+    for (const tr of b.traps) { const pu = 0.5 + 0.5 * Math.sin(time * 6); if (tr.kind === 'mine') this.ring(tr.x, tr.y, 0.3 + 0.05 * pu, '#ff9b3d', 1 + pu, 0.05); else { this.ring(tr.x, tr.y, 0.62, '#c58bff', 1.2 + pu * 0.6, 0.035); this.ring(tr.x, tr.y, 0.25, '#c58bff', 2, 0.08); } }
+    if (view.aimPower) for (const pp of b.paths) for (let d = 60; d < pp.length - 60; d += 90) { const q = pp.pointAt(d); this.ring(q.x, q.y, 0.3, POWER_BY_ID[view.aimPower].color, 0.8 + 0.4 * Math.sin(time * 6 + d / 60), 0.03); }
     for (const im of this.inst.values()) if (im.userData.kind === 'tw' || im.userData.kind === 'en') { im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }
     this.drawBars(b, view.dt);
     // Projectiles
@@ -14208,6 +14283,13 @@ const GameView = {
   onClick(pt) {
     const b = this.battle;
     if (!b || b.state === 'victory' || b.state === 'defeat') return;
+    // Pouvoir à poser sur un chemin (mine, leurre)
+    if (this.aimPower) {
+      const id = this.aimPower, p = POWER_BY_ID[id];
+      if (b.placePower(id, pt)) { this.aimPower = null; Toast.show(`${p.icon} ${p.name} posé${id === 'mine' ? 'e' : ''} !`); Sound.sfx && Sound.sfx('ui'); }
+      else Toast.show(b.canPower(id) || 'Pose-le sur un chemin');
+      return;
+    }
     const pad = this.padAt(pt);
     // Mode fusion : on choisit la seconde tourelle
     if (this.fuseFrom) {
@@ -14258,7 +14340,7 @@ const GameView = {
     this.renderInspector();
   },
   clearSelection() { this.sheetForced = false; this.sellArmed = null; this.selectedTower = null; this.selectedPad = null; this.selectedEnemy = null; this.enemyType = null; this.fuseFrom = null; this.fuseTarget = null; },
-  clearAll() { Radial.close(); this.clearSelection(); this.selectedType = null; this.renderInspector(); },
+  clearAll() { Radial.close(); this.clearSelection(); this.selectedType = null; this.aimPower = null; this.renderInspector(); },
 
   startWave() { if (this.battle && this.battle.startWave()) { this.selectedPad = null; this.renderInspector(); Sound.sfx && Sound.sfx('wave'); buzz(20); } },
   togglePause() {
@@ -14594,7 +14676,7 @@ const GameView = {
       bg: this.bg, padLayer: this.padLayer, time: this.time, dt, hoverPad: this.padAt(this.hover), paused: this.paused,
       preview: this.preview, radialPad: this.radialPad,
       selectedType: this.selectedType, selectedTower: this.selectedTower, selectedPad: this.selectedPad, selectedEnemy: this.selectedEnemy,
-      fuseFrom: this.fuseFrom, fuseTarget: this.fuseTarget
+      fuseFrom: this.fuseFrom, fuseTarget: this.fuseTarget, aimPower: this.aimPower
     });
     this.updateHud();
     this.updateLive();
@@ -14612,7 +14694,9 @@ const GameView = {
       const bt = document.createElement('button'); bt.type = 'button'; bt.style.setProperty('--ac', p.color);
       bt.innerHTML = `<i>${p.icon}</i><small>${p.cost}</small>`; bt.title = `${p.name} · ${p.cost} énergie — ${p.desc}`;
       bt.setAttribute('aria-label', bt.title);
-      bt.onclick = ev => { ev.stopPropagation(); const why = b.canPower(p.id); if (why) { Toast.show(`${p.icon} ${p.name} (${p.cost} énergie) : ${p.desc} — ${why}.`); return; } b.usePower(p.id); Toast.show(`${p.icon} ${p.name} !`); Sound.sfx && Sound.sfx('ui'); };
+      bt.onclick = ev => { ev.stopPropagation(); const why = b.canPower(p.id); if (why) { Toast.show(`${p.icon} ${p.name} (${p.cost} énergie) : ${p.desc} — ${why}.`); return; }
+        if (p.aim) { if (this.aimPower === p.id) { this.aimPower = null; return; } Radial.close(); this.clearSelection(); this.selectedType = null; this.renderInspector(); this.aimPower = p.id; Toast.show(`${p.icon} ${p.name} : touche un chemin pour le poser`); return; }
+        b.usePower(p.id); Toast.show(`${p.icon} ${p.name} !`); Sound.sfx && Sound.sfx('ui'); };
       list.appendChild(bt); this.powerBtns[p.id] = bt;
     }
     const next = D2 ? null : POWERS.find(p => p.unlock > top);
@@ -14624,7 +14708,7 @@ const GameView = {
     const pct = Math.round(b.energy);
     if (this.cache.en !== pct) { this.cache.en = pct; box.querySelector('.egauge i').style.setProperty('--p', pct + '%'); $('energyVal').textContent = pct; }
     for (const [id, bt] of Object.entries(this.powerBtns || {})) {
-      const p = POWER_BY_ID[id], ok = b.energy >= p.cost, on = (b.powerT[id] || 0) > 0;
+      const p = POWER_BY_ID[id], ok = b.energy >= p.cost, on = (b.powerT[id] || 0) > 0 || this.aimPower === id;
       if (bt.classList.contains('ready') !== ok) { bt.classList.toggle('ready', ok); bt.classList.toggle('poor', !ok); }
       if (bt.classList.contains('on') !== on) bt.classList.toggle('on', on);
     }
