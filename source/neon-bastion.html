@@ -7172,10 +7172,19 @@ const Plat = {
     const cv = $('mgCv'); if (!cv) return;
     this.stick = null;
     const pos = ev => { const r = cv.getBoundingClientRect(); return [(ev.clientX - r.left) / r.width * this.W, (ev.clientY - r.top) / r.height * this.H]; };
-    cv.addEventListener('pointerdown', ev => { const [x, y] = pos(ev); if (x < this.W / 2 && !this.stick) this.stick = { id: ev.pointerId, ox: x, oy: y, x, y }; else this.touches.set(ev.pointerId, { x, y }); });
-    cv.addEventListener('pointermove', ev => { const [x, y] = pos(ev); if (this.stick && this.stick.id === ev.pointerId) { this.stick.x = x; this.stick.y = y; } else if (this.touches.has(ev.pointerId)) this.touches.set(ev.pointerId, { x, y }); });
-    const del = ev => { if (this.stick && this.stick.id === ev.pointerId) this.stick = null; else this.touches.delete(ev.pointerId); };
-    cv.addEventListener('pointerup', del); cv.addEventListener('pointercancel', del);
+    // Un doigt posé à gauche prend toujours le joystick (même si l'ancien n'a pas été relâché proprement)
+    cv.addEventListener('pointerdown', ev => { const [x, y] = pos(ev); this.touches.delete(ev.pointerId); if (x < this.W / 2) { this.stick = { id: ev.pointerId, ox: x, oy: y, x, y, t: performance.now() }; } else this.touches.set(ev.pointerId, { x, y, t: performance.now() }); });
+    cv.addEventListener('pointermove', ev => { const [x, y] = pos(ev); if (this.stick && this.stick.id === ev.pointerId) { this.stick.x = x; this.stick.y = y; this.stick.t = performance.now(); } else if (this.touches.has(ev.pointerId)) this.touches.set(ev.pointerId, { x, y, t: performance.now() }); });
+    const del = ev => { if (this.stick && this.stick.id === ev.pointerId) this.stick = null; this.touches.delete(ev.pointerId); };
+    for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) cv.addEventListener(t, del);
+    // Relâchés hors de la zone de jeu, retour sur l'appli, nombre de doigts réel
+    if (this._winDel) for (const t of ['pointerup', 'pointercancel']) window.removeEventListener(t, this._winDel);
+    this._winDel = del; for (const t of ['pointerup', 'pointercancel']) window.addEventListener(t, del);
+    const reset = () => { this.stick = null; this.touches.clear(); };
+    if (this._blur) { window.removeEventListener('blur', this._blur); document.removeEventListener('visibilitychange', this._blur); }
+    this._blur = reset; window.addEventListener('blur', reset); document.addEventListener('visibilitychange', reset);
+    cv.addEventListener('touchend', ev => { if (!ev.touches.length) reset(); }, { passive: true });
+    cv.addEventListener('touchcancel', reset, { passive: true });
   },
   STICK_R: 42,
   input(keys) {
@@ -7435,17 +7444,23 @@ const Plat = {
   /* Murs destructibles : chaque bloc a des points de vie. */
   hitTile(c, r, d) {
     if (this.tile(c, r) !== 6) return false;
-    const k = c * this.ROWS + r, hp = (this.tileHp.get(k) ?? 30 * this.hk()) - d;
-    if (hp > 0) { this.tileHp.set(k, hp); return true; }
-    this.g[k] = 0; this.tileHp.delete(k); const x = (c + 0.5) * this.T, y = (r + 0.5) * this.T;
-    for (let i = 0; i < 6; i++) { const a = Math.random() * TAU, sp = 60 + Math.random() * 120; this.fx.push({ p: true, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: '#c8925a', t: 0.5 }); }
-    if (Math.random() < 0.25) this.bolts.push({ x, y, vx: 0, vy: -150, a: 1, fall: true });
-    Sound.sfx && Sound.sfx('build'); return true;
+    // Le mur de briques entier s'effondre d'un seul tir
+    const R = this.ROWS, T = this.T, todo = [[c, r]], seen = new Set([c * R + r]);
+    let n = 0;
+    while (todo.length) {
+      const [cc, rr] = todo.pop(), k = cc * R + rr; this.g[k] = 0; n++;
+      const x = (cc + 0.5) * T, y = (rr + 0.5) * T;
+      if (Math.abs(rr - r) < 6) for (let i = 0; i < 2; i++) { const a = Math.random() * TAU, sp = 60 + Math.random() * 140; this.fx.push({ p: true, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: '#c8925a', t: 0.6 }); }
+      for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nc = cc + dc, nr = rr + dr, nk = nc * R + nr; if (!seen.has(nk) && nr >= 0 && nr < R && this.tile(nc, nr) === 6) { seen.add(nk); todo.push([nc, nr]); } }
+    }
+    for (let i = 0; i < Math.min(4, Math.ceil(n / 6)); i++) this.bolts.push({ x: (c + 0.5) * T, y: (r + 0.5) * T, vx: (Math.random() - 0.5) * 160, vy: -200, a: 1, fall: true });
+    this.fx.push({ ring: true, x: (c + 0.5) * T, y: (r + 0.5) * T, c: '#c8925a', r: 40, t: 0.4 });
+    buzz(40); Sound.sfx && Sound.sfx('boom'); return true;
   },
   /* Cible de secours : un bloc destructible devant Pip quand aucun ennemi n'est à portée. */
   brkTarget() {
-    const T = this.T, c0 = Math.floor((this.px + 9) / T), r0 = Math.floor((this.py + 11) / T);
-    for (let dc = 0; dc <= 7; dc++) for (const dr of [0, -1, 1, -2, 2]) { const c = c0 + dc * this.face, r = r0 + dr; if (this.tile(c, r) === 6) return { x: c * T, y: r * T, w: T, h: T, dead: false, tile: true }; }
+    const T = this.T, c0 = Math.floor((this.px + 9) / T), r0 = Math.floor((this.py + 11) / T), dir = this.mdir || this.face;
+    for (let dc = 0; dc <= 7; dc++) for (const dr of [0, -1, 1]) { const c = c0 + dc * dir, r = r0 + dr; if (this.tile(c, r) === 6) return { x: c * T, y: r * T, w: T, h: T, dead: false, tile: true, dc }; }
     return null;
   },
   spawn(t, x, groundY) {
@@ -7547,7 +7562,7 @@ const Plat = {
     // Pip
     const want = inp.mx, tv = want * this.spd;
     const acc = this.onG ? 1600 : 1100;
-    if (want) { this.vx += clamp(tv - this.vx, -acc * dt, acc * dt); this.face = Math.sign(want); } else { const f = (this.onG ? 1600 : 500) * dt; this.vx = Math.abs(this.vx) <= f ? 0 : this.vx - Math.sign(this.vx) * f; }
+    if (want) { this.vx += clamp(tv - this.vx, -acc * dt, acc * dt); this.face = Math.sign(want); this.mdir = Math.sign(want); } else { const f = (this.onG ? 1600 : 500) * dt; this.vx = Math.abs(this.vx) <= f ? 0 : this.vx - Math.sign(this.vx) * f; }
     { const sp = this.spd * (this.power.turbo > 0 ? 1.5 : 1) * (this.power.vol > 0 ? 1.25 : 1); if (want) this.vx = clamp(this.vx + clamp(want * sp - this.vx, -1600 * dt, 1600 * dt), -sp, sp); else this.vx = clamp(this.vx, -sp, sp); }
     if (inp.J && !this.jHeld) this.jbuf = 0.12;
     this.jbuf -= dt; this.coyote -= dt;
@@ -7555,7 +7570,8 @@ const Plat = {
       if (this.onG || this.coyote > 0) { this.vy = -this.jumpV; this.jbuf = 0; this.coyote = 0; Sound.sfx && Sound.sfx('ui'); }
       else { this.vy = -this.jumpV * this.airK; this.jbuf = 0; this.fx.push({ ring: true, x: this.px + 9, y: this.py + 26, c: '#9afff0', r: 12, t: 0.25 }); }
     }
-    if (!inp.J && this.vy < -220) this.vy *= 0.6;
+    if (this.boost && this.vy >= 0) this.boost = false;
+    if (!inp.J && this.vy < -220 && !this.boost) this.vy *= 0.6;
     this.jHeld = inp.J;
     // joystick vers le bas : chute rapide ; vers le haut : descente freinée
     if (this.power.vol > 0) { const ty = inp.J || inp.my < -0.4 ? -240 : inp.my > 0.4 ? 260 : 20; this.vy += (ty - this.vy) * Math.min(1, 7 * dt); this.jbuf = 0; } else
@@ -7573,7 +7589,7 @@ const Plat = {
     if (this.onG) {
       this.coyote = 0.08;
       if (box.gt === 5) { this.hurt(); this.vy = -480; this.onG = false; }
-      else if (box.gt === 11) { this.vy = -1080; this.onG = false; this.fx.push({ ring: true, x: this.px + 9, y: this.py + this.h, c: '#ffd84a', r: 16, t: 0.3 }); Sound.sfx && Sound.sfx('ui'); }
+      else if (box.gt === 11) { this.vy = -1180; this.boost = true; this.onG = false; this.fx.push({ ring: true, x: this.px + 9, y: this.py + this.h, c: '#ffd84a', r: 16, t: 0.3 }); Sound.sfx && Sound.sfx('ui'); }
       else if (box.gt === 12) { const c0 = Math.floor(this.px / T), c1 = Math.floor((this.px + this.w - 1) / T); for (let cc = c0; cc <= c1; cc++) { const kk = cc * this.ROWS + box.gr; if (this.g[kk] === 12 && !this.crumb.has(kk)) this.crumb.set(kk, 0.45); } }
     }
     else if (wasG && this.vy >= 0) this.coyote = 0.08;
@@ -7610,7 +7626,9 @@ const Plat = {
     }
     // Tir automatique
     this.cd -= dt;
-    const tgt = this.nearest() || this.brkTarget();
+    // Un mur de briques juste devant Pip passe avant les monstres plus lointains : Pip tire droit dessus
+    const enT = this.nearest(), brk = this.brkTarget();
+    const tgt = brk && (!enT || brk.dc <= 4 || Math.hypot(enT.x - this.px, enT.y - this.py) > brk.dc * this.T + 30) ? brk : enT || brk;
     if (this.cd <= 0 && tgt) {
       this.cd = this.rate;
       const cx = this.px + 9, cy = this.py + 10, a = Math.atan2(tgt.y + tgt.h / 2 - cy, tgt.x + tgt.w / 2 - cx), n = this.multi + (this.power.triple > 0 ? 2 : 0);
@@ -9564,8 +9582,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.16';
+const APP_VERSION = '7.16.1';
 const CHANGELOG = [
+  { v: '7.16.1', date: '03.11.2026', items: ['Course des Toits : les trampolines propulsent vraiment haut (le saut n’est plus coupé quand on lâche SAUTER)', 'Joystick plus fiable : il ne reste plus bloqué dans une direction ; reposer le pouce à gauche reprend toujours la main', 'Murs de briques : ils s’effondrent en entier au premier tir, et Pip vise le mur qui est devant lui plutôt qu’un monstre en hauteur'] },
   { v: '7.16', date: '02.11.2026', items: ['Course des Toits : 10 emplacements avec leurs propres objets (blaster principal, blaster auxiliaire, casque, plastron, gants, ceinture, pantalon, bottes, sac à dos, puce)', 'Expédition : 10 emplacements avec leurs propres objets (canon principal, tourelle auxiliaire, module, coque, cockpit, ailerons, réacteur, radar, soute, puce)', 'La moitié des sets passe sur les nouveaux emplacements : un set classique et un nouveau se portent ensemble'] },
   { v: '7.15', date: '02.11.2026', items: ['Expédition et Course des Toits : 10 emplacements d’équipement (2 de chaque type), pour porter deux sets complets en même temps'] },
   { v: '7.14', date: '02.11.2026', items: ['Raretés revues partout (équipage, Expédition, Course des Toits) : plus le niveau monte, plus les objets Rares, Exceptionnels, Épiques, Légendaires et Mythiques deviennent fréquents, lentement ; la chance d’objet profite surtout aux hautes raretés', 'Les objets de set ont maintenant exactement la même chance de tomber que les Mythiques, y compris pour l’équipage'] },
