@@ -243,6 +243,10 @@ input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline
 /* ---------- Histoire, quêtes, boutique, journal ---------- */
 .gem{color:var(--gem)}
 .count{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--red);color:#fff;font-size:.7rem;line-height:18px;text-align:center}
+.tuto{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:8;max-width:min(420px,calc(100% - 24px));display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:14px;background:rgba(10,14,24,.92);border:2px solid var(--cyan);box-shadow:0 0 18px rgba(62,242,200,.35);color:var(--fg);font-size:.9rem;line-height:1.3;pointer-events:none}
+.tuto b{color:var(--cyan);display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}.tuto i{font-style:normal;font-size:1.4rem}
+.tuto-pulse{animation:tutoPulse 1.1s ease-in-out infinite!important;box-shadow:0 0 0 0 rgba(62,242,200,.8)!important}
+@keyframes tutoPulse{0%{box-shadow:0 0 0 0 rgba(62,242,200,.8)}70%{box-shadow:0 0 0 12px rgba(62,242,200,0)}100%{box-shadow:0 0 0 0 rgba(62,242,200,0)}}
 .dialog{position:absolute;left:12px;bottom:12px;max-width:min(560px,calc(100% - 24px));z-index:7;display:flex;gap:10px;align-items:center;
   background:rgba(17,24,41,.9);border:1px solid var(--dc,var(--line));border-radius:12px;padding:8px 12px;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .dialog canvas{width:44px;height:44px;flex:none}
@@ -1213,6 +1217,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
         <div class="evts" id="evts"><div class="evbanner" id="evBanner" hidden></div><div class="evchips" id="evChips"></div></div>
         <div class="toast" id="toast" style="opacity:0"></div>
         <div class="dialog" id="dialog" hidden></div>
+        <div class="tuto" id="tuto" hidden></div>
         <div class="overlay" id="endOverlay" hidden><div class="card" id="endCard"></div></div>
       </div>
       <div class="infobar" id="infobar"></div>
@@ -9683,8 +9688,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.18';
+const APP_VERSION = '7.19';
 const CHANGELOG = [
+  { v: '7.19', date: '03.11.2026', items: ['Première partie guidée (niveau 1 d’une nouvelle sauvegarde) : quatre étapes montrées sur le plateau, construire, lancer la vague, améliorer, enchaîner les vagues pour le bonus d’or'] },
   { v: '7.18', date: '03.11.2026', items: ['Un nouvel ennemi par monde, dès son premier niveau : Saboteur (monde 2, coupe les tourelles proches), Réflecteur (3, résiste aux projectiles), Brouilleur (4, réduit la portée), Pillard (5, vole de l’or au lieu d’une vie), Planeur (6, vole en ligne droite vers le Noyau)', 'Un boss différent par monde : Colosse, Matriarche (pond des larves, libère des Blindés), Roi spectral (intangible et bondit), Titan brouilleur (coupe les tourelles), Nécro-noyau (soigne et régénère son bouclier) ; puis le cycle recommence', 'Les tourelles coupées par une impulsion sont marquées d’un éclair'] },
   { v: '7.17', date: '03.11.2026', items: ['Niveaux plus courts : 10 vagues au niveau 1, 20 au plus (22 sur un boss), avec des vagues plus denses et plus d’élites', 'Vagues de pression toutes les 5 vagues (Blindés, Éclaireurs, Spectres, Soigneurs, Boucliers), annoncées une vague à l’avance par Volta, et mieux payées', 'Les améliorations de tourelle coûtent 36 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus, il faut construire et acheter des cases', 'Les deux premières vagues laissent plus de temps pour bâtir, surtout à partir du niveau 15', 'La vitesse de jeu choisie est gardée d’un niveau à l’autre', 'Plus aucune fenêtre (annonces, connexion) avant la première victoire ; le carrousel s’ouvre sur le dernier événement débloqué'] },
   { v: '7.16.1', date: '03.11.2026', items: ['Course des Toits : les trampolines propulsent vraiment haut (le saut n’est plus coupé quand on lâche SAUTER)', 'Joystick plus fiable : il ne reste plus bloqué dans une direction ; reposer le pouce à gauche reprend toujours la main', 'Murs de briques : ils s’effondrent en entier au premier tir, et Pip vise le mur qui est devant lui plutôt qu’un monstre en hauteur'] },
@@ -11792,6 +11798,7 @@ function renderBattle(ctx, b, view) {
   PFX.drawSolid(ctx);
   for (const t of b.towers) drawTowerFX(ctx, t, t === view.selectedTower || t === view.fuseFrom || (hoverPad && hoverPad.tower === t), time);
   for (const t of b.towers) if (t.stun > 0) drawTowerStun(ctx, t.x, t.y, time);
+  Tuto.draw(ctx, b, time);
   for (const e of b.enemies) drawHpBar(ctx, e, e === view.selectedEnemy, view.dt);
   drawBeams(ctx, b, time);
   for (const p of b.projectiles) drawProjectileFX(ctx, p, time);
@@ -13609,7 +13616,7 @@ const Radial = {
       return;
     }
     const items = [
-      { svg: ICONS.up, text: fmtBig(t.upgradeCost), cost: t.upgradeCost, color: '#3ef2c8', label: `Améliorer, ${fmtBig(t.upgradeCost)} or`, fn: () => { if (b.upgrade(t, 1)) this.openTower(t); } },
+      { svg: ICONS.up, text: fmtBig(t.upgradeCost), cost: t.upgradeCost, color: '#3ef2c8', cls: Tuto.active && Tuto.step === 2 ? 'tuto-pulse' : '', label: `Améliorer, ${fmtBig(t.upgradeCost)} or`, fn: () => { if (b.upgrade(t, 1)) this.openTower(t); } },
       { svg: ICONS.max, text: 'Max', cost: t.upgradeCost, color: '#3ef2c8', label: 'Améliorer au maximum', fn: () => { if (b.upgrade(t, Infinity)) this.openTower(t); } }
     ];
     if (!['aura', 'pulse'].includes(t.def.kind)) items.push({ svg: ICONS.mode, text: MODE_SHORT[t.mode], color: '#7aa7ff', label: 'Changer la cible', fn: () => {
@@ -13718,6 +13725,54 @@ const Events = {
   reset() { for (const el of this.drops.values()) el.remove(); this.drops.clear(); const cb = $('evChips'); if (cb) { cb.innerHTML = ''; cb._h = ''; } const bn = $('evBanner'); if (bn) bn.hidden = true; this.offer = null; }
 };
 
+/* Première partie guidée (niveau 1, nouvelle sauvegarde) : construire, lancer, améliorer, enchaîner. */
+const Tuto = {
+  active: false, step: 0, pad: null, t: 0,
+  STEPS: [
+    { title: 'Étape 1 · Construire', icon: '🔧', text: 'Touche la case qui clignote près du chemin, puis choisis la Gatling.', ok: b => b.towers.length >= 1 },
+    { title: 'Étape 2 · Lancer', icon: '▶', text: 'Appuie sur « Lancer la vague ». Les ennemis suivent le chemin jusqu’au Noyau.', ok: b => b.wave >= 1 },
+    { title: 'Étape 3 · Améliorer', icon: '⬆', text: 'Touche ta tourelle puis « Améliorer » : chaque rang augmente ses dégâts de 32 %.', ok: b => b.stats.upgrades >= 1, wait: b => b.towers.length && b.gold < b.towers[0].upgradeCost ? 'Chaque ennemi éliminé rapporte de l’or : attends d’en avoir assez pour améliorer ta tourelle.' : null },
+    { title: 'Étape 4 · Enchaîner', icon: '⚡', text: 'Pas besoin d’attendre : lance la vague suivante pendant celle-ci. Chaque enchaînement rapporte un bonus d’or.', ok: b => b.stats.earlyCalls >= 1 || b.wave >= 5 }
+  ],
+  start(b) {
+    const s = App.slot;
+    this.active = !D2 && !s.tutoDone && b.level.n === 1 && (s.unlocked || 1) <= 1 && b.wave === 0;
+    this.step = 0; this.pad = null; this.t = 0;
+    if (!this.active) return;
+    const near = b.pads.filter(p => !p.locked && !p.tower), cov = p => { let k = 0; for (const c of b.path.cells) { const [x, y] = c.split(',').map(Number); if (Math.hypot(x - p.col, y - p.row) <= 2.2) k++; } return k; };
+    this.pad = near.sort((a, c) => cov(c) - cov(a))[0] || null;
+  },
+  stop() { this.active = false; const el = $('tuto'); if (el) el.hidden = true; this.mark(); },
+  mark() {
+    const on = this.active && $('modal').hidden;
+    const w = $('btnWave'); if (w) w.classList.toggle('tuto-pulse', on && (this.step === 1 || this.step === 3));
+    const up = document.querySelector('[data-a="up"]'); if (up) up.classList.toggle('tuto-pulse', on && this.step === 2);
+  },
+  tick(b, dt) {
+    if (!this.active) return;
+    this.t += dt;
+    while (this.step < this.STEPS.length && this.STEPS[this.step].ok(b)) { this.step++; Sound.sfx && Sound.sfx('up'); }
+    const el = $('tuto');
+    if (this.step >= this.STEPS.length) { this.active = false; App.slot.tutoDone = true; Store.touch(App.slot); el.hidden = true; this.mark(); Talk.say('volta', 'Tu as tout en main, Gardien. Le reste s’apprend en jouant.'); return; }
+    if (this.step === 0 && this.pad && this.pad.tower) this.pad = b.pads.find(p => !p.locked && !p.tower) || this.pad;
+    const st = this.STEPS[this.step], wait = st.wait && st.wait(b), txt = wait || st.text, key = this.step + (wait ? 'w' : '');
+    if (!$('modal').hidden) { el.hidden = true; this.mark(); return; }
+    if (el._key !== key) { el._key = key; el.innerHTML = `<i>${st.icon}</i><div><b>${st.title}</b>${esc(txt)}</div>`; }
+    el.hidden = false; this.mark();
+  },
+  /* Repère sur le plateau : case à construire, puis tourelle à améliorer. */
+  draw(ctx, b, time) {
+    if (!this.active || !$('modal').hidden) return;
+    let x, y, r;
+    if (this.step === 0 && this.pad) { x = this.pad.x; y = this.pad.y; r = 30; }
+    else if (this.step === 2 && b.towers[0] && b.gold >= b.towers[0].upgradeCost) { x = b.towers[0].x; y = b.towers[0].y; r = 28; }
+    else return;
+    const k = (time * 1.4) % 1;
+    ctx.save(); ctx.strokeStyle = `rgba(62,242,200,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, r + k * 22, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = '#3ef2c8'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.lineDashOffset = -time * 30; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.restore();
+  }
+};
 const GameView = {
   battle: null, bg: null, padLayer: null,
   speed: 1, paused: false, hover: null, time: 0, frame: 0, cache: {},
@@ -13828,7 +13883,8 @@ const GameView = {
     this.clearAll();
     this.renderEnemyList();
     this.saveRun();
-    if (!snapshot) Toast.show('Pose tes tourelles puis lance la première vague');
+    Tuto.start(b);
+    if (!snapshot && !Tuto.active) Toast.show('Pose tes tourelles puis lance la première vague');
     if (boosts.length) Toast.show('Boost actif : ' + boosts.map(id => BOOST_BY_ID[id].name).join(', '));
     setTimeout(() => { if (this.battle === b && App.current === 'game') Talk.levelIntro(b.level); }, 600);
   },
@@ -13974,6 +14030,7 @@ const GameView = {
     this.setLabels();
   },
   quit() {
+    Tuto.stop();
     const b = this.battle, leave = () => { this.flushStats(); this.saveRun(); Talk.clear(); App.show('map'); };
     if (b && b.state === 'wave') {
       this.paused = true; this.setLabels();
@@ -14033,7 +14090,7 @@ const GameView = {
       const canMode = !['aura', 'pulse'].includes(t.def.kind);
       icon = t.def; color = t.def.color;
       html = head(esc(t.def.name), `Niveau ${t.level} · ${esc(t.def.specName || t.def.role)}`, t.def.color) +
-        `<div class="upgrid"><button class="btn small primary" data-a="up" data-cost="${cost}" type="button">Améliorer · ${fmtBig(cost)}</button>` +
+        `<div class="upgrid"><button class="btn small primary${Tuto.active && Tuto.step === 2 ? ' tuto-pulse' : ''}" data-a="up" data-cost="${cost}" type="button">Améliorer · ${fmtBig(cost)}</button>` +
         `<button class="btn small" data-a="up5" data-cost="${cost5}" type="button">+5 · ${fmtBig(cost5)}</button>` +
         `<button class="btn small" data-a="upmax" data-cost="${cost}" type="button">Max</button></div>` +
         (canMode || b.canFuseHere ? '<div class="row">' + (canMode ? `<button class="btn small" data-a="mode" type="button">Cible : ${modes[t.mode]}</button>` : '') +
@@ -14178,6 +14235,7 @@ const GameView = {
   /* ---------- Fin de niveau ---------- */
   showEnd(victory) {
     const b = this.battle, slot = App.slot, lv = b.level;
+    Tuto.stop();
     $('nextWave').hidden = true; Radial.close();
     this.flushStats();
     Talk.clear();
@@ -14254,6 +14312,7 @@ const GameView = {
     const run = !this.paused && $('modal').hidden;
     if (R.hitstop > 0) R.hitstop -= dt;
     else if (run) for (let i = 0; i < this.speed; i++) b.update(dt);
+    Tuto.tick(b, run ? dt : 0);
     R.consume(b);
     R.update(run ? dt : 0, b);
 
