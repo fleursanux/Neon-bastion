@@ -1307,7 +1307,7 @@ const CONFIG = {
   upCostBase: 0.65,       // 1re amélioration = 65 % du prix de la tourelle
   upCostGrowth: 1.3,      // chaque amélioration coûte 30 % de plus que la précédente…
   upCostGrowth2: 1.36,    // … et 36 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus
-  fusionLevel: (typeof NB_MODE !== 'undefined' ? NB_MODE === 'd2' : (() => { try { return localStorage.getItem('nb-mode') === 'd2'; } catch (e) { return false; } })()) ? Infinity : 50,   // niveau de jeu à partir duquel la fusion est possible (pas de fusion en mode Diablo II)
+  fusionLevel: (typeof NB_MODE !== 'undefined' ? NB_MODE === 'd2' : (() => { try { return localStorage.getItem('nb-mode') === 'd2'; } catch (e) { return false; } })()) ? Infinity : 1,    // niveau de jeu à partir duquel la fusion est possible (pas de fusion en mode Diablo II)
   // ---- Difficulté ----
   lvlHpWorld1: 0.2,       // monde 1 : +20 % de PV ennemis par niveau
   lvlHpGrowth: 1.08,      // ensuite : +8 % de PV ennemis par niveau
@@ -9908,8 +9908,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.20.1';
+const APP_VERSION = '7.21';
 const CHANGELOG = [
+  { v: '7.21', date: '04.11.2026', items: ['La fusion de tourelles est possible dès le niveau 1 (au lieu du niveau 50) : deux tourelles de types différents, adjacentes ou non, via le menu de la tourelle. La branche Fusion de l’atelier (Synergie, Résonance) est débloquée d’entrée.'] },
   { v: '7.20.1', date: '03.11.2026', items: ['Deux pouvoirs à poser sur un chemin : la Mine (40 énergie, niveau 14) explose au passage du premier ennemi et inflige 60 % des PV restants à tous les ennemis proches (15 % pour les boss) ; le Leurre (50 énergie, niveau 21) retient pendant 6 s les ennemis qui l’atteignent (les boss et les planeurs passent). Touche le pouvoir, puis un chemin.'] },
   { v: '7.20', date: '03.11.2026', items: ['Chemins multiples : à partir du monde 2, certains niveaux ont 2 chemins, puis 2 ou 3 dès le monde 4 (jusqu’à 4 au monde 6+). Chaque chemin secondaire part d’un bord de la carte et rejoint le chemin principal ; les ennemis se répartissent entre les chemins ouverts.', 'Barricades : touche l’entrée d’un chemin pour le barricader (60 % de l’or de départ, prix ×1,8 à chaque barricade). Il faut toujours laisser au moins un chemin ouvert. Les niveaux à plusieurs chemins donnent plus d’or de départ et de cases gratuites.', 'Pouvoirs : une barre d’énergie se remplit avec les ennemis vaincus et les vagues terminées. Six pouvoirs, débloqués aux niveaux 3, 5, 8, 12, 18 et 25 : Impulsion EMP (paralysie), Grand gel, Nova (dégâts en % des PV), Surcharge (cadence des tourelles), Réparation (+2 vies), Pluie d’or (prime de la vague). La barre se trouve sous le bouton de vague.'] },
   { v: '7.19', date: '03.11.2026', items: ['Première partie guidée (niveau 1 d’une nouvelle sauvegarde) : quatre étapes montrées sur le plateau, construire, lancer la vague, améliorer, enchaîner les vagues pour le bonus d’or'] },
