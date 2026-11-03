@@ -1286,7 +1286,7 @@ const CONFIG = {
   dmgGrowth: 1.32,        // dégâts ×1,32 par niveau d'amélioration
   upCostBase: 0.65,       // 1re amélioration = 65 % du prix de la tourelle
   upCostGrowth: 1.3,      // chaque amélioration coûte 30 % de plus que la précédente…
-  upCostGrowth2: 1.42,    // … et 42 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus
+  upCostGrowth2: 1.36,    // … et 36 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus
   fusionLevel: (typeof NB_MODE !== 'undefined' ? NB_MODE === 'd2' : (() => { try { return localStorage.getItem('nb-mode') === 'd2'; } catch (e) { return false; } })()) ? Infinity : 50,   // niveau de jeu à partir duquel la fusion est possible (pas de fusion en mode Diablo II)
   // ---- Difficulté ----
   lvlHpWorld1: 0.2,       // monde 1 : +20 % de PV ennemis par niveau
@@ -1298,7 +1298,7 @@ const CONFIG = {
   startGold: 160,         // or de départ au niveau 1…
   startGoldStep: 40,      // … +40 par niveau du monde 1
   budgetBase: 6.5,          // taille d'une vague : base…
-  budgetPerWave: 3.2,     // … + ce montant par vague
+  budgetPerWave: 2.6,     // … + ce montant par vague
   freePads1: 8,           // cases gratuites au niveau 1 (une de moins tous les 3 niveaux)
   waveBudgetCap: 30,      // au-delà de 30 vagues, le nombre d'ennemis n'augmente plus (seule leur force augmente)
   eventChance: 0.32       // chance qu'une vague déclenche un événement surprise
@@ -1780,8 +1780,30 @@ const ENEMIES = D2 ? D2_ENEMIES : [
   { id: 'medic', unlock: 9, name: 'Médic', hp: 100, speed: 52, def: 0.1, reward: 14, lives: 1, r: 13, color: '#ff6fae', shape: 'medic', cost: 4,
     heal: { r: 95, hps: 0.035 }, desc: 'Soigne en permanence les ennemis qui l’entourent.' },
   { id: 'colosse', unlock: 10, name: 'Colosse', hp: 1200, speed: 22, def: 0.45, reward: 150, lives: 8, r: 28, color: '#ff3355', shape: 'boss', cost: 40,
-    immuneSlow: true, boss: true, spawn: { id: 'drone', every: 5, n: 2 }, desc: 'Boss de fin de monde. Lâche des drones en avançant.' }
+    immuneSlow: true, boss: true, spawn: { id: 'drone', every: 5, n: 2 }, desc: 'Boss du monde 1. Lâche des drones en avançant.' },
+  // ---- Un nouvel ennemi par monde (dès le premier niveau du monde)
+  { id: 'saboteur', unlock: 11, name: 'Saboteur', hp: 110, speed: 50, def: 0.1, reward: 14, lives: 1, r: 13, color: '#ffe14f', shape: 'bolt', cost: 3.5,
+    emp: { every: 5, r: 90, dur: 2 }, desc: 'Toutes les 5 s, une impulsion coupe les tourelles proches pendant 2 s. Espace tes tourelles.' },
+  { id: 'reflecteur', unlock: 21, name: 'Réflecteur', hp: 150, speed: 45, def: 0.1, reward: 16, lives: 1, r: 14, color: '#dfe7f5', shape: 'mirror', cost: 4,
+    reflect: 0.4, desc: 'Blindage réactif : les projectiles (Gatling, Plasma, Missiles…) perdent 40 % de leurs dégâts. Lasers, Tesla, ondes et Railgun passent.' },
+  { id: 'brouilleur', unlock: 31, name: 'Brouilleur', hp: 130, speed: 50, def: 0.15, reward: 16, lives: 1, r: 13, color: '#c58bff', shape: 'dish', cost: 4,
+    jam: { r: 95, v: 0.25 }, desc: 'Son champ réduit de 25 % la portée des tourelles proches. Tire de loin.' },
+  { id: 'pillard', unlock: 41, name: 'Pillard', hp: 90, speed: 80, def: 0, reward: 20, lives: 0, r: 11, color: '#ffcf4a', shape: 'bag', cost: 3,
+    steal: 0.12, desc: 'Ne coûte pas de vie, mais s’il atteint le Noyau il emporte 12 % de ton or.' },
+  { id: 'planeur', unlock: 51, name: 'Planeur', hp: 100, speed: 55, def: 0, reward: 15, lives: 1, r: 12, color: '#7fe8ff', shape: 'wing', cost: 3.5,
+    fly: true, desc: 'Vole en ligne droite de l’entrée au Noyau, sans suivre le chemin. Couvre la ligne droite.' },
+  // ---- Un boss différent par monde (puis le cycle recommence)
+  { id: 'matriarche', unlock: null, name: 'Matriarche', hp: 1400, speed: 22, def: 0.4, reward: 160, lives: 8, r: 28, color: '#ffb347', shape: 'matri', cost: 40,
+    immuneSlow: true, boss: true, spawn: { id: 'larve', every: 4, n: 3 }, split: { id: 'blinde', n: 3 }, desc: 'Boss du monde 2. Pond des larves en avançant et libère trois Blindés à sa mort.' },
+  { id: 'roi_spectral', unlock: null, name: 'Roi spectral', hp: 1100, speed: 30, def: 0.3, reward: 160, lives: 8, r: 27, color: '#c9d6ff', shape: 'king', cost: 40,
+    immuneSlow: true, boss: true, phase: { every: 6, dur: 2.2 }, blink: 70, desc: 'Boss du monde 3. Devient intangible toutes les 6 s et bondit en avant à chaque fois.' },
+  { id: 'titan_emp', unlock: null, name: 'Titan brouilleur', hp: 1500, speed: 20, def: 0.45, reward: 170, lives: 8, r: 29, color: '#ffe14f', shape: 'titan', cost: 40,
+    immuneSlow: true, boss: true, emp: { every: 7, r: 150, dur: 3 }, jam: { r: 130, v: 0.3 }, desc: 'Boss du monde 4. Coupe les tourelles proches toutes les 7 s et réduit leur portée.' },
+  { id: 'necro', unlock: null, name: 'Nécro-noyau', hp: 1300, speed: 24, def: 0.35, shield: 800, reward: 170, lives: 8, r: 28, color: '#5dff9a', shape: 'necro', cost: 40,
+    immuneSlow: true, boss: true, heal: { r: 140, hps: 0.04 }, reshield: 10, desc: 'Boss du monde 5. Soigne tout ce qui l’entoure et régénère son bouclier toutes les 10 s.' }
 ];
+const BOSSES = ['colosse', 'matriarche', 'roi_spectral', 'titan_emp', 'necro'];
+const bossFor = world => BOSSES[(world - 1) % BOSSES.length];
 if (!D2) ENEMIES.push({ id: 'tresor', unlock: null, name: 'Cargo doré', hp: 260, speed: 82, def: 0.15, reward: 10, lives: 0, r: 15, color: '#ffcf4a', shape: 'treasure', cost: 0,
   desc: 'Vaisseau marchand chargé d’or. Il ne fait aucun dégât au noyau, mais s’enfuit avec son trésor.' });
 const ENEMY_BY_ID = Object.fromEntries(ENEMIES.map(e => [e.id, e]));
@@ -2030,7 +2052,7 @@ function getLevel(n) {
     waves: wavesFor(n),
     gold: Math.round((CONFIG.startGold + CONFIG.startGoldStep * Math.min(n - 1, 9)) * econ),
     freePads: n <= 10 ? CONFIG.freePads1 - Math.floor((n - 1) / 3) : Math.max(4, CONFIG.freePads1 - 2 - Math.floor((world - 2) / 2)),
-    elite: n <= 10 ? 0 : Math.min(0.1 * (world - 1) + 0.01 * (idx - 1), 0.5),
+    elite: n <= 10 ? 0 : Math.min(0.07 * (world - 1) + 0.005 * (idx - 1), 0.5),
     speedBonus: n <= 10 ? 1 : Math.min(1 + 0.006 * (n - 10), 1.3),
     color: worldInfo(world).color
   };
@@ -2106,16 +2128,15 @@ function generatePads(level, path) {
 function buildWave(level, w) {
   const rng = mulberry32(level.n * 7919 + w * 104729);
   if (D2) return finishWave(level, w, rng, d2Wave(level, w, rng));
-  const maxU = Math.min(level.n, 10);
-  const pool = ENEMIES.filter(e => e.unlock && e.unlock <= maxU && !e.boss);
+  const pool = ENEMIES.filter(e => e.unlock && e.unlock <= level.n && !e.boss);
   const usable = w === 1 ? pool.filter(e => e.cost <= 1) : pool;
   let budget = (CONFIG.budgetBase + Math.min(w, CONFIG.waveBudgetCap) * CONFIG.budgetPerWave) * (1 + 0.05 * Math.min(level.n - 1, 40));
   if (w === level.waves) budget *= 1.4;
   const ids = [], menace = waveMenace(level, w);
-  if (menace) { budget *= 1.3; const m = MENACES[menace]; const pool2 = usable.filter(e => m.ids.includes(e.id)); if (pool2.length) { let bud = budget * 0.7; let g = 0; while (bud > 0.5 && g++ < 200) { const e = pool2[Math.floor(rng() * pool2.length)]; ids.push(e.id); bud -= e.cost; budget -= e.cost; } } }
-  const newest = level.n <= 10 ? ENEMIES.find(e => e.unlock === level.n && !e.boss) : null;
+  if (menace) { budget *= 1.2; const m = MENACES[menace]; const pool2 = usable.filter(e => m.ids.includes(e.id)); if (pool2.length) { let bud = budget * 0.7; let g = 0; while (bud > 0.5 && g++ < 200) { const e = pool2[Math.floor(rng() * pool2.length)]; ids.push(e.id); bud -= e.cost; budget -= e.cost; } } }
+  const newest = ENEMIES.find(e => e.unlock === level.n && !e.boss) || null;
   if (newest && w >= 2) {
-    const n = Math.min(1 + Math.floor(w / 3), 6);
+    const n = level.n <= 10 ? Math.min(1 + Math.floor(w / 3), 6) : Math.min(1 + Math.floor(w / 5), 3); // les ennemis de monde sont introduits plus doucement
     for (let i = 0; i < n; i++) { ids.push(newest.id); budget -= newest.cost; }
   }
   let guard = 0;
@@ -2127,7 +2148,7 @@ function buildWave(level, w) {
   }
   shuffle(ids, rng);
   const spawns = ids.map(id => ({ id, elite: w > 1 && rng() < level.elite }));
-  if (level.boss && w === level.waves) for (let i = 0; i < 1 + Math.floor((level.world - 1) / 3); i++) spawns.push({ id: 'colosse', elite: false });
+  if (level.boss && w === level.waves) { spawns.push({ id: bossFor(level.world), elite: false }); for (let i = 1; i < 1 + Math.floor((level.world - 1) / 3); i++) spawns.push({ id: BOSSES[(level.world - 1 - i + 50) % BOSSES.length], elite: false }); }
   return finishWave(level, w, rng, spawns, menace);
 }
 /* Vagues de pression : toutes les 5 vagues (sauf la dernière), un thème annoncé une vague à l'avance. */
@@ -2149,7 +2170,7 @@ function waveMenace(level, w) {
 function finishWave(level, w, rng, spawns, menace) {
   // les deux premières vagues laissent le temps de bâtir (surtout à partir du niveau 15, où les éclaireurs arrivent vite)
   const slow = w === 1 ? 1.4 : w === 2 ? (level.n >= 15 ? 1.35 : 1.1) : 1;
-  for (const s of spawns) s.delay = clamp(55 / ENEMY_BY_ID[s.id].speed, 0.35, 1.3) * (0.8 + rng() * 0.4) * slow * 0.75; // vagues plus serrées : des niveaux plus courts en temps réel
+  for (const s of spawns) s.delay = clamp(55 / ENEMY_BY_ID[s.id].speed, 0.35, 1.3) * (0.8 + rng() * 0.4) * slow;
   return {
     hpMul: waveHp(w) * level.hpScale,
     rewMul: Math.pow(waveHp(w), CONFIG.waveRewardExp) * (menace ? 1.3 : 1),
@@ -2209,6 +2230,15 @@ class Enemy {
       if (!this.alive) return;
     }
     if (this.type.regen) this.hp = Math.min(this.maxHp, this.hp + this.maxHp * this.type.regen * dt);
+    if (this.type.emp) { // impulsion : coupe les tourelles proches
+      this.empClock = (this.empClock || 0) + dt;
+      if (this.empClock >= this.type.emp.every) { this.empClock = 0; const r2 = this.type.emp.r ** 2; let n = 0;
+        for (const t of battle.towers) if (dist2(t.x, t.y, this.x, this.y) <= r2) { t.stun = Math.max(t.stun || 0, this.type.emp.dur); n++; }
+        battle.fx(new Effect('ring', this.x, this.y, { color: this.type.color, radius: this.type.emp.r, life: 0.5, grow: true }));
+        if (n) battle.emit('toast', `${this.type.name} : ${n} tourelle${n > 1 ? 's' : ''} coupée${n > 1 ? 's' : ''} !`); }
+    }
+    if (this.type.reshield) { this.reClock = (this.reClock || 0) + dt; if (this.reClock >= this.type.reshield && this.shield <= 0) { this.reClock = 0; this.shield = this.maxShield; battle.fx(new Effect('ring', this.x, this.y, { color: '#4fd1ff', radius: this.r + 20, life: 0.5, grow: true })); } }
+    if (this.type.blink) { const ph = this.phased; if (ph && !this.wasPhased) { this.distance = Math.min(this.path.length - 1, this.distance + this.type.blink); battle.fx(new Effect('ring', this.x, this.y, { color: this.type.color, radius: this.r + 10, life: 0.4, grow: true })); } this.wasPhased = ph; }
     if (this.type.heal) {
       const h = this.type.heal, r2 = h.r * h.r;
       for (const o of battle.enemies) if (o !== this && o.alive && dist2(o.x, o.y, this.x, this.y) <= r2) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * h.hps * dt);
@@ -2326,6 +2356,46 @@ function drawEnemyShape(ctx, t, x, y, angle, spin, st) {
       ctx.fillStyle = 'rgba(60,40,0,.95)'; ctx.beginPath(); ctx.moveTo(r + 4, 0); ctx.lineTo(r * 0.3, -r * 0.8); ctx.lineTo(-r, -r * 0.6); ctx.lineTo(-r, r * 0.6); ctx.lineTo(r * 0.3, r * 0.8); ctx.closePath(); ctx.fill(); ctx.lineWidth = 3; ctx.stroke();
       ctx.fillStyle = col; ctx.fillRect(-r * 0.5, -r * 1.25, r * 0.9, r * 0.35); ctx.fillRect(-r * 0.5, r * 0.9, r * 0.9, r * 0.35);
       ctx.font = `800 ${Math.round(r * 1.1)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.rotate(-angle); ctx.fillText('$', 0, 1); break;
+    case 'bolt':       // saboteur : disque à éclair, arcs qui crépitent
+      ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x + 2, y - 8); ctx.lineTo(x - 4, y + 1); ctx.lineTo(x, y + 1); ctx.lineTo(x - 2, y + 8); ctx.lineTo(x + 4, y - 1); ctx.lineTo(x, y - 1); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = col; ctx.lineWidth = 1; for (let i = 0; i < 3; i++) { const a = spin * 2 + i * TAU / 3; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r); ctx.lineTo(x + Math.cos(a + .3) * (r + 5), y + Math.sin(a + .3) * (r + 5)); ctx.stroke(); } break;
+    case 'mirror':     // réflecteur : losange à facettes brillantes
+      polygonPath(ctx, x, y, r, 4, Math.PI / 4); ctx.fill(); ctx.lineWidth = 3; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - r * .6, y - r * .6); ctx.lineTo(x + r * .6, y + r * .6); ctx.moveTo(x + r * .6, y - r * .6); ctx.lineTo(x - r * .6, y + r * .6); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + Math.cos(spin) * r * .4, y + Math.sin(spin) * r * .4, 2, 0, TAU); ctx.fill(); break;
+    case 'dish':       // brouilleur : parabole et ondes
+      ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y + 2, r * .6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); ctx.fillStyle = col; ctx.fillRect(x - 1.5, y - 2, 3, 8);
+      ctx.strokeStyle = 'rgba(197,139,255,.35)'; ctx.lineWidth = 1; for (let i = 1; i <= 2; i++) { ctx.beginPath(); ctx.arc(x, y, r + 4 + ((spin * 10 + i * 6) % 12), 0, TAU); ctx.stroke(); } break;
+    case 'bag':        // pillard : sac rond avec un $
+      ctx.beginPath(); ctx.arc(x, y + 2, r, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.fillStyle = col; ctx.fillRect(x - 4, y - r - 2, 8, 5);
+      ctx.font = `800 ${Math.round(r * 1.1)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', x, y + 3); ctx.textBaseline = 'alphabetic'; break;
+    case 'wing':       // planeur : aile en V orientée, ombre au sol
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(x + 6, y + 10, r, r * .45, 0, 0, TAU); ctx.fill();
+      ctx.translate(x, y); ctx.rotate(angle); if (mat) ctx.fillStyle = enemyMat(ctx, t, 0, 0, r, st.flash); else ctx.fillStyle = st.flash ? '#fff' : '#0a0e18';
+      ctx.beginPath(); ctx.moveTo(r + 2, 0); ctx.lineTo(-r * .6, -r * 1.2); ctx.lineTo(-r * .2, 0); ctx.lineTo(-r * .6, r * 1.2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(r * .2, 0, 2.5, 0, TAU); ctx.fill(); break;
+    case 'matri':      // matriarche : hexagone de ruche géant, alvéoles qui pulsent
+      polygonPath(ctx, x, y, r, 6, Math.PI / 6); ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.fillStyle = col; for (let i = 0; i < 6; i++) { const a = spin + i * TAU / 6; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * .5, y + Math.sin(a) * r * .5, 3.5 + Math.sin(spin * 4 + i) * 1.2, 0, TAU); ctx.fill(); }
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill(); break;
+    case 'king':       // roi spectral : fantôme couronné
+      ctx.beginPath(); ctx.arc(x, y - 4, r, Math.PI, 0); ctx.lineTo(x + r, y + r);
+      for (let i = 0; i < 5; i++) ctx.lineTo(x + r - (i + .5) * r / 2.5, y + r - (i % 2 ? 0 : 7));
+      ctx.lineTo(x - r, y + r); ctx.closePath(); ctx.fill(); ctx.lineWidth = 4; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - r * .7, y - r * .9); for (let i = 0; i < 5; i++) ctx.lineTo(x - r * .7 + i * r * .35, y - r * (i % 2 ? 1.5 : 1.1)); ctx.lineTo(x + r * .7, y - r * .9); ctx.closePath(); ctx.fill();
+      ctx.fillRect(x - 8, y - 6, 5, 6); ctx.fillRect(x + 3, y - 6, 5, 6); break;
+    case 'titan':      // titan brouilleur : hexagone à antennes et éclair central
+      polygonPath(ctx, x, y, r, 6, spin * .5); ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.strokeStyle = col; ctx.lineWidth = 2; for (let i = 0; i < 3; i++) { const a = i * TAU / 3 + spin * .5; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * .8, y + Math.sin(a) * r * .8); ctx.lineTo(x + Math.cos(a) * (r + 9), y + Math.sin(a) * (r + 9)); ctx.stroke(); }
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x + 4, y - 12); ctx.lineTo(x - 6, y + 2); ctx.lineTo(x, y + 2); ctx.lineTo(x - 4, y + 12); ctx.lineTo(x + 6, y - 2); ctx.lineTo(x, y - 2); ctx.closePath(); ctx.fill(); break;
+    case 'necro':      // nécro-noyau : octogone, croix et halo de soin
+      polygonPath(ctx, x, y, r, 8, spin * .3); ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
+      ctx.shadowBlur = 0; if (st.shield) { ctx.strokeStyle = 'rgba(79,209,255,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, r + 7, spin, spin + TAU * .75); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(93,255,154,.3)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, r + 14 + Math.sin(spin * 3) * 4, 0, TAU); ctx.stroke();
+      ctx.fillStyle = col; ctx.fillRect(x - 3, y - 12, 6, 24); ctx.fillRect(x - 12, y - 3, 24, 6); break;
     case 'boss':
       polygonPath(ctx, x, y, r, 6, spin); ctx.fill(); ctx.lineWidth = 5; ctx.stroke();
       ctx.lineWidth = 2; polygonPath(ctx, x, y, r * .62, 6, -spin * 1.5); ctx.stroke();
@@ -2623,7 +2693,7 @@ class Tower {
   specialize(i) { if (!this.def.specs || this.spec !== null) return false; this.def = specDef(this.def, i); this.spec = i; this._sl = -1; this.spots = null; return true; }
   get s() { if (this._sl !== this.level) { this._s = towerStats(this.def, this.level, this.mods); this._sl = this.level; } return this._s; }
   get damage() { return this.s.dmg * this.buff; }
-  get range() { return this.s.range * (this.gb || 1); }
+  get range() { return this.s.range * (this.gb || 1) * (this.jam || 1); }
   get upgradeCost() { return upgradeCostAt(this.def, this.level, this.mods); }
   costFor(n) { let c = 0; for (let i = 0; i < n; i++) c += upgradeCostAt(this.def, this.level + i, this.mods); return c; }
   get sellValue() { return Math.floor(this.spent * (CONFIG.baseSell + this.mods.resale)); }
@@ -2691,6 +2761,7 @@ class Tower {
   }
 
   update(dt, battle) {
+    if (this.stun > 0) { this.stun -= dt; return; } // coupée par une impulsion
     if (this.cooldown > 0) this.cooldown -= dt * (this.rb || 1);
     if (this.recoil > 0) this.recoil = Math.max(0, this.recoil - dt * 6);
     const kind = this.def.kind;
@@ -2901,6 +2972,7 @@ function drawTowerBadge(ctx, def, x, y, level) {
   ctx.fillText(label, x + s - 1 - tw / 2, y + s - 6.5);
 }
 /* Dessin d'une tourelle (boutique, codex, fiches). level = 0 pour ne pas afficher de niveau. */
+function drawTowerStun(ctx, x, y, t) { ctx.save(); ctx.strokeStyle = '#ffe14f'; ctx.lineWidth = 2; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(x, y, 22, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#ffe14f'; ctx.font = '800 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⚡', x, y - 26 + Math.sin(t * 8) * 2); ctx.restore(); }
 function drawTower(ctx, def, x, y, angle, level, recoil, highlighted) {
   drawTowerBase(ctx, def, x, y, highlighted);
   ctx.save();
@@ -3038,6 +3110,7 @@ class Battle {
     this.level = getLevel(levelN);
     this.mods = mods || NO_MODS;
     this.path = new Path(this.level.path);
+    this.airPath = new Path([this.level.path[0], this.level.path[this.level.path.length - 1]]); // trajet des planeurs
     this.pads = generatePads(this.level, this.path);
     this.startLives = CONFIG.baseLives + this.mods.lives;
     this.lives = this.startLives;
@@ -3405,6 +3478,7 @@ class Battle {
       if (el && immuneTo(e, el)) { dmg *= e.lowResT || (o.source && o.source.s && o.source.s.mastery) ? IMM_BROKEN : IMM_FACTOR; if (!o.dot && Math.random() < 0.08) this.vfx({ t: 'imm', e }); }
     }
     if (e.curse) dmg *= 1 + e.curse;
+    if (e.type.reflect && o.source && o.source.def.kind === 'bullet' && !o.dot) dmg *= 1 - e.type.reflect;
     const before = e.hp + e.shield;
     const killed = e.takeDamage(dmg, o);
     const dealt = before - e.hp - e.shield;
@@ -3455,7 +3529,7 @@ class Battle {
         sw.timer -= dt;
         if (sw.timer <= 0 && sw.queue.length) {
           const s = sw.queue.shift();
-          const en = new Enemy(s.id, this.path, sw.hpMul, sw.speedMul, 0, s.elite, this.mods);
+          const en = new Enemy(s.id, ENEMY_BY_ID[s.id].fly ? this.airPath : this.path, sw.hpMul, sw.speedMul, 0, s.elite, this.mods);
           en.rew = sw.rewMul;
           if (D2 && s.elite && this.level.diff) en.imm2 = ['feu', 'froid', 'foudre', 'poison', 'feu', 'froid', 'foudre', 'physique'][Math.floor(Math.random() * 8)];
           this.enemies.push(en);
@@ -3473,6 +3547,7 @@ class Battle {
       e.update(dt, this);
       if (e.reachedBase) {
         if (e.treasure) this.emit('toast', 'Le cargo doré s’est échappé avec son or…');
+        if (e.type.steal) { const take = Math.min(this.gold, Math.max(40, Math.round(this.gold * e.type.steal))); this.gold -= take; this.stats.stolen = (this.stats.stolen || 0) + take; this.emit('toast', `Un pillard s’enfuit avec ${fmtBig(take)} or !`); }
         this.lives = Math.max(0, this.lives - e.type.lives);
         this.stats.livesLost += e.type.lives;
         this.baseHit = 0.35; this.shake = 0.25;
@@ -3480,6 +3555,8 @@ class Battle {
       }
     }
 
+    for (const t of this.towers) t.jam = 1;
+    for (const e of this.enemies) if (e.alive && e.type.jam) { const r2 = e.type.jam.r ** 2; for (const t of this.towers) if (dist2(t.x, t.y, e.x, e.y) <= r2) t.jam = Math.min(t.jam, 1 - e.type.jam.v); }
     for (const t of this.towers) t.update(dt, this);
     if (this.minions.length) this.updateMinions(dt);
     for (const p of this.projectiles) p.update(dt, this);
@@ -9606,9 +9683,10 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.17';
+const APP_VERSION = '7.18';
 const CHANGELOG = [
-  { v: '7.17', date: '03.11.2026', items: ['Niveaux plus courts : 10 vagues au niveau 1, 20 au plus (22 sur un boss), avec des vagues plus denses et plus d’élites', 'Vagues de pression toutes les 5 vagues (Blindés, Éclaireurs, Spectres, Soigneurs, Boucliers), annoncées une vague à l’avance par Volta, et mieux payées', 'Les améliorations de tourelle coûtent 42 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus, il faut construire et acheter des cases', 'Les deux premières vagues laissent plus de temps pour bâtir, surtout à partir du niveau 15', 'La vitesse de jeu choisie est gardée d’un niveau à l’autre', 'Plus aucune fenêtre (annonces, connexion) avant la première victoire ; le carrousel s’ouvre sur le dernier événement débloqué'] },
+  { v: '7.18', date: '03.11.2026', items: ['Un nouvel ennemi par monde, dès son premier niveau : Saboteur (monde 2, coupe les tourelles proches), Réflecteur (3, résiste aux projectiles), Brouilleur (4, réduit la portée), Pillard (5, vole de l’or au lieu d’une vie), Planeur (6, vole en ligne droite vers le Noyau)', 'Un boss différent par monde : Colosse, Matriarche (pond des larves, libère des Blindés), Roi spectral (intangible et bondit), Titan brouilleur (coupe les tourelles), Nécro-noyau (soigne et régénère son bouclier) ; puis le cycle recommence', 'Les tourelles coupées par une impulsion sont marquées d’un éclair'] },
+  { v: '7.17', date: '03.11.2026', items: ['Niveaux plus courts : 10 vagues au niveau 1, 20 au plus (22 sur un boss), avec des vagues plus denses et plus d’élites', 'Vagues de pression toutes les 5 vagues (Blindés, Éclaireurs, Spectres, Soigneurs, Boucliers), annoncées une vague à l’avance par Volta, et mieux payées', 'Les améliorations de tourelle coûtent 36 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus, il faut construire et acheter des cases', 'Les deux premières vagues laissent plus de temps pour bâtir, surtout à partir du niveau 15', 'La vitesse de jeu choisie est gardée d’un niveau à l’autre', 'Plus aucune fenêtre (annonces, connexion) avant la première victoire ; le carrousel s’ouvre sur le dernier événement débloqué'] },
   { v: '7.16.1', date: '03.11.2026', items: ['Course des Toits : les trampolines propulsent vraiment haut (le saut n’est plus coupé quand on lâche SAUTER)', 'Joystick plus fiable : il ne reste plus bloqué dans une direction ; reposer le pouce à gauche reprend toujours la main', 'Murs de briques : ils s’effondrent en entier au premier tir, et Pip vise le mur qui est devant lui plutôt qu’un monstre en hauteur'] },
   { v: '7.16', date: '02.11.2026', items: ['Course des Toits : 10 emplacements avec leurs propres objets (blaster principal, blaster auxiliaire, casque, plastron, gants, ceinture, pantalon, bottes, sac à dos, puce)', 'Expédition : 10 emplacements avec leurs propres objets (canon principal, tourelle auxiliaire, module, coque, cockpit, ailerons, réacteur, radar, soute, puce)', 'La moitié des sets passe sur les nouveaux emplacements : un set classique et un nouveau se portent ensemble'] },
   { v: '7.15', date: '02.11.2026', items: ['Expédition et Course des Toits : 10 emplacements d’équipement (2 de chaque type), pour porter deux sets complets en même temps'] },
@@ -11713,6 +11791,7 @@ function renderBattle(ctx, b, view) {
   for (const e of b.enemies) drawEnemyFX(ctx, e, e === view.selectedEnemy, time);
   PFX.drawSolid(ctx);
   for (const t of b.towers) drawTowerFX(ctx, t, t === view.selectedTower || t === view.fuseFrom || (hoverPad && hoverPad.tower === t), time);
+  for (const t of b.towers) if (t.stun > 0) drawTowerStun(ctx, t.x, t.y, time);
   for (const e of b.enemies) drawHpBar(ctx, e, e === view.selectedEnemy, view.dt);
   drawBeams(ctx, b, time);
   for (const p of b.projectiles) drawProjectileFX(ctx, p, time);
@@ -14055,9 +14134,9 @@ const GameView = {
 
   renderEnemyList() {
     const b = this.battle, el = $('elist');
-    const ids = ENEMIES.filter(e => e.unlock && e.unlock <= Math.min(b.level.n, 10) && !e.boss).map(e => e.id);
+    const ids = ENEMIES.filter(e => e.unlock && e.unlock <= b.level.n && !e.boss).map(e => e.id);
     if (ids.includes('ruche')) ids.splice(ids.indexOf('ruche') + 1, 0, 'larve');
-    if (b.level.boss) ids.push('colosse');
+    if (b.level.boss) ids.push(bossFor(b.level.world));
     const wn = clamp(b.state === 'build' ? b.wave + 1 : b.wave, 1, b.level.waves);
     const w = buildWave(b.level, wn);
     $('elistTitle').textContent = `Ennemis · stats vague ${wn}`;
