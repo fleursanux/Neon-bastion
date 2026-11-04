@@ -4958,10 +4958,11 @@ const Gear = {
   /* Trois objets identiques (même modèle, même rareté) donnent un objet de la rareté suivante. */
   mergeGroup(slot, it) {
     if (it.r >= GEAR_TOP) return [];
+    /* Le premier objet reçoit la fusion (celui qu'on a touché, ou un objet porté) ; les deux autres sont toujours des objets libres. */
     const same = slot.gear.items.filter(x => x.t === it.t && x.r === it.r);
-    if (same.length < 3) return [];
-    same.sort((a, b) => (b.uid === it.uid) - (a.uid === it.uid) || !!this.owner(slot, b.uid) - !!this.owner(slot, a.uid) || b.l - a.l);
-    return same.slice(0, 3);
+    const keep = this.owner(slot, it.uid) ? it : (same.find(x => this.owner(slot, x.uid)) || it);
+    const free = same.filter(x => x !== keep && !this.owner(slot, x.uid)).sort((a, b) => (b.uid === it.uid) - (a.uid === it.uid) || b.l - a.l);
+    return free.length >= 2 ? [keep, free[0], free[1]] : [];
   },
   merge(slot, it) {
     const grp = this.mergeGroup(slot, it);
@@ -4976,9 +4977,15 @@ const Gear = {
     let n = 0, guard = 0, again = true;
     while (again && guard++ < 200) {
       again = false;
+      /* Jamais d'objet porté consommé : au plus un objet porté par groupe, et c'est lui qui reçoit la fusion. */
       for (let r = 0; r < GEAR_TOP && !again; r++) for (const it of slot.gear.items.filter(x => x.r === r)) {
-        const grp = this.mergeGroup(slot, it);
-        if (grp.length === 3) { this.merge(slot, it); n++; again = true; break; }
+        const same = slot.gear.items.filter(x => x.t === it.t && x.r === r), worn = same.filter(x => this.owner(slot, x.uid)), free = same.filter(x => !this.owner(slot, x.uid)).sort((a, b) => b.l - a.l);
+        const base = worn[0] || free.shift();
+        if (!base || free.length < 2) continue;
+        const lvl = Math.max(base.l, free[0].l, free[1].l);
+        this.remove(slot, free[0].uid); this.remove(slot, free[1].uid);
+        base.r++; base.l = Math.min(this.maxLevel(base.r), lvl);
+        n++; again = true; break;
       }
     }
     return n;
@@ -10262,8 +10269,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.24.7';
+const APP_VERSION = '7.24.8';
 const CHANGELOG = [
+  { v: '7.24.8', date: '04.11.2026', items: ['Fusion : un objet porté n’est jamais consommé, ni par « Tout fusionner » ni par une fusion manuelle ; s’il fait partie du groupe, c’est lui qui monte de rareté.'] },
   { v: '7.24.7', date: '04.11.2026', items: ['Équipement : « Équiper le meilleur » met les meilleurs objets sur le personnage choisi, quitte à les reprendre aux autres ; « Meilleur du reste » n’utilise que les objets que personne ne porte.', 'Le verrou des objets est supprimé : recycler un objet porté demande une confirmation.'] },
   { v: '7.24.6', date: '04.11.2026', items: ['Bouton « ‹ Retour » en haut de l’arbre de compétences, des quêtes, du journal et de l’arsenal.'] },
   { v: '7.24.5', date: '04.11.2026', items: ['Application installée sur iPhone : les marges de l’encoche et de la barre du bas étaient comptées deux fois. La carte, les écrans et la partie tiennent de nouveau dans l’écran sans faire défiler.'] },
