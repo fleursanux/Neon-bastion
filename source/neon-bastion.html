@@ -218,6 +218,12 @@ input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline
   padding:6px 14px;border-radius:999px;font-weight:600;font-size:.85rem;white-space:nowrap;pointer-events:none;transition:opacity .3s;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- Fenêtres ---------- */
+.recap{text-align:left;margin:8px 0;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:rgba(255,255,255,.03)}.recap summary{cursor:pointer;font-weight:700;color:var(--cyan)}
+.recapt{overflow-x:auto;margin:6px 0}.recapt table{width:100%;border-collapse:collapse;font-size:.72rem}.recapt th,.recapt td{padding:3px 4px;text-align:right;border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap}
+.recapt th:first-child,.recapt td:first-child{text-align:left;white-space:normal}.recapt td small{display:block;color:var(--muted);font-size:.6rem}.recapt td:first-child small{display:inline}
+.recapk{width:100%;border-collapse:collapse;font-size:.74rem;margin-top:4px}.recapk td{padding:2px 4px;border-bottom:1px solid rgba(255,255,255,.05)}.recapk td:first-child{color:var(--muted)}.recapk td:last-child{text-align:right;font-weight:600}
+.recapt tr.tot td{font-weight:700;border-top:1px solid var(--line)}.recapt tr.pw td{color:#7aa7ff}.rdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+#endCard{max-height:100%;overflow:auto}
 .overlay{position:absolute;inset:0;z-index:8;background:rgba(6,9,16,.86);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
 .modal-bg{position:fixed;inset:0;z-index:30;background:rgba(6,9,16,.8);display:flex;align-items:center;justify-content:center;
   padding:max(16px,var(--sat)) max(16px,var(--sar)) max(16px,var(--sab)) max(16px,var(--sal))}
@@ -400,12 +406,18 @@ body.d2 .btn.primary *{color:#1a0e04}
 .powers button small{font:700 .55rem var(--font-ui);color:var(--muted);letter-spacing:.04em}
 .powers button.ready{border-color:var(--ac);box-shadow:0 0 12px color-mix(in srgb,var(--ac) 55%,transparent);animation:powReady 1.6s ease-in-out infinite}
 .powers button.poor{opacity:.5}
+.powers button::before{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--cdp,0%);background:rgba(0,0,0,.6);border-radius:inherit;pointer-events:none}
 .powers button.on::after{content:'';position:absolute;inset:-3px;border-radius:14px;border:2px solid var(--ac);animation:tutoPulse 1s ease-in-out infinite}
 @keyframes powReady{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 body.fsgame .powers{margin:4px 0 0;width:100%}
 body.fsgame .powers button{height:40px;border-radius:8px}body.fsgame .powers button i{font-size:.95rem}body.fsgame .powers button small{font-size:.5rem}body.fsgame .powers .plist{gap:3px}
 .nextwave .nwt{font:700 .62rem var(--font-ui);text-transform:uppercase;letter-spacing:.1em;color:var(--pink);margin-right:2px}
-.nwe{display:inline-flex;align-items:center;gap:1px}
+.nwe{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:1px;border-radius:4px;padding:1px 2px;pointer-events:auto}.nwe:hover,.nwe:focus-visible{background:rgba(255,255,255,.12)}
+.nextwave{pointer-events:auto}
+.esheet{display:flex;flex-direction:column;gap:6px;text-align:left}.eshead{display:flex;gap:10px;align-items:center}.eshead canvas{width:64px;height:64px;flex:0 0 auto}.eshead b{font-size:1.1rem}.eshead small{display:block;color:var(--muted)}.eshead p{margin:2px 0 0;font-size:.8rem}
+.esheet .eyebrow{margin:6px 0 0}.ecounter li{color:#c9f7d2}
+.eswaves{display:flex;flex-wrap:wrap;gap:4px}.eswaves span{font:700 .7rem var(--font-num);padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.07)}.eswaves span.past{opacity:.45}.eswaves span.next{background:var(--pink);color:#1a0010}.eswaves i{font-style:normal;color:var(--gold)}
+.lvenemies{display:flex;flex-wrap:wrap;gap:6px}.lven{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;width:62px;padding:4px;border-radius:10px;background:rgba(255,255,255,.06);text-align:center}.lven canvas{width:36px;height:36px}.lven small{font-size:.58rem;line-height:1.1}.lven.boss{background:rgba(255,84,104,.18)}
 .nwe canvas{width:20px;height:20px}
 .nwe b{font:700 .7rem var(--font-num)}
 .nwe.boss b{color:var(--red)}
@@ -897,7 +909,8 @@ body.fsgame .ctrl .row{flex-wrap:nowrap;gap:4px;width:100%}
 body.fsgame #scrGame > .ctrl > .btn{width:100%}
 body.fsgame .hud .stat .v{white-space:nowrap}
 .btn.sound-gate{position:fixed}
-body.fsgame .sound-gate{bottom:calc(var(--sab) + 200px)}
+body.fsgame .sound-gate{bottom:auto;top:calc(var(--sat) + 56px);right:12px}
+body.fsgame.fsland .sound-gate{top:auto;bottom:calc(var(--sab) + 12px);left:12px;right:auto}
 body.fsgame .ctrl .row .btn{flex:1 1 0;min-width:0;font-size:.66rem;padding:7px 2px;overflow:hidden;text-overflow:ellipsis}
 body.fsgame #btnWave{padding:9px 6px;font-size:.82rem;white-space:normal;line-height:1.15}
 /* Tiroir : fiche, tourelles, ennemis (ouvert à la demande, par-dessus la carte) */
@@ -958,6 +971,46 @@ body.fsgame.fsland.sheet .side{transform:none}
 @keyframes hueSpin{to{filter:hue-rotate(360deg) drop-shadow(0 0 6px currentColor)}}
 @keyframes rainbowGlow{0%{box-shadow:0 0 16px #ff4a5a}20%{box-shadow:0 0 16px #ffd84a}40%{box-shadow:0 0 16px #5dff9a}60%{box-shadow:0 0 16px #5ef0ff}80%{box-shadow:0 0 16px #c58bff}100%{box-shadow:0 0 16px #ff4a5a}}
 @keyframes mythic{50%{box-shadow:0 0 22px color-mix(in srgb,var(--rc) 60%,transparent)}}
+.crewviews{gap:6px;flex-wrap:wrap}
+.gslots{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.gslot.gs2{flex-direction:row;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-left:3px solid var(--rc);background:rgba(10,14,28,.6);min-height:0}
+.gslot.gs2>i{flex:0 0 auto;width:34px;height:34px;display:grid;place-items:center;border-radius:9px;background:rgba(0,0,0,.25);color:rgba(255,255,255,.5)}
+.gslot.gs2>span{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.gslot.gs2 b{font-size:.68rem;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+.gslot.gs2 small{font-size:.74rem;font-weight:700;color:var(--rc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gslot.gs2:not(.full) small{color:var(--muted);font-weight:400}
+.gslot.gs2 em{font-style:normal;font-size:.62rem;color:var(--muted)}.gslot.gs2 em.gsfree{color:var(--cyan)}
+.gslot.gs2.r6 small{background:linear-gradient(90deg,#ff7ae0,#ffd84a,#5dff9a,#4fa3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.crewstage.cs10{grid-template-rows:auto auto auto}
+.crewstage.cs10 .gslot.gs2{min-height:0;padding:5px;border:3px solid var(--toyedge);border-radius:14px;background:linear-gradient(180deg,#8a6ae8,#5a3ab8);box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 3px 0 var(--toyedge);gap:5px}
+.crewstage.cs10 .gslot.gs2.full{background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 55%,#5a3ab8),#3a2490)}
+.crewstage.cs10 .gslot.gs2.on{background:linear-gradient(180deg,var(--cta1),var(--cta2))}
+.crewstage.cs10 .gslot.gs2>i{width:28px;height:28px;background:rgba(10,12,50,.45)}
+.crewstage.cs10 .gslot.gs2 b{color:#fff;font:400 .62rem var(--font-toy);text-transform:none;letter-spacing:.02em;text-shadow:0 1px 0 var(--toyedge)}
+.crewstage.cs10 .gslot.gs2 small{color:#fff;font-size:.62rem}
+.crewstage.cs10 .gslot.gs2 em{color:rgba(255,255,255,.75);font-size:.56rem}
+.crewstage.cs10 .cscol{gap:6px;justify-content:center}
+.crewstage.cs10 .cstowers{grid-column:1/-1;flex-direction:row;justify-content:center}
+.crewstage.cs10 .cstowers figure{flex-direction:row;gap:6px;padding:4px 10px}
+@media (min-width:760px){.crewstage.cs10 .gslot.gs2{padding:8px 10px}.crewstage.cs10 .gslot.gs2 b{font-size:.74rem}.crewstage.cs10 .gslot.gs2 small{font-size:.86rem}.crewstage.cs10 .gslot.gs2 em{font-size:.7rem}.crewstage.cs10 .gslot.gs2>i{width:38px;height:38px}}
+@media (max-width:560px){.crewstage.cs10{grid-template-columns:minmax(0,1fr) minmax(0,.9fr) minmax(0,1fr)}.crewstage.cs10 .gslot.gs2>i{display:none}.crewstage.cs10 .cshero{min-height:320px}}
+.gpick{display:flex;flex-direction:column;gap:8px}
+.gtotal summary{cursor:pointer}.gtotal table{width:100%;border-collapse:collapse;font-size:.74rem;margin-top:6px}.gtotal td{padding:2px 4px;border-bottom:1px solid rgba(255,255,255,.06)}.gtotal td:nth-child(n+2){text-align:right;white-space:nowrap}
+.gprow{display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:8px}
+.gprow>div{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.gprow.cur{border-top:0}
+.gdelta{display:flex;flex-wrap:wrap;gap:3px 8px;font-size:.72rem}.gdelta .up{color:#5dff9a}.gdelta .down{color:#ff7a8a}
+.gfilters{gap:4px;flex-wrap:wrap;margin:4px 0;align-items:center}
+.gfilters .btn.tiny svg{vertical-align:-3px}
+.glock{position:absolute;bottom:4px;right:4px;font-size:.7rem}
+.gnew{position:absolute;top:4px;left:50%;transform:translateX(-50%);font:800 .52rem var(--font-ui);text-transform:uppercase;background:#ffcf4a;color:#2a1a00;border-radius:4px;padding:1px 4px}
+.gsetp button{all:unset;cursor:pointer;font-size:.7rem;padding:2px 6px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.gsetp button svg{vertical-align:-3px}.gsetp button.own{color:#c9f7d2;border-color:rgba(61,220,90,.5)}.gsetp button.on{color:#062a10;background:#3ddc5a;border-color:#3ddc5a}.gsetp button.sel{outline:2px solid #fff}
+.gpiece{border:1px solid var(--line);border-radius:8px;padding:6px;margin:4px 0;display:flex;flex-direction:column;gap:3px}
+.gpiece table,.gchance table{width:100%;border-collapse:collapse;font-size:.72rem}.gpiece th,.gpiece td,.gchance th,.gchance td{padding:3px 4px;text-align:right;border-bottom:1px solid rgba(255,255,255,.06)}
+.gpiece td:first-child,.gchance td:first-child,.gchance th:first-child{text-align:left}.gpiece .mine{color:#5dff9a}
+.gchance{overflow-x:auto}.gchance td.rbw{background:linear-gradient(90deg,#ff7ae0,#ffd84a,#5dff9a,#4fa3ff);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
+.gchance th{font-weight:600;color:var(--muted);font-size:.66rem}
 .gown{position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:50%;background:var(--cyan);color:#062019;font:800 .62rem/17px var(--font-ui)}
 .gmerge{position:absolute;top:4px;left:4px;font:800 .6rem var(--font-num);color:#1d0b33;background:var(--violet);border-radius:4px;padding:1px 4px}
 .gicon{filter:drop-shadow(0 0 6px currentColor)}
@@ -1169,7 +1222,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
   <!-- ================= ÉQUIPAGE ================= -->
   <section class="screen" id="scrCrew" hidden>
     <div class="topbar">
-      <div class="who"><p class="eyebrow">Armes, blindages et modules</p><h2>Équipage</h2></div>
+      <div class="who"><p class="eyebrow">10 emplacements par personnage · sets · étoiles</p><h2>Équipage</h2></div>
       <div class="row">
         <span class="stat"><span class="k">Ferraille</span><span class="v" id="crewScrap" style="color:#c9d6ff">0</span></span>
         <span class="stat"><span class="k">Gemmes</span><span class="v gem" id="crewGems">0</span></span>
@@ -1839,7 +1892,17 @@ function enemyAbilities(t) {
   if (t.regen) a.push(`Régénère ${Math.round(t.regen * 100)} % de ses PV max par seconde`);
   if (t.immuneSlow) a.push('Insensible aux ralentissements et répulsions');
   if (t.heal) a.push(`Soigne les ennemis proches de ${fmt(t.heal.hps * 100)} % de leurs PV max par seconde`);
-  if (t.spawn) a.push(`Libère ${t.spawn.n} ${D2 ? ENEMY_BY_ID[t.spawn.id].name.toLowerCase() + (t.spawn.n > 1 ? 's' : '') : 'drones'} toutes les ${t.spawn.every} s`);
+  if (t.spawn) a.push(`Libère ${t.spawn.n} ${ENEMY_BY_ID[t.spawn.id].name.toLowerCase()}${t.spawn.n > 1 ? 's' : ''} toutes les ${t.spawn.every} s`);
+  if (!D2) {
+    if (t.emp) a.push(`Impulsion EMP toutes les ${t.emp.every} s : coupe les tourelles à moins de ${t.emp.r} px pendant ${fmt(t.emp.dur)} s`);
+    if (t.reflect) a.push(`Renvoie ${Math.round(t.reflect * 100)} % des dégâts des tourelles à projectiles (Gatling…)`);
+    if (t.jam) a.push(`Brouille les tourelles à moins de ${t.jam.r} px : −${Math.round(t.jam.v * 100)} % de portée`);
+    if (t.steal) a.push(`Ne retire pas de vie mais vole ${Math.round(t.steal * 100)} % de ton or (au moins 40) s’il atteint le Noyau`);
+    if (t.fly) a.push('Volant : file en ligne droite de l’entrée au Noyau, sans suivre le chemin (ignore barricades, mines et leurres)');
+    if (t.blink) a.push(`Se téléporte de ${t.blink} px vers l’avant à chaque phase`);
+    if (t.reshield) a.push(`Recharge entièrement son bouclier toutes les ${t.reshield} s quand il est brisé`);
+    if (t.boss) a.push('Boss : immunisé aux répulsions, résiste aux pouvoirs (EMP, Nova, Mine réduits)');
+  }
   if (D2) {
     if (t.imm) a.push('Immunisé : ' + Object.keys(t.imm).map(k => ELEM[k].name).join(', ') + ' (10 % des dégâts de ce type)');
     if (t.undead) a.push('Mort-vivant');
@@ -1931,13 +1994,14 @@ const SKILLS = [
   { id: 'bounty', b: 'eco', req: 5, max: Infinity, name: 'Prime', desc: 'Chaque élimination rapporte plus d’or.', show: P('d’or par élimination', 0.025) },
   { id: 'wave', b: 'eco', req: 5, max: Infinity, name: 'Dividendes', desc: 'Augmente le bonus de fin de vague.', show: P('de bonus de vague', 0.04) },
   { id: 'cheap', b: 'eco', req: 15, max: 30, name: 'Ingénierie', desc: 'Réduit le prix des tourelles.', show: M('sur les tourelles', 0.015) },
-  { id: 'land', b: 'eco', req: 15, max: 30, name: 'Cadastre', desc: 'Réduit le prix des cases à acheter.', show: M('sur les cases', 0.02) },
+  { id: 'land', b: 'eco', req: 15, max: 30, name: 'Cadastre', desc: 'Réduit le prix des cases à acheter et des barricades.', show: M('sur les cases et barricades', 0.02) },
   { id: 'resale', b: 'eco', req: 30, max: 25, name: 'Recyclage', desc: 'Augmente l’or rendu à la revente.', show: r => `${pct(CONFIG.baseSell + 0.01 * r)} rendu à la revente` },
   { id: 'workshop', b: 'eco', req: 30, max: 40, name: 'Atelier', desc: 'Réduit le prix des améliorations.', show: M('sur les améliorations', 0.01) },
   { id: 'lives', b: 'def', req: 0, max: 20, name: 'Remparts', desc: 'Vies supplémentaires au début de chaque niveau.', show: r => `+${r} vie${r > 1 ? 's' : ''}` },
   { id: 'frost', b: 'def', req: 5, max: 25, name: 'Cryogénie', desc: 'Renforce tous les ralentissements.', show: P('de puissance de ralentissement', 0.02) },
   { id: 'drag', b: 'def', req: 5, max: 20, name: 'Champ inhibiteur', desc: 'Les ennemis avancent plus lentement.', show: M('de vitesse ennemie', 0.01) },
   { id: 'breaker', b: 'def', req: 15, max: Infinity, name: 'Brise-bouclier', desc: 'Dégâts bonus contre les boucliers.', show: P('contre les boucliers', 0.05) },
+  { id: 'energy', b: 'def', req: 5, max: 20, name: 'Condensateur', desc: 'Les pouvoirs se rechargent plus vite : plus d’énergie par ennemi vaincu et par vague.', show: P('d’énergie gagnée', 0.02) },
   { id: 'hunter', b: 'def', req: 15, max: Infinity, name: 'Chasseur', desc: 'Dégâts bonus contre les élites et les boss.', show: P('contre élites et boss', 0.04) },
   ...TOWERS.map(t => ({
     id: 'm_' + t.id, b: 'mas', req: 0, max: Infinity, tower: t.id, unlockLevel: t.unlock, name: 'Maîtrise ' + t.name,
@@ -1970,7 +2034,7 @@ function computeMods(skills) {
     critdmg: 0.1 * r('critdmg'), pen: 0.01 * r('pen'),
     gold: 0.045 * r('gold'), bounty: 0.025 * r('bounty'), wave: 0.04 * r('wave'), cheap: 0.015 * r('cheap'),
     land: 0.02 * r('land'), resale: 0.01 * r('resale'), workshop: 0.01 * r('workshop'),
-    lives: r('lives'), frost: 0.02 * r('frost'), drag: 0.01 * r('drag'), breaker: 0.05 * r('breaker'), hunter: 0.04 * r('hunter'),
+    lives: r('lives'), energy: 0.02 * r('energy'), frost: 0.02 * r('frost'), drag: 0.01 * r('drag'), breaker: 0.05 * r('breaker'), hunter: 0.04 * r('hunter'),
     synergy: 0.01 * r('synergy'), resonance: 0.05 * r('resonance'), rewardMul: 1, crew: {},
     mastery: Object.fromEntries(TOWERS.map(t => [t.id, r('m_' + t.id)]))
   };
@@ -2329,7 +2393,7 @@ class Enemy {
     if (this.hitFlash > 0) this.hitFlash -= dt;
     if (this.poisonT > 0) {
       this.poisonT -= dt;
-      battle.damageEnemy(this, this.poisonDps * dt, { dot: true });
+      battle.damageEnemy(this, this.poisonDps * dt, { dot: true, src: this.poisonSrc });
       if (!this.alive) return;
     }
     if (this.type.regen) this.hp = Math.min(this.maxHp, this.hp + this.maxHp * this.type.regen * dt);
@@ -2830,7 +2894,7 @@ class Tower {
     const s = this.s, dot = !!opts.dot;
     if (!e.alive) return;
     if (s.slow) e.applySlow(s.slow.f, s.slow.d);
-    if (s.poison) e.applyPoison(s.poison.dps * this.buff, s.poison.d);
+    if (s.poison) { e.applyPoison(s.poison.dps * this.buff, s.poison.d); e.poisonSrc = this; }
     if (s.shred && (!dot || Math.random() < 0.1)) e.applyShred(s.shred.v, s.shred.max, s.shred.d);
     if (s.pull && !dot && this.def.kind !== 'pulse') e.pull(s.pull);
     let dmg = amount;
@@ -3213,14 +3277,14 @@ function newStats() {
 /* Pouvoirs du joueur : une barre d'énergie se remplit avec les ennemis vaincus et les vagues terminées.
    Chaque pouvoir se débloque à un niveau atteint et coûte de l'énergie. */
 const POWERS = [
-  { id: 'emp', name: 'Impulsion EMP', icon: '⚡', cost: 35, unlock: 3, color: '#7aa7ff', desc: 'Paralyse tous les ennemis pendant 2,5 s (1,2 s pour les boss).' },
-  { id: 'gel', name: 'Grand gel', icon: '❄', cost: 30, unlock: 5, color: '#7fe8ff', desc: 'Ralentit tous les ennemis de 60 % pendant 6 s.' },
-  { id: 'nova', name: 'Nova', icon: '✸', cost: 55, unlock: 8, color: '#ff7a2a', desc: 'Frappe tous les ennemis : 30 % de leurs PV restants (10 % pour les boss), ignore la défense.' },
-  { id: 'surcharge', name: 'Surcharge', icon: '⟫', cost: 45, unlock: 12, color: '#ffcf4a', desc: 'Toutes les tourelles tirent 60 % plus vite pendant 8 s.' },
-  { id: 'mine', name: 'Mine', icon: '◈', cost: 40, unlock: 14, color: '#ff9b3d', aim: true, desc: 'Se pose sur un chemin. Explose au passage du premier ennemi : 60 % des PV de chaque ennemi proche (15 % pour les boss).' },
-  { id: 'reparation', name: 'Réparation', icon: '♥', cost: 80, unlock: 18, color: '#3ef2c8', desc: 'Répare le noyau : +2 vies.' },
-  { id: 'leurre', name: 'Leurre', icon: '◎', cost: 50, unlock: 21, color: '#c58bff', aim: true, desc: 'Se pose sur un chemin. Pendant 6 s, les ennemis qui l’atteignent s’arrêtent pour l’attaquer (les boss passent).' },
-  { id: 'pluie', name: 'Pluie d’or', icon: '◉', cost: 60, unlock: 25, color: '#ffd84a', desc: 'Verse immédiatement la prime de la vague en cours.' }
+  { id: 'emp', name: 'Impulsion EMP', icon: '⚡', cost: 35, unlock: 3, cd: 12, color: '#7aa7ff', desc: 'Paralyse tous les ennemis pendant 2,5 s (1,2 s pour les boss).' },
+  { id: 'gel', name: 'Grand gel', icon: '❄', cost: 30, unlock: 5, cd: 10, color: '#7fe8ff', desc: 'Ralentit tous les ennemis de 60 % pendant 6 s.' },
+  { id: 'nova', name: 'Nova', icon: '✸', cost: 55, unlock: 8, cd: 15, color: '#ff7a2a', desc: 'Frappe tous les ennemis : 30 % de leurs PV restants (10 % pour les boss), ignore la défense.' },
+  { id: 'surcharge', name: 'Surcharge', icon: '⟫', cost: 45, unlock: 12, cd: 16, color: '#ffcf4a', desc: 'Toutes les tourelles tirent 60 % plus vite pendant 8 s.' },
+  { id: 'mine', name: 'Mine', icon: '◈', cost: 40, unlock: 14, cd: 6, color: '#ff9b3d', aim: true, desc: 'Se pose sur un chemin. Explose au passage du premier ennemi : 60 % des PV de chaque ennemi proche (15 % pour les boss).' },
+  { id: 'reparation', name: 'Réparation', icon: '♥', cost: 80, unlock: 18, cd: 30, color: '#3ef2c8', desc: 'Répare le noyau : +2 vies.' },
+  { id: 'leurre', name: 'Leurre', icon: '◎', cost: 50, unlock: 21, cd: 14, color: '#c58bff', aim: true, desc: 'Se pose sur un chemin. Pendant 6 s, les ennemis qui l’atteignent s’arrêtent pour l’attaquer (les boss passent).' },
+  { id: 'pluie', name: 'Pluie d’or', icon: '◉', cost: 60, unlock: 25, color: '#ffd84a', desc: 'Verse 60 % de la prime de la vague en cours (une fois par vague).' }
 ];
 const POWER_BY_ID = Object.fromEntries(POWERS.map(p => [p.id, p]));
 
@@ -3231,9 +3295,10 @@ class Battle {
     this.path = buildPaths(this.level);
     this.paths = this.path.all;  // chemin principal + chemins secondaires
     this.closed = [];            // indices des chemins barricadés
-    this.energy = 0;             // énergie des pouvoirs (0 à 100)
+    this.energy = Math.min(100, this.mods.energy0 || 0);   // énergie des pouvoirs (0 à 100), départ selon l'équipement
     this.powerT = {};            // pouvoirs actifs (durées restantes)
     this.traps = [];             // mines et leurres posés sur les chemins
+    this.pcd = {};               // temps de recharge de chaque pouvoir
     this.airPath = new Path([this.level.path[0], this.level.path[this.level.path.length - 1]]); // trajet des planeurs
     this.pads = generatePads(this.level, this.path);
     this.startLives = CONFIG.baseLives + this.mods.lives;
@@ -3258,6 +3323,7 @@ class Battle {
     this.stats = newStats();
     this.revives = 0;
     this.boosts = [];
+    this.gone = [];             // tourelles vendues (pour le récapitulatif)
     if (snapshot) this.restore(snapshot);
   }
 
@@ -3277,7 +3343,7 @@ class Battle {
       v: 2, level: this.level.n, wave: this.wave, gold: Math.floor(this.gold), lives: this.lives,
       score: this.score, kills: this.kills, padsBought: this.padsBought,
       unlocked: this.pads.filter(p => !p.locked).map(p => p.i),
-      towers: this.towers.map(t => ({ p: t.pad.i, id: t.id, lv: t.level, spent: t.spent, mode: t.mode, kills: t.kills, sp: t.spec })),
+      towers: this.towers.map(t => ({ p: t.pad.i, id: t.id, lv: t.level, spent: t.spent, mode: t.mode, kills: t.kills, sp: t.spec, d: Math.round(t.dmgDone || 0) })), gone: this.gone,
       stats: JSON.parse(JSON.stringify(this.stats)), boosts: this.boosts, allowed: this.allowed || null,
       closed: this.closed.slice(), energy: Math.round(this.energy), traps: this.traps.map(t => ({ kind: t.kind, x: t.x, y: t.y, t: t.t }))
     };
@@ -3289,6 +3355,7 @@ class Battle {
     this.clearedUpTo = s.wave;
     this.boosts = s.boosts || [];
     this.allowed = s.allowed || null;
+    this.gone = s.gone || [];
     this.closed = (s.closed || []).filter(i => i > 0 && i < this.paths.length || i === 0);
     this.energy = s.energy || 0;
     this.traps = (s.traps || []).map(t => ({ kind: t.kind, x: t.x, y: t.y, t: t.t, alive: true }));
@@ -3298,7 +3365,7 @@ class Battle {
       const pad = this.pads[t.p], def = getTowerDef(t.id, this.mods);
       if (!pad || pad.tower || !def) continue;
       const tw = new Tower(def, pad, this.mods);
-      tw.level = Math.max(1, t.lv); tw.spent = t.spent; tw.mode = t.mode || tw.mode; tw.kills = t.kills || 0;
+      tw.level = Math.max(1, t.lv); tw.spent = t.spent; tw.mode = t.mode || tw.mode; tw.kills = t.kills || 0; tw.dmgDone = t.d || 0;
       if (t.sp !== undefined && t.sp !== null && def.specs) tw.specialize(t.sp);
       pad.locked = false; pad.tower = tw; this.towers.push(tw);
     }
@@ -3322,6 +3389,7 @@ class Battle {
   }
   closePath(i) {
     if (this.canClose(i)) return false;
+    this.stats.gateGold = (this.stats.gateGold || 0) + this.barricadeCost; this.stats.goldSpent += this.barricadeCost;
     this.gold -= this.barricadeCost;
     this.closed.push(i);
     const en = this.paths[i].entry();
@@ -3331,11 +3399,14 @@ class Battle {
   }
 
   /* ---------- Pouvoirs ---------- */
-  gainEnergy(v) { if (this.state === 'victory' || this.state === 'defeat') return; this.energy = Math.min(100, this.energy + v * (1 + (this.mods.energy || 0))); }
+  gainEnergy(v) { if (this.state === 'victory' || this.state === 'defeat') return; const g = v * (1 + (this.mods.energy || 0)); this.stats.energyGot = (this.stats.energyGot || 0) + g; this.energy = Math.min(100, this.energy + g); }
+  powerCost(id) { const p = POWER_BY_ID[id]; return Math.max(5, Math.round(p.cost * (1 - (this.mods.pcost || 0)))); }
   canPower(id) {
     const p = POWER_BY_ID[id];
     if (!p || this.state === 'victory' || this.state === 'defeat') return 'Indisponible';
-    if (this.energy < p.cost) return `Il manque ${Math.ceil(p.cost - this.energy)} énergie`;
+    if (this.energy < this.powerCost(id)) return `Il manque ${Math.ceil(this.powerCost(id) - this.energy)} énergie`;
+    if ((this.pcd[id] || 0) > 0) return `Recharge : encore ${Math.ceil(this.pcd[id])} s`;
+    if (id === 'pluie' && this.pluieWave === this.wave) return 'Une seule Pluie d’or par vague';
     if (id === 'reparation' && this.lives >= this.startLives) return 'Le noyau est intact';
     if ((id === 'emp' || id === 'gel' || id === 'nova') && !this.enemies.some(e => e.alive)) return 'Aucun ennemi en vue';
     return null;
@@ -3352,9 +3423,10 @@ class Battle {
     const q = this.pathPointNear(pt, 30);
     if (!q) return false;
     const p = POWER_BY_ID[id];
-    this.energy -= p.cost;
+    this.energy -= this.powerCost(id);
     this.stats.powers = (this.stats.powers || 0) + 1;
     this.traps.push({ kind: id, x: q.x, y: q.y, t: id === 'leurre' ? 6 : 999, alive: true });
+    this.pcd[id] = p.cd || 0;
     this.fx(new Effect('ring', q.x, q.y, { color: p.color, radius: 40, life: 0.4, grow: true }));
     this.emit('power', id);
     return true;
@@ -3381,7 +3453,7 @@ class Battle {
     if (this.canPower(id)) return false;
     const p = POWER_BY_ID[id];
     if (p.aim) return false;   // se pose sur le chemin via placePower
-    this.energy -= p.cost;
+    this.energy -= this.powerCost(id);
     this.stats.powers = (this.stats.powers || 0) + 1;
     const live = this.enemies.filter(e => e.alive);
     if (id === 'emp') for (const e of live) e.stunT = Math.max(e.stunT || 0, e.type.boss ? 1.2 : 2.5);
@@ -3389,7 +3461,8 @@ class Battle {
     if (id === 'nova') for (const e of live) this.damageEnemy(e, Math.max(1, (e.hp + e.shield) * (e.type.boss ? 0.1 : 0.3)), { pierce: true, power: true });
     if (id === 'surcharge') this.powerT.surcharge = 8;
     if (id === 'reparation') { this.lives = Math.min(this.startLives, this.lives + 2); this.baseHit = 0; }
-    if (id === 'pluie') { const g = this.waveBonus(Math.max(1, this.wave)); this.gold += g; this.fx(new Effect('text', this.path.end.x, this.path.end.y - 30, { text: '+' + fmtBig(g), color: '#ffcf4a', life: 1.2 })); }
+    this.pcd[id] = p.cd || 0;
+    if (id === 'pluie') { this.pluieWave = this.wave; const g = Math.round(this.waveBonus(Math.max(1, this.wave)) * 0.6); this.gold += g; this.fx(new Effect('text', this.path.end.x, this.path.end.y - 30, { text: '+' + fmtBig(g), color: '#ffcf4a', life: 1.2 })); }
     for (let i = 0; i < 3; i++) this.fx(new Effect('ring', W / 2, H / 2, { color: p.color, radius: 420 + i * 90, life: 0.55 + i * 0.12, grow: true }));
     this.shake = Math.max(this.shake, id === 'nova' ? 0.3 : 0.12);
     this.emit('power', id);
@@ -3455,7 +3528,7 @@ class Battle {
     this.gold -= cost;
     pad.locked = false;
     this.padsBought++;
-    this.stats.padBuys++; this.stats.goldSpent += cost;
+    this.stats.padBuys++; this.stats.goldSpent += cost; this.stats.padGold = (this.stats.padGold || 0) + cost;
     this.vfx({ t: 'pad', x: pad.x, y: pad.y });
     this.emit('changed', 'pads');
     return true;
@@ -3471,7 +3544,11 @@ class Battle {
     if (done) { this.vfx({ t: 'upgrade', tw: tower, n: done }); this.emit('changed'); }
     return done;
   }
+  /* Fiche d'une tourelle pour le récapitulatif de fin de niveau. */
+  towerRec(t, end) { return { id: t.def.id, name: t.def.name, color: t.def.color, lv: t.level, kills: t.kills, dmg: Math.round(t.dmgDone || 0), spent: t.spent, end, fused: !!t.def.fused, x: t.pad.col, y: t.pad.row }; }
   sell(tower) {
+    this.gone.push(this.towerRec(tower, 'vendue · +' + fmtBig(tower.sellValue)));
+    this.stats.soldBack = (this.stats.soldBack || 0) + tower.sellValue;
     this.gold += tower.sellValue;
     this.stats.sold++;
     this.vfx({ t: 'sell', x: tower.x, y: tower.y, color: tower.def.color });
@@ -3499,7 +3576,7 @@ class Battle {
     if (this.fusionBlock(a, b)) return null;
     const { def, level } = this.fusionPreview(a, b);
     const t = new Tower(def, a.pad, this.mods);
-    t.level = level; t.spent = a.spent + b.spent; t.kills = a.kills + b.kills; t.mode = a.mode;
+    t.level = level; t.spent = a.spent + b.spent; t.kills = a.kills + b.kills; t.mode = a.mode; t.dmgDone = (a.dmgDone || 0) + (b.dmgDone || 0);
     a.pad.tower = t; b.pad.tower = null;
     this.towers = this.towers.filter(x => x !== a && x !== b);
     this.towers.push(t);
@@ -3701,7 +3778,9 @@ class Battle {
     if (e.type.reflect && o.source && o.source.def.kind === 'bullet' && !o.dot) dmg *= 1 - e.type.reflect;
     const before = e.hp + e.shield;
     const killed = e.takeDamage(dmg, o);
-    const dealt = before - e.hp - e.shield;
+    const dealt = before - e.hp - e.shield, who = o.source || o.src;
+    if (who) who.dmgDone = (who.dmgDone || 0) + dealt;
+    else if (o.power) this.stats.powerDmg = (this.stats.powerDmg || 0) + dealt;
     if (o.dot) e.dotAcc = (e.dotAcc || 0) + dealt;
     else if (dealt > 0) this.vfx({ t: 'hit', e, v: dealt, crit: !!o.crit });
     if (e.type.boss && !e.halfSaid && e.hp < e.maxHp / 2) { e.halfSaid = true; this.emit('boss', 'half'); }
@@ -3710,10 +3789,12 @@ class Battle {
     if (e.treasure) this.emit('treasure', e.treasure);
     if (e.carrier) this.emit('artifact');
     this.gold += reward;
+    this.stats.goldKills = (this.stats.goldKills || 0) + reward;
     this.score += reward * 2;
     this.kills++;
-    this.gainEnergy(e.type.boss ? 15 : e.elite ? 2.5 : 1.2);
-    if (o.source) o.source.kills++;
+    this.gainEnergy(e.type.boss ? 12 : e.elite ? 1.5 : 0.6);
+    if (o.source) o.source.kills++; else if (o.src && o.src.kills !== undefined) o.src.kills++;
+    if (o.power) this.stats.powerKills = (this.stats.powerKills || 0) + 1;
     const st = this.stats;
     st.kills++;
     if (e.elite) st.elites++;
@@ -3742,6 +3823,7 @@ class Battle {
     if (this.evtQ && this.waveActive) { this.evtQ.t -= dt; if (this.evtQ.t <= 0) { const ty = this.evtQ.type; this.evtQ = null; this.trigger(ty); } }
     if (this.surgeT > 0) { this.surgeT -= dt; for (const t of this.towers) t.buff *= 1.5; }
     if (this.powerT.surcharge > 0) { this.powerT.surcharge -= dt; for (const t of this.towers) t.rb *= 1.6; }
+    for (const k in this.pcd) if (this.pcd[k] > 0) this.pcd[k] -= dt;
     if (this.stormT > 0) this.stormT -= dt;
     if (this.merchant) { this.merchant.t -= dt; if (this.merchant.t <= 0) { this.merchant = null; this.emit('merchantgone'); } }
     if (this.drops.length) { for (const d of this.drops) d.t -= dt; this.drops = this.drops.filter(d => d.t > 0 && !d.taken); }
@@ -3773,7 +3855,7 @@ class Battle {
         if (e.treasure) this.emit('toast', 'Le cargo doré s’est échappé avec son or…');
         if (e.type.steal) { const take = Math.min(this.gold, Math.max(40, Math.round(this.gold * e.type.steal))); this.gold -= take; this.stats.stolen = (this.stats.stolen || 0) + take; this.emit('toast', `Un pillard s’enfuit avec ${fmtBig(take)} or !`); }
         this.lives = Math.max(0, this.lives - e.type.lives);
-        this.stats.livesLost += e.type.lives;
+        this.stats.livesLost += e.type.lives; this.stats.leaks = (this.stats.leaks || 0) + 1;
         this.baseHit = 0.35; this.shake = 0.25;
         this.vfx({ t: 'leak', x: e.x, y: e.y });
       }
@@ -3796,7 +3878,7 @@ class Battle {
       this.projectiles = [];
       const from = this.clearedUpTo + 1, to = this.wave;
       this.stats.waves += to - from + 1;
-      this.gainEnergy(6 * (to - from + 1));
+      this.gainEnergy(5 * (to - from + 1));
       this.clearedUpTo = to;
       this.emit('wavedone', this.wave);
       if (to - from >= 1) this.emit('chaincleared', to - from + 1);
@@ -4603,19 +4685,42 @@ const RARITY = [
   { name: 'Set', color: '#3ddc5a', mul: 3.6, scrap: 90, price: 1500, set: true }
 ];
 const GEAR_TOP = 6, GEAR_STARS = 12, GEAR_SET_R = 7;
+/* 10 emplacements distincts par personnage (comme les mini-jeux) : on peut porter deux sets complets.
+   Groupe A : emplacements classiques ; groupe B : nouveaux emplacements. La moitié des sets utilise chaque groupe. */
 const GEAR_SLOTS = [
-  { id: 'arme', name: 'Arme', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
-  { id: 'blindage', name: 'Blindage', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
-  { id: 'module', name: 'Module', hint: 'Bonus pour toute la partie' }
+  { id: 'arme', name: 'Arme principale', g: 'A', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
+  { id: 'blindage', name: 'Plastron', g: 'A', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
+  { id: 'casque', name: 'Casque', g: 'A', hint: 'Portée, visée et chasse aux élites' },
+  { id: 'module', name: 'Module', g: 'A', hint: 'Bonus pour toute la partie' },
+  { id: 'bottes', name: 'Bottes', g: 'A', hint: 'Or, ralentissement et défense du Noyau' },
+  { id: 'auxiliaire', name: 'Arme auxiliaire', g: 'B', hint: D2 ? 'Renforce le héros' : 'Renforce les tourelles du personnage' },
+  { id: 'gants', name: 'Gants', g: 'B', hint: 'Cadence et coups critiques' },
+  { id: 'ceinture', name: 'Ceinture', g: 'B', hint: 'Économie et énergie des pouvoirs' },
+  { id: 'sac', name: 'Sac à outils', g: 'B', hint: 'Cases, barricades, revente et énergie' },
+  { id: 'insigne', name: 'Insigne', g: 'B', hint: 'Pouvoirs, vagues et boucliers' }
 ];
+const GEAR_SLOT_BY_ID = Object.fromEntries(GEAR_SLOTS.map(s => [s.id, s]));
 const SCRAP = '⚙';
-/* crew : le bonus ne s'applique qu'aux tourelles du personnage qui porte l'objet. */
+/* crew : le bonus ne s'applique qu'aux tourelles du personnage qui porte l'objet.
+   base : valeur de référence (statistique principale d'un objet commun niveau 1) ; w : poids pour « Équiper le meilleur » ;
+   cap : plafond du total (compétences + équipement) pour les réductions. */
 const GEAR_STATS = {
-  power: { label: 'dégâts', crew: true }, rate: { label: 'cadence de tir', crew: true }, range: { label: 'portée', crew: true },
-  hunter: { label: 'dégâts contre élites et boss' }, pen: { label: 'défense ennemie ignorée' },
-  gold: { label: 'or de départ' }, bounty: { label: 'or par élimination' }, crit: { label: 'chance de critique' },
-  lives: { label: 'vies', flat: true }, wave: { label: 'bonus de vague' }
+  power: { label: 'dégâts', crew: true, base: 0.04, w: 1.2 }, rate: { label: 'cadence de tir', crew: true, base: 0.03, w: 1.2 }, range: { label: 'portée', crew: true, base: 0.03, w: 0.9 },
+  hunter: { label: 'dégâts contre élites et boss', base: 0.06, w: 0.5, soft: 1.2 }, pen: { label: 'défense ennemie ignorée', base: 0.02, w: 1.2, cap: 0.6, soft: 0.35 },
+  gold: { label: 'or de départ', base: 0.06, w: 0.5, soft: 0.8 }, bounty: { label: 'or par élimination', base: 0.04, w: 0.8, soft: 0.6 }, crit: { label: 'chance de critique', base: 0.012, w: 2, cap: 0.75, soft: 0.25 },
+  lives: { label: 'vies', flat: true, base: 1, w: 0.03, soft: 12 }, wave: { label: 'bonus de vague', base: 0.06, w: 0.4, soft: 0.6 },
+  critdmg: { label: 'dégâts critiques', base: 0.1, w: 0.3, soft: 1.5 },
+  cheap: { label: 'de réduction sur les tourelles', base: 0.015, w: 1.5, cap: 0.5, soft: 0.3 },
+  land: { label: 'de réduction sur les cases et barricades', base: 0.03, w: 0.6, cap: 0.7, soft: 0.5 },
+  resale: { label: 'valeur de revente', base: 0.02, w: 0.5, cap: 0.35, soft: 0.25 },
+  frost: { label: 'puissance des ralentissements', base: 0.04, w: 0.6, soft: 0.8 },
+  drag: { label: 'de vitesse ennemie en moins', base: 0.012, w: 2, cap: 0.4, soft: 0.25 },
+  breaker: { label: 'dégâts contre les boucliers', base: 0.08, w: 0.4, soft: 1.5 },
+  energy: { label: 'énergie gagnée', base: 0.05, w: 0.8, cap: 0.6, soft: 0.5 },
+  energy0: { label: 'énergie au départ', flat: true, base: 4, w: 0.02, cap: 60, soft: 40 },
+  pcost: { label: 'de réduction sur les pouvoirs', base: 0.02, w: 1.5, cap: 0.4, soft: 0.3 }
 };
+const G_ = (id, slot, name, stat, sub, f) => ({ id, slot, name, stat, base: GEAR_STATS[stat].base * (f || 1), sub });
 const GEAR = [
   { id: 'canon', slot: 'arme', name: 'Canon de récupération', stat: 'power', base: 0.04, sub: 'rate' },
   { id: 'bobine', slot: 'arme', name: 'Bobine survoltée', stat: 'rate', base: 0.03, sub: 'power' },
@@ -4629,40 +4734,69 @@ const GEAR = [
   { id: 'aimant2', slot: 'module', name: 'Aimant à ferraille', stat: 'bounty', base: 0.04, sub: 'gold' },
   { id: 'viseur', slot: 'module', name: 'Viseur tactique', stat: 'crit', base: 0.012, sub: 'hunter' },
   { id: 'batterie', slot: 'module', name: 'Batterie de secours', stat: 'lives', base: 1, sub: 'wave' },
-  { id: 'horloge', slot: 'module', name: 'Horloge de l’Arche', stat: 'wave', base: 0.06, sub: 'gold' }
+  { id: 'horloge', slot: 'module', name: 'Horloge de l’Arche', stat: 'wave', base: 0.06, sub: 'gold' },
+  G_('visiere', 'casque', 'Visière de tir', 'range', 'crit'), G_('casqueradio', 'casque', 'Casque radio', 'rate', 'wave', 0.9), G_('heaume', 'casque', 'Heaume de Rouille', 'hunter', 'pen'),
+  G_('bottesmag', 'bottes', 'Bottes magnétiques', 'bounty', 'gold'), G_('patins', 'bottes', 'Patins de givre', 'frost', 'drag'), G_('bottesancre', 'bottes', 'Bottes d’ancrage', 'lives', 'breaker'),
+  G_('pistolet', 'auxiliaire', 'Pistolet de bord', 'power', 'crit', 0.9), G_('lancearc', 'auxiliaire', 'Lance-arc', 'rate', 'range'), G_('fusilcourt', 'auxiliaire', 'Fusil à canon court', 'power', 'breaker'),
+  G_('gantssoude', 'gants', 'Gants de soudeur', 'rate', 'power'), G_('gantsprec', 'gants', 'Gants de précision', 'critdmg', 'crit'), G_('gantelets', 'gants', 'Gantelets lourds', 'power', 'hunter', 0.8),
+  G_('ceintoutils', 'ceinture', 'Ceinture à outils', 'cheap', 'resale'), G_('cartouchiere', 'ceinture', 'Cartouchière', 'critdmg', 'power'), G_('ceintbatt', 'ceinture', 'Ceinture-batterie', 'energy', 'energy0'),
+  G_('sacferraille', 'sac', 'Sac de ferraille', 'resale', 'bounty'), G_('sacgenie', 'sac', 'Sac du génie', 'land', 'cheap'), G_('saccellules', 'sac', 'Sac de cellules', 'energy0', 'energy'),
+  G_('inscapitaine', 'insigne', 'Insigne de capitaine', 'wave', 'gold'), G_('insenergie', 'insigne', 'Insigne d’énergie', 'pcost', 'energy'), G_('insbouclier', 'insigne', 'Insigne anti-bouclier', 'breaker', 'lives')
 ];
 /* Mode Diablo II : noms d'objets, de charmes et de coffres du Sanctuaire (mêmes effets). */
 if (D2) {
   const rn = (list, names) => { for (const x of list) if (names[x.id]) Object.assign(x, typeof names[x.id] === 'string' ? { name: names[x.id] } : names[x.id]); };
   rn(GEAR, { canon: 'Arc long de guerre', bobine: 'Bâton de foudre', lentille: 'Œil de faucon', percuteur: 'Marteau de guerre béni', plaque: 'Armure de plates gothique', champ: 'Bouclier sacré',
     carapace: 'Cuirasse d’os', egide: 'Égide de Zakarum', puce: 'Anneau de Gheed', aimant2: 'Amulette du chasseur de trésor', viseur: 'Shako de l’Arlequin', batterie: 'Potion de rajeunissement', horloge: 'Grand charme de vitesse' });
-  rn(GEAR_SLOTS, { arme: { name: 'Arme' }, blindage: { name: 'Armure' }, module: { name: 'Bijou' } });
+  rn(GEAR_SLOTS, { arme: { name: 'Arme' }, blindage: { name: 'Armure' }, module: { name: 'Bijou' }, casque: { name: 'Heaume' }, auxiliaire: { name: 'Arme secondaire' }, sac: { name: 'Charme' }, insigne: { name: 'Amulette' } });
   rn(RELICS, { pile: 'Grand charme de puissance', visee: 'Charme de l’archer', bourse: 'Bourse de Gheed', ancre: 'Rune Ber', coeur: 'Pierre d’âme brisée', prisme: 'Rune Jah', aimant: 'Amulette du collectionneur',
     lame: 'Rune Ist', moteur: 'Cube Horadrique', eclat: 'Fragment de la Pierre-Monde', givre: 'Pierre de givre', cle: 'Clé de la Terreur' });
 }
 const GEAR_BY_ID = Object.fromEntries(GEAR.map(g => [g.id, g]));
-/* Sets de l'équipage : 3 pièces (arme, blindage, module) portées par le même personnage. Bonus à 2 et 3 pièces. */
+/* Sets de l'équipage : 3 à 5 pièces portées par le même personnage. Les 10 premiers utilisent les emplacements classiques (A),
+   les 10 suivants les nouveaux emplacements (B) : un personnage peut porter deux sets complets. */
 const GEAR_SETS = [
   { id: 'forge', name: 'Forge ardente', pieces: [['arme', 'Marteau-forge', 'power', 0.05, 'rate'], ['blindage', 'Tablier de fonderie', 'power', 0.03, 'hunter'], ['module', 'Creuset vivant', 'crit', 0.012, 'power']],
     bonus: { 2: [['power', 0.15]], 3: [['power', 0.15], ['crit', 0.05]] } },
-  { id: 'tempete', name: 'Œil de la tempête', pieces: [['arme', 'Arc-bobine', 'rate', 0.04, 'power'], ['blindage', 'Cape ionisée', 'rate', 0.025, 'range'], ['module', 'Condensateur d’orage', 'crit', 0.012, 'rate']],
-    bonus: { 2: [['rate', 0.15]], 3: [['rate', 0.15], ['crit', 0.04]] } },
-  { id: 'vigie', name: 'Vigie lointaine', pieces: [['arme', 'Lunette de siège', 'range', 0.04, 'power'], ['blindage', 'Mât d’observation', 'range', 0.03, 'hunter'], ['module', 'Carte des vents', 'crit', 0.012, 'range']],
-    bonus: { 2: [['range', 0.15]], 3: [['range', 0.1], ['hunter', 0.25]] } },
-  { id: 'titans', name: 'Chasseur de titans', pieces: [['arme', 'Harpon lourd', 'power', 0.05, 'hunter'], ['blindage', 'Bouclier de traque', 'hunter', 0.06, 'power'], ['module', 'Trophée de titan', 'hunter', 0.05, 'crit']],
-    bonus: { 2: [['hunter', 0.3]], 3: [['hunter', 0.4], ['pen', 0.1]] } },
+  { id: 'tempete', name: 'Œil de la tempête', pieces: [['arme', 'Arc-bobine', 'rate', 0.04, 'power'], ['blindage', 'Cape ionisée', 'rate', 0.025, 'range'], ['module', 'Condensateur d’orage', 'crit', 0.012, 'rate'], ['casque', 'Casque paratonnerre', 'rate', 0.03, 'crit']],
+    bonus: { 2: [['rate', 0.15]], 3: [['rate', 0.15], ['crit', 0.04]], 4: [['rate', 0.15], ['energy', 0.15]] } },
+  { id: 'vigie', name: 'Vigie lointaine', pieces: [['arme', 'Lunette de siège', 'range', 0.04, 'power'], ['blindage', 'Mât d’observation', 'range', 0.03, 'hunter'], ['module', 'Carte des vents', 'crit', 0.012, 'range'], ['casque', 'Casque longue-vue', 'range', 0.035, 'crit'], ['bottes', 'Bottes de vigie', 'drag', 0.012, 'range']],
+    bonus: { 2: [['range', 0.15]], 3: [['range', 0.1], ['hunter', 0.25]], 4: [['range', 0.1]], 5: [['crit', 0.05], ['drag', 0.05]] } },
+  { id: 'titans', name: 'Chasseur de titans', pieces: [['arme', 'Harpon lourd', 'power', 0.05, 'hunter'], ['blindage', 'Bouclier de traque', 'hunter', 0.06, 'power'], ['module', 'Trophée de titan', 'hunter', 0.05, 'crit'], ['bottes', 'Bottes de traque', 'hunter', 0.06, 'drag']],
+    bonus: { 2: [['hunter', 0.3]], 3: [['hunter', 0.4], ['pen', 0.1]], 4: [['hunter', 0.3], ['power', 0.1]] } },
   { id: 'brise', name: 'Brise-armure', pieces: [['arme', 'Foreuse à plasma', 'power', 0.045, 'pen'], ['blindage', 'Plaques perforantes', 'pen', 0.025, 'power'], ['module', 'Puce de faille', 'pen', 0.02, 'crit']],
     bonus: { 2: [['pen', 0.1]], 3: [['pen', 0.15], ['power', 0.1]] } },
-  { id: 'tresor', name: 'Trésor de la Rouille', pieces: [['arme', 'Pistolet doré', 'power', 0.04, 'bounty'], ['blindage', 'Gilet à poches', 'bounty', 0.04, 'gold'], ['module', 'Coffre portatif', 'gold', 0.07, 'bounty']],
-    bonus: { 2: [['gold', 0.2]], 3: [['bounty', 0.25], ['gold', 0.2]] } },
-  { id: 'rempart', name: 'Rempart du Noyau', pieces: [['arme', 'Canon de garde', 'power', 0.04, 'range'], ['blindage', 'Muraille portative', 'range', 0.025, 'hunter'], ['module', 'Cœur de secours', 'lives', 1, 'wave']],
-    bonus: { 2: [['lives', 2]], 3: [['lives', 3], ['wave', 0.15]] } },
+  { id: 'tresor', name: 'Trésor de la Rouille', pieces: [['arme', 'Pistolet doré', 'power', 0.04, 'bounty'], ['blindage', 'Gilet à poches', 'bounty', 0.04, 'gold'], ['module', 'Coffre portatif', 'gold', 0.07, 'bounty'], ['bottes', 'Bottes dorées', 'bounty', 0.045, 'wave']],
+    bonus: { 2: [['gold', 0.2]], 3: [['bounty', 0.25], ['gold', 0.2]], 4: [['bounty', 0.2], ['wave', 0.15]] } },
+  { id: 'rempart', name: 'Rempart du Noyau', pieces: [['arme', 'Canon de garde', 'power', 0.04, 'range'], ['blindage', 'Muraille portative', 'range', 0.025, 'hunter'], ['module', 'Cœur de secours', 'lives', 1, 'wave'], ['casque', 'Heaume du Noyau', 'hunter', 0.06, 'lives'], ['bottes', 'Bottes ancrées', 'lives', 1, 'drag']],
+    bonus: { 2: [['lives', 2]], 3: [['lives', 3], ['wave', 0.15]], 4: [['lives', 3]], 5: [['lives', 4], ['drag', 0.05]] } },
   { id: 'vagues', name: 'Maître des vagues', pieces: [['arme', 'Lance-marée', 'rate', 0.03, 'power'], ['blindage', 'Combinaison de houle', 'power', 0.03, 'rate'], ['module', 'Sablier de l’Arche', 'wave', 0.07, 'gold']],
     bonus: { 2: [['wave', 0.2]], 3: [['wave', 0.25], ['rate', 0.1]] } },
-  { id: 'precision', name: 'Précision absolue', pieces: [['arme', 'Fusil de précision', 'power', 0.05, 'range'], ['blindage', 'Viseur blindé', 'range', 0.025, 'power'], ['module', 'Puce balistique', 'crit', 0.015, 'power']],
-    bonus: { 2: [['crit', 0.04]], 3: [['crit', 0.06], ['power', 0.2]] } },
+  { id: 'precision', name: 'Précision absolue', pieces: [['arme', 'Fusil de précision', 'power', 0.05, 'range'], ['blindage', 'Viseur blindé', 'range', 0.025, 'power'], ['module', 'Puce balistique', 'crit', 0.015, 'power'], ['casque', 'Visière balistique', 'crit', 0.014, 'range']],
+    bonus: { 2: [['crit', 0.04]], 3: [['crit', 0.06], ['power', 0.2]], 4: [['critdmg', 0.5]] } },
   { id: 'phenix', name: 'Phénix d’acier', pieces: [['arme', 'Bec de braise', 'power', 0.045, 'rate'], ['blindage', 'Plumage blindé', 'power', 0.03, 'range'], ['module', 'Œuf de cendres', 'lives', 1, 'gold']],
-    bonus: { 2: [['power', 0.12], ['rate', 0.08]], 3: [['lives', 2], ['hunter', 0.2]] } }
+    bonus: { 2: [['power', 0.12], ['rate', 0.08]], 3: [['lives', 2], ['hunter', 0.2]] } },
+  // ---- Sets des nouveaux emplacements (arme auxiliaire, gants, ceinture, sac, insigne)
+  { id: 'reacteur', name: 'Cœur de réacteur', pieces: [['auxiliaire', 'Lance-arc d’énergie', 'rate', 0.03, 'energy'], ['gants', 'Gants conducteurs', 'energy', 0.05, 'rate'], ['ceinture', 'Ceinture-cellule', 'energy0', 4, 'energy'], ['sac', 'Réservoir dorsal', 'energy', 0.05, 'energy0'], ['insigne', 'Insigne du réacteur', 'pcost', 0.02, 'energy']],
+    bonus: { 2: [['energy', 0.2]], 3: [['energy0', 15]], 4: [['pcost', 0.1]], 5: [['energy', 0.3], ['pcost', 0.1]] } },
+  { id: 'genie', name: 'Génie de campagne', pieces: [['gants', 'Gants de terrassier', 'land', 0.03, 'power'], ['ceinture', 'Ceinture de sapeur', 'cheap', 0.015, 'land'], ['sac', 'Sac du sapeur', 'land', 0.035, 'resale'], ['insigne', 'Insigne du génie', 'land', 0.03, 'cheap']],
+    bonus: { 2: [['land', 0.15]], 3: [['cheap', 0.08]], 4: [['land', 0.15], ['resale', 0.1]] } },
+  { id: 'hiver', name: 'Hiver éternel', pieces: [['auxiliaire', 'Pistolet cryo', 'power', 0.035, 'frost'], ['gants', 'Gants glacés', 'frost', 0.05, 'rate'], ['ceinture', 'Ceinture de givre', 'drag', 0.012, 'frost'], ['insigne', 'Flocon d’argent', 'frost', 0.05, 'drag']],
+    bonus: { 2: [['frost', 0.2]], 3: [['drag', 0.06]], 4: [['frost', 0.3], ['drag', 0.06]] } },
+  { id: 'marchand', name: 'Marchand de la Rouille', pieces: [['ceinture', 'Bourse ceinturée', 'gold', 0.07, 'bounty'], ['sac', 'Sac à butin', 'bounty', 0.045, 'resale'], ['insigne', 'Sceau marchand', 'resale', 0.025, 'gold']],
+    bonus: { 2: [['bounty', 0.2]], 3: [['gold', 0.3], ['resale', 0.1]] } },
+  { id: 'duel', name: 'Duelliste', pieces: [['auxiliaire', 'Pistolet de duel', 'power', 0.045, 'crit'], ['gants', 'Gants de duel', 'critdmg', 0.12, 'crit'], ['insigne', 'Médaille du duel', 'crit', 0.014, 'critdmg']],
+    bonus: { 2: [['critdmg', 0.5]], 3: [['crit', 0.05], ['critdmg', 0.5]] } },
+  { id: 'disrupt', name: 'Perce-bouclier', pieces: [['auxiliaire', 'Fusil disrupteur', 'power', 0.04, 'breaker'], ['gants', 'Gants à impulsion', 'breaker', 0.09, 'power'], ['sac', 'Batterie disruptive', 'breaker', 0.09, 'pen'], ['insigne', 'Insigne de faille', 'pen', 0.02, 'breaker']],
+    bonus: { 2: [['breaker', 0.3]], 3: [['pen', 0.08]], 4: [['breaker', 0.5], ['pen', 0.07]] } },
+  { id: 'commandant', name: 'Commandant', pieces: [['auxiliaire', 'Pistolet d’officier', 'rate', 0.035, 'power'], ['gants', 'Gants de commandement', 'power', 0.04, 'rate'], ['ceinture', 'Ceinturon d’officier', 'wave', 0.07, 'gold'], ['sac', 'Sacoche d’état-major', 'gold', 0.07, 'wave'], ['insigne', 'Étoile de commandant', 'pcost', 0.025, 'wave']],
+    bonus: { 2: [['wave', 0.2]], 3: [['power', 0.15]], 4: [['rate', 0.12]], 5: [['pcost', 0.15], ['energy', 0.2]] } },
+  { id: 'artilleur', name: 'Artilleur', pieces: [['auxiliaire', 'Mortier portatif', 'power', 0.045, 'range'], ['gants', 'Gants de chargeur', 'rate', 0.035, 'power'], ['ceinture', 'Ceinture d’obus', 'critdmg', 0.12, 'power']],
+    bonus: { 2: [['range', 0.12]], 3: [['power', 0.2], ['hunter', 0.2]] } },
+  { id: 'garde', name: 'Garde du Noyau', pieces: [['auxiliaire', 'Carabine de garde', 'range', 0.035, 'power'], ['ceinture', 'Ceinture de ronde', 'lives', 1, 'wave'], ['sac', 'Sac de secours', 'lives', 1, 'energy0'], ['insigne', 'Insigne de garde', 'breaker', 0.08, 'lives']],
+    bonus: { 2: [['lives', 2]], 3: [['range', 0.1]], 4: [['lives', 3], ['wave', 0.15]] } },
+  { id: 'eclipse', name: 'Éclipse', pieces: [['auxiliaire', 'Lame d’ombre', 'power', 0.05, 'crit'], ['gants', 'Gants d’ombre', 'crit', 0.014, 'power'], ['ceinture', 'Ceinture du crépuscule', 'energy', 0.05, 'pen'], ['sac', 'Sac du néant', 'pen', 0.02, 'energy'], ['insigne', 'Sceau d’éclipse', 'hunter', 0.06, 'crit']],
+    bonus: { 2: [['crit', 0.03]], 3: [['pen', 0.06]], 4: [['energy', 0.2]], 5: [['power', 0.25], ['hunter', 0.3]] } }
 ];
 const GEAR_SET_BY_ID = Object.fromEntries(GEAR_SETS.map(S => [S.id, S]));
 for (const S of GEAR_SETS) for (const [slot, name, stat, base, sub] of S.pieces) GEAR_BY_ID['set_' + S.id + '_' + slot] = { id: 'set_' + S.id + '_' + slot, slot, name, stat, base, sub, set: S.id };
@@ -4672,32 +4806,35 @@ const CHESTS = [
   { id: 'c3', name: 'Caisse de l’Arche', price: 400, n: 1, min: 3, desc: '1 objet · Exceptionnel ou mieux' },
   { id: 'c10', name: '10 caisses renforcées', price: 1350, n: 10, min: 1, desc: '10 objets Magique ou mieux · 10 % de réduction', tag: 'Meilleure offre' }
 ];
+const GEAR_INV_MAX = 250;
 
 const Gear = {
   migrate(s) {
     s.gear = Object.assign({ items: [], equip: {}, scrap: 0, next: 1, fresh: 0, day: '', offers: [] }, s.gear || {});
-    for (const c of CREW_IDS) s.gear.equip[c] = Object.assign({ arme: null, blindage: null, module: null }, s.gear.equip[c] || {});
+    for (const c of CREW_IDS) { const e = s.gear.equip[c] = s.gear.equip[c] || {}; for (const sl of GEAR_SLOTS) if (e[sl.id] === undefined) e[sl.id] = null; }
     // v2 : 7 raretés. Légendaire et Mythique gardent leur nom ; Rare devient Magique, Épique devient Rare (même puissance)
     if (!s.gear.v) { const M = [0, 1, 2, 5, 6]; for (const it of s.gear.items) it.r = M[it.r] ?? it.r; for (const o of s.gear.offers || []) o.r = M[o.r] ?? o.r; s.gear.v = 2; }
+    // v3 : 10 emplacements, nouveaux objets (aucune conversion : les anciens objets restent dans leur emplacement)
+    if (s.gear.v < 3) s.gear.v = 3;
   },
   canStar: it => (it.r === GEAR_TOP || it.r === GEAR_SET_R) && it.l >= Gear.maxLevel(it.r) && (it.st || 0) < GEAR_STARS,
-  starCost: it => Math.round(1000 * Math.pow(1.4, it.st || 0)),
+  starCost: it => Math.round(1000 * Math.pow(1.4, it.st || 0) * (it.r === GEAR_SET_R ? 0.8 : 1)),
   starText: it => it.st ? '★'.repeat(it.st) : '',
   maxLevel: r => r === GEAR_SET_R ? 25 : 5 + 5 * r,
   upCost: it => Math.ceil(4 * it.l * (it.r + 1)),
-  /* Valeur d'une statistique pour un objet donné. */
+  /* Valeur d'une statistique pour un objet donné. La statistique secondaire vaut la moitié de la référence de cette statistique. */
   value(it, sub) {
-    const t = GEAR_BY_ID[it.t], st = sub ? t.sub : t.stat, base = sub ? (GEAR.find(g => g.stat === st) || t).base * 0.5 : t.base;
+    const t = GEAR_BY_ID[it.t], st = sub ? t.sub : t.stat, base = sub ? GEAR_STATS[st].base * 0.5 : t.base;
     const v = base * RARITY[it.r].mul * (1 + 0.1 * (it.st || 0)) * (1 + 0.12 * (it.l - 1));
     return GEAR_STATS[st].flat ? Math.max(1, Math.round(v)) : v;
   },
+  /* Statistique principale, puis secondaire dès Magique (comme les mini-jeux ; toujours pour un objet de set). */
   stats(it) {
     const t = GEAR_BY_ID[it.t], out = [[t.stat, this.value(it, false)]];
-    if (it.r >= 2) out.push([t.sub, this.value(it, true)]);
+    if (t.sub && (it.r >= 1 || t.set)) out.push([t.sub, this.value(it, true)]);
     return out;
   },
   statText(st, v) { const d = GEAR_STATS[st]; return d.flat ? `+${v} ${d.label}` : `+${pct(v)} ${d.label}`; },
-  /* Tirage d'un objet : la rareté dépend du monde atteint et d'un minimum garanti. */
   /* Tirage d'un objet : la rareté dépend du niveau atteint (voir rarityWeights) ; les sets ont la chance du Mythique. */
   roll(slot, min, rng, noSet) {
     rng = rng || Math.random;
@@ -4708,43 +4845,51 @@ const Gear = {
   },
   give(slot, it) {
     const g = slot.gear;
-    const item = { uid: g.next++, t: it.t, r: it.r, l: it.l || 1, n: 1 };
+    const item = { uid: g.next++, t: it.t, r: it.r, l: it.l || 1, n: 1, nw: 1 };
     g.items.push(item); g.fresh++;
+    // Inventaire plein : le commun libre le plus faible part au recyclage
+    if (g.items.length > GEAR_INV_MAX) { const w = g.items.filter(x => x.r === 0 && !x.lk && !this.owner(slot, x.uid) && x !== item).sort((a, b) => this.score(a) - this.score(b))[0]; if (w) this.recycle(slot, w); }
     return item;
   },
   label(it) { const t = GEAR_BY_ID[it.t]; return t.set ? `Set ${GEAR_SET_BY_ID[t.set].name} : ${t.name}` : `${RARITY[it.r].name} : ${t.name}`; },
   /* Sets : pièces portées par un personnage et bonus actifs. */
   setCount(slot, c) { const n = {}; for (const sl of GEAR_SLOTS) { const it = this.find(slot, slot.gear.equip[c][sl.id]), t = it && GEAR_BY_ID[it.t]; if (t && t.set) n[t.set] = (n[t.set] || 0) + 1; } return n; },
-  setBonus(slot, c) { const n = this.setCount(slot, c), out = []; for (const S of GEAR_SETS) for (const k in S.bonus) if ((n[S.id] || 0) >= +k) out.push(...S.bonus[k]); return out; },
-  /* Pièce de set au hasard (récompense de palier). */
-  setHtml(slot, S, c) {
-    const n = this.setCount(slot, c)[S.id] || 0, own = new Set(slot.gear.items.map(x => x.t));
-    return `<div class="gsetbox"><b>${esc(S.name)}</b> <small>${n}/3 sur ${esc(CAST[c] ? CAST[c].name : '')}</small><div class="gsetp">${S.pieces.map(([sl, nm]) => `<span class="${own.has('set_' + S.id + '_' + sl) ? 'own' : ''}">${esc(nm)}</span>`).join('')}</div>` +
-      `<ul>${Object.keys(S.bonus).map(k => `<li class="${n >= +k ? 'on' : ''}"><b>${k} pièces</b> : ${S.bonus[k].map(([st, v]) => esc(this.statText(st, GEAR_STATS[st].flat ? v : v))).join(' · ')}</li>`).join('')}</ul><p class="hint">Les bonus comptent quand les pièces sont portées par le même personnage.</p></div>`;
+  setBonusOf(S, n) { const out = []; for (const k in S.bonus) if (n >= +k) out.push(...S.bonus[k]); return out; },
+  setBonus(slot, c) { const n = this.setCount(slot, c), out = []; for (const S of GEAR_SETS) out.push(...this.setBonusOf(S, n[S.id] || 0)); return out; },
+  setHtml(slot, S, c, opts) {
+    const n = this.setCount(slot, c)[S.id] || 0, own = new Set(slot.gear.items.map(x => x.t)), eqd = new Set(GEAR_SLOTS.map(sl => { const it = this.find(slot, slot.gear.equip[c][sl.id]); return it && it.t; }));
+    const pick = opts && opts.piece;
+    return `<div class="gsetbox"><b>${esc(S.name)}</b> <small>${n}/${S.pieces.length} sur ${esc(CAST[c] ? CAST[c].name : '')} · ${S.pieces.filter(([sl]) => own.has('set_' + S.id + '_' + sl)).length}/${S.pieces.length} trouvées</small>` +
+      `<div class="gsetp">${S.pieces.map(([sl, nm]) => { const id = 'set_' + S.id + '_' + sl, cl = eqd.has(id) ? 'on' : own.has(id) ? 'own' : ''; return `<button type="button" data-piece="${id}" class="${cl}${pick === id ? ' sel' : ''}">${gearSlotSvg(sl, 14)} ${esc(nm)}${cl === 'on' ? ' · portée' : cl === 'own' ? ' · possédée' : ''}</button>`; }).join('')}</div>` +
+      (pick && pick.startsWith('set_' + S.id + '_') ? this.pieceHtml(slot, pick) : '') +
+      `<ul>${Object.keys(S.bonus).map(k => `<li class="${n >= +k ? 'on' : ''}"><b>${k} pièces</b> : ${S.bonus[k].map(([st, v]) => esc(this.statText(st, v))).join(' · ')}</li>`).join('')}</ul></div>`;
   },
-  rollSet(slot) { const S = GEAR_SETS[Math.floor(Math.random() * GEAR_SETS.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)]; return { t: 'set_' + S.id + '_' + p[0], r: GEAR_SET_R, l: 1 }; },
+  /* Fiche d'une pièce de set : valeurs au niveau 1, au niveau 25 et avec 12 étoiles, et la meilleure possédée. */
+  pieceHtml(slot, id) {
+    const t = GEAR_BY_ID[id], mk = (l, st) => this.stats({ t: id, r: GEAR_SET_R, l, st }), max = this.maxLevel(GEAR_SET_R);
+    const v1 = mk(1, 0), vm = mk(max, 0), vs = mk(max, GEAR_STARS), mine = slot.gear.items.filter(x => x.t === id).sort((a, b) => (b.st || 0) - (a.st || 0) || b.l - a.l), best = mine[0], vb = best ? this.stats(best) : null;
+    const sh = (st, v) => GEAR_STATS[st].flat ? '+' + v : '+' + pct(v);
+    return `<div class="gpiece"><b>${gearSlotSvg(t.slot, 16)} ${esc(t.name)}</b><small>${esc(GEAR_SLOT_BY_ID[t.slot].name)} · ${mine.length ? `tu en as ${mine.length} (meilleure : niv. ${best.l}${best.st ? ' ' + this.starText(best) : ''})` : 'pas encore trouvée'}</small>` +
+      `<table><tr><th></th><th>Niv. 1</th><th>Niv. ${max}</th><th>${GEAR_STARS} ★</th>${vb ? '<th class="mine">La tienne</th>' : ''}</tr>${v1.map(([st, v], i) => `<tr><td>${esc(GEAR_STATS[st].label)}</td><td>${sh(st, v)}</td><td>${sh(st, vm[i][1])}</td><td>${sh(st, vs[i][1])}</td>${vb ? `<td class="mine">${sh(st, vb[i][1])}</td>` : ''}</tr>`).join('')}</table>` +
+      (best ? `<div class="row"><button class="btn tiny" data-item="${best.uid}" type="button">Voir la fiche</button></div>` : '') + '</div>';
+  },
+  rollSet(slot) { void slot; const S = GEAR_SETS[Math.floor(Math.random() * GEAR_SETS.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)]; return { t: 'set_' + S.id + '_' + p[0], r: GEAR_SET_R, l: 1 }; },
   owner(slot, uid) {
-    for (const c of CREW_IDS) for (const sl of GEAR_SLOTS) if (slot.gear.equip[c][sl.id] === uid) return { c, s: sl.id };
+    for (const c of CREW_IDS) { const e = slot.gear.equip[c]; if (e) for (const sl of GEAR_SLOTS) if (e[sl.id] === uid) return { c, s: sl.id }; }
     return null;
   },
-  find(slot, uid) { return slot.gear.items.find(i => i.uid === uid) || null; },
+  find(slot, uid) { return uid == null ? null : slot.gear.items.find(i => i.uid === uid) || null; },
+  /* Équipe un objet sur un personnage (il quitte son ancien porteur). */
+  equip(slot, c, it) { const o = this.owner(slot, it.uid); if (o) slot.gear.equip[o.c][o.s] = null; slot.gear.equip[c][GEAR_BY_ID[it.t].slot] = it.uid; delete it.nw; },
 
   /* Bonus des objets équipés, transmis à la bataille. */
+  /* Rendement décroissant des bonus globaux de tout l'équipage : S·(1 − e^(−v/S)). Proche de v au début, plafonné à S. */
+  soft(k, v) { const S = GEAR_STATS[k].soft; if (!S || v <= 0) return v; const e = S * (1 - Math.exp(-v / S)); return GEAR_STATS[k].flat ? Math.round(e) : e; },
+  globalRaw(slot) { const g = {}; for (const c of CREW_IDS) { const { glob } = this.summary(slot, c); for (const k in glob) g[k] = (g[k] || 0) + glob[k]; } return g; },
   mods(slot) {
-    const global = {}, crew = {};
-    for (const c of CREW_IDS) {
-      const own = {};
-      for (const sl of GEAR_SLOTS) {
-        const it = this.find(slot, slot.gear.equip[c][sl.id]);
-        if (!it) continue;
-        for (const [st, v] of this.stats(it)) {
-          if (GEAR_STATS[st].crew) own[st] = (own[st] || 0) + v;
-          else global[st] = (global[st] || 0) + v;
-        }
-      }
-      for (const [st, v] of this.setBonus(slot, c)) { if (GEAR_STATS[st].crew) own[st] = (own[st] || 0) + v; else global[st] = (global[st] || 0) + v; }
-      for (const tid of CREW_TOWERS[c]) crew[tid] = own;
-    }
+    const raw = this.globalRaw(slot), global = {}, crew = {};
+    for (const k in raw) global[k] = this.soft(k, raw[k]);
+    for (const c of CREW_IDS) { const { own } = this.summary(slot, c); for (const tid of CREW_TOWERS[c]) crew[tid] = own; }
     return { global, crew };
   },
   summary(slot, c) {
@@ -4772,7 +4917,7 @@ const Gear = {
     if (it.r >= GEAR_TOP) return [];
     const same = slot.gear.items.filter(x => x.t === it.t && x.r === it.r);
     if (same.length < 3) return [];
-    same.sort((a, b) => (b.uid === it.uid) - (a.uid === it.uid) || b.l - a.l);
+    same.sort((a, b) => (b.uid === it.uid) - (a.uid === it.uid) || !!this.owner(slot, b.uid) - !!this.owner(slot, a.uid) || b.l - a.l);
     return same.slice(0, 3);
   },
   merge(slot, it) {
@@ -4783,38 +4928,75 @@ const Gear = {
     keep.r++; keep.l = Math.min(this.maxLevel(keep.r), lvl);
     return keep;
   },
+  /* Fusionne d'un coup tous les groupes de 3 objets identiques libres (du plus faible au plus fort). */
+  mergeAll(slot) {
+    let n = 0, guard = 0, again = true;
+    while (again && guard++ < 200) {
+      again = false;
+      for (let r = 0; r < GEAR_TOP && !again; r++) for (const it of slot.gear.items.filter(x => x.r === r && !x.lk)) {
+        const grp = this.mergeGroup(slot, it);
+        if (grp.length === 3 && grp.every(x => !x.lk)) { this.merge(slot, it); n++; again = true; break; }
+      }
+    }
+    return n;
+  },
   remove(slot, uid) {
     const o = this.owner(slot, uid);
     if (o) slot.gear.equip[o.c][o.s] = null;
     slot.gear.items = slot.gear.items.filter(x => x.uid !== uid);
   },
-  recycle(slot, it) { const gain = RARITY[it.r].scrap * it.l + 300 * (it.st || 0); this.remove(slot, it.uid); slot.gear.scrap += gain; return gain; },
-  score(it) { return (it.st || 0) * 0.1 + this.stats(it).reduce((a, [st, v]) => a + (GEAR_STATS[st].flat ? v * 0.03 : v), 0); },
-  /* Équipe automatiquement le meilleur objet libre dans chaque emplacement du personnage. */
-  autoEquip(slot, c) {
-    for (const sl of GEAR_SLOTS) {
-      const cur = this.find(slot, slot.gear.equip[c][sl.id]);
-      let best = cur, bs = cur ? this.score(cur) : -1;
-      for (const it of slot.gear.items) {
-        if (GEAR_BY_ID[it.t].slot !== sl.id || this.owner(slot, it.uid)) continue;
-        const sc = this.score(it);
-        if (sc > bs) { best = it; bs = sc; }
+  recycleValue(it) { return RARITY[it.r].scrap * it.l + 300 * (it.st || 0); },
+  recycle(slot, it) { const gain = this.recycleValue(it); this.remove(slot, it.uid); slot.gear.scrap += gain; return gain; },
+  score(it) { return (it.st || 0) * 0.1 + this.stats(it).reduce((a, [st, v]) => a + v * (GEAR_STATS[st].w || 1), 0); },
+  /* Valeur d'une liste de bonus (pour comparer des combinaisons de sets). */
+  bonusScore(list) { return list.reduce((a, [st, v]) => a + v * (GEAR_STATS[st].w || 1), 0); },
+  /* Score d'un personnage : objets portés + bonus de sets actifs. */
+  charScore(slot, c) { let s = 0; for (const sl of GEAR_SLOTS) { const it = this.find(slot, slot.gear.equip[c][sl.id]); if (it) s += this.score(it); } return s + this.bonusScore(this.setBonus(slot, c)); },
+  /* Équipe automatiquement le meilleur objet libre dans chaque emplacement, en tenant compte des bonus de set
+     (deux passes : chaque changement n'est gardé que s'il améliore le score total du personnage). */
+  autoEquip(slot, c, others) {
+    const eq = slot.gear.equip[c];
+    for (let pass = 0; pass < 3; pass++) {
+      let changed = false;
+      for (const sl of GEAR_SLOTS) {
+        const cands = slot.gear.items.filter(it => GEAR_BY_ID[it.t].slot === sl.id && (!this.owner(slot, it.uid) || this.owner(slot, it.uid).c === c || (others && !others.includes(this.owner(slot, it.uid).c))));
+        let best = eq[sl.id], bs = this.charScore(slot, c);
+        for (const it of cands) {
+          if (it.uid === eq[sl.id]) continue;
+          const o = this.owner(slot, it.uid), prev = eq[sl.id], prevO = o && slot.gear.equip[o.c][o.s];
+          if (o) slot.gear.equip[o.c][o.s] = null;
+          eq[sl.id] = it.uid;
+          const sc = this.charScore(slot, c);
+          eq[sl.id] = prev; if (o) slot.gear.equip[o.c][o.s] = prevO;
+          if (sc > bs + 1e-9) { bs = sc; best = it.uid; }
+        }
+        if (best !== eq[sl.id]) { const it = this.find(slot, best); this.equip(slot, c, it); changed = true; }
       }
-      if (best && best !== cur) slot.gear.equip[c][sl.id] = best.uid;
+      if (!changed) break;
     }
+  },
+  /* Équipe tout l'équipage : chaque personnage, dans l'ordre, prend le meilleur parmi les objets que les suivants n'ont pas. */
+  autoEquipAll(slot, chars) {
+    for (const c of chars) for (const sl of GEAR_SLOTS) slot.gear.equip[c][sl.id] = null;
+    for (const c of chars) this.autoEquip(slot, c);
   }
 };
 
-/* Icône d'un objet (SVG), teintée de la couleur de rareté. */
-function gearIcon(it, size) {
-  const t = GEAR_BY_ID[it.t], c = RARITY[it.r].color, s = size || 40;
-  const shapes = {
-    arme: '<path d="M7 17h22l4-3h5v9h-5l-4-3H24l-3 10h-7l2-10H7z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><rect x="10" y="19" width="9" height="3" rx="1" fill="currentColor"/><path d="M38 18.5h3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
-    blindage: '<path d="M22 6l13 5v9c0 9-6 15-13 18C15 35 9 29 9 20v-9z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M22 13v18M15 20h14" stroke="currentColor" stroke-width="2"/>',
-    module: '<rect x="11" y="11" width="22" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="17" y="17" width="10" height="10" rx="1.5" fill="currentColor"/><path d="M15 6v5M22 6v5M29 6v5M15 33v5M22 33v5M29 33v5M6 15h5M6 22h5M6 29h5M33 15h5M33 22h5M33 29h5" stroke="currentColor" stroke-width="2"/>'
-  };
-  return `<svg class="gicon" viewBox="0 0 44 44" width="${s}" height="${s}" style="color:${c}" aria-hidden="true">${shapes[t.slot]}</svg>`;
-}
+/* Icônes des emplacements (SVG) et d'un objet (teintée de la couleur de rareté). */
+const GEAR_SHAPES = {
+  arme: '<path d="M7 17h22l4-3h5v9h-5l-4-3H24l-3 10h-7l2-10H7z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><rect x="10" y="19" width="9" height="3" rx="1" fill="currentColor"/><path d="M38 18.5h3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  blindage: '<path d="M22 6l13 5v9c0 9-6 15-13 18C15 35 9 29 9 20v-9z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M22 13v18M15 20h14" stroke="currentColor" stroke-width="2"/>',
+  module: '<rect x="11" y="11" width="22" height="22" rx="3" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="17" y="17" width="10" height="10" rx="1.5" fill="currentColor"/><path d="M15 6v5M22 6v5M29 6v5M15 33v5M22 33v5M29 33v5M6 15h5M6 22h5M6 29h5M33 15h5M33 22h5M33 29h5" stroke="currentColor" stroke-width="2"/>',
+  casque: '<path d="M9 27c0-9 6-16 13-16s13 7 13 16v4H9z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M12 24h20" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 11V7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="22" cy="6" r="2" fill="currentColor"/>',
+  bottes: '<path d="M12 7h9v17l10 4c3 1 4 3 4 6v3H12z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M12 32h23M12 14h9" stroke="currentColor" stroke-width="2"/>',
+  auxiliaire: '<path d="M8 15h18l3-3h4v10h-4l-3-3h-6l-3 8h-5l2-8H8z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M32 27l5 5M27 32l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  gants: '<path d="M14 36V20l-3-5 2-2 4 4V9a2 2 0 0 1 4 0v8V7a2 2 0 0 1 4 0v10V9a2 2 0 0 1 4 0v10v-6a2 2 0 0 1 4 0v14c0 5-4 9-9 9z" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/>',
+  ceinture: '<rect x="5" y="17" width="34" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="2.6"/><rect x="17" y="14" width="10" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="22" cy="22" r="2" fill="currentColor"/>',
+  sac: '<path d="M10 16h24l-2 21H12z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M16 16c0-6 3-9 6-9s6 3 6 9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M17 24h10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  insigne: '<path d="M22 5l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M16 30l-3 9 9-4 9 4-3-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'
+};
+function gearSlotSvg(slotId, size, color) { return `<svg class="gicon" viewBox="0 0 44 44" width="${size || 20}" height="${size || 20}" style="color:${color || 'currentColor'}" aria-hidden="true">${GEAR_SHAPES[slotId] || GEAR_SHAPES.module}</svg>`; }
+function gearIcon(it, size) { const t = GEAR_BY_ID[it.t]; return gearSlotSvg(t.slot, size || 40, RARITY[it.r].color); }
 function gearCard(slot, it, opts) {
   const t = GEAR_BY_ID[it.t], R = RARITY[it.r], o = Gear.owner(slot, it.uid), merge = Gear.mergeGroup(slot, it).length >= 3;
   return `<button class="gcard r${it.r} ${opts && opts.big ? 'big' : ''}" type="button" data-item="${it.uid}" style="--rc:${R.color}">` +
@@ -4822,6 +5004,7 @@ function gearCard(slot, it, opts) {
     `<b>${esc(t.name)}</b><small>${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : R.name} · niv. ${it.l}</small>${it.st ? `<small class="gstars">${Gear.starText(it)}</small>` : ''}` +
     `<span class="gstat">${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join('<br>')}</span>` +
     (o ? `<span class="gown" title="Équipé par ${esc(CAST[o.c].name)}">${esc(CAST[o.c].name[0])}</span>` : '') +
+    (it.lk ? '<span class="glock" title="Verrouillé">🔒</span>' : '') + (it.nw && !o ? '<span class="gnew">Nouveau</span>' : '') +
     (merge ? '<span class="gmerge" title="Fusion possible">×3</span>' : '') + '</button>';
 }
 
@@ -6626,7 +6809,7 @@ function makeGearHub(C, D) { return {
   close() { Minigames.closeDom(); },
   render() {
     const s = App.slot, e = D.get(s), st = D.stats(s), el = $('mgDig');
-    const tabs = [['play', 'Partie'], ['hangar', C.invTab + (e.fresh ? ` (${e.fresh})` : '')], ['sets', 'Sets'], ['atelier', 'Atelier']];
+    const tabs = [['play', 'Partie'], ['hangar', C.invTab + (e.fresh ? ` (${e.fresh})` : '')], ['sets', 'Sets'], ['atelier', 'Atelier'], ['chances', 'Chances']];
     let h = `<div class="card mgdig expdig"><div class="row" style="justify-content:space-between;align-items:center"><div><p class="eyebrow">${C.eyebrow}</p><h2>${C.title}</h2></div>
       <button class="btn small" id="expClose" type="button">Fermer</button></div>
       <div class="expwallet"><span class="expec">${C.sym} <b>${fmtBig(e[C.cur])}</b> ${C.curName}</span><span>Record : ${C.unit} <b>${e.best}</b></span><span>Meilleur score <b>${fmtBig(e.score)}</b></span></div>
@@ -6636,6 +6819,7 @@ function makeGearHub(C, D) { return {
     if (this.tab === 'play') h += this.playHtml(s, e, st);
     else if (this.tab === 'hangar') h += this.pick ? this.pickHtml(s, e) : this.hangarHtml(s, e, st);
     else if (this.tab === 'sets') h += this.setsHtml(e);
+    else if (this.tab === 'chances') h += this.chancesHtml(e);
     else h += this.atelierHtml(s, e);
     if (this.tab === 'play') h += `<div class="row" style="justify-content:center;margin-top:6px"><button class="btn small danger" id="gearReset" type="button">Réinitialiser ce mini-jeu</button></div>`;
     el.innerHTML = h + '</div>';
@@ -6740,6 +6924,14 @@ function makeGearHub(C, D) { return {
     const own = C.sets.map(S => S.pieces.filter(([sl]) => e.items.some(x => x.b === S.id + '_' + sl)).length);
     return `<p class="hint">${C.setHint} Chaque set compte 3 à 5 pièces, une par emplacement ; la moitié des sets utilise les emplacements classiques, l’autre moitié les nouveaux : tu peux porter deux sets complets en même temps. Une pièce de set au niveau 25 peut encore gagner 12 étoiles. Touche une pièce pour voir ses statistiques.</p>` +
       C.sets.map((S, i) => this.setBlock(e, S, false).replace('</b>', ` <small>· ${own[i]}/${S.pieces.length} trouvées</small></b>`)).join('');
+  },
+  /* Chances de rareté selon le record atteint (même table que l'équipage). */
+  chancesHtml(e) {
+    const L = Math.max(1, e.best || 1), cols = [[`${C.unit} ${L}`, L], [`${C.unit} ${L + 25}`, L + 25], [`${C.unit} ${L + 100}`, L + 100]];
+    const f = v => v < 0.001 ? '< 0,1 %' : (v * 100).toFixed(v < 0.1 ? 1 : 0).replace('.', ',') + ' %';
+    const tab = cols.map(([, l]) => { const w = rarityWeights(l, 1), t = w.reduce((a, b) => a + b, 0); return w.map(x => x / t); });
+    return `<div class="expbox"><b>Chances par rareté</b><div class="gchance"><table><tr><th>Rareté</th>${cols.map(([n]) => `<th>${esc(n)}</th>`).join('')}</tr>${C.rar.map((R, i) => `<tr><td style="color:${R.color}" class="${R.rainbow ? 'rbw' : ''}">${R.name}</td>${tab.map(c => `<td>${f(c[i] || 0)}</td>`).join('')}</tr>`).join('')}</table></div>` +
+      `<p class="hint">Plus tu vas loin, plus les raretés hautes tombent souvent (lentement). La chance d’objet de l’atelier et de l’équipement augmente surtout les hautes raretés. Les objets de set ont la même chance que les Mythiques. Tous les 10 ${C.unit}s, un palier donne aussi un objet garanti à l’équipage de Neon Bastion.</p></div>`;
   },
   atelierHtml(s, e) {
     return '<p class="hint">Améliorations permanentes : elles servent pour toutes tes prochaines parties.</p><div class="explist">' + C.ups.map(u => {
@@ -8968,133 +9160,224 @@ const Loadout = {
   }
 };
 const CrewView = {
-  char: CREW_IDS[0], filter: 'all',
-  /* Mode normal : le personnage en figurine 3D sur son socle, entouré de ses emplacements d'équipement. */
+  char: CREW_IDS[0], filter: 'all', tab: 'equip', pick: null, piece: null, sort: 'rar',
+  /* Mode normal : le personnage en figurine 3D sur son socle, entouré de ses 10 emplacements (5 de chaque côté). */
   stage(sum) {
     const body = $('crewBody'), hero = body.querySelector('.crewhero'), slots = body.querySelector('.gslots');
     if (!hero || !slots) return;
     const c = this.char, st = document.createElement('section');
-    st.className = 'crewstage'; st.style.setProperty('--cc', CAST[c].color);
+    st.className = 'crewstage cs10'; st.style.setProperty('--cc', CAST[c].color);
     const own = Object.entries(sum.own).map(([k, v]) => Gear.statText(k, v)), glob = Object.entries(sum.glob).map(([k, v]) => Gear.statText(k, v));
     st.innerHTML = `<div class="cscol l"></div><div class="cshero"><div class="csname"><b>${esc(CAST[c].name)}</b><small>${esc(CAST[c].role)}</small></div></div><div class="cscol r"></div>` +
-      `<div class="csstats"><span>🔧 ${own.length ? esc(own.join(' · ')) : 'Aucun bonus de tourelle'}</span><span>🌐 ${glob.length ? esc(glob.join(' · ')) : 'Aucun bonus global'}</span></div>`;
+      `<div class="cstowers"></div><div class="csstats"><span>🔧 ${own.length ? esc(own.join(' · ')) : 'Aucun bonus de tourelle'}</span><span>🌐 ${glob.length ? esc(glob.join(' · ')) : 'Aucun bonus global'}</span></div>`;
     const ss = [...slots.children];
-    st.querySelector('.cscol.l').append(...ss.slice(0, 2)); st.querySelector('.cscol.r').append(...ss.slice(2));
-    const towers = document.createElement('div'); towers.className = 'cstowers';
+    st.querySelector('.cscol.l').append(...ss.slice(0, 5)); st.querySelector('.cscol.r').append(...ss.slice(5));
+    const towers = st.querySelector('.cstowers');
     for (const id of CREW_TOWERS[c]) { const ic = iconCanvas(60); towerIcon(ic, TOWER_BY_ID[id]); const f = document.createElement('figure'); f.append(ic); f.insertAdjacentHTML('beforeend', `<figcaption>${esc(TOWER_BY_ID[id].name)}</figcaption>`); towers.append(f); }
-    st.querySelector('.cscol.r').append(towers);
     body.insertBefore(st, hero); slots.remove();
     hero.classList.add('crewinfo');
     Toy.live(st.querySelector('.cshero'), c);
   },
+  slotTile(s, c, sl) {
+    const it = Gear.find(s, s.gear.equip[c][sl.id]), R = it ? RARITY[it.r] : null, n = s.gear.items.filter(x => GEAR_BY_ID[x.t].slot === sl.id && !Gear.owner(s, x.uid)).length;
+    return `<div class="gslot gs2${this.pick === sl.id ? ' on' : ''}${it ? ' full r' + it.r : ''}" data-slot="${sl.id}" role="button" tabindex="0" aria-label="${esc(sl.name)} : ${it ? esc(GEAR_BY_ID[it.t].name) : 'vide'}" style="--rc:${R ? R.color : 'rgba(255,255,255,.35)'}">` +
+      `<i>${gearSlotSvg(sl.id, 26, R ? R.color : null)}</i><span><b>${esc(sl.name)}</b><small>${it ? esc(GEAR_BY_ID[it.t].name) : 'Vide'}</small>${it ? `<em>niv. ${it.l}${it.st ? ' ' + Gear.starText(it) : ''}</em>` : n ? `<em class="gsfree">${n} libre${n > 1 ? 's' : ''}</em>` : ''}</span></div>`;
+  },
   render() {
     const s = App.slot;
     Gear.migrate(s);
-    s.gear.fresh = 0;
     $('crewScrap').textContent = fmtBig(s.gear.scrap);
     $('crewGems').textContent = fmtBig(s.gems);
     if (!CREW_TOWERS[this.char] || !crewJoined(s, this.char)) this.char = CREW_IDS[0];
-    Meta.tabs($('crewTabs'), CREW_IDS.filter(c => crewJoined(s, c)).map(c => [c, D2 ? `<span class="dot" style="background:${CAST[c].color}"></span>${esc(CAST[c].name)}` : `<canvas width="96" height="96" data-portrait="${c}"></canvas><span>${esc(CAST[c].name)}</span>`]), this.char, id => { this.char = id; this.render(); });
+    Meta.tabs($('crewTabs'), CREW_IDS.filter(c => crewJoined(s, c)).map(c => [c, D2 ? `<span class="dot" style="background:${CAST[c].color}"></span>${esc(CAST[c].name)}` : `<canvas width="96" height="96" data-portrait="${c}"></canvas><span>${esc(CAST[c].name)}</span>`]), this.char, id => { this.char = id; this.pick = null; this.render(); });
     if (!D2) $('crewTabs').querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
-    const c = this.char, eq = s.gear.equip[c], sum = Gear.summary(s, c);
-    const towers = CREW_TOWERS[c].map(id => TOWER_BY_ID[id].name).join(', ');
-    const lines = [...Object.entries(sum.own).map(([st, v]) => Gear.statText(st, v) + ' (' + towers + ')'), ...Object.entries(sum.glob).map(([st, v]) => Gear.statText(st, v) + ' (toute la partie)')];
-    const nextRec = CREW_IDS.find(x => !crewJoined(s, x));
-    let h = (nextRec ? `<p class="hint">Prochaine recrue au niveau ${crewLevel(nextRec)} : un nouveau personnage et sa tourelle.</p>` : '') + `<section class="panel crewhero" style="--cc:${CAST[c].color}"><canvas width="128" height="128" data-portrait="${c}"></canvas><div><p class="eyebrow">${esc(CAST[c].role)}</p><h3>${esc(CAST[c].name)}</h3>` +
-      `<p class="hint">${D2 ? 'Classe' : 'Tourelles'} : ${esc(towers)}</p><p class="hint">${lines.length ? 'Bonus actifs : ' + lines.map(esc).join(' · ') : 'Aucun objet équipé pour l’instant.'}</p>` +
-      `<div class="row"><button class="btn small primary" id="gearAuto" type="button">Équiper le meilleur</button><button class="btn small" id="gearShop" type="button">Caisses et offres</button></div>` +
-      (D2 ? `<div class="row" style="align-items:center"><button class="btn small" id="artImport" type="button">${HeroArt.sets[c] ? 'Changer la planche de sprites' : 'Importer une planche de sprites'}</button>` +
-        (HeroArt.sets[c] ? '<button class="btn small danger" id="artRemove" type="button">Retirer</button>' : '') + `<input type="file" id="artFile" accept="image/*" hidden></div>` +
-        `<p class="hint" id="artInfo">${HeroArt.sets[c] ? `Graphismes personnels : ${esc(HeroArt.sets[c].name)} · ${HeroArt.sets[c].blocks.length} animations reconnues${HeroArt.sets[c].small ? ' · image en petite taille : prends la version complète de la planche pour un rendu net' : ''}` : 'Une image de planche (blocs gris, 16 directions) remplace l’emblème du héros. Elle reste sur cet appareil.'}</p>` +
-        (HeroArt.sets[c] ? '<canvas id="artPrev" width="420" height="110" style="width:100%;max-width:420px;height:auto;background:rgba(0,0,0,.25);border-radius:8px"></canvas>' +
-          '<div class="artpick">' + Object.entries(HERO_ROLES).map(([role, label]) => `<label>${label}<select data-role="${role}">${HeroArt.sets[c].blocks.map((x, i) => `<option value="${i}" ${HeroArt.sets[c].assign[role] === i ? 'selected' : ''}>Bloc ${i + 1} · ${x.frames} images</option>`).join('')}</select></label>`).join('') + '</div>' +
-          '<div class="artthumbs">' + HeroArt.sets[c].blocks.map((x, i) => `<figure data-thumb="${i}"><canvas width="48" height="64"></canvas><figcaption>${i + 1}</figcaption></figure>`).join('') + '</div>' : '') : '') +
-      `</div></section>`;
-    h += '<div class="gslots">' + GEAR_SLOTS.map(sl => {
-      const it = Gear.find(s, eq[sl.id]);
-      return `<div class="gslot${this.filter === sl.id ? ' on' : ''}" data-slot="${sl.id}" role="button" tabindex="0" aria-label="Voir les objets : ${esc(sl.name)}"><p class="eyebrow">${sl.name} <span class="gfl">${this.filter === sl.id ? '· filtré' : '· voir les objets ▾'}</span></p>${it ? gearCard(s, it, { big: true }) : `<div class="gempty">Vide<small>${esc(sl.hint)}</small><small class="gfl">Touche pour voir tes objets de ce type</small></div>`}</div>`;
-    }).join('') + '</div>';
-    const items = s.gear.items.filter(it => this.filter === 'all' || GEAR_BY_ID[it.t].slot === this.filter)
-      .sort((a, b) => b.r - a.r || b.l - a.l || a.t.localeCompare(b.t));
-    const commons = s.gear.items.filter(it => it.r === 0 && !Gear.owner(s, it.uid)).length;
-    h += `<section class="panel" id="crewInv"><div class="topbar" style="gap:6px"><p class="eyebrow">Inventaire · ${this.filter === 'all' ? `${s.gear.items.length} objet${s.gear.items.length > 1 ? 's' : ''}` : `${items.length} × ${esc(GEAR_SLOTS.find(x => x.id === this.filter).name)}`}</p>` +
-      `<div class="row">${[['all', 'Tout'], ...GEAR_SLOTS.map(x => [x.id, x.name])].map(([id, l]) => `<button class="btn tiny" data-flt="${id}" aria-pressed="${this.filter === id}" type="button">${l}</button>`).join('')}` +
-      (commons ? `<button class="btn tiny" id="gearRecycleAll" type="button">Recycler les ${commons} communs libres</button>` : '') + '</div></div>' +
-      (items.length ? `<div class="ggrid">${items.map(it => gearCard(s, it)).join('')}</div>` : '<div class="empty">Aucun objet. Gagne des niveaux, termine des quêtes ou ouvre une caisse dans la boutique.</div>') +
-      '<p class="hint">Trois objets identiques (même nom, même rareté) fusionnent en un objet de la rareté suivante. Recycler un objet rapporte de la ferraille pour monter les autres de niveau.</p></section>';
+    const fresh = s.gear.items.filter(x => x.nw).length;
+    const tabs = [['equip', 'Équipement'], ['inv', `Inventaire${fresh ? ` (${fresh} nouv.)` : ''}`], ['sets', 'Sets'], ['chances', 'Chances']];
+    let h = `<div class="row crewviews">${tabs.map(([id, l]) => `<button class="btn small ${this.tab === id ? 'primary' : ''}" data-view="${id}" type="button">${l}</button>`).join('')}</div>`;
+    if (this.tab === 'equip') h += this.equipHtml(s);
+    else if (this.tab === 'inv') h += this.invHtml(s);
+    else if (this.tab === 'sets') h += this.setsHtml(s);
+    else h += this.chancesHtml(s);
+    const keep = window.scrollY;
     $('crewBody').innerHTML = h;
     const body = $('crewBody');
-    if (!D2) this.stage(sum);
+    if (!D2 && this.tab === 'equip') this.stage(Gear.summary(s, this.char));
     body.querySelectorAll('[data-portrait]').forEach(cv => drawPortrait(cv, cv.dataset.portrait));
-    body.querySelectorAll('[data-item]').forEach(bt => { bt.onclick = () => this.detail(+bt.dataset.item); });
-    body.querySelectorAll('[data-flt]').forEach(bt => { bt.onclick = () => { this.filter = bt.dataset.flt; this.render(); }; });
-    // Toucher une case d'équipement montre seulement les objets de ce type
-    body.querySelectorAll('[data-slot]').forEach(sl => {
-      const go = ev => { if (ev.target.closest('[data-item]')) return; this.filter = this.filter === sl.dataset.slot ? 'all' : sl.dataset.slot; this.render(); const inv = $('crewInv'); if (inv) inv.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-      sl.onclick = go; sl.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(ev); } };
-    });
-    $('gearAuto').onclick = () => { Gear.autoEquip(s, c); Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); };
-    $('gearShop').onclick = () => { Meta.shopTab = 'gear'; App.show('shop'); };
-    if (D2) {
-      $('artImport').onclick = () => $('artFile').click();
-      $('artFile').onchange = async ev => {
-        const f = ev.target.files[0]; if (!f) return;
-        $('artInfo').textContent = 'Découpage de la planche…';
-        try { await HeroArt.importFile(c, f); Toast2.show(`Graphismes de ${CAST[c].name} importés`); } catch (e) { $('artInfo').textContent = 'Impossible de lire cette planche : ' + (e.message || e); return; }
-        this.render();
-      };
-      if ($('artRemove')) $('artRemove').onclick = async () => { await HeroArt.remove(c); this.render(); };
-      body.querySelectorAll('.artpick select').forEach(sel => { sel.onchange = async () => { $('artInfo').textContent = 'Mise à jour des animations…'; await HeroArt.reassign(c, sel.dataset.role, +sel.value); this.render(); }; });
-      if (HeroArt.sets[c]) body.querySelectorAll('[data-thumb]').forEach(async fg => {
-        const bl = HeroArt.sets[c].blocks[+fg.dataset.thumb]; if (!bl || !bl.thumb) return;
-        const im = await createImageBitmap(bl.thumb), cv = fg.querySelector('canvas'), k = Math.min(48 / im.width, 64 / im.height);
-        cv.getContext('2d').drawImage(im, (48 - im.width * k) / 2, 64 - im.height * k, im.width * k, im.height * k);
-      });
-      const pv = $('artPrev');
-      if (pv) {
-        cancelAnimationFrame(this.artRaf);
-        const set = HeroArt.sets[c], g = pv.getContext('2d'), fake = { x: 0, y: 0, s: { rate: 0.8 }, angle: 0 };
-        const loop = t => {
-          if (!pv.isConnected) return;
-          g.clearRect(0, 0, pv.width, pv.height);
-          for (let i = 0; i < 8; i++) { fake.angle = Math.PI / 2 + i * TAU / 8; fake._atk = i % 2 ? Math.floor(t / 1600) * 1.6 : undefined; HeroArt.draw(g, set, fake, 28 + i * 52, 100, 80, t / 1000); }
-          this.artRaf = requestAnimationFrame(loop);
-        };
-        this.artRaf = requestAnimationFrame(loop);
-      }
+    this.bind(s);
+    if (this._keepScroll) { window.scrollTo(0, keep); this._keepScroll = false; }
+  },
+  equipHtml(s) {
+    const c = this.char, sum = Gear.summary(s, c);
+    const towers = CREW_TOWERS[c].map(id => TOWER_BY_ID[id].name).join(', ');
+    const nextRec = CREW_IDS.find(x => !crewJoined(s, x)), filled = GEAR_SLOTS.filter(sl => s.gear.equip[c][sl.id] != null).length;
+    let h = (nextRec ? `<p class="hint">Prochaine recrue au niveau ${crewLevel(nextRec)} : un nouveau personnage et sa tourelle.</p>` : '') + `<section class="panel crewhero" style="--cc:${CAST[c].color}"><canvas width="128" height="128" data-portrait="${c}"></canvas><div><p class="eyebrow">${esc(CAST[c].role)} · ${filled}/${GEAR_SLOTS.length} emplacements</p><h3>${esc(CAST[c].name)}</h3>` +
+      `<p class="hint">${D2 ? 'Classe' : 'Tourelles'} : ${esc(towers)}. Les bonus de dégâts, cadence et portée ne valent que pour ces tourelles ; les autres comptent pour toute la partie.</p>` +
+      `<div class="row"><button class="btn small primary" id="gearAuto" type="button">Équiper le meilleur</button><button class="btn small" id="gearAutoAll" type="button">Équiper tout l’équipage</button><button class="btn small" id="gearShop" type="button">Caisses et offres</button></div>` +
+      (D2 ? this.d2ArtHtml(c) : '') + `</div></section>`;
+    h += '<div class="gslots">' + GEAR_SLOTS.map(sl => this.slotTile(s, c, sl)).join('') + '</div>';
+    if (this.pick) h += this.pickHtml(s, c);
+    else h += '<p class="hint">Touche un emplacement pour choisir son objet. Les 5 emplacements de gauche servent aux sets classiques, les 5 de droite aux nouveaux sets : un personnage peut porter deux sets complets.</p>';
+    const raw = Gear.globalRaw(s), ks = Object.keys(raw);
+    if (ks.length) h += `<details class="panel gtotal"><summary><b>Bonus globaux de tout l’équipage</b> <small>(rendement décroissant)</small></summary><table>${ks.map(k => `<tr><td>${esc(GEAR_STATS[k].label)}</td><td>${GEAR_STATS[k].flat ? '+' + Math.round(raw[k]) : '+' + pct(raw[k])}</td><td>→ ${GEAR_STATS[k].flat ? '+' + Gear.soft(k, raw[k]) : '+' + pct(Gear.soft(k, raw[k]))}</td><td class="muted">max ${GEAR_STATS[k].soft ? (GEAR_STATS[k].flat ? '+' + GEAR_STATS[k].soft : '+' + pct(GEAR_STATS[k].soft)) : '—'}</td></tr>`).join('')}</table><p class="hint">Les bonus de dégâts, cadence et portée restent liés aux tourelles du porteur, sans plafond. Les bonus globaux de tous les personnages s’additionnent, puis rapportent de moins en moins près de leur maximum : mieux vaut varier les statistiques.</p></details>`;
+    const cnt = Gear.setCount(s, c), act = GEAR_SETS.filter(S => cnt[S.id]);
+    if (act.length) h += `<section class="panel"><p class="eyebrow">Sets portés par ${esc(CAST[c].name)}</p>${act.map(S => Gear.setHtml(s, S, c, { piece: this.piece })).join('')}</section>`;
+    return h;
+  },
+  d2ArtHtml(c) {
+    return `<div class="row" style="align-items:center"><button class="btn small" id="artImport" type="button">${HeroArt.sets[c] ? 'Changer la planche de sprites' : 'Importer une planche de sprites'}</button>` +
+      (HeroArt.sets[c] ? '<button class="btn small danger" id="artRemove" type="button">Retirer</button>' : '') + `<input type="file" id="artFile" accept="image/*" hidden></div>` +
+      `<p class="hint" id="artInfo">${HeroArt.sets[c] ? `Graphismes personnels : ${esc(HeroArt.sets[c].name)} · ${HeroArt.sets[c].blocks.length} animations reconnues${HeroArt.sets[c].small ? ' · image en petite taille : prends la version complète de la planche pour un rendu net' : ''}` : 'Une image de planche (blocs gris, 16 directions) remplace l’emblème du héros. Elle reste sur cet appareil.'}</p>` +
+      (HeroArt.sets[c] ? '<canvas id="artPrev" width="420" height="110" style="width:100%;max-width:420px;height:auto;background:rgba(0,0,0,.25);border-radius:8px"></canvas>' +
+        '<div class="artpick">' + Object.entries(HERO_ROLES).map(([role, label]) => `<label>${label}<select data-role="${role}">${HeroArt.sets[c].blocks.map((x, i) => `<option value="${i}" ${HeroArt.sets[c].assign[role] === i ? 'selected' : ''}>Bloc ${i + 1} · ${x.frames} images</option>`).join('')}</select></label>`).join('') + '</div>' +
+        '<div class="artthumbs">' + HeroArt.sets[c].blocks.map((x, i) => `<figure data-thumb="${i}"><canvas width="48" height="64"></canvas><figcaption>${i + 1}</figcaption></figure>`).join('') + '</div>' : '');
+  },
+  /* Différence de statistiques entre un objet et celui déjà porté (bonus de set compris). */
+  delta(s, c, it) {
+    const sl = GEAR_BY_ID[it.t].slot, eq = s.gear.equip[c], prev = eq[sl], o = Gear.owner(s, it.uid), prevO = o && s.gear.equip[o.c][o.s];
+    const before = Gear.summary(s, c), b0 = Gear.charScore(s, c);
+    if (o) s.gear.equip[o.c][o.s] = null;
+    eq[sl] = it.uid;
+    const after = Gear.summary(s, c), b1 = Gear.charScore(s, c);
+    eq[sl] = prev; if (o) s.gear.equip[o.c][o.s] = prevO;
+    const keys = new Set([...Object.keys(before.own), ...Object.keys(before.glob), ...Object.keys(after.own), ...Object.keys(after.glob)]), out = [];
+    for (const k of keys) {
+      const a = (before.own[k] || 0) + (before.glob[k] || 0), b = (after.own[k] || 0) + (after.glob[k] || 0), d = b - a;
+      if (Math.abs(d) < 1e-6) continue;
+      const f = GEAR_STATS[k].flat ? Math.round(d) : String(Math.round(d * 1000) / 10).replace('.', ',');
+      out.push(`<span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? '+' : '−'}${Math.abs(f)}${GEAR_STATS[k].flat ? '' : ' %'} ${esc(GEAR_STATS[k].label)}</span>`);
     }
-    const ra = $('gearRecycleAll');
-    if (ra) ra.onclick = () => { let gain = 0; for (const it of s.gear.items.filter(x => x.r === 0 && !Gear.owner(s, x.uid))) gain += Gear.recycle(s, it); Store.touch(s); Toast2.show(`+${gain} ${SCRAP} ferraille`); this.render(); };
+    return { html: out.join(''), gain: b1 - b0 };
+  },
+  pickHtml(s, c) {
+    const sl = GEAR_SLOT_BY_ID[this.pick], cur = Gear.find(s, s.gear.equip[c][sl.id]);
+    const list = s.gear.items.filter(it => GEAR_BY_ID[it.t].slot === sl.id && it !== cur).map(it => ({ it, d: this.delta(s, c, it) })).sort((a, b) => b.d.gain - a.d.gain);
+    let h = `<section class="panel gpick"><div class="row" style="justify-content:space-between;align-items:center"><b>${gearSlotSvg(sl.id, 20)} Choisir : ${esc(sl.name)}</b><button class="btn tiny" data-act="close" type="button">Fermer ✕</button></div><p class="hint">${esc(sl.hint)}.</p>`;
+    h += cur ? `<div class="gprow cur">${gearCard(s, cur)}<div><small>Équipé</small><button class="btn tiny" data-unequip="${cur.uid}" type="button">Retirer</button></div></div>` : '<p class="hint">Rien d’équipé ici.</p>';
+    if (!list.length) return h + `<p class="hint">Aucun autre objet « ${esc(sl.name)} » pour l’instant. Termine des niveaux, des quêtes ou ouvre une caisse.</p></section>`;
+    h += '<p class="hint">Classés du meilleur au moins bon pour ce personnage (bonus de set compris). En vert ce que tu gagnes, en rouge ce que tu perds.</p>';
+    for (const { it, d } of list) {
+      const o = Gear.owner(s, it.uid);
+      h += `<div class="gprow">${gearCard(s, it)}<div><div class="gdelta">${d.html || '<span>Aucun changement</span>'}</div>${o ? `<small>Porté par ${esc(CAST[o.c].name)}</small>` : ''}<button class="btn tiny ${d.gain > 0 ? 'primary' : ''}" data-eq="${it.uid}" type="button">${o ? 'Prendre' : 'Équiper'}</button></div></div>`;
+    }
+    return h + '</section>';
+  },
+  invHtml(s) {
+    const g = s.gear, eqd = it => !!Gear.owner(s, it.uid);
+    const items = g.items.filter(it => this.filter === 'all' || (this.filter === 'set' ? GEAR_BY_ID[it.t].set : this.filter === 'free' ? !eqd(it) : GEAR_BY_ID[it.t].slot === this.filter))
+      .sort(this.sort === 'lvl' ? (a, b) => b.l - a.l || b.r - a.r : this.sort === 'slot' ? (a, b) => GEAR_SLOTS.findIndex(x => x.id === GEAR_BY_ID[a.t].slot) - GEAR_SLOTS.findIndex(x => x.id === GEAR_BY_ID[b.t].slot) || b.r - a.r : (a, b) => b.r - a.r || b.l - a.l || a.t.localeCompare(b.t));
+    const free = r => g.items.filter(it => it.r === r && !it.lk && !eqd(it)).length, merges = (() => { const k = {}; for (const it of g.items) if (it.r < GEAR_TOP && !it.lk) k[it.t + ':' + it.r] = (k[it.t + ':' + it.r] || 0) + 1; return Object.values(k).filter(n => n >= 3).length; })();
+    let h = `<section class="panel" id="crewInv"><p class="eyebrow">Inventaire · ${g.items.length} / ${GEAR_INV_MAX} objets · ${fmtBig(g.scrap)} ${SCRAP}</p>` +
+      `<div class="row gfilters">${[['all', 'Tout'], ['free', 'Libres'], ['set', 'Sets'], ...GEAR_SLOTS.map(x => [x.id, gearSlotSvg(x.id, 16)])].map(([id, l]) => `<button class="btn tiny" data-flt="${id}" aria-pressed="${this.filter === id}" type="button" title="${esc(id === 'all' || id === 'free' || id === 'set' ? '' : GEAR_SLOT_BY_ID[id].name)}">${l}</button>`).join('')}</div>` +
+      `<div class="row gfilters"><span class="hint">Trier :</span>${[['rar', 'Rareté'], ['lvl', 'Niveau'], ['slot', 'Emplacement']].map(([id, l]) => `<button class="btn tiny" data-sort="${id}" aria-pressed="${this.sort === id}" type="button">${l}</button>`).join('')}</div>` +
+      `<div class="row gfilters">${merges ? `<button class="btn tiny violet" id="gearMergeAll" type="button">Tout fusionner (${merges})</button>` : ''}${free(0) ? `<button class="btn tiny" data-rec="0" type="button">Recycler les communs libres (${free(0)})</button>` : ''}${free(1) ? `<button class="btn tiny" data-rec="1" type="button">Recycler les magiques libres (${free(1)})</button>` : ''}</div>` +
+      (items.length ? `<div class="ggrid">${items.map(it => gearCard(s, it)).join('')}</div>` : '<div class="empty">Aucun objet ici. Chaque victoire rapporte un objet ; boss, quêtes, paliers des mini-jeux et caisses en donnent d’autres.</div>') +
+      '<p class="hint">Trois objets identiques (même nom, même rareté) fusionnent en un objet de la rareté suivante. Recycler rapporte de la ferraille pour monter les objets de niveau. Un objet verrouillé 🔒 n’est jamais recyclé ni fusionné automatiquement.</p></section>';
+    for (const it of g.items) delete it.nw;
+    return h;
+  },
+  setsHtml(s) {
+    const c = this.char;
+    const groups = [['A', 'Sets des emplacements classiques (arme principale, plastron, casque, module, bottes)'], ['B', 'Sets des nouveaux emplacements (arme auxiliaire, gants, ceinture, sac, insigne)']];
+    return `<p class="hint">Les objets de set (verts) sont aussi rares que les Mythiques. Un set compte de 3 à 5 pièces ; ses bonus s’activent quand les pièces sont portées par le même personnage (ici ${esc(CAST[c].name)}). Une pièce au niveau 25 peut encore gagner 12 étoiles. Touche une pièce pour voir ses statistiques.</p>` +
+      groups.map(([g, t]) => `<section class="panel"><p class="eyebrow">${t}</p>${GEAR_SETS.filter(S => GEAR_SLOT_BY_ID[S.pieces[0][0]].g === g).map(S => Gear.setHtml(s, S, c, { piece: this.piece })).join('')}</section>`).join('');
+  },
+  /* Chances d'obtenir chaque rareté au niveau atteint (et plus loin), pour chaque source d'objets. */
+  chancesHtml(s) {
+    const L = s.unlocked || 1, cols = [['Fin de niveau', L, 0], ['Boss (Magique +)', L, 1], ['Caisse de l’Arche', L, 3], [`Au niveau ${L + 50}`, L + 50, 0], [`Au niveau ${L + 150}`, L + 150, 0]];
+    const tab = cols.map(([, l, min]) => { const w = rarityWeights(l, 1), ok = i => i >= min; let t = 0; w.forEach((x, i) => { if (ok(i) || i === 7) t += x; }); return w.map((x, i) => ok(i) || i === 7 ? x / t : 0); });
+    const f = v => v <= 0 ? '—' : v < 0.001 ? '< 0,1 %' : (v * 100).toFixed(v < 0.1 ? 1 : 0).replace('.', ',') + ' %';
+    return `<section class="panel"><p class="eyebrow">Chances par rareté · niveau atteint ${L}</p><div class="gchance"><table><tr><th>Rareté</th>${cols.map(([n]) => `<th>${esc(n)}</th>`).join('')}</tr>` +
+      RARITY.map((R, i) => `<tr><td style="color:${R.color}" class="${R.rainbow ? 'rbw' : ''}">${R.name}</td>${tab.map(col => `<td>${f(col[i])}</td>`).join('')}</tr>`).join('') + `</table></div>` +
+      `<ul class="hint"><li>Chaque victoire rapporte <b>un objet</b>, plus une chance de second objet (10 % par étoile).</li><li>Un boss rapporte un objet Magique ou mieux, et un objet Rare ou mieux avec 3 étoiles.</li><li>Plus le niveau atteint est haut, plus les raretés élevées tombent souvent, lentement. Les objets de set ont la même chance que les Mythiques.</li><li>Les paliers des mini-jeux (tous les 10 niveaux) donnent des objets garantis : Commun au 10, Magique au 20… puis set et Mythique.</li></ul></section>`;
+  },
+  bind(s) {
+    const body = $('crewBody'), c = this.char, done = sfx => { Store.touch(s); Sound.sfx && Sound.sfx(sfx || 'ui'); this._keepScroll = true; this.render(); };
+    body.querySelectorAll('[data-view]').forEach(b => { b.onclick = () => { this.tab = b.dataset.view; this.pick = null; this.render(); }; });
+    body.querySelectorAll('[data-item]').forEach(bt => { bt.onclick = ev => { ev.stopPropagation(); this.detail(+bt.dataset.item); }; });
+    body.querySelectorAll('[data-flt]').forEach(bt => { bt.onclick = () => { this.filter = bt.dataset.flt; this.render(); }; });
+    body.querySelectorAll('[data-sort]').forEach(bt => { bt.onclick = () => { this.sort = bt.dataset.sort; this.render(); }; });
+    body.querySelectorAll('[data-piece]').forEach(bt => { bt.onclick = () => { this.piece = this.piece === bt.dataset.piece ? null : bt.dataset.piece; this._keepScroll = true; this.render(); }; });
+    body.querySelectorAll('[data-slot]').forEach(sl => {
+      const go = () => { this.pick = this.pick === sl.dataset.slot ? null : sl.dataset.slot; this._keepScroll = true; this.render(); const p = body.querySelector('.gpick'); if (p) p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+      sl.onclick = go; sl.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } };
+    });
+    body.querySelectorAll('[data-eq]').forEach(bt => { bt.onclick = () => { const it = Gear.find(s, +bt.dataset.eq); if (!it) return; Gear.equip(s, c, it); done('build'); }; });
+    body.querySelectorAll('[data-unequip]').forEach(bt => { bt.onclick = () => { const o = Gear.owner(s, +bt.dataset.unequip); if (o) s.gear.equip[o.c][o.s] = null; done(); }; });
+    body.querySelectorAll('[data-act="close"]').forEach(bt => { bt.onclick = () => { this.pick = null; this._keepScroll = true; this.render(); }; });
+    body.querySelectorAll('[data-rec]').forEach(bt => { bt.onclick = () => {
+      const r = +bt.dataset.rec, list = s.gear.items.filter(x => x.r === r && !x.lk && !Gear.owner(s, x.uid)), doIt = () => { let g = 0; for (const it of list) g += Gear.recycle(s, it); Toast2.show(`+${fmtBig(g)} ${SCRAP} ferraille`); done('sell'); };
+      if (r >= 1) Modal.open({ title: 'Recycler les objets magiques libres ?', text: `${list.length} objet${list.length > 1 ? 's' : ''} seront détruits contre de la ferraille (les objets verrouillés et équipés sont gardés).`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] });
+      else doIt();
+    }; });
+    const ma = $('gearMergeAll'); if (ma) ma.onclick = () => { const n = Gear.mergeAll(s); Toast2.show(`${n} fusion${n > 1 ? 's' : ''} réalisée${n > 1 ? 's' : ''}`); done('up'); };
+    if ($('gearAuto')) $('gearAuto').onclick = () => { Gear.autoEquip(s, c); done('up'); };
+    if ($('gearAutoAll')) $('gearAutoAll').onclick = () => { Gear.autoEquipAll(s, [c, ...CREW_IDS.filter(x => x !== c && crewJoined(s, x))]); Toast2.show('Équipage équipé (en commençant par ' + CAST[c].name + ')'); done('up'); };
+    if ($('gearShop')) $('gearShop').onclick = () => { Meta.shopTab = 'gear'; App.show('shop'); };
+    if (D2 && $('artImport')) this.bindArt(c);
+  },
+  bindArt(c) {
+    const body = $('crewBody');
+    $('artImport').onclick = () => $('artFile').click();
+    $('artFile').onchange = async ev => {
+      const f = ev.target.files[0]; if (!f) return;
+      $('artInfo').textContent = 'Découpage de la planche…';
+      try { await HeroArt.importFile(c, f); Toast2.show(`Graphismes de ${CAST[c].name} importés`); } catch (e) { $('artInfo').textContent = 'Impossible de lire cette planche : ' + (e.message || e); return; }
+      this.render();
+    };
+    if ($('artRemove')) $('artRemove').onclick = async () => { await HeroArt.remove(c); this.render(); };
+    body.querySelectorAll('.artpick select').forEach(sel => { sel.onchange = async () => { $('artInfo').textContent = 'Mise à jour des animations…'; await HeroArt.reassign(c, sel.dataset.role, +sel.value); this.render(); }; });
+    if (HeroArt.sets[c]) body.querySelectorAll('[data-thumb]').forEach(async fg => {
+      const bl = HeroArt.sets[c].blocks[+fg.dataset.thumb]; if (!bl || !bl.thumb) return;
+      const im = await createImageBitmap(bl.thumb), cv = fg.querySelector('canvas'), k = Math.min(48 / im.width, 64 / im.height);
+      cv.getContext('2d').drawImage(im, (48 - im.width * k) / 2, 64 - im.height * k, im.width * k, im.height * k);
+    });
+    const pv = $('artPrev');
+    if (pv) {
+      cancelAnimationFrame(this.artRaf);
+      const set = HeroArt.sets[c], g = pv.getContext('2d'), fake = { x: 0, y: 0, s: { rate: 0.8 }, angle: 0 };
+      const loop = t => {
+        if (!pv.isConnected) return;
+        g.clearRect(0, 0, pv.width, pv.height);
+        for (let i = 0; i < 8; i++) { fake.angle = Math.PI / 2 + i * TAU / 8; fake._atk = i % 2 ? Math.floor(t / 1600) * 1.6 : undefined; HeroArt.draw(g, set, fake, 28 + i * 52, 100, 80, t / 1000); }
+        this.artRaf = requestAnimationFrame(loop);
+      };
+      this.artRaf = requestAnimationFrame(loop);
+    }
   },
   detail(uid) {
     const s = App.slot, it = Gear.find(s, uid);
     if (!it) return;
+    delete it.nw;
     const t = GEAR_BY_ID[it.t], o = Gear.owner(s, uid), max = Gear.maxLevel(it.r), cost = Gear.upCost(it), grp = Gear.mergeGroup(s, it);
-    const star = Gear.canStar(it), sc = star ? Gear.starCost(it) : 0, top = it.r === GEAR_TOP || it.r === GEAR_SET_R;
+    const star = Gear.canStar(it), sc = star ? Gear.starCost(it) : 0, top = it.r === GEAR_TOP || it.r === GEAR_SET_R, c = this.char;
     const next = it.l < max ? Gear.stats({ ...it, l: it.l + 1 }) : star ? Gear.stats({ ...it, st: (it.st || 0) + 1 }) : null;
-    const html = `<div class="gdetail r${it.r}" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b class="grname" style="color:${RARITY[it.r].color}">${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : RARITY[it.r].name}</b> · ${GEAR_SLOTS.find(x => x.id === t.slot).name} · niveau ${it.l} / ${max}${top ? ` · étoiles ${it.st || 0} / ${GEAR_STARS}` : ''}</p>` +
-      (t.set ? Gear.setHtml(s, GEAR_SET_BY_ID[t.set], o ? o.c : this.char) : '') +
+    const d = (!o || o.c !== c) ? this.delta(s, c, it) : null;
+    const html = `<div class="gdetail r${it.r}" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b class="grname" style="color:${RARITY[it.r].color}">${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : RARITY[it.r].name}</b> · ${esc(GEAR_SLOT_BY_ID[t.slot].name)} · niveau ${it.l} / ${max}${top ? ` · étoiles ${it.st || 0} / ${GEAR_STARS}` : ''}${it.lk ? ' · 🔒' : ''}</p>` +
       (top ? `<div class="expstars">${Array.from({ length: GEAR_STARS }, (_, i) => `<i class="${i < (it.st || 0) ? 'on' : ''}">★</i>`).join('')}</div>` : '') +
-      (top && it.l < max ? `<p class="hint">Au niveau ${max}, l’objet peut gagner jusqu’à ${GEAR_STARS} étoiles : +10 % à ses valeurs par étoile.</p>` : '') +
       `<ul class="traits" style="text-align:left">${Gear.stats(it).map(([st, v], i) => `<li>${esc(Gear.statText(st, v))}${next ? ` <span style="color:var(--cyan)">→ ${esc(Gear.statText(st, next[i][1]).split(' ')[0])}</span>` : ''}${GEAR_STATS[st].crew ? ' <span class="muted">(tourelles du porteur)</span>' : ''}</li>`).join('')}</ul>` +
-      (it.r < 2 ? '<p class="hint">Dès la rareté Rare, l’objet gagne une seconde statistique.</p>' : '') +
+      (d ? `<p class="hint">Sur ${esc(CAST[c].name)} à la place de l’objet actuel :</p><div class="gdelta">${d.html || '<span>Aucun changement</span>'}</div>` : '') +
+      (t.set ? Gear.setHtml(s, GEAR_SET_BY_ID[t.set], o ? o.c : c) : '') +
+      (top && it.l < max ? `<p class="hint">Au niveau ${max}, l’objet peut gagner jusqu’à ${GEAR_STARS} étoiles : +10 % à ses valeurs par étoile.</p>` : '') +
+      (it.r < 1 && !t.set ? '<p class="hint">Dès la rareté Magique, l’objet gagne une seconde statistique.</p>' : '') +
+      (!t.set && it.r < GEAR_TOP ? `<p class="hint">Fusion : 3 × ${esc(t.name)} ${RARITY[it.r].name.toLowerCase()} → 1 ${RARITY[it.r + 1].name.toLowerCase()} (tu en as ${s.gear.items.filter(x => x.t === it.t && x.r === it.r).length}/3).</p>` : '') +
       `<p class="hint">${o ? `Équipé par ${esc(CAST[o.c].name)}.` : 'Pas équipé.'} Ferraille : ${fmtBig(s.gear.scrap)} ${SCRAP}</p></div>`;
-    const acts = [];
-    const c = this.char;
-    if (!o || o.c !== c) acts.push({ label: `Équiper sur ${CAST[c].name}`, cls: 'primary', fn: () => { if (o) s.gear.equip[o.c][o.s] = null; s.gear.equip[c][t.slot] = uid; Store.touch(s); Sound.sfx && Sound.sfx('build'); this.render(); } });
-    else acts.push({ label: 'Retirer', fn: () => { s.gear.equip[o.c][o.s] = null; Store.touch(s); this.render(); } });
+    const acts = [], again = () => { Store.touch(s); this._keepScroll = true; this.render(); setTimeout(() => this.detail(uid), 30); };
+    if (!o || o.c !== c) acts.push({ label: `Équiper sur ${CAST[c].name}`, cls: 'primary', fn: () => { Gear.equip(s, c, it); Store.touch(s); Sound.sfx && Sound.sfx('build'); this._keepScroll = true; this.render(); } });
+    else acts.push({ label: 'Retirer', fn: () => { s.gear.equip[o.c][o.s] = null; Store.touch(s); this._keepScroll = true; this.render(); } });
     if (it.l < max) acts.push({ label: `Améliorer · ${cost} ${SCRAP}`, cls: s.gear.scrap >= cost ? 'gold' : '', fn: () => {
       if (s.gear.scrap < cost) { Toast2.show(`Il manque ${cost - s.gear.scrap} ${SCRAP} ferraille`); return; }
-      s.gear.scrap -= cost; it.l++; Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); setTimeout(() => this.detail(uid), 30);
+      s.gear.scrap -= cost; it.l++; Sound.sfx && Sound.sfx('up'); again();
     } });
+    if (it.l < max) { let n = 0, tot = 0; const tmp = { ...it }; while (tmp.l < max && tot + Gear.upCost(tmp) <= s.gear.scrap) { tot += Gear.upCost(tmp); tmp.l++; n++; } if (n > 1) acts.push({ label: `Améliorer ×${n} · ${fmtBig(tot)} ${SCRAP}`, cls: 'gold', fn: () => { s.gear.scrap -= tot; it.l += n; Sound.sfx && Sound.sfx('up'); again(); } }); }
     if (star) acts.push({ label: `★ Étoile ${(it.st || 0) + 1} · ${fmtBig(sc)} ${SCRAP}`, cls: s.gear.scrap >= sc ? 'gold' : '', fn: () => {
       if (s.gear.scrap < sc) { Toast2.show(`Il manque ${fmtBig(sc - s.gear.scrap)} ${SCRAP} ferraille`); return; }
-      s.gear.scrap -= sc; it.st = (it.st || 0) + 1; Store.touch(s); Sound.sfx && Sound.sfx('up'); this.render(); setTimeout(() => this.detail(uid), 30);
+      s.gear.scrap -= sc; it.st = (it.st || 0) + 1; Sound.sfx && Sound.sfx('up'); again();
     } });
-    if (grp.length >= 3) acts.push({ label: `Fusionner ×3 → ${RARITY[it.r + 1].name}`, cls: 'violet', fn: () => { const r = Gear.merge(s, it); Store.touch(s); this.render(); if (r) Reveal.show([r], 'Fusion réussie'); } });
-    acts.push({ label: `Recycler · +${RARITY[it.r].scrap * it.l + 300 * (it.st || 0)} ${SCRAP}`, cls: 'danger', fn: () => {
-      const doIt = () => { const g = Gear.recycle(s, it); Store.touch(s); Toast2.show(`+${g} ${SCRAP} ferraille`); this.render(); };
-      if (it.r >= 2) setTimeout(() => Modal.open({ title: 'Recycler cet objet ?', text: `${Gear.label(it)} sera détruit contre ${RARITY[it.r].scrap * it.l} ${SCRAP}.`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] }), 30);
+    if (grp.length >= 3) acts.push({ label: `Fusionner ×3 → ${RARITY[it.r + 1].name}`, cls: 'violet', fn: () => { const r = Gear.merge(s, it); Store.touch(s); this._keepScroll = true; this.render(); if (r) Reveal.show([r], 'Fusion réussie'); } });
+    acts.push({ label: it.lk ? '🔓 Déverrouiller' : '🔒 Verrouiller', fn: () => { it.lk = !it.lk; again(); } });
+    if (!it.lk) acts.push({ label: `Recycler · +${Gear.recycleValue(it)} ${SCRAP}`, cls: 'danger', fn: () => {
+      const doIt = () => { const g = Gear.recycle(s, it); Store.touch(s); Toast2.show(`+${g} ${SCRAP} ferraille`); this._keepScroll = true; this.render(); };
+      if (it.r >= 2) setTimeout(() => Modal.open({ title: 'Recycler cet objet ?', text: `${Gear.label(it)} sera détruit contre ${Gear.recycleValue(it)} ${SCRAP}.`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] }), 30);
       else doIt();
     } });
     acts.push({ label: 'Fermer' });
@@ -9169,6 +9452,7 @@ function buildMods(slot, levelN, boosts) {
   Gear.migrate(slot);
   const gm = Gear.mods(slot);
   add(gm.global); m.crew = gm.crew;
+  for (const k in GEAR_STATS) if (GEAR_STATS[k].cap !== undefined && m[k] > GEAR_STATS[k].cap) m[k] = GEAR_STATS[k].cap;
   return m;
 }
 const COUNTER_KEYS = ['kills', 'elites', 'bosses', 'upgrades', 'built', 'goldSpent', 'waves', 'fusions', 'padBuys', 'earlyCalls'];
@@ -9908,8 +10192,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.22';
+const APP_VERSION = '7.23';
 const CHANGELOG = [
+  { v: '7.23', date: '04.11.2026', items: ['Équipement de l’équipage refait sur le modèle des mini-jeux : 10 emplacements par personnage (arme principale, plastron, casque, module, bottes, arme auxiliaire, gants, ceinture, sac à outils, insigne), 18 nouveaux objets, 20 sets de 3 à 5 pièces (deux sets complets portables), nouvelles statistiques liées aux pouvoirs, aux cases et aux barricades.', 'Écran Équipage en onglets : Équipement (toucher un emplacement pour choisir, comparaison vert/rouge avec l’objet porté), Inventaire (filtres, tri, tout fusionner, recyclage groupé, verrouillage), Sets (fiche de chaque pièce), Chances (raretés par source). « Équiper tout l’équipage » et « Améliorer ×N ».', 'Chaque victoire rapporte un objet et de la ferraille. Les bonus globaux de tout l’équipage ont un rendement décroissant (détail dans l’écran Équipage).', 'Fiche ennemi complète : touche une icône de la prochaine vague, de la liste des ennemis, du codex ou de la fiche d’un niveau (statistiques, version élite, capacités, apparitions par vague, conseils pour le contrer).', 'Récapitulatif de fin de niveau par tourelle : éliminations, dégâts et part des dégâts, or investi, rendement, plus le bilan de la partie (cases, barricades, reventes, énergie, pouvoirs).', 'Pouvoirs : temps de recharge, énergie rééquilibrée, Pluie d’or limitée à une fois par vague ; au premier appui, un pouvoir explique ce qu’il fait. Nouvelle compétence Condensateur. Onglet Chances dans les mini-jeux.', 'Corrections : message qui cachait la prochaine vague en portrait, bouton du son par-dessus les infos, capacités des ennemis récents absentes des fiches, boss de fin mal annoncés dans la fiche de niveau.'] },
   { v: '7.22', date: '04.11.2026', items: ['La fusion se débloque au niveau 2, avec un mini-tutoriel en 4 étapes : poser une Stase à côté de la Gatling, ouvrir le menu d’une tourelle et toucher « Fusion », choisir l’autre tourelle, confirmer. Les repères s’affichent sur le plateau en 2D comme en 3D ; on peut annuler et reprendre à tout moment.'] },
   { v: '7.21', date: '04.11.2026', items: ['La fusion de tourelles est possible dès le niveau 1 (au lieu du niveau 50) : deux tourelles de types différents, adjacentes ou non, via le menu de la tourelle. La branche Fusion de l’atelier (Synergie, Résonance) est débloquée d’entrée.'] },
   { v: '7.20.1', date: '03.11.2026', items: ['Deux pouvoirs à poser sur un chemin : la Mine (40 énergie, niveau 14) explose au passage du premier ennemi et inflige 60 % des PV restants à tous les ennemis proches (15 % pour les boss) ; le Leurre (50 énergie, niveau 21) retient pendant 6 s les ennemis qui l’atteignent (les boss et les planeurs passent). Touche le pouvoir, puis un chemin.'] },
@@ -10106,10 +10391,14 @@ const Meta = {
     s.gems += gems;
     // Butin d'équipement : chance selon les étoiles, garanti sur un boss
     Gear.migrate(s);
-    const items = [], chance = 0.2 + 0.1 * b.stars + (lv.boss ? 1 : 0);
-    if (Math.random() < chance) items.push(Gear.give(s, Gear.roll(s, lv.boss ? 1 : 0)));
+    const items = [];
+    items.push(Gear.give(s, Gear.roll(s, lv.boss ? 1 : 0)));                 // un objet garanti par victoire (Magique + sur un boss)
+    if (Math.random() < 0.1 * b.stars) items.push(Gear.give(s, Gear.roll(s, 0)));
     if (lv.boss && b.stars === 3) items.push(Gear.give(s, Gear.roll(s, 2)));
     for (const it of items) lines.push(`Équipement trouvé : ${Gear.label(it)}`);
+    // Ferraille : de quoi monter l'équipement sans tout recycler
+    const scrap = Math.round((8 + 1.5 * lv.n) * (0.5 + 0.25 * b.stars) * (lv.boss ? 2 : 1));
+    s.gear.scrap += scrap; lines.push(`Ferraille : +${fmtBig(scrap)} ${SCRAP}`);
     return { gems, lines, items };
   },
   consumeBoosts() {
@@ -10299,7 +10588,7 @@ const Meta = {
       h += '</div>';
     } else if (this.shopTab === 'gear') {
       Gear.migrate(s);
-      h += `<p class="hint">${D2 ? 'Les objets s’équipent sur les héros depuis l’écran Héros.' : 'Les objets s’équipent sur l’équipage (Brann, Iris, Volta, Écho) depuis l’écran Équipage.'} Ferraille : ${fmtBig(s.gear.scrap)} ${SCRAP}</p><div class="shopgrid">`;
+      h += `<p class="hint">${D2 ? 'Les objets s’équipent sur les héros depuis l’écran Héros.' : 'Les objets s’équipent depuis l’écran Équipage : 10 emplacements par personnage, deux sets complets possibles.'} Ferraille : ${fmtBig(s.gear.scrap)} ${SCRAP}</p><div class="shopgrid">`;
       for (const c of CHESTS) h += `<div class="sitem chest c${c.min}">${c.tag ? `<span class="badge gold">${c.tag}</span>` : ''}<span class="crate"></span><b>${esc(c.name)}</b><small class="muted">${esc(c.desc)}</small>${buyBtn('chest:' + c.id, c.price, 'Ouvrir')}</div>`;
       h += '</div><p class="eyebrow" style="margin-top:10px">Offres du jour · renouvelées à minuit</p><div class="shopgrid">';
       Gear.offers(s).forEach((o, i) => { h += `<div class="sitem offer" style="--rc:${RARITY[o.r].color}">${gearIcon(o, 46)}<b>${esc(GEAR_BY_ID[o.t].name)}</b><small style="color:${RARITY[o.r].color}">${RARITY[o.r].name}</small><small class="muted">${Gear.stats({ ...o, l: 1 }).map(([st, v]) => esc(Gear.statText(st, v))).join(' · ')}</small>${o.sold ? '<span class="badge">Acheté</span>' : buyBtn('offer:' + i, RARITY[o.r].price)}</div>`; });
@@ -13609,7 +13898,9 @@ const App = {
       (newTower ? `<div class="unlock" id="uT"><div><span class="eyebrow">${D2 ? 'Nouveau héros' : 'Nouvelle tourelle'}</span><b>${esc(newTower.name)}</b>${esc(newTower.desc)}</div></div>` : '') +
       (newEnemy ? `<div class="unlock" id="uE"><div><span class="eyebrow">Nouvel ennemi</span><b>${esc(newEnemy.name)}</b>${esc(newEnemy.desc)}</div></div>` : '') +
       (lv.n === CONFIG.fusionLevel ? `<div class="unlock"><div><span class="eyebrow" style="color:var(--violet)">Nouveau</span><b>Fusion de tourelles</b>Dès ce niveau, tu peux fusionner deux tourelles différentes.</div></div>` : '') +
-      (lv.boss && !D2 ? `<p class="hint">Vague finale : ${1 + Math.floor((lv.world - 1) / 3)} Colosse${lv.world > 3 ? 's' : ''}.</p>` : '') +
+      (lv.boss && !D2 ? `<p class="hint">Vague finale : ${[bossFor(lv.world), ...Array.from({ length: Math.floor((lv.world - 1) / 3) }, (_, i) => BOSSES[(lv.world - 2 - i + 50) % BOSSES.length])].map(id => esc(ENEMY_BY_ID[id].name)).join(' + ')}.</p>` : '') +
+      (!D2 && lv.branches && lv.branches.length ? `<p class="hint">${lv.branches.length + 1} chemins : touche l’entrée d’un chemin en partie pour le barricader.</p>` : '') +
+      (!D2 ? `<p class="eyebrow">Ennemis du niveau · touche pour la fiche</p><div class="lvenemies" id="lvEn"></div>` : '') +
       (lv.boss && D2 ? `<p class="hint">Vague finale : <b style="color:${ENEMY_BY_ID[lv.bossId].color}">${esc(ENEMY_BY_ID[lv.bossId].name)}</b> (${esc(enemyAbilities(ENEMY_BY_ID[lv.bossId]).filter(x => x.startsWith('Immunisé')).join(' ') || 'aucune immunité')}).` +
         (D2_UNIQUES[lv.bossId] ? ` Monstres uniques en chemin : ${D2_UNIQUES[lv.bossId].map(([, id]) => esc(ENEMY_BY_ID[id].name)).join(', ')}.` : '') + '</p>' : '') +
       Meta.detailExtras(lv) +
@@ -13618,6 +13909,8 @@ const App = {
       `<button class="btn ${run ? '' : 'primary'}" id="btnPlay" type="button">${run ? 'Recommencer le niveau' : st ? 'Rejouer' : 'Jouer'}</button>`;
     if (newTower) { const ti = iconCanvas(80); towerIcon(ti, newTower); $('uT').prepend(ti); }
     if (newEnemy) { const ei = iconCanvas(80); enemyIcon(ei, newEnemy); $('uE').prepend(ei); }
+    if ($('lvEn')) { const ids = new Set(); for (let w = 1; w <= lv.waves; w++) for (const x of buildWave(lv, w).spawns) ids.add(x.id);
+      for (const id of ids) { const t = ENEMY_BY_ID[id], bt = document.createElement('button'); bt.type = 'button'; bt.className = 'lven' + (t.boss ? ' boss' : ''); bt.title = t.name; const ic = iconCanvas(44); enemyIcon(ic, t); bt.append(ic); bt.insertAdjacentHTML('beforeend', `<small>${esc(t.name)}</small>`); bt.onclick = () => enemySheet(t, { level: lv }); $('lvEn').append(bt); } }
     const pv = $('preview').getContext('2d'), path = buildPaths(lv);
     pv.drawImage(renderLevelBackground(lv, path), 0, 0, 480, 300);
     pv.drawImage(renderPadLayer({ pads: generatePads(lv, path) }), 0, 0, 480, 300);
@@ -13735,11 +14028,50 @@ function enemyStatRows(t, hpMul, spMul, elite) {
   return rows;
 }
 const kvHtml = rows => `<dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+/* Conseils pour contrer un ennemi, d'après ses capacités et les tourelles disponibles au niveau n. */
+function enemyCounters(t, n) {
+  const av = TOWERS.filter(x => !x.fused && x.unlock <= n), names = f => av.filter(f).map(x => x.name).slice(0, 3).join(', '), out = [];
+  if (D2) return out;
+  if (t.def >= 0.25) { const k = names(x => x.pierce || x.shred); out.push(`Défense élevée : tirs perforants ou corrosion${k ? ' (' + k + ')' : ''}, compétence Perforation, objets « défense ignorée ».`); }
+  if (t.shield) { const k = names(x => x.chains || x.kind === 'beam'); out.push(`Bouclier : tirs rapides et en chaîne${k ? ' (' + k + ')' : ''}, objets « dégâts contre les boucliers ». Le poison ne touche pas le bouclier.`); }
+  if (t.phase) { const k = names(x => x.seesPhased || x.kind === 'pulse' || x.kind === 'aura'); out.push(`Intangible par moments : ondes et zones le touchent quand même${k ? ' (' + k + ')' : ''}.`); }
+  if (t.speed >= 75 && !t.immuneSlow) { const k = names(x => x.slow); out.push(`Rapide : ralentis-le dès l’entrée${k ? ' (' + k + ')' : ''}, ou garde un Grand gel / une Impulsion EMP.`); }
+  if (t.immuneSlow) out.push('Insensible aux ralentissements : mise sur les dégâts bruts, pas sur la Stase.');
+  if (t.regen || t.heal) out.push('Soins : concentre le feu (cible « le plus résistant ») pour dépasser la régénération ; la Nova retire un pourcentage de PV.');
+  if (t.split || t.spawn) { const k = names(x => x.splash); out.push(`Libère des petits ennemis : dégâts de zone${k ? ' (' + k + ')' : ''} près du Noyau.`); }
+  if (t.reflect) out.push('Renvoie les balles : privilégie lasers, ondes, missiles et tesla plutôt que la Gatling.');
+  if (t.emp) out.push('Coupe les tourelles proches : espace tes tourelles et place des tourelles à longue portée loin du chemin.');
+  if (t.jam) out.push('Réduit la portée : tue-le en priorité (cible « le plus avancé » ou « le plus résistant ») ou place des tourelles hors de son rayon.');
+  if (t.steal) out.push('Vole de l’or au Noyau : il ne coûte pas de vie, mais dépense ton or avant qu’il n’arrive.');
+  if (t.fly) out.push('Volant : ligne droite de l’entrée au Noyau ; des tourelles autour du Noyau l’attrapent toutes.');
+  if (t.boss) out.push('Boss : objets « contre élites et boss », compétence Chasseur ; garde la Surcharge pour son passage.');
+  if (!out.length) out.push('Ennemi de base : n’importe quelle tourelle bien placée suffit.');
+  return out;
+}
+/* Fiche complète d'un ennemi (modale, met la partie en pause) : statistiques à une vague, version élite, capacités, apparitions et conseils. */
+function enemySheet(t, opts) {
+  opts = opts || {};
+  const lv = opts.level || (GameView.battle && GameView.battle.level) || getLevel(App.selectedLevel || 1), b = GameView.battle && GameView.battle.level === lv ? GameView.battle : null;
+  const seen = [], tot = { n: 0, el: 0 };
+  if (!D2) for (let w = 1; w <= lv.waves; w++) { const wv = buildWave(lv, w); let n = 0, el = 0; for (const x of wv.spawns) if (x.id === t.id) { n++; if (x.elite) el++; } if (n) { seen.push([w, n, el]); tot.n += n; tot.el += el; } }
+  const wn = opts.wave || (b ? clamp(b.state === 'build' ? b.wave + 1 : b.wave, 1, lv.waves) : (seen[0] ? seen[0][0] : 1)), wv = buildWave(lv, wn);
+  const rows = enemyStatRows(t, wv.hpMul, wv.speedMul);
+  const ab = enemyAbilities(t), co = enemyCounters(t, lv.n);
+  const html = `<div class="esheet" style="--ec:${t.color}"><div class="eshead"><span data-eicon></span><div><b style="color:${t.color}">${esc(t.name)}</b><small>${t.boss ? 'Boss' : t.unlock ? 'Apparaît dès le niveau ' + t.unlock : 'Invoqué par un autre ennemi'}</small><p>${esc(t.desc || '')}</p></div></div>` +
+    `<p class="eyebrow">Statistiques · niveau ${lv.n}, vague ${wn}</p>${kvHtml(rows)}` +
+    (!t.boss && lv.elite ? `<p class="eyebrow">Version élite (★ dorée, ${pct(lv.elite)} des ennemis ici)</p>${kvHtml(enemyStatRows(t, wv.hpMul, wv.speedMul, true))}` : '') +
+    `<p class="eyebrow">Capacités</p><ul class="traits">${ab.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` +
+    (co.length ? `<p class="eyebrow">Comment le contrer</p><ul class="traits ecounter">${co.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : '') +
+    (seen.length ? `<p class="eyebrow">Dans ce niveau · ${tot.n} au total${tot.el ? ` dont ${tot.el} élite${tot.el > 1 ? 's' : ''}` : ''}</p><div class="eswaves">${seen.map(([w, n, el]) => `<span class="${b && w <= b.wave ? 'past' : b && w === b.wave + 1 ? 'next' : ''}">V${w} ×${n}${el ? ` <i>★${el}</i>` : ''}</span>`).join('')}</div>` : !D2 && !t.boss ? '<p class="hint">N’apparaît pas directement dans ce niveau.</p>' : '') + '</div>';
+  Modal.open({ title: 'Fiche ennemi', html, actions: [{ label: 'Fermer', cls: 'primary' }] });
+  const slot = document.querySelector('#modal [data-eicon]'); if (slot) { const ic = iconCanvas(80); enemyIcon(ic, t); slot.replaceWith(ic); }
+}
 function enemyCard(t, locked) {
   const el = document.createElement('article');
   el.className = 'ccard' + (locked ? ' locked' : '');
   if (locked) { el.innerHTML = `<header><div><b>???</b><small>Apparaît au niveau ${t.unlock}</small></div></header><p>Progresse pour découvrir cet ennemi.</p>`; return el; }
   const ic = iconCanvas(96); enemyIcon(ic, t);
+  el.style.cursor = 'pointer'; el.title = 'Voir la fiche complète'; el.onclick = () => enemySheet(t, { level: getLevel(Math.max(t.unlock || 1, App.slot ? App.slot.unlocked || 1 : 1)) });
   el.innerHTML = `<header><div><b>${esc(t.name)}</b><small>Apparaît au niveau ${t.unlock}${t.boss ? ' · Boss' : ''}</small></div></header>` +
     `<p>${esc(t.desc)}</p><p style="font-style:italic">${esc(ENEMY_LORE[t.id] || '')}</p>${kvHtml(enemyStatRows(t, 1, 1))}<ul class="traits">${enemyAbilities(t).map(a => `<li>${esc(a)}</li>`).join('')}</ul>` +
     `<p class="hint">Valeurs de base : les PV augmentent avec le niveau et la vague.</p>`;
@@ -14271,7 +14603,8 @@ const GameView = {
     const rot = fs && !land && !use3d;
     if (rot !== R.rot) { R.rot = rot; Overlay.key = ''; }
     // Les bulles (dialogue, messages, prochaine vague) quittent la carte en plein écran
-    for (const id of ['nextWave', 'toast', 'dialog']) { const el = $(id); const home = fs ? info : board; if (el.parentNode !== home) home.appendChild(el); }
+    // En portrait, les messages brefs restent sur le plateau (sinon ils cachent les icônes de la prochaine vague)
+    for (const id of ['nextWave', 'toast', 'dialog']) { const el = $(id); const home = fs && (id !== 'toast' || land) ? info : board; if (el.parentNode !== home) home.appendChild(el); }
     // Annonces et compteurs d'événements : jamais par-dessus les tourelles (panneau à droite, ou barre d'info sur téléphone)
     for (const id of ['evBanner', 'evChips']) { const el = $(id); const home = fs ? info : $('evPanel'); if (el.parentNode !== home) home.appendChild(el); }
     Events.panel();
@@ -14295,6 +14628,7 @@ const GameView = {
   setLabels() {
     const fs = document.body.classList.contains('fsgame'), full = !!document.fullscreenElement;
     $('btnSpeed').textContent = fs ? '×' + this.speed : 'Vitesse x' + this.speed;
+    if (this.battle) { const lv = this.battle.level, port = fs && !document.body.classList.contains('fsland'); $('hudLvlNum').textContent = port ? `M${lv.world} · N${lv.n}` : `${worldLabel(lv.world)} · Niveau ${lv.n}`; }
     $('btnPause').textContent = this.paused ? (fs ? '▶' : 'Reprendre') : (fs ? '❚❚' : 'Pause');
     $('btnSheet').textContent = 'Tours';
     $('btnSoundGame').textContent = fs ? '⚙' : 'Réglages';
@@ -14480,7 +14814,7 @@ const GameView = {
           ['Récompense', fmtBig(Math.max(1, Math.round(e.reward * b.level.econ * (1 + b.mods.bounty)))) + ' or'], [D2 ? 'Dégâts au portail' : 'Dégâts au noyau', t.lives],
           ['État', e.blocker ? 'Retenu par une invocation' : e.phased ? 'Intangible' : e.poisonT > 0 ? 'Empoisonné' : 'Normal'],
           ...(e.imm2 ? [['Immunité d’élite', ELEM[e.imm2].name]] : []), ...(e.curse ? [['Maudit', '+' + pct(e.curse) + ' de dégâts subis']] : [])]) +
-        `<ul class="traits">${enemyAbilities(t).map(a => `<li>${esc(a)}</li>`).join('')}</ul>`;
+        `<ul class="traits">${enemyAbilities(t).map(a => `<li>${esc(a)}</li>`).join('')}</ul><div class="row"><button class="btn small" data-a="esheet" type="button">Fiche complète</button></div>`;
     } else if (this.enemyType) {
       const { t, hpMul, spMul, w } = this.enemyType;
       color = t.color;
@@ -14523,6 +14857,7 @@ const GameView = {
     const b = this.battle, on = (a, fn) => { const el = box.querySelector(`[data-a="${a}"]`); if (el) el.onclick = fn; };
     const t = this.selectedTower;
     on('close', () => this.clearAll());
+    on('esheet', () => { const e = this.selectedEnemy; if (e) enemySheet(e.type); });
     on('fcancel', () => { const from = this.fuseFrom; this.clearSelection(); this.selectedTower = from; this.renderInspector(); });
     on('fconfirm', () => { const r = b.fuse(this.fuseFrom, this.fuseTarget); this.clearSelection(); this.selectedTower = r; this.renderInspector(); });
     on('up', () => { if (b.upgrade(t, 1)) this.renderInspector(); });
@@ -14566,7 +14901,7 @@ const GameView = {
       const ic = iconCanvas(52); enemyIcon(ic, t);
       r.append(ic);
       r.insertAdjacentHTML('beforeend', `<b>${esc(t.name)}${t.unlock === b.level.n ? ' <span style="color:var(--gold)">nouveau</span>' : ''}</b><span>${fmtBig(t.hp * w.hpMul)} PV · ${pct(t.def)}</span>`);
-      r.onclick = () => { this.clearSelection(); this.enemyType = { t, hpMul: w.hpMul, spMul: w.speedMul, w: wn }; this.renderInspector(); };
+      r.onclick = () => { this.clearSelection(); this.enemyType = { t, hpMul: w.hpMul, spMul: w.speedMul, w: wn }; this.renderInspector(); enemySheet(t, { wave: wn }); };
       el.appendChild(r);
     }
   },
@@ -14584,8 +14919,9 @@ const GameView = {
     el.innerHTML = `<span class="nwt">Vague ${n}</span>`;
     for (const id of Object.keys(count)) {
       const t = ENEMY_BY_ID[id], ic = iconCanvas(40); enemyIcon(ic, t);
-      const sp = document.createElement('span'); sp.className = 'nwe' + (t.boss ? ' boss' : '');
+      const sp = document.createElement('button'); sp.type = 'button'; sp.className = 'nwe' + (t.boss ? ' boss' : ''); sp.title = `${t.name} : voir la fiche`; sp.setAttribute('aria-label', `${count[id]} ${t.name}, voir la fiche`);
       sp.append(ic); sp.insertAdjacentHTML('beforeend', `<b>${count[id]}</b>`);
+      sp.onclick = ev => { ev.stopPropagation(); enemySheet(t, { wave: n }); };
       el.appendChild(sp);
     }
     if (elites) el.insertAdjacentHTML('beforeend', `<span class="nwel">★ ${elites}</span>`);
@@ -14643,6 +14979,7 @@ const GameView = {
         (avail ? `<p>Tu as ${avail} point${avail > 1 ? 's' : ''} à investir dans l’arbre.</p>` : '') +
         `<div class="row"><button class="btn primary" data-a="retry" type="button">Restart</button><button class="btn" data-a="tree" type="button">Arbre</button><button class="btn" data-a="map" type="button">Carte</button></div>`;
     }
+    html += this.recapHtml(b, victory);
     const card = $('endCard');
     card.innerHTML = html;
     const go = a => {
@@ -14664,6 +15001,28 @@ const GameView = {
     $('endOverlay').hidden = false;
     this.clearAll();
     card.querySelector('.btn.primary').focus();
+  },
+
+  /* Récapitulatif complet de la partie : par tourelle (éliminations, dégâts, or investi, rendement) et bilan général. */
+  recapHtml(b, victory) {
+    if (D2) return '';
+    const list = [...b.towers.map(t => b.towerRec(t, 'en place')), ...b.gone];
+    const totD = list.reduce((a, r) => a + r.dmg, 0) + (b.stats.powerDmg || 0), totK = Math.max(1, b.kills), totS = list.reduce((a, r) => a + r.spent, 0);
+    list.sort((a, c) => c.dmg - a.dmg);
+    const best = list[0], eff = list.filter(r => r.spent > 0).sort((a, c) => c.dmg / c.spent - a.dmg / a.spent)[0];
+    const st = b.stats, lost = b.startLives - b.lives;
+    const row = r => `<tr><td><i class="rdot" style="background:${r.color}"></i>${esc(r.name)} <small>niv. ${r.lv}${r.end !== 'en place' ? ' · ' + esc(r.end) : ''}</small></td><td>${fmtBig(r.kills)}</td><td>${fmtBig(r.dmg)}<small>${totD ? Math.round(r.dmg / totD * 100) : 0} %</small></td><td>${fmtBig(r.spent)}</td><td>${r.spent ? fmt(r.dmg / r.spent) : '—'}</td></tr>`;
+    return `<details class="recap" ${victory ? '' : 'open'}><summary>Récapitulatif de la partie · ${list.length} tourelle${list.length > 1 ? 's' : ''}</summary>` +
+      (best ? `<p class="hint">Meilleure tourelle : <b style="color:${best.color}">${esc(best.name)}</b> (${totD ? Math.round(best.dmg / totD * 100) : 0} % des dégâts)${eff && eff !== best ? ` · la plus rentable : <b style="color:${eff.color}">${esc(eff.name)}</b> (${fmt(eff.dmg / eff.spent)} dégâts par pièce d’or)` : ''}.</p>` : '') +
+      `<div class="recapt"><table><tr><th>Tourelle</th><th>Élim.</th><th>Dégâts</th><th>Or investi</th><th>Dégâts / or</th></tr>${list.map(row).join('')}` +
+      (st.powerDmg ? `<tr class="pw"><td>⚡ Pouvoirs</td><td>${fmtBig(st.powerKills || 0)}</td><td>${fmtBig(st.powerDmg)}<small>${Math.round(st.powerDmg / totD * 100)} %</small></td><td>—</td><td>—</td></tr>` : '') +
+      `<tr class="tot"><td>Total</td><td>${fmtBig(b.kills)}</td><td>${fmtBig(totD)}</td><td>${fmtBig(totS)}</td><td>${totS ? fmt(totD / totS) : '—'}</td></tr></table></div>` +
+      ((rows => `<table class="recapk">${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>`))([['Vagues', `${b.wave} / ${b.level.waves}`], ['Vies perdues', `${lost} (${st.leaks || 0} ennemi${(st.leaks || 0) > 1 ? 's' : ''} passé${(st.leaks || 0) > 1 ? 's' : ''})`], ['Élites · boss éliminés', `${st.elites} · ${st.bosses}`],
+        ['Or des éliminations', fmtBig(st.goldKills || 0)], ['Or des tourelles', `${fmtBig(totS)} (${st.built} construites, ${st.upgrades} améliorations, ${st.fusions} fusion${st.fusions > 1 ? 's' : ''})`],
+        ['Cases achetées', `${st.padBuys} · ${fmtBig(st.padGold || 0)} or`], ...(b.paths.length > 1 ? [['Barricades', `${b.closed.length} · ${fmtBig(st.gateGold || 0)} or`]] : []),
+        ...(st.sold ? [['Reventes', `${st.sold} · +${fmtBig(st.soldBack || 0)} or`]] : []), ['Or restant', fmtBig(Math.floor(b.gold))],
+        ['Énergie gagnée', `${Math.round(st.energyGot || 0)} · ${st.powers || 0} pouvoir${(st.powers || 0) > 1 ? 's' : ''} utilisé${(st.powers || 0) > 1 ? 's' : ''}`], ['Vagues enchaînées', `${st.earlyCalls} (série max ${st.maxChain})`]]) +
+      (!victory && lost ? `<p class="hint">Conseil : ${list.length < 4 ? 'construis plus de tourelles tôt, l’or des premières vagues rapporte le plus.' : st.padBuys === 0 ? 'achète des cases près des virages : une tourelle qui couvre deux portions du chemin vaut double.' : !(st.powers) ? 'utilise tes pouvoirs (barre sous le bouton de vague) quand une vague déborde.' : 'regarde la fiche des ennemis (icônes de la prochaine vague) pour choisir les bonnes tourelles.'}</p>` : '') + '</details>';
   },
 
   tick(dt) {
@@ -14732,9 +15091,12 @@ const GameView = {
     box.hidden = !avail.length;
     for (const p of avail) {
       const bt = document.createElement('button'); bt.type = 'button'; bt.style.setProperty('--ac', p.color);
-      bt.innerHTML = `<i>${p.icon}</i><small>${p.cost}</small>`; bt.title = `${p.name} · ${p.cost} énergie — ${p.desc}`;
+      const pc = b.powerCost(p.id); bt.innerHTML = `<i>${p.icon}</i><small>${pc}</small>`; bt.title = `${p.name} · ${pc} énergie — ${p.desc}`;
       bt.setAttribute('aria-label', bt.title);
-      bt.onclick = ev => { ev.stopPropagation(); const why = b.canPower(p.id); if (why) { Toast.show(`${p.icon} ${p.name} (${p.cost} énergie) : ${p.desc} — ${why}.`); return; }
+      bt.onclick = ev => { ev.stopPropagation();
+        const seen = App.slot.powSeen = App.slot.powSeen || {};
+        if (!seen[p.id]) { seen[p.id] = 1; Store.touch(App.slot); Modal.open({ title: `${p.icon} ${p.name}`, html: `<p>${esc(p.desc)}</p><p class="hint">Coût : ${b.powerCost(p.id)} énergie · recharge ${p.cd || 0} s${p.aim ? ' · se pose sur un chemin' : ''}. La barre d’énergie (à gauche des pouvoirs) se remplit avec les ennemis vaincus et les vagues terminées.</p>`, actions: [{ label: 'Compris', cls: 'primary' }] }); return; }
+        const why = b.canPower(p.id); if (why) { Toast.show(`${p.icon} ${p.name} (${b.powerCost(p.id)} énergie) : ${p.desc} — ${why}.`); return; }
         if (p.aim) { if (this.aimPower === p.id) { this.aimPower = null; return; } Radial.close(); this.clearSelection(); this.selectedType = null; this.renderInspector(); this.aimPower = p.id; Toast.show(`${p.icon} ${p.name} : touche un chemin pour le poser`); return; }
         b.usePower(p.id); Toast.show(`${p.icon} ${p.name} !`); Sound.sfx && Sound.sfx('ui'); };
       list.appendChild(bt); this.powerBtns[p.id] = bt;
@@ -14748,9 +15110,11 @@ const GameView = {
     const pct = Math.round(b.energy);
     if (this.cache.en !== pct) { this.cache.en = pct; box.querySelector('.egauge i').style.setProperty('--p', pct + '%'); $('energyVal').textContent = pct; }
     for (const [id, bt] of Object.entries(this.powerBtns || {})) {
-      const p = POWER_BY_ID[id], ok = b.energy >= p.cost, on = (b.powerT[id] || 0) > 0 || this.aimPower === id;
+      const cd = (b.pcd[id] || 0) > 0, ok = b.energy >= b.powerCost(id) && !cd, on = (b.powerT[id] || 0) > 0 || this.aimPower === id;
       if (bt.classList.contains('ready') !== ok) { bt.classList.toggle('ready', ok); bt.classList.toggle('poor', !ok); }
       if (bt.classList.contains('on') !== on) bt.classList.toggle('on', on);
+      const cp = cd ? Math.round(b.pcd[id] / (POWER_BY_ID[id].cd || 1) * 20) * 5 : 0;
+      if (bt._cp !== cp) { bt._cp = cp; bt.style.setProperty('--cdp', cp + '%'); }
     }
   },
   setText(k, el, v) { if (this.cache[k] !== v) { this.cache[k] = v; el.textContent = v; } },
