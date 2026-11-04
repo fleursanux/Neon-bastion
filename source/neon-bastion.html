@@ -4877,7 +4877,7 @@ const Gear = {
     const item = { uid: g.next++, t: it.t, r: it.r, l: it.l || 1, n: 1, nw: 1 };
     g.items.push(item); g.fresh++;
     // Inventaire plein : le commun libre le plus faible part au recyclage
-    if (g.items.length > GEAR_INV_MAX) { const w = g.items.filter(x => x.r === 0 && !x.lk && !this.owner(slot, x.uid) && x !== item).sort((a, b) => this.score(a) - this.score(b))[0]; if (w) this.recycle(slot, w); }
+    if (g.items.length > GEAR_INV_MAX) { const w = g.items.filter(x => x.r === 0 && !this.owner(slot, x.uid) && x !== item).sort((a, b) => this.score(a) - this.score(b))[0]; if (w) this.recycle(slot, w); }
     return item;
   },
   label(it) { const t = GEAR_BY_ID[it.t]; return t.set ? `Set ${GEAR_SET_BY_ID[t.set].name} : ${t.name}` : `${RARITY[it.r].name} : ${t.name}`; },
@@ -4976,9 +4976,9 @@ const Gear = {
     let n = 0, guard = 0, again = true;
     while (again && guard++ < 200) {
       again = false;
-      for (let r = 0; r < GEAR_TOP && !again; r++) for (const it of slot.gear.items.filter(x => x.r === r && !x.lk)) {
+      for (let r = 0; r < GEAR_TOP && !again; r++) for (const it of slot.gear.items.filter(x => x.r === r)) {
         const grp = this.mergeGroup(slot, it);
-        if (grp.length === 3 && grp.every(x => !x.lk)) { this.merge(slot, it); n++; again = true; break; }
+        if (grp.length === 3) { this.merge(slot, it); n++; again = true; break; }
       }
     }
     return n;
@@ -4997,12 +4997,15 @@ const Gear = {
   charScore(slot, c) { let s = 0; for (const sl of GEAR_SLOTS) { const it = this.find(slot, slot.gear.equip[c][sl.id]); if (it) s += this.score(it); } return s + this.bonusScore(this.setBonus(slot, c)); },
   /* Équipe automatiquement le meilleur objet libre dans chaque emplacement, en tenant compte des bonus de set
      (deux passes : chaque changement n'est gardé que s'il améliore le score total du personnage). */
-  autoEquip(slot, c, others) {
-    const eq = slot.gear.equip[c];
+  /* takeAll : si vrai, peut prendre les objets portés par les autres personnages (« Équiper le meilleur ») ;
+     sinon, seulement les objets libres (« Meilleur du reste »). Renvoie le nombre d'objets repris aux autres. */
+  autoEquip(slot, c, takeAll) {
+    const eq = slot.gear.equip[c], before = new Set(Object.values(eq).filter(Boolean));
+    const ownerOf0 = {}; for (const x of CREW_IDS) if (x !== c && slot.gear.equip[x]) for (const v of Object.values(slot.gear.equip[x])) if (v) ownerOf0[v] = x;
     for (let pass = 0; pass < 3; pass++) {
       let changed = false;
       for (const sl of GEAR_SLOTS) {
-        const cands = slot.gear.items.filter(it => GEAR_BY_ID[it.t].slot === sl.id && (!this.owner(slot, it.uid) || this.owner(slot, it.uid).c === c || (others && !others.includes(this.owner(slot, it.uid).c))));
+        const cands = slot.gear.items.filter(it => GEAR_BY_ID[it.t].slot === sl.id && (takeAll || !this.owner(slot, it.uid) || this.owner(slot, it.uid).c === c));
         let best = eq[sl.id], bs = this.charScore(slot, c);
         for (const it of cands) {
           if (it.uid === eq[sl.id]) continue;
@@ -5017,6 +5020,8 @@ const Gear = {
       }
       if (!changed) break;
     }
+    const taken = {}; for (const v of Object.values(eq)) if (v && !before.has(v) && ownerOf0[v]) taken[ownerOf0[v]] = (taken[ownerOf0[v]] || 0) + 1;
+    return taken;
   },
   /* Équipe tout l'équipage : chaque personnage, dans l'ordre, prend le meilleur parmi les objets que les suivants n'ont pas. */
   autoEquipAll(slot, chars) {
@@ -5047,7 +5052,7 @@ function gearCard(slot, it, opts) {
     `<b>${esc(t.name)}</b><small>${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : R.name} · niv. ${it.l}</small>${it.st ? `<small class="gstars">${Gear.starText(it)}</small>` : ''}` +
     `<span class="gstat">${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join('<br>')}</span>` +
     (o ? `<span class="gown" title="Équipé par ${esc(CAST[o.c].name)}">${esc(CAST[o.c].name[0])}</span>` : '') +
-    (it.lk ? '<span class="glock" title="Verrouillé">🔒</span>' : '') + (it.nw && !o ? '<span class="gnew">Nouveau</span>' : '') +
+    (it.nw && !o ? '<span class="gnew">Nouveau</span>' : '') +
     (merge ? '<span class="gmerge" title="Fusion possible">×3</span>' : '') + '</button>';
 }
 
@@ -9260,7 +9265,7 @@ const CrewView = {
     let h = (nextRec ? `<p class="hint">Prochaine recrue au niveau ${crewLevel(nextRec)} : un nouveau personnage et sa tourelle.</p>` : '') +
       (!D2 ? `<p class="hint gpow">Puissance d’équipement de l’équipage : <b>+${pct(gp)}</b> · les ennemis gagnent <b>+${pct(gearThreatOf(gp) - 1)}</b> de PV. L’équipement garde un avantage, mais c’est le placement des tourelles qui fait la différence.</p>` : '') + `<section class="panel crewhero" style="--cc:${CAST[c].color}"><canvas width="128" height="128" data-portrait="${c}"></canvas><div><p class="eyebrow">${esc(CAST[c].role)} · ${filled}/${GEAR_SLOTS.length} emplacements</p><h3>${esc(CAST[c].name)}</h3>` +
       `<p class="hint">${D2 ? 'Classe' : 'Tourelles'} : ${esc(towers)}. Les bonus de dégâts, cadence et portée ne valent que pour ces tourelles ; les autres comptent pour toute la partie.</p>` +
-      `<div class="row"><button class="btn small primary" id="gearAuto" type="button">Équiper le meilleur</button><button class="btn small" id="gearAutoAll" type="button">Équiper tout l’équipage</button><button class="btn small" id="gearShop" type="button">Caisses et offres</button></div>` +
+      `<div class="row"><button class="btn small primary" id="gearAuto" type="button">Équiper le meilleur</button><button class="btn small" id="gearAutoAll" type="button" title="Seulement parmi les objets que personne ne porte">Meilleur du reste</button><button class="btn small" id="gearShop" type="button">Caisses et offres</button></div>` +
       (D2 ? this.d2ArtHtml(c) : '') + `</div></section>`;
     h += '<div class="gslots">' + GEAR_SLOTS.map(sl => this.slotTile(s, c, sl)).join('') + '</div>';
     if (this.pick) h += this.pickHtml(s, c);
@@ -9313,7 +9318,7 @@ const CrewView = {
     const g = s.gear, eqd = it => !!Gear.owner(s, it.uid);
     const items = g.items.filter(it => this.filter === 'all' || (this.filter === 'set' ? GEAR_BY_ID[it.t].set : this.filter === 'free' ? !eqd(it) : GEAR_BY_ID[it.t].slot === this.filter))
       .sort(this.sort === 'lvl' ? (a, b) => b.l - a.l || b.r - a.r : this.sort === 'slot' ? (a, b) => GEAR_SLOTS.findIndex(x => x.id === GEAR_BY_ID[a.t].slot) - GEAR_SLOTS.findIndex(x => x.id === GEAR_BY_ID[b.t].slot) || b.r - a.r : (a, b) => b.r - a.r || b.l - a.l || a.t.localeCompare(b.t));
-    const free = r => g.items.filter(it => it.r === r && !it.lk && !eqd(it)).length, merges = (() => { const k = {}; for (const it of g.items) if (it.r < GEAR_TOP && !it.lk) k[it.t + ':' + it.r] = (k[it.t + ':' + it.r] || 0) + 1; return Object.values(k).filter(n => n >= 3).length; })();
+    const free = r => g.items.filter(it => it.r === r && !eqd(it)).length, merges = (() => { const k = {}; for (const it of g.items) if (it.r < GEAR_TOP) k[it.t + ':' + it.r] = (k[it.t + ':' + it.r] || 0) + 1; return Object.values(k).filter(n => n >= 3).length; })();
     let h = `<section class="panel" id="crewInv"><p class="eyebrow">Inventaire · ${g.items.length} / ${GEAR_INV_MAX} objets · ${fmtBig(g.scrap)} ${SCRAP}</p>` +
       `<div class="row gfilters">${[['all', 'Tout'], ['free', 'Libres'], ['set', 'Sets'], ...GEAR_SLOTS.map(x => [x.id, gearSlotSvg(x.id, 16)])].map(([id, l]) => `<button class="btn tiny" data-flt="${id}" aria-pressed="${this.filter === id}" type="button" title="${esc(id === 'all' || id === 'free' || id === 'set' ? '' : GEAR_SLOT_BY_ID[id].name)}">${l}</button>`).join('')}</div>` +
       `<div class="row gfilters"><span class="hint">Trier :</span>${[['rar', 'Rareté'], ['lvl', 'Niveau'], ['slot', 'Emplacement']].map(([id, l]) => `<button class="btn tiny" data-sort="${id}" aria-pressed="${this.sort === id}" type="button">${l}</button>`).join('')}</div>` +
@@ -9354,13 +9359,13 @@ const CrewView = {
     body.querySelectorAll('[data-unequip]').forEach(bt => { bt.onclick = () => { const o = Gear.owner(s, +bt.dataset.unequip); if (o) s.gear.equip[o.c][o.s] = null; done(); }; });
     body.querySelectorAll('[data-act="close"]').forEach(bt => { bt.onclick = () => { this.pick = null; this._keepScroll = true; this.render(); }; });
     body.querySelectorAll('[data-rec]').forEach(bt => { bt.onclick = () => {
-      const r = +bt.dataset.rec, list = s.gear.items.filter(x => x.r === r && !x.lk && !Gear.owner(s, x.uid)), doIt = () => { let g = 0; for (const it of list) g += Gear.recycle(s, it); Toast2.show(`+${fmtBig(g)} ${SCRAP} ferraille`); done('sell'); };
+      const r = +bt.dataset.rec, list = s.gear.items.filter(x => x.r === r && !Gear.owner(s, x.uid)), doIt = () => { let g = 0; for (const it of list) g += Gear.recycle(s, it); Toast2.show(`+${fmtBig(g)} ${SCRAP} ferraille`); done('sell'); };
       if (r >= 1) Modal.open({ title: 'Recycler les objets magiques libres ?', text: `${list.length} objet${list.length > 1 ? 's' : ''} seront détruits contre de la ferraille (les objets verrouillés et équipés sont gardés).`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] });
       else doIt();
     }; });
     const ma = $('gearMergeAll'); if (ma) ma.onclick = () => { const n = Gear.mergeAll(s); Toast2.show(`${n} fusion${n > 1 ? 's' : ''} réalisée${n > 1 ? 's' : ''}`); done('up'); };
-    if ($('gearAuto')) $('gearAuto').onclick = () => { Gear.autoEquip(s, c); done('up'); };
-    if ($('gearAutoAll')) $('gearAutoAll').onclick = () => { Gear.autoEquipAll(s, [c, ...CREW_IDS.filter(x => x !== c && crewJoined(s, x))]); Toast2.show('Équipage équipé (en commençant par ' + CAST[c].name + ')'); done('up'); };
+    if ($('gearAuto')) $('gearAuto').onclick = () => { const tk = Gear.autoEquip(s, c, true), ks = Object.keys(tk); Toast2.show(ks.length ? 'Meilleurs objets équipés · repris à ' + ks.map(x => CAST[x].name + ' (' + tk[x] + ')').join(', ') : 'Meilleurs objets équipés'); done('up'); };
+    if ($('gearAutoAll')) $('gearAutoAll').onclick = () => { Gear.autoEquip(s, c, false); Toast2.show('Meilleurs objets libres équipés'); done('up'); };
     if ($('gearShop')) $('gearShop').onclick = () => { Meta.shopTab = 'gear'; App.show('shop'); };
     if (D2 && $('artImport')) this.bindArt(c);
   },
@@ -9402,7 +9407,7 @@ const CrewView = {
     const star = Gear.canStar(it), sc = star ? Gear.starCost(it) : 0, top = it.r === GEAR_TOP || it.r === GEAR_SET_R, c = this.char;
     const next = it.l < max ? Gear.stats({ ...it, l: it.l + 1 }) : star ? Gear.stats({ ...it, st: (it.st || 0) + 1 }) : null;
     const d = (!o || o.c !== c) ? this.delta(s, c, it) : null;
-    const html = `<div class="gdetail r${it.r}" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b class="grname" style="color:${RARITY[it.r].color}">${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : RARITY[it.r].name}</b> · ${esc(GEAR_SLOT_BY_ID[t.slot].name)} · niveau ${it.l} / ${max}${top ? ` · étoiles ${it.st || 0} / ${GEAR_STARS}` : ''}${it.lk ? ' · 🔒' : ''}</p>` +
+    const html = `<div class="gdetail r${it.r}" style="--rc:${RARITY[it.r].color}">${gearIcon(it, 72)}<p><b class="grname" style="color:${RARITY[it.r].color}">${t.set ? 'Set · ' + esc(GEAR_SET_BY_ID[t.set].name) : RARITY[it.r].name}</b> · ${esc(GEAR_SLOT_BY_ID[t.slot].name)} · niveau ${it.l} / ${max}${top ? ` · étoiles ${it.st || 0} / ${GEAR_STARS}` : ''}</p>` +
       (top ? `<div class="expstars">${Array.from({ length: GEAR_STARS }, (_, i) => `<i class="${i < (it.st || 0) ? 'on' : ''}">★</i>`).join('')}</div>` : '') +
       `<ul class="traits" style="text-align:left">${Gear.stats(it).map(([st, v], i) => `<li>${esc(Gear.statText(st, v))}${next ? ` <span style="color:var(--cyan)">→ ${esc(Gear.statText(st, next[i][1]).split(' ')[0])}</span>` : ''}${GEAR_STATS[st].crew ? ' <span class="muted">(tourelles du porteur)</span>' : ''}</li>`).join('')}</ul>` +
       (d ? `<p class="hint">Sur ${esc(CAST[c].name)} à la place de l’objet actuel :</p><div class="gdelta">${d.html || '<span>Aucun changement</span>'}</div>` : '') +
@@ -9425,10 +9430,9 @@ const CrewView = {
       s.gear.scrap -= sc; it.st = (it.st || 0) + 1; Sound.sfx && Sound.sfx('up'); again();
     } });
     if (grp.length >= 3) acts.push({ label: `Fusionner ×3 → ${RARITY[it.r + 1].name}`, cls: 'violet', fn: () => { const r = Gear.merge(s, it); Store.touch(s); this._keepScroll = true; this.render(); if (r) Reveal.show([r], 'Fusion réussie'); } });
-    acts.push({ label: it.lk ? '🔓 Déverrouiller' : '🔒 Verrouiller', fn: () => { it.lk = !it.lk; again(); } });
-    if (!it.lk) acts.push({ label: `Recycler · +${Gear.recycleValue(it)} ${SCRAP}`, cls: 'danger', fn: () => {
+    acts.push({ label: `Recycler · +${Gear.recycleValue(it)} ${SCRAP}`, cls: 'danger', fn: () => {
       const doIt = () => { const g = Gear.recycle(s, it); Store.touch(s); Toast2.show(`+${g} ${SCRAP} ferraille`); this._keepScroll = true; this.render(); };
-      if (it.r >= 2) setTimeout(() => Modal.open({ title: 'Recycler cet objet ?', text: `${Gear.label(it)} sera détruit contre ${Gear.recycleValue(it)} ${SCRAP}.`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] }), 30);
+      if (it.r >= 2 || Gear.owner(s, it.uid)) setTimeout(() => Modal.open({ title: 'Recycler cet objet ?', text: `${Gear.label(it)}${Gear.owner(s, it.uid) ? ' (porté par ' + CAST[Gear.owner(s, it.uid).c].name + ')' : ''} sera détruit contre ${Gear.recycleValue(it)} ${SCRAP}.`, actions: [{ label: 'Garder' }, { label: 'Recycler', cls: 'primary', fn: doIt }] }), 30);
       else doIt();
     } });
     acts.push({ label: 'Fermer' });
@@ -10258,8 +10262,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.24.6';
+const APP_VERSION = '7.24.7';
 const CHANGELOG = [
+  { v: '7.24.7', date: '04.11.2026', items: ['Équipement : « Équiper le meilleur » met les meilleurs objets sur le personnage choisi, quitte à les reprendre aux autres ; « Meilleur du reste » n’utilise que les objets que personne ne porte.', 'Le verrou des objets est supprimé : recycler un objet porté demande une confirmation.'] },
   { v: '7.24.6', date: '04.11.2026', items: ['Bouton « ‹ Retour » en haut de l’arbre de compétences, des quêtes, du journal et de l’arsenal.'] },
   { v: '7.24.5', date: '04.11.2026', items: ['Application installée sur iPhone : les marges de l’encoche et de la barre du bas étaient comptées deux fois. La carte, les écrans et la partie tiennent de nouveau dans l’écran sans faire défiler.'] },
   { v: '7.24.4', date: '04.11.2026', items: ['iPhone en portrait : le plateau ne recouvre plus les vies, l’or et la vague (calcul sur la zone réellement visible, recalcul quand la barre de commandes change de taille).'] },
