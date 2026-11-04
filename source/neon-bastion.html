@@ -678,7 +678,8 @@ html.da body.hub #scrMap>.topbar,html.da body.hub #scrMap>.worldnav,html.da body
   background:linear-gradient(180deg,#6a72f0,#434ac4);border:3px solid var(--toyedge);box-shadow:0 3px 0 var(--toyedge)}
 .carrow.l{left:0}.carrow.r{right:0}
 html.da body.hub .sound-gate{bottom:calc(var(--sab) + 104px)}
-html.da body.hub [id$="Back"]{display:none}.carrow:disabled{opacity:.35;cursor:default}
+html.da body.hub [id$="Back"]{display:none}
+html.da body.hub .who .hubback[id$="Back"]{display:inline-flex;align-self:flex-start;width:auto;margin-bottom:6px;padding:6px 16px;font-size:.95rem}.carrow:disabled{opacity:.35;cursor:default}
 .clevels{grid-area:lv;display:flex;gap:8px;overflow-x:auto;padding:6px 4px 10px;scrollbar-width:none;justify-content:safe center;z-index:2}
 .clevels::-webkit-scrollbar{display:none}
 .clv{all:unset;cursor:pointer;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:52px;height:60px;border-radius:14px;background:linear-gradient(180deg,#6a72f0,#434ac4);border:3px solid var(--toyedge);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 4px 0 var(--toyedge)}
@@ -10257,8 +10258,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.24.5';
+const APP_VERSION = '7.24.6';
 const CHANGELOG = [
+  { v: '7.24.6', date: '04.11.2026', items: ['Bouton « ‹ Retour » en haut de l’arbre de compétences, des quêtes, du journal et de l’arsenal.'] },
   { v: '7.24.5', date: '04.11.2026', items: ['Application installée sur iPhone : les marges de l’encoche et de la barre du bas étaient comptées deux fois. La carte, les écrans et la partie tiennent de nouveau dans l’écran sans faire défiler.'] },
   { v: '7.24.4', date: '04.11.2026', items: ['iPhone en portrait : le plateau ne recouvre plus les vies, l’or et la vague (calcul sur la zone réellement visible, recalcul quand la barre de commandes change de taille).'] },
   { v: '7.24.3', date: '04.11.2026', items: ['La croix (ou « Quitter ») ouvre une fenêtre de pause : Reprendre, Recommencer le niveau (avec confirmation) ou Retour à la carte.'] },
@@ -13778,6 +13780,8 @@ const App = {
     $('btnTree').onclick = () => this.show('tree');
     $('btnCodexBack').onclick = () => this.show('map');
     $('btnTreeBack').onclick = () => this.show('map');
+    // Écrans hors barre de navigation (arbre, quêtes, journal, arsenal) : un bouton « Retour » bien visible en haut
+    for (const id of ['btnTreeBack', 'btnQuestsBack', 'btnJournalBack', 'btnArsenalBack']) { const bt = $(id), who = bt && bt.closest('.topbar') && bt.closest('.topbar').querySelector('.who'); if (!who) continue; bt.classList.add('hubback'); bt.textContent = '‹ Retour'; bt.setAttribute('aria-label', 'Retour à la carte'); who.prepend(bt); }
     $('btnTreeReset').onclick = () => Modal.open({
       title: 'Réinitialiser l’arbre ?', text: 'Tous les points investis te sont rendus. Tu pourras les redistribuer librement.',
       actions: [{ label: 'Annuler' }, { label: 'Réinitialiser', cls: 'danger', fn: () => { this.slot.skills = {}; Store.touch(this.slot); this.renderTree(); } }]
