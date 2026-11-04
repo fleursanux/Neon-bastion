@@ -49,7 +49,7 @@ html = f"""<!doctype html>
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 {chr(10).join(head_bits)}
-<style>:root{{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}body{{margin:0;font:14px system-ui,sans-serif}}img{{max-width:100%}}</style>
+<style>body{{margin:0;font:14px system-ui,sans-serif}}img{{max-width:100%}}</style>
 <script>window.NB_APP = {json.dumps({'url': url, 'version': version})};</script>
 </head>
 <body>
