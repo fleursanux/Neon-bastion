@@ -10257,8 +10257,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.24.2';
+const APP_VERSION = '7.24.3';
 const CHANGELOG = [
+  { v: '7.24.3', date: '04.11.2026', items: ['La croix (ou « Quitter ») ouvre une fenêtre de pause : Reprendre, Recommencer le niveau (avec confirmation) ou Retour à la carte.'] },
   { v: '7.24.2', date: '04.11.2026', items: ['Écran Équipage : chaque emplacement montre l’image de l’objet sur le fond de sa couleur de rareté (niveau, étoiles et fusion possible en pastilles). Toucher un objet porté l’agrandit avec ses statistiques et ses actions, dont « Changer d’objet » ; toucher un emplacement vide ouvre directement le choix.'] },
   { v: '7.24.1', date: '04.11.2026', items: ['Tutoriels des niveaux 1 et 2 : on construit sur la case de son choix. La case qui clignote n’est qu’un conseil, désormais choisie au début du chemin (elle couvre le plus long morceau que tous les ennemis traversent) et jamais à côté du Noyau.', 'Fusion du tutoriel offerte : l’or de la tourelle absorbée est remboursé.'] },
   { v: '7.24', date: '04.11.2026', items: ['La difficulté suit l’équipement : la puissance d’équipement de l’équipage (affichée dans l’écran Équipage et sur la fiche de chaque niveau) renforce les PV ennemis de (1 + puissance)^0,5. L’équipement garde un avantage, mais le placement des tourelles redevient décisif.', 'Mini-cinématique pour chaque nouveau pouvoir : au début de la partie où il devient disponible, une fenêtre montre une scène animée du pouvoir en action, quand et comment l’utiliser, son coût et sa recharge.', 'En paysage sur téléphone, les messages de l’équipage deviennent une petite bulle translucide en bas à gauche du plateau.', 'Les pièces de set sont cliquables dans la fiche d’un objet. Correction d’une comparaison qui affichait « NaN ».'] },
@@ -14927,14 +14928,19 @@ const GameView = {
     this.paused = !this.paused;
     this.setLabels();
   },
+  /* La croix ouvre toujours un choix : reprendre, recommencer le niveau ou retourner à la carte. */
   quit() {
-    Tuto.stop();
-    const b = this.battle, leave = () => { this.flushStats(); this.saveRun(); Talk.clear(); App.show('map'); };
-    if (b && b.state === 'wave') {
-      this.paused = true; this.setLabels();
-      Modal.open({ title: 'Quitter le niveau ?', text: `La partie reprendra au début de la vague ${b.wave}, avec tes tourelles et ton or d’avant cette vague.`,
-        actions: [{ label: 'Rester', fn: () => { this.paused = false; this.setLabels(); } }, { label: 'Quitter', cls: 'primary', fn: leave }] });
-    } else leave();
+    const b = this.battle;
+    if (!b) return;
+    const leave = () => { Tuto.stop(); this.flushStats(); this.saveRun(); Talk.clear(); App.show('map'); };
+    const restart = () => { Tuto.stop(); this.flushStats(); App.slot.run = null; Store.touch(App.slot); Talk.clear(); const ids = b.allowed ? b.allowed.slice() : null; this.start(b.level.n, null, ids); };
+    const wasPaused = this.paused;
+    this.paused = true; this.setLabels();
+    const resume = () => { this.paused = wasPaused; this.setLabels(); };
+    const txt = b.state === 'wave' ? `Si tu quittes, la partie reprendra au début de la vague ${b.wave}, avec tes tourelles et ton or d’avant cette vague.`
+      : b.wave ? `Si tu quittes, la partie reprendra à la vague ${b.wave + 1}.` : 'Tu peux recommencer le niveau ou retourner à la carte.';
+    Modal.open({ title: 'Pause', text: `${b.level.name} · vague ${b.wave} / ${b.level.waves}. ${txt}`,
+      actions: [{ label: 'Reprendre', cls: 'primary', fn: resume }, { label: '↻ Recommencer le niveau', fn: () => setTimeout(() => Modal.open({ title: 'Recommencer le niveau ?', text: 'La partie en cours (tourelles, or, vagues) sera perdue.', actions: [{ label: 'Annuler', fn: resume }, { label: 'Recommencer', cls: 'primary', fn: restart }] }), 30) }, { label: 'Retour à la carte', fn: leave }] });
   },
 
   buildShop() {
