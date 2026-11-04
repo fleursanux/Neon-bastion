@@ -1097,6 +1097,43 @@ body.fsgame .infobar .evchips{margin-top:2px}
 @keyframes gempulse{50%{transform:scale(1.3);text-shadow:0 0 12px var(--gem)}}
 #questGems{display:inline-block}
 @media (prefers-reduced-motion:reduce){.screen.enter,.rbtn,.rhub,.bgfx::before,.bgfx::after,.insp::before{animation:none}}
+
+/* ---------- Multijoueur ---------- */
+.mprow{display:flex;justify-content:center;margin:4px 0}
+.mpgo{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.mpgo .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 12px;width:100%}
+.mpgo .btn b{font-size:1.1rem}.mpgo .btn small{opacity:.8;font-weight:500}
+.mpcode{font:800 2.6rem/1 ui-monospace,Menlo,monospace;letter-spacing:.35em;text-align:center;padding:16px 0 16px .35em;margin:10px 0;border-radius:14px;background:rgba(0,0,0,.28);color:var(--cyan);user-select:all;-webkit-user-select:all}
+.mpinput{display:block;width:100%;box-sizing:border-box;margin:12px 0;padding:14px;font:800 2rem/1 ui-monospace,Menlo,monospace;letter-spacing:.3em;text-align:center;text-transform:uppercase;border-radius:12px;border:2px solid var(--line);background:rgba(0,0,0,.3);color:var(--fg)}
+.mpinput.bad{border-color:var(--red)}
+.mpwait{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0}.mpwait p{margin:0}
+.mpspin{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,.18);border-top-color:var(--cyan);animation:mpspin .8s linear infinite;flex:none}
+@keyframes mpspin{to{transform:rotate(360deg)}}
+.mpwho{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:6px;margin:6px 0 10px}.mpwho i{font-size:.75rem;opacity:.7}.mpwho .mpvs{opacity:.6;margin:0 4px}
+.mpdot{width:9px;height:9px;border-radius:50%;background:#4be37a;box-shadow:0 0 8px #4be37a;align-self:center}
+.mpmodes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mpmode{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border-radius:12px;border:2px solid var(--line);background:rgba(0,0,0,.22);color:var(--fg);font:inherit;cursor:pointer}
+.mpmode span{font-size:1.5rem}.mpmode b{font-size:.85rem}
+.mpmode.on{border-color:var(--cyan);background:rgba(62,242,200,.14);box-shadow:0 0 0 1px var(--cyan) inset}
+.mpmode:disabled{cursor:default;opacity:1}.mpmode:disabled:not(.on){opacity:.5}
+.mpdesc{text-align:center;min-height:2.6em;margin:8px 0}
+.mplvl{display:flex;align-items:center;gap:10px;justify-content:center;margin:6px 0}
+.mplvl>div{display:flex;flex-direction:column;align-items:center;min-width:0;flex:1;text-align:center}.mplvl>div b{font-size:1.05rem}.mplvl>div small{opacity:.75}
+.mplvl .btn{min-width:44px;font-size:1.2rem}
+.mpbar{position:absolute;right:8px;top:8px;z-index:5;display:flex;align-items:center;gap:6px;max-width:calc(100% - 16px);padding:4px 6px 4px 8px;border-radius:999px;background:rgba(8,12,26,.78);border:1px solid rgba(255,255,255,.14);font-size:.74rem;line-height:1.2;color:#e8f0ff;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.mpbar b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:9em}
+.mpbar .mpst{white-space:nowrap}.mpbar em{font-style:normal;font-weight:700}.mpbar em.l{color:#ff6b7d}.mpbar em.s{color:var(--gold)}
+.mpnet{font-style:normal;font-size:.66rem;opacity:.65;white-space:nowrap}.mpnet.warn{color:var(--gold);opacity:1}.mpnet.off{color:var(--red);opacity:1}
+.mpsend{border:0;border-radius:999px;padding:5px 10px;font:700 .72rem/1 inherit;font-family:inherit;background:linear-gradient(#ff7a59,#e0503a);color:#fff;cursor:pointer;white-space:nowrap}
+.mpsend.cd{filter:grayscale(.7) brightness(.8)}
+.mpsendbox{position:absolute;right:8px;top:44px;z-index:7;width:min(260px,calc(100% - 16px));padding:8px;border-radius:14px;background:rgba(8,12,26,.94);border:1px solid rgba(255,255,255,.16);display:flex;flex-direction:column;gap:6px}
+.mpsendbox[hidden]{display:none}
+.mpsendbox p{margin:0 0 2px;font-size:.75rem;opacity:.8;text-align:center}
+.mpsendbox button{display:grid;grid-template-columns:28px 1fr auto;grid-template-rows:auto auto;align-items:center;column-gap:8px;text-align:left;padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#e8f0ff;font:inherit;cursor:pointer}
+.mpsendbox button span{grid-row:1/3;font-size:1.2rem;text-align:center}.mpsendbox button small{opacity:.7;font-size:.7rem}.mpsendbox button em{grid-row:1/3;grid-column:3;font-style:normal;font-weight:800;color:var(--gold)}
+.mpsendbox button:disabled{opacity:.45;cursor:default}
+.mptab{width:100%;border-collapse:collapse;margin:8px 0;font-size:.88rem}.mptab th,.mptab td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.08);text-align:center}.mptab td:first-child{text-align:left;opacity:.75}
+body.mpgame .hudmini{right:auto}
 </style>
 
 <div class="bgfx" aria-hidden="true"></div>
@@ -1304,6 +1341,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
           <span class="chip wave"><i>≋</i><b id="miniWave">0/0</b></span>
         </div>
         <div class="nextwave" id="nextWave" hidden></div>
+        <div class="mpbar" id="mpBar" hidden></div><div class="mpsendbox" id="mpSend" hidden></div>
         <div class="radial" id="radial" hidden></div>
         <div class="evts" id="evts"><div class="evbanner" id="evBanner" hidden></div><div class="evchips" id="evChips"></div></div>
         <div class="toast" id="toast" style="opacity:0"></div>
@@ -2399,6 +2437,7 @@ class Enemy {
     this.hitFlash = 0;
     this.spin = Math.random() * TAU;
     this.alive = true;
+    this.uid = ++Enemy.seq;   // identifiant (synchronisation multijoueur)
     this.reachedBase = false;
     const p = path.pointAt(this.distance);
     this.x = p.x; this.y = p.y; this.angle = p.angle;
@@ -2435,7 +2474,7 @@ class Enemy {
       const h = this.type.heal, r2 = h.r * h.r;
       for (const o of battle.enemies) if (o !== this && o.alive && dist2(o.x, o.y, this.x, this.y) <= r2) o.hp = Math.min(o.maxHp, o.hp + o.maxHp * h.hps * dt);
     }
-    if (this.type.spawn) {
+    if (this.type.spawn && !battle.ghost) {
       this.spawnClock += dt;
       if (this.spawnClock >= this.type.spawn.every) {
         this.spawnClock = 0;
@@ -2861,6 +2900,8 @@ function immuneTo(e, el) {
   if (!el || el === 'mixte') return false;
   return !!((e.type.imm && e.type.imm[el]) || e.imm2 === el);
 }
+
+Enemy.seq = 0;
 
 class Tower {
   constructor(def, pad, mods) {
@@ -3509,7 +3550,8 @@ class Battle {
     const w = buildWave(this.level, this.wave);
     this.streams.push({ queue: w.spawns, hpMul: w.hpMul * this.threat, speedMul: w.speedMul, rewMul: w.rewMul, timer: early ? 0.8 : 0.3 });
     // Événement surprise : programmé quelques secondes après le début de la vague
-    if (this.wave >= 2 && this.wave < this.level.waves && !this.evtQ && Math.random() < CONFIG.eventChance) {
+    if (this.pendingSend) { this.streams.push(...this.pendingSend); this.pendingSend = null; }   // renforts reçus en Duel
+    if (!this.noEvents && this.wave >= 2 && this.wave < this.level.waves && !this.evtQ && Math.random() < CONFIG.eventChance) {
       const pool = [['treasure', 30], ['meteor', 24], ['artifact', 16], ['surge', 14], ['storm', 10], ['merchant', this.wave >= 3 ? 12 : 0]];
       let x = Math.random() * pool.reduce((a, p) => a + p[1], 0), type = 'treasure';
       for (const [k, wgt] of pool) { x -= wgt; if (x <= 0) { type = k; break; } }
@@ -3573,6 +3615,7 @@ class Battle {
     if (done) { this.vfx({ t: 'upgrade', tw: tower, n: done }); this.emit('changed'); }
     return done;
   }
+  setMode(tower, mode) { if (!tower || !['first', 'close', 'strong', 'last'].includes(mode)) return false; tower.mode = mode; this.emit('changed'); return true; }
   /* Fiche d'une tourelle pour le récapitulatif de fin de niveau. */
   towerRec(t, end) { return { id: t.def.id, name: t.def.name, color: t.def.color, lv: t.level, kills: t.kills, dmg: Math.round(t.dmgDone || 0), spent: t.spent, end, fused: !!t.def.fused, x: t.pad.col, y: t.pad.row }; }
   sell(tower) {
@@ -3794,6 +3837,7 @@ class Battle {
   /* Dégâts centralisés : bonus de compétences, récompense, éclatement des ruches. */
   damageEnemy(e, amount, opts) {
     const o = opts || {};
+    if (this.ghost) { if (!o.dot && amount > 0 && e.alive) this.vfx({ t: 'hit', e, v: Math.min(amount, e.hp + e.shield), crit: !!o.crit }); return false; }   // copie de l'invité : seul l'hôte compte les dégâts
     let dmg = amount;
     if (o.source) {
       if (e.elite || e.type.boss) dmg *= 1 + this.mods.hunter;
@@ -3814,6 +3858,7 @@ class Battle {
     else if (dealt > 0) this.vfx({ t: 'hit', e, v: dealt, crit: !!o.crit });
     if (e.type.boss && !e.halfSaid && e.hp < e.maxHp / 2) { e.halfSaid = true; this.emit('boss', 'half'); }
     if (!killed) return false;
+    if (this.multi && this.multi.host) Multi.dead.push(e.uid);
     const reward = Math.max(1, Math.round(e.reward * this.level.econ * (1 + this.mods.bounty + this.auraBounty) * this.mods.rewardMul * (this.stormT > 0 ? 2 : 1))) + (e.treasure || 0);
     if (e.treasure) this.emit('treasure', e.treasure);
     if (e.carrier) this.emit('artifact');
@@ -3857,7 +3902,7 @@ class Battle {
     if (this.merchant) { this.merchant.t -= dt; if (this.merchant.t <= 0) { this.merchant = null; this.emit('merchantgone'); } }
     if (this.drops.length) { for (const d of this.drops) d.t -= dt; this.drops = this.drops.filter(d => d.t > 0 && !d.taken); }
 
-    if (this.waveActive) {
+    if (this.waveActive && !this.ghost) {
       for (const sw of this.streams) {
         sw.timer -= dt;
         if (sw.timer <= 0 && sw.queue.length) {
@@ -3880,7 +3925,8 @@ class Battle {
     for (const e of this.enemies.slice()) {
       if (!e.alive) continue;
       e.update(dt, this);
-      if (e.reachedBase) {
+      if (e.reachedBase && this.ghost) this.vfx({ t: 'leak', x: e.x, y: e.y });
+      else if (e.reachedBase) {
         if (e.treasure) this.emit('toast', 'Le cargo doré s’est échappé avec son or…');
         if (e.type.steal) { const take = Math.min(this.gold, Math.max(40, Math.round(this.gold * e.type.steal))); this.gold -= take; this.stats.stolen = (this.stats.stolen || 0) + take; this.emit('toast', `Un pillard s’enfuit avec ${fmtBig(take)} or !`); }
         this.lives = Math.max(0, this.lives - e.type.lives);
@@ -3901,6 +3947,7 @@ class Battle {
     if (this.shake > 0) this.shake -= dt;
     if (this.baseHit > 0) this.baseHit -= dt;
 
+    if (this.ghost) return;   // coopération, côté invité : vies, vagues et fin de partie viennent de l'hôte
     if (this.lives <= 0) { this.state = 'defeat'; this.waveActive = false; this.emit('defeat'); return; }
     if (this.waveActive && !this.streams.length && !this.enemies.length) {
       this.waveActive = false;
@@ -6075,7 +6122,7 @@ function renderCamp() {
   if (!camp) {
     scr.insertAdjacentHTML('beforeend', `<div class="camp" id="camp">
       <button class="cbanner" id="campBanner" type="button"></button>
-      <div class="cside l"><button type="button" data-go="quests"><span>📜</span><b>Quêtes</b><i class="reddot" id="cdQ" hidden></i></button><button type="button" data-go="tree"><span>🌳</span><b>Arbre</b><i class="reddot" id="cdT" hidden></i></button><button type="button" data-go="arsenal"><span>🛡</span><b>Arsenal</b></button></div>
+      <div class="cside l"><button type="button" data-go="quests"><span>📜</span><b>Quêtes</b><i class="reddot" id="cdQ" hidden></i></button><button type="button" data-go="tree"><span>🌳</span><b>Arbre</b><i class="reddot" id="cdT" hidden></i></button><button type="button" data-go="arsenal"><span>🛡</span><b>Arsenal</b></button><button type="button" data-go="multi"><span>👥</span><b>À deux</b></button></div>
       <div class="cside r"><button type="button" data-go="login"><span>📅</span><b>Connexion</b><i class="reddot" id="cdL" hidden></i></button><button type="button" data-go="news"><span>📣</span><b>Annonces</b></button><button type="button" data-go="journal"><span>📖</span><b>Journal</b></button></div>
       <div class="ctitle"><span class="cnum" id="cNum">1</span><div><b id="cName"></b><small id="cBest"></small></div></div>
       <div class="cisle" id="campIsle"><button class="carrow l" id="cPrev" type="button" aria-label="Monde précédent">◀</button><button class="carrow r" id="cNext" type="button" aria-label="Monde suivant">▶</button></div>
@@ -6090,7 +6137,7 @@ function renderCamp() {
     $('cInfo').onclick = () => { $('cSheet').hidden = false; };
     $('cPrev').onclick = () => { if (App.world > 1) { App.world--; App.selectedLevel = Math.min(App.slot.unlocked, worldFirst(App.world) + worldSize(App.world) - 1); App._dir = -1; App.renderMap(); } };
     $('cNext').onclick = () => { const f = worldFirst(App.world) + worldSize(App.world); if (f <= App.slot.unlocked && App.world < WORLD_MAX) { App.world++; App.selectedLevel = Math.min(App.slot.unlocked, worldFirst(App.world) + worldSize(App.world) - 1); App._dir = 1; App.renderMap(); } };
-    camp.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => { const g = b.dataset.go; if (g === 'settings') $('btnSoundMap').click(); else if (g === 'login') Popups.login(); else if (g === 'news') Popups.news(); else App.show(g); }; });
+    camp.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => { const g = b.dataset.go; if (g === 'settings') $('btnSoundMap').click(); else if (g === 'login') Popups.login(); else if (g === 'news') Popups.news(); else if (g === 'multi') Multi.open(); else App.show(g); }; });
     $('campBanner').onclick = () => App.show('events');
     $('cPlay').onclick = () => { const b = $('btnResume') || $('btnPlay'); Sound.sfx && Sound.sfx('wave'); Isle.dive(() => b.click()); };
     let sx = null;
@@ -10269,8 +10316,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.24.8';
+const APP_VERSION = '7.25.0';
 const CHANGELOG = [
+  { v: '7.25.0', date: '04.11.2026', items: ['Multijoueur (prototype) : tuile « À deux » sur la carte. Un joueur crée une partie et donne son code de 5 caractères, l’autre le tape. Connexion directe entre les deux téléphones (iPhone ou Android), sans compte.', 'Trois modes : Coopération (même carte, or et vies en commun), Course (même niveau, meilleur score) et Duel (envoi de renforts ennemis chez l’adversaire).', 'Les parties à deux ne touchent pas à la campagne : pas d’étoiles, pas d’objets, la partie solo en cours est conservée.'] },
   { v: '7.24.8', date: '04.11.2026', items: ['Fusion : un objet porté n’est jamais consommé, ni par « Tout fusionner » ni par une fusion manuelle ; s’il fait partie du groupe, c’est lui qui monte de rareté.'] },
   { v: '7.24.7', date: '04.11.2026', items: ['Équipement : « Équiper le meilleur » met les meilleurs objets sur le personnage choisi, quitte à les reprendre aux autres ; « Meilleur du reste » n’utilise que les objets que personne ne porte.', 'Le verrou des objets est supprimé : recycler un objet porté demande une confirmation.'] },
   { v: '7.24.6', date: '04.11.2026', items: ['Bouton « ‹ Retour » en haut de l’arbre de compétences, des quêtes, du journal et de l’arsenal.'] },
@@ -14339,7 +14387,7 @@ const Radial = {
       { svg: ICONS.max, text: 'Max', cost: t.upgradeCost, color: '#3ef2c8', label: 'Améliorer au maximum', fn: () => { if (b.upgrade(t, Infinity)) this.openTower(t); } }
     ];
     if (!['aura', 'pulse'].includes(t.def.kind)) items.push({ svg: ICONS.mode, text: MODE_SHORT[t.mode], color: '#7aa7ff', label: 'Changer la cible', fn: () => {
-      const o = ['first', 'close', 'strong', 'last']; t.mode = o[(o.indexOf(t.mode) + 1) % o.length]; GameView.saveRun(); this.openTower(t); GameView.renderInspector(); } });
+      const o = ['first', 'close', 'strong', 'last']; b.setMode(t, o[(o.indexOf(t.mode) + 1) % o.length]); GameView.saveRun(); this.openTower(t); GameView.renderInspector(); } });
     if (b.canFuseHere && !t.def.fused) items.push({ svg: ICONS.fuse, text: 'Fusion', color: '#c58bff', label: 'Fusionner', cls: Tuto.active && Tuto.kind === 'fusion' && Tuto.step === 1 ? 'tuto-pulse' : '', fn: () => { this.close(); GameView.clearSelection(); GameView.fuseFrom = t; GameView.sheetForced = true; GameView.renderInspector(); } });
     items.push({ svg: ICONS.info, text: 'Fiche', color: '#e4ecfb', label: 'Fiche détaillée', fn: () => { GameView.sheetForced = true; GameView.renderInspector(); this.close(); const el = $('insp'); if (el && !el.hidden) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } });
     items.push({ svg: ICONS.sell, text: '+' + fmtBig(t.sellValue), color: '#ff5468', cls: 'danger', label: `Vendre, ${fmtBig(t.sellValue)} or`, fn: bt => {
@@ -14669,6 +14717,560 @@ const Tuto = {
     ctx.restore();
   }
 };
+/* =====================================================================
+   MULTIJOUEUR : deux appareils reliés directement (WebRTC, pair à pair)
+   - Mise en relation par un code de partie (service gratuit PeerJS : il ne voit passer que la présentation).
+   - Ensuite tout passe directement d'un téléphone à l'autre ; relais gratuit (Open Relay) si le réseau bloque.
+   - Modes : Coopération (même carte, l'hôte fait tourner la partie), Course (meilleur score), Duel (renforts ennemis).
+   ===================================================================== */
+const MP_PROTO = 1;
+const MP_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const Net = {
+  ws: null, pc: null, dc: null, id: null, remote: null, hb: null, sid: null, connected: false, pend: [],
+  onOpen: null, onMsg: null, onClose: null, onFail: null, last: 0,
+  /* Serveur de mise en relation : le service public de PeerJS (ou un serveur local de test : ?peer=127.0.0.1:9000). */
+  server() {
+    let q = null; try { q = new URLSearchParams(location.search).get('peer'); } catch (e) {}
+    if (q) { const [h, p] = q.split(':'); return `ws://${h}:${p || 9000}/peerjs?key=peerjs`; }
+    return 'wss://0.peerjs.com:443/peerjs?key=peerjs';
+  },
+  /* Serveurs STUN publics + relais TURN gratuit Open Relay (identifiants temporaires calculés sur place). */
+  async ice() {
+    const list = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+    let q = null; try { q = new URLSearchParams(location.search).get('peer'); } catch (e) {}
+    if (q) return [];   // test local : pas besoin de relais
+    try {
+      const user = Math.floor(Date.now() / 1000 + 8 * 3600) + ':neonbastion', enc = new TextEncoder();
+      const k = await crypto.subtle.importKey('raw', enc.encode('openrelayprojectsecret'), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+      const sig = new Uint8Array(await crypto.subtle.sign('HMAC', k, enc.encode(user)));
+      let s = ''; for (const c of sig) s += String.fromCharCode(c);
+      const h = 'staticauth.openrelay.metered.ca';
+      list.push({ urls: [`turn:${h}:80`, `turn:${h}:80?transport=tcp`, `turn:${h}:443`, `turns:${h}:443?transport=tcp`], username: user, credential: btoa(s) });
+    } catch (e) { /* pas de relais : la connexion directe reste possible */ }
+    return list;
+  },
+  /* Canal de présentation (WebSocket) : sert uniquement à échanger l'offre de connexion. */
+  openSig(id) {
+    return new Promise((res, rej) => {
+      let ws, done = false;
+      try { ws = new WebSocket(`${this.server()}&id=${encodeURIComponent(id)}&token=${Math.random().toString(36).slice(2, 12)}&version=1.5.5`); }
+      catch (e) { rej(new Error('Connexion Internet indisponible')); return; }
+      const to = setTimeout(() => { if (!done) { done = true; try { ws.close(); } catch (e) {} rej(new Error('Le service de mise en relation ne répond pas. Vérifie ta connexion Internet.')); } }, 12000);
+      ws.onmessage = ev => {
+        let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+        if (!done) {
+          if (m.type === 'OPEN') { done = true; clearTimeout(to); this.ws = ws; this.id = id; clearInterval(this.hb); this.hb = setInterval(() => { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 5000); res(); return; }
+          if (m.type === 'ID-TAKEN' || m.type === 'ERROR') { done = true; clearTimeout(to); try { ws.close(); } catch (e) {} rej(Object.assign(new Error(m.type === 'ID-TAKEN' ? 'Code déjà pris' : 'Le service de mise en relation a refusé la connexion'), { code: m.type })); return; }
+        }
+        this.signal(m);
+      };
+      ws.onerror = () => { if (!done) { done = true; clearTimeout(to); rej(new Error('Impossible de joindre le service de mise en relation. Vérifie ta connexion Internet.')); } };
+      ws.onclose = () => { if (this.ws === ws) { this.ws = null; clearInterval(this.hb); } };
+    });
+  },
+  closeSig() { clearInterval(this.hb); if (this.ws) { try { this.ws.send(JSON.stringify({ type: 'LEAVE' })); this.ws.close(); } catch (e) {} } this.ws = null; },
+  sig(type, payload) { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify({ type, payload, dst: this.remote })); },
+  async makePc() {
+    const pc = this.pc = new RTCPeerConnection({ iceServers: await this.ice() });
+    pc.onicecandidate = e => { if (e.candidate) this.sig('CANDIDATE', { c: e.candidate.toJSON ? e.candidate.toJSON() : { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex }, sid: this.sid }); };
+    pc.onconnectionstatechange = () => { if (pc !== this.pc) return; const s = pc.connectionState; if (s === 'failed') this.fail(this.connected ? 'Connexion perdue' : 'La connexion directe a échoué : un des deux réseaux bloque. Essayez en Wi-Fi.'); };
+    pc.ondatachannel = e => this.bindDc(e.channel);
+    return pc;
+  },
+  bindDc(dc) {
+    this.dc = dc;
+    dc.onopen = () => { clearTimeout(this.cto); this.connected = true; this.last = performance.now(); if (this.onOpen) this.onOpen(); setTimeout(() => this.closeSig(), 3000); };
+    dc.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } this.last = performance.now(); if (this.onMsg) this.onMsg(m); };
+    dc.onclose = () => { if (this.dc !== dc) return; const was = this.connected; this.connected = false; if (was && this.onClose) this.onClose(); };
+  },
+  async addCand(c) { try { if (this.pc && this.pc.remoteDescription) await this.pc.addIceCandidate(c); else this.pend.push(c); } catch (e) {} },
+  async flushCand() { const p = this.pend.splice(0); for (const c of p) { try { await this.pc.addIceCandidate(c); } catch (e) {} } },
+  async signal(m) {
+    const pl = m.payload || {};
+    if (m.type === 'OFFER' && this.role === 'host') {
+      if (this.pc) { if (m.src !== this.remote) { const keep = this.remote; this.remote = m.src; this.sig('LEAVE', {}); this.remote = keep; } return; }   // partie déjà pleine
+      this.remote = m.src; this.sid = pl.sid;
+      try {
+        const pc = await this.makePc();
+        await pc.setRemoteDescription(pl.sdp); await this.flushCand();
+        await pc.setLocalDescription(await pc.createAnswer());
+        this.sig('ANSWER', { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid });
+        if (this.onKnock) this.onKnock();
+      } catch (e) { this.fail('La connexion a échoué'); }
+    } else if (m.type === 'ANSWER' && this.role === 'guest' && this.pc && !this.pc.remoteDescription) {
+      try { await this.pc.setRemoteDescription(pl.sdp); await this.flushCand(); } catch (e) { this.fail('La connexion a échoué'); }
+    } else if (m.type === 'CANDIDATE' && pl.c && m.src === this.remote) this.addCand(pl.c);
+    else if ((m.type === 'LEAVE' || m.type === 'EXPIRE') && !this.connected && this.role === 'guest' && m.src === this.remote) this.fail(m.type === 'EXPIRE' ? 'Aucune partie ne correspond à ce code.' : 'Cette partie est déjà complète.');
+  },
+  async host(code) { this.reset(); this.role = 'host'; await this.openSig('neonbastion-' + code); },
+  async join(code) {
+    this.reset(); this.role = 'guest';
+    await this.openSig('neonbastion-g' + Math.random().toString(36).slice(2, 10));
+    this.remote = 'neonbastion-' + code; this.sid = Math.random().toString(36).slice(2, 10);
+    const pc = await this.makePc();
+    this.bindDc(pc.createDataChannel('nb', { ordered: true }));
+    await pc.setLocalDescription(await pc.createOffer());
+    this.sig('OFFER', { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid, type: 'data' });
+    this.cto = setTimeout(() => { if (!this.connected) this.fail('Personne ne répond à ce code. Vérifie le code et que ton ami attend bien sur l’écran de création.'); }, 20000);
+  },
+  send(o) { if (this.dc && this.dc.readyState === 'open') { if (o.t === 'snap' && this.dc.bufferedAmount > 256e3) return false; try { this.dc.send(JSON.stringify(o)); return true; } catch (e) {} } return false; },
+  fail(msg) { const f = this.onFail; this.close(); if (f) f(msg); },
+  reset() { this.close(); this.pend = []; },
+  close() {
+    clearTimeout(this.cto); this.closeSig();
+    const dc = this.dc, pc = this.pc; this.dc = null; this.pc = null; this.connected = false; this.remote = null;
+    try { if (dc) dc.close(); } catch (e) {} try { if (pc) pc.close(); } catch (e) {}
+  }
+};
+
+const MP_MODES = {
+  coop: { name: 'Coopération', icon: '🤝', desc: 'La même carte à deux : or et vies en commun. Chacun pose, améliore et vend des tourelles, lance les vagues et les pouvoirs.' },
+  race: { name: 'Course', icon: '🏁', desc: 'Le même niveau, chacun sur son téléphone. Le meilleur score gagne ; une défaite élimine. Lancer les vagues en avance rapporte gros.' },
+  duel: { name: 'Duel', icon: '⚔', desc: 'Le même niveau, chacun de son côté. Dépense ton or pour envoyer des renforts ennemis chez l’autre. Le dernier debout gagne.' }
+};
+/* Renforts du mode Duel : coût en or selon la vague de l'envoyeur, ennemis tirés du niveau du receveur. */
+const MP_PACKS = [
+  { id: 'essaim', name: 'Essaim', icon: '»', n: 8, pick: 'fast', mul: 0.45, desc: '8 ennemis rapides' },
+  { id: 'blindes', name: 'Blindés', icon: '■', n: 3, pick: 'tank', mul: 0.8, desc: '3 ennemis résistants' },
+  { id: 'elite', name: 'Élite', icon: '◆', n: 1, pick: 'tank', elite: true, mul: 1.3, desc: '1 élite renforcé' }
+];
+const MP_ACTS = ['build', 'buyPad', 'upgrade', 'sell', 'fuse', 'specialize', 'closePath', 'usePower', 'placePower', 'startWave', 'setMode'];
+const MP_FWD = ['toast', 'wave', 'menace', 'early', 'chaincleared', 'boss', 'unique', 'wavedone', 'victory', 'defeat', 'healed'];
+
+const Multi = {
+  code: null, role: null, them: null, mode: 'coop', level: 1, linked: false, game: null, opp: null, myRes: null, oppRes: null,
+  outbox: [], dead: [], snapT: 0, stT: 0, pingT: 0, ping: 0, lastSnap: null,
+  get name() { return (App.slot && App.slot.name) || 'Joueur'; },
+  get themName() { return (this.them && this.them.name) || 'Ton ami'; },
+  send(o) { return Net.send(o); },
+
+  /* ---------- Écrans du salon ---------- */
+  open() {
+    if (this.linked) { this.lobby(); return; }
+    Modal.open({ title: 'Multijoueur', html:
+      `<p class="hint" style="text-align:center">Jouez à deux, chacun sur son téléphone (iPhone ou Android), avec une connexion Internet. Pas de compte, pas de serveur à payer.</p>` +
+      `<div class="mpgo"><button class="btn primary" type="button" id="mpCreate"><b>Créer une partie</b><small>Tu reçois un code à donner à ton ami</small></button>` +
+      `<button class="btn" type="button" id="mpJoin"><b>Rejoindre</b><small>Entre le code de ton ami</small></button></div>` +
+      `<p class="hint" style="text-align:center">Les parties à deux ne comptent pas pour la campagne : ni étoiles, ni objets, ni sauvegarde de la partie.</p>`,
+      actions: [{ label: 'Fermer' }] });
+    $('mpCreate').onclick = () => this.create();
+    $('mpJoin').onclick = () => this.joinForm();
+  },
+  wait(title, text, cancel) {
+    Modal.open({ title, html: `<div class="mpwait"><i class="mpspin"></i><p>${esc(text)}</p></div>`, actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; if (cancel) cancel(); } }] });
+  },
+  error(msg) {
+    this.linked = false;
+    Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(msg)}</p>`, actions: [{ label: 'Fermer' }, { label: 'Réessayer', cls: 'primary', fn: () => setTimeout(() => this.open(), 30) }] });
+  },
+  hook() {
+    Net.onOpen = () => { this.linked = true; this.send({ t: 'hello', v: MP_PROTO, app: APP_VERSION, name: this.name, top: Math.min(App.slot.unlocked || 1, MAX_LEVEL) }); };
+    Net.onMsg = m => this.onMsg(m);
+    Net.onClose = () => this.lost();
+    Net.onFail = msg => { if (this.linked || this.game) this.lost(); else this.error(msg); };
+    Net.onKnock = () => { const p = $('mpHostSt'); if (p) p.textContent = 'Ton ami arrive, connexion en cours…'; };
+  },
+  async create() {
+    this.hook(); this.role = 'host';
+    this.wait('Créer une partie', 'Préparation du code…');
+    for (let tries = 0; tries < 3; tries++) {
+      let c = ''; for (let i = 0; i < 5; i++) c += MP_ALPHA[Math.floor(Math.random() * MP_ALPHA.length)];
+      try { await Net.host(c); this.code = c; break; }
+      catch (e) { if (e.code !== 'ID-TAKEN' || tries === 2) { if (!$('modal').hidden) this.error(e.message); return; } }
+    }
+    if ($('modal').hidden) { Net.close(); return; }   // annulé entre-temps
+    const share = `Rejoins ma partie Neon Bastion à deux : code ${this.code}`;
+    Modal.open({ title: 'Ta partie est prête', html:
+      `<p class="hint" style="text-align:center">Donne ce code à ton ami. Il touche « Rejoindre » et le tape.</p><div class="mpcode" id="mpCode">${this.code}</div>` +
+      `<div class="mprow"><button class="btn small" type="button" id="mpShare">${navigator.share ? 'Partager le code' : 'Copier le code'}</button></div>` +
+      `<div class="mpwait"><i class="mpspin"></i><p id="mpHostSt">En attente de ton ami…</p></div>`,
+      actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; } }] });
+    $('mpShare').onclick = async () => {
+      try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(this.code); Toast2.show('Code copié'); } } catch (e) {}
+    };
+  },
+  joinForm() {
+    this.hook(); this.role = 'guest';
+    Modal.open({ title: 'Rejoindre une partie', html:
+      `<p class="hint" style="text-align:center">Tape le code de 5 caractères affiché chez ton ami.</p>` +
+      `<input class="mpinput" id="mpIn" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCDE" aria-label="Code de la partie">`,
+      actions: [{ label: 'Annuler' }, { label: 'Rejoindre', cls: 'primary', keep: true, fn: () => go() }] });
+    const inp = $('mpIn');
+    const go = async () => {
+      const c = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/O/g, '0').replace(/I/g, '1');
+      if (c.length !== 5) { inp.classList.add('bad'); Toast2.show('Le code fait 5 caractères'); return; }
+      this.code = c;
+      this.wait('Rejoindre ' + c, 'Connexion à la partie…');
+      try { await Net.join(c); } catch (e) { this.error(e.message); }
+    };
+    inp.oninput = () => { inp.value = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); inp.classList.remove('bad'); };
+    inp.onkeydown = e => { if (e.key === 'Enter') go(); };
+    setTimeout(() => inp.focus(), 50);
+  },
+  maxLevel() { return Math.max(1, Math.min(MAX_LEVEL, App.slot.unlocked || 1, (this.them && this.them.top) || 1)); },
+  lobby() {
+    if (!this.linked) { this.open(); return; }
+    const host = this.role === 'host', lv = getLevel(this.level), md = MP_MODES[this.mode];
+    const modes = Object.entries(MP_MODES).map(([id, m]) => `<button type="button" class="mpmode${id === this.mode ? ' on' : ''}" data-mode="${id}" ${host ? '' : 'disabled'}><span>${m.icon}</span><b>${m.name}</b></button>`).join('');
+    Modal.open({ title: 'Partie à deux', html:
+      `<div class="mpwho"><span class="mpdot"></span><b>${esc(this.name)}</b><i>${host ? 'hôte' : 'invité'}</i><span class="mpvs">+</span><b>${esc(this.themName)}</b><i>${host ? 'invité' : 'hôte'}</i></div>` +
+      `<div class="mpmodes">${modes}</div><p class="hint mpdesc">${esc(md.desc)}</p>` +
+      `<div class="mplvl"><button class="btn small" type="button" id="mpLm" ${host ? '' : 'disabled'} aria-label="Niveau précédent">−</button>` +
+      `<div><small>${esc(worldLabel(lv.world))} · niveau ${lv.n}</small><b>${esc(lv.name)}</b><small>${lv.waves} vagues${lv.boss ? ' · boss' : ''}</small></div>` +
+      `<button class="btn small" type="button" id="mpLp" ${host ? '' : 'disabled'} aria-label="Niveau suivant">+</button></div>` +
+      `<p class="hint" style="text-align:center">${host ? `Niveaux jusqu’au ${this.maxLevel()} : le plus haut débloqué par vous deux.` : `${esc(this.themName)} choisit le mode et le niveau.`}${this.mode === 'coop' ? ' En coopération, ce sont les bonus d’équipement et de compétences de l’hôte qui comptent.' : ''}</p>`,
+      actions: host ? [{ label: 'Quitter', fn: () => this.disconnect() }, { label: 'Lancer la partie', cls: 'primary', fn: () => this.launch() }]
+        : [{ label: 'Quitter', fn: () => this.disconnect() }, { label: `En attente de ${this.themName}…`, keep: true, fn: () => Toast2.show(`${this.themName} lance la partie`) }] });
+    if (!host) return;
+    $('modalCard').querySelectorAll('[data-mode]').forEach(b => { b.onclick = () => { this.mode = b.dataset.mode; this.pushLobby(); this.lobby(); }; });
+    $('mpLm').onclick = () => { this.level = Math.max(1, this.level - 1); this.pushLobby(); this.lobby(); };
+    $('mpLp').onclick = () => { this.level = Math.min(this.maxLevel(), this.level + 1); this.pushLobby(); this.lobby(); };
+  },
+  pushLobby() { this.send({ t: 'lobby', mode: this.mode, level: this.level }); },
+  inLobby() { return !$('modal').hidden && $('modalCard').querySelector('.mpmodes'); },
+  disconnect() { this.send({ t: 'bye' }); setTimeout(() => Net.close(), 150); this.linked = false; this.them = null; if (this.game) this.leaveGame(); },
+
+  /* ---------- Lancement ---------- */
+  launch() {
+    if (this.role !== 'host' || !this.linked) return;
+    const lv = this.level, mode = this.mode, go = ids => {
+      const mods = mode === 'coop' ? buildMods(App.slot, lv, []) : null;
+      this.send({ t: 'start', mode, level: lv, allowed: mode === 'coop' ? ids : null, mods });
+      this.begin({ mode, level: lv, role: 'host', mods }, ids);
+    };
+    if (Loadout.needed(App.slot, lv)) Loadout.pick(lv, ids => go(ids)); else go(null);
+  },
+  begin(opt, ids) {
+    this.myRes = null; this.oppRes = null; this.opp = null; this.dead = []; this.outbox = []; this.lastSnap = null; this.sendCd = 0;
+    this.game = { mode: opt.mode, role: opt.role, level: opt.level, ghost: opt.mode === 'coop' && opt.role === 'guest', host: opt.mode === 'coop' && opt.role === 'host' };
+    Modal.close();
+    GameView.start(opt.level, null, ids || null, { mode: opt.mode, mods: opt.mods || null, ghost: this.game.ghost });
+  },
+  /* Appelé par GameView.start une fois la bataille créée. */
+  attach(b, mp) {
+    b.multi = this.game || { mode: mp.mode };
+    b.noEvents = true;
+    if (mp.ghost) this.ghostWrap(b); else if (b.multi.host) this.hostWrap(b);
+    $('mpBar').hidden = false; this.bar(b, true);
+    document.body.classList.add('mpgame');
+    Toast.show(mp.mode === 'coop' ? `${MP_MODES.coop.icon} Coopération avec ${this.themName} : posez vos tourelles !` : mp.mode === 'race' ? `${MP_MODES.race.icon} Course contre ${this.themName} : fais le meilleur score !` : `${MP_MODES.duel.icon} Duel contre ${this.themName} : envoie-lui des renforts !`);
+  },
+  detach() { $('mpBar').hidden = true; document.body.classList.remove('mpgame'); this.game = null; },
+
+  /* ---------- Messages ---------- */
+  onMsg(m) {
+    const b = GameView.battle, inGame = !!(this.game && b && b.multi);
+    switch (m.t) {
+      case 'hello':
+        this.them = m;
+        if (m.v !== MP_PROTO) { Modal.open({ title: 'Versions différentes', html: `<p style="text-align:center">Ton jeu (${esc(APP_VERSION)}) et celui de ${esc(m.name)} (${esc(m.app)}) ne sont pas compatibles. Mettez tous les deux le jeu à jour (recharger la page), puis recommencez.</p>`, actions: [{ label: 'Fermer' }] }); this.disconnect(); return; }
+        if (this.role === 'host') { this.level = Math.min(this.maxLevel(), Math.max(1, App.selectedLevel || this.maxLevel())); this.pushLobby(); }
+        Sound.sfx && Sound.sfx('up'); buzz(30);
+        this.lobby();
+        return;
+      case 'lobby': this.mode = m.mode; this.level = m.level; if (this.inLobby() || !this.game) this.lobby(); return;
+      case 'start':
+        if (this.game) this.leaveGame(true);
+        this.mode = m.mode; this.level = m.level;
+        if (m.mode !== 'coop' && Loadout.needed(App.slot, m.level)) { Modal.close(); Loadout.pick(m.level, ids => this.begin({ mode: m.mode, level: m.level, role: 'guest' }, ids)); }
+        else this.begin({ mode: m.mode, level: m.level, role: 'guest', mods: m.mods }, m.allowed);
+        return;
+      case 'ping': this.send({ t: 'pong', k: m.k }); return;
+      case 'pong': this.ping = Math.round(performance.now() - m.k); return;
+      case 'bye': this.linked = false; Net.close(); this.lost(true); return;
+    }
+    if (!inGame) return;
+    switch (m.t) {
+      case 'st': this.opp = m; return;
+      case 'done': this.oppRes = m.r; this.opp = Object.assign(this.opp || {}, { st: m.r.victory ? 'victory' : 'defeat' }); this.checkEnd(); return;
+      case 'send': this.receive(b, m); return;
+      case 'snap': if (b.ghost) this.apply(b, m); return;
+      case 'act': if (b.ghost) this.replay(b, m); return;
+      case 'ev': if (b.ghost) for (const e of m.e) b.events.push(e); return;
+      case 'req': if (b.multi.host) this.request(b, m); return;
+      case 'ctl': if (b.multi.host) { if (m.k === 'pause') GameView.togglePause(); if (m.k === 'speed') $('btnSpeed').click(); if (m.k === 'wave') b.startWave(); } return;
+      case 'leave':
+        if (b.multi.mode === 'coop') {
+          if (b.ghost) { this.leaveGame(); Modal.open({ title: 'Partie terminée', html: `<p style="text-align:center">${esc(this.themName)} a quitté la partie.</p>`, actions: [{ label: 'Salon', cls: 'primary', fn: () => setTimeout(() => this.lobby(), 30) }] }); }
+          else { b.multi.solo = true; Toast.show(`${this.themName} a quitté la partie : tu continues seul`); }
+        }
+        return;
+    }
+  },
+  lost(bye) {
+    const b = GameView.battle, inGame = !!(this.game && b && b.multi);
+    this.linked = false;
+    if (inGame && b.ghost) { this.leaveGame(); Modal.open({ title: 'Connexion perdue', html: `<p style="text-align:center">La liaison avec ${esc(this.themName)} est coupée${bye ? ' (il a quitté)' : ''}. La partie s’arrête.</p>`, actions: [{ label: 'Retour à la carte', cls: 'primary' }] }); return; }
+    if (inGame) { b.multi.solo = true; Toast.show(`Connexion perdue avec ${this.themName} : tu continues seul`); return; }
+    if (!$('modal').hidden && $('modalCard').querySelector('.mpmodes, .mpwait')) Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(this.themName)} ${bye ? 'a quitté le salon' : 'n’est plus connecté'}.</p>`, actions: [{ label: 'Fermer' }] });
+  },
+
+  /* ---------- Pendant la partie ---------- */
+  tick(b, dt) {
+    if (!this.game || !b.multi) return;
+    const real = dt;
+    this.pingT -= real; if (this.pingT <= 0 && this.linked) { this.pingT = 3; this.send({ t: 'ping', k: performance.now() }); }
+    if (b.multi.mode === 'coop') {
+      if (b.multi.host && !b.multi.solo) {
+        this.snapT -= real;
+        if (this.snapT <= 0) { this.snapT = 0.15; this.send({ t: 'snap', ...this.snap(b) }); }
+        if (this.outbox.length) { this.send({ t: 'ev', e: this.outbox.splice(0) }); }
+      }
+    } else {
+      this.stT -= real;
+      if (this.stT <= 0 && !this.myRes) { this.stT = 1; this.send({ t: 'st', w: b.wave, W: b.level.waves, l: b.lives, L: b.startLives, s: b.score, k: b.kills, st: b.state }); }
+      if (this.sendCd > 0) this.sendCd -= real;
+    }
+    this.bar(b);
+  },
+  bar(b, force) {
+    const el = $('mpBar'); if (!el || !this.game) return;
+    const g = this.game, o = this.opp, warn = this.linked && Net.last && performance.now() - Net.last > 9000, off = !this.linked;
+    const net = off ? '<i class="mpnet off">hors ligne</i>' : warn ? '<i class="mpnet warn">connexion instable</i>' : `<i class="mpnet">${this.ping ? this.ping + ' ms' : 'connecté'}</i>`;
+    let h;
+    if (g.mode === 'coop') h = `<span class="mpic">🤝</span><b>${esc(this.themName)}</b>${net}`;
+    else {
+      const st = !o ? 'en route…' : o.st === 'defeat' ? 'éliminé' : o.st === 'victory' ? 'a fini' : `vague ${o.w}/${o.W}`;
+      h = `<span class="mpic">${MP_MODES[g.mode].icon}</span><b>${esc(this.themName)}</b><span class="mpst">${st}${o ? ` · <em class="l">♥ ${o.l}</em> · <em class="s">${fmtBig(o.s)}</em>` : ''}</span>${net}`;
+      if (g.mode === 'duel' && !this.myRes) h += `<button type="button" class="mpsend${this.sendCd > 0 ? ' cd' : ''}" id="mpSendBtn">⚔ Renforts</button>`;
+    }
+    if (!force && el._h === h) return;
+    el._h = h; el.innerHTML = h;
+    const sb = $('mpSendBtn'); if (sb) sb.onclick = ev => { ev.stopPropagation(); this.sendMenu(); };
+  },
+  packCost(b, p) { return Math.max(10, Math.round(b.waveBonus(Math.max(1, b.wave)) * p.mul)); },
+  sendMenu() {
+    const b = GameView.battle; if (!b || this.myRes) return;
+    const box = $('mpSend');
+    if (!box.hidden) { box.hidden = true; return; }
+    box.innerHTML = `<p>Envoyer chez ${esc(this.themName)}${this.sendCd > 0 ? ` · prêt dans ${Math.ceil(this.sendCd)} s` : ''}</p>` + MP_PACKS.map(p => { const c = this.packCost(b, p); return `<button type="button" data-p="${p.id}" ${b.gold >= c && this.sendCd <= 0 ? '' : 'disabled'}><span>${p.icon}</span><b>${p.name}</b><small>${p.desc}</small><em>${fmtBig(c)} or</em></button>`; }).join('');
+    box.hidden = false;
+    box.querySelectorAll('[data-p]').forEach(bt => { bt.onclick = ev => { ev.stopPropagation(); this.sendPack(bt.dataset.p); box.hidden = true; }; });
+  },
+  sendPack(id) {
+    const b = GameView.battle, p = MP_PACKS.find(x => x.id === id); if (!b || !p || this.myRes) return;
+    const c = this.packCost(b, p);
+    if (this.sendCd > 0) { Toast.show(`Renforts prêts dans ${Math.ceil(this.sendCd)} s`); return; }
+    if (b.gold < c) { Toast.show(`Il manque ${fmtBig(c - b.gold)} or`); return; }
+    if (!this.linked) { Toast.show('Ton ami n’est plus connecté'); return; }
+    b.gold -= c; b.stats.goldSpent += c; this.sendCd = 8;
+    b.mpSent = (b.mpSent || 0) + 1;
+    this.send({ t: 'send', p: id });
+    Toast.show(`⚔ ${p.name} envoyé chez ${this.themName} !`); Sound.sfx && Sound.sfx('wave'); buzz(20);
+  },
+  /* Renforts reçus : ennemis du niveau du receveur, à la force de sa vague en cours. Ils arrivent tout de suite pendant une vague, sinon au début de la suivante. */
+  receive(b, m) {
+    const p = MP_PACKS.find(x => x.id === m.p);
+    if (!p || b.state === 'victory' || b.state === 'defeat' || this.myRes) return;
+    const w = buildWave(b.level, Math.max(1, Math.min(b.level.waves, b.wave || 1)));
+    const pool = [...new Set(w.spawns.map(s => s.id))].map(id => ENEMY_BY_ID[id]).filter(t => t && !t.boss && !t.unique && !t.fly && !t.treasure);
+    if (!pool.length) return;
+    const t = pool.slice().sort((a, c) => p.pick === 'fast' ? c.speed - a.speed : c.hp - a.hp)[0];
+    const sw = { queue: Array.from({ length: p.n }, () => ({ id: t.id, elite: !!p.elite, delay: p.pick === 'fast' ? 0.35 : 0.9 })), hpMul: w.hpMul * b.threat, speedMul: w.speedMul, rewMul: 0.5, timer: 1.5 };
+    b.mpGot = (b.mpGot || 0) + 1;
+    if (b.waveActive) { b.streams.push(sw); Toast.show(`⚔ ${this.themName} t’envoie ${p.n > 1 ? p.n + ' × ' : ''}${t.name}${p.elite ? ' élite' : ''} !`); }
+    else { (b.pendingSend = b.pendingSend || []).push(sw); Toast.show(`⚔ ${this.themName} t’envoie ${p.n > 1 ? p.n + ' × ' : ''}${t.name}${p.elite ? ' élite' : ''} : ils arrivent avec ta prochaine vague`); }
+    Sound.sfx && Sound.sfx('alarm'); buzz(40);
+  },
+
+  /* ---------- Coopération : l'hôte fait tourner la partie ---------- */
+  enc(b, x) {
+    if (x instanceof Tower) return { T: x.pad.i };
+    if (x && typeof x === 'object' && b.pads.includes(x)) return { P: x.i };
+    if (x === Infinity) return { I: 1 };
+    if (x && typeof x === 'object' && 'x' in x && 'y' in x) return { x: x.x, y: x.y };
+    return x;
+  },
+  dec(b, x) {
+    if (x && typeof x === 'object') {
+      if (x.T !== undefined) { const p = b.pads[x.T]; return p && p.tower ? p.tower : undefined; }
+      if (x.P !== undefined) return b.pads[x.P];
+      if (x.I) return Infinity;
+    }
+    return x;
+  },
+  hostWrap(b) {
+    const self = this, emit = b.emit;
+    b.emit = function (type, data) {
+      if (MP_FWD.includes(type) && !this.multi.solo) {
+        const personal = type === 'toast' && /^(Pas assez|Il manque|Ce chemin|Il faut laisser)/.test(String(data));
+        if (this._fromGuest && type === 'toast') { if (personal) { self.outbox.push({ type, data }); return; } }
+        else if (!personal) self.outbox.push({ type, data });
+      }
+      return emit.call(this, type, data);
+    };
+    for (const m of MP_ACTS) {
+      const f = Battle.prototype[m];
+      b[m] = function (...a) {
+        const g = this.gold, e = this.energy, r = f.apply(this, a);
+        if ((r || m === 'sell') && !this.multi.solo) self.send({ t: 'act', m, a: a.map(x => self.enc(this, x)), g, e });
+        return r;
+      };
+    }
+  },
+  ghostWrap(b) {
+    const self = this;
+    b.ghost = true; b._orig = {};
+    const emit = b.emit;
+    b.emit = function (type, data) { if (type === 'changed' || type === 'fused') return emit.call(this, type, data); };   // le reste arrive de l'hôte
+    for (const m of MP_ACTS) {
+      b._orig[m] = Battle.prototype[m];
+      b[m] = function (...a) { self.send({ t: 'req', m, a: a.map(x => self.enc(this, x)) }); return m === 'fuse' ? null : true; };
+    }
+  },
+  request(b, m) {
+    const a = (m.a || []).map(x => this.dec(b, x));
+    if (!MP_ACTS.includes(m.m) || a.some(x => x === undefined)) return;
+    b._fromGuest = true;
+    try { b[m.m](...a); } catch (e) {} finally { b._fromGuest = false; }
+  },
+  replay(b, m) {
+    const a = (m.a || []).map(x => this.dec(b, x));
+    if (!b._orig[m.m] || a.some(x => x === undefined)) return;
+    b.gold = m.g; if (m.e !== undefined) b.energy = m.e;
+    try { b._orig[m.m].apply(b, a); } catch (e) {}
+  },
+  snap(b) {
+    const r1 = v => Math.round(v * 10) / 10, pi = e => e.path === b.airPath ? -1 : Math.max(0, b.paths.indexOf(e.path));
+    const s = {
+      g: Math.floor(b.gold), l: b.lives, w: b.wave, s: b.state, wa: b.waveActive ? 1 : 0, en: Math.round(b.energy * 10) / 10, sc: b.score, k: b.kills,
+      cu: b.clearedUpTo, pb: b.padsBought, cl: b.closed, pcd: b.pcd, pt: b.powerT, ch: b.chain, sp: GameView.speed, pa: GameView.paused || !$('modal').hidden ? 1 : 0,
+      pads: b.pads.map(p => p.locked ? 1 : 0).join(''),
+      T: b.towers.map(t => [t.pad.i, t.def.id, t.level, t.spec, t.mode, t.kills, Math.round(t.dmgDone || 0), t.spent]),
+      E: b.enemies.filter(e => e.alive).map(e => [e.uid, e.id, pi(e), r1(e.distance), Math.ceil(e.hp), e.maxHp, Math.ceil(e.shield), e.elite ? 1 : 0, r1(e.slowF), e.stunT > 0 ? 1 : 0, e.held ? 1 : 0, e.speedMul, e.hpMul]),
+      D: this.dead.splice(0), tr: b.traps.map(t => [t.kind, Math.round(t.x), Math.round(t.y), r1(t.t)])
+    };
+    return s;
+  },
+  apply(b, m) {
+    b.gold = m.g; b.lives = m.l; b.wave = m.w; b.state = m.s; b.waveActive = !!m.wa; b.energy = m.en; b.score = m.sc; b.kills = m.k;
+    b.clearedUpTo = m.cu; b.padsBought = m.pb; b.closed = m.cl || []; b.pcd = m.pcd || {}; b.powerT = m.pt || {}; b.chain = m.ch;
+    GameView.speed = m.sp || 1; if (GameView.paused !== !!m.pa) { GameView.paused = !!m.pa; GameView.setLabels(); }
+    let padsChanged = false;
+    b.pads.forEach((p, i) => { const lk = m.pads[i] === '1'; if (p.locked !== lk) { p.locked = lk; padsChanged = true; } });
+    // Tourelles
+    const want = new Map(m.T.map(t => [t[0], t]));
+    for (const t of b.towers.slice()) { const w = want.get(t.pad.i); if (!w || w[1] !== t.def.id) { t.pad.tower = null; b.towers = b.towers.filter(x => x !== t); padsChanged = true; } }
+    for (const w of m.T) {
+      const pad = b.pads[w[0]]; if (!pad) continue;
+      let t = pad.tower;
+      if (!t) { const def = getTowerDef(w[1], b.mods); if (!def) continue; t = new Tower(def, pad, b.mods); pad.tower = t; b.towers.push(t); padsChanged = true; }
+      if (w[3] !== null && w[3] !== undefined && t.spec === null && t.def.specs) t.specialize(w[3]);
+      if (t.level !== w[2]) { t.level = w[2]; }
+      t.mode = w[4]; t.kills = w[5]; t.dmgDone = w[6]; t.spent = w[7];
+    }
+    // Ennemis
+    const dead = new Set(m.D || []), have = new Map(b.enemies.map(e => [e.uid, e])), seen = new Set();
+    for (const r of m.E) {
+      const [uid, id, pi, d, hp, mhp, sh, el, sf, stun, held, sm, hm] = r;
+      seen.add(uid);
+      let e = have.get(uid);
+      if (!e) {
+        const path = pi < 0 ? b.airPath : (b.paths[pi] || b.path);
+        if (!ENEMY_BY_ID[id]) continue;
+        e = new Enemy(id, path, hm, sm, d, !!el, b.mods); e.uid = uid; b.enemies.push(e);
+      }
+      e.maxHp = mhp; e.hp = hp; e.shield = sh; e.slowF = sf; e.slowT = sf < 1 ? 0.5 : 0; e.stunT = stun ? 0.3 : 0; e.held = !!held;
+      const diff = d - e.distance;
+      e.distance = Math.abs(diff) > 50 ? d : e.distance + diff * 0.5;
+      const p = e.path.pointAt(e.distance); e.x = p.x; e.y = p.y; e.angle = p.angle;
+    }
+    for (const e of b.enemies) {
+      if (seen.has(e.uid)) continue;
+      if (dead.has(e.uid)) b.vfx({ t: 'kill', x: e.x, y: e.y, color: e.type.color, r: e.r, boss: !!e.type.boss, elite: e.elite });
+      e.alive = false;
+    }
+    b.enemies = b.enemies.filter(e => e.alive);
+    b.traps = (m.tr || []).map(t => ({ kind: t[0], x: t[1], y: t[2], t: t[3], alive: true }));
+    if (padsChanged) b.emit('changed', 'pads');
+  },
+  /* Pause et vitesse : en coopération, c'est la partie de l'hôte qui compte. */
+  ctl(k) { this.send({ t: 'ctl', k }); Toast.show(k === 'pause' ? 'Demande de pause envoyée' : 'Demande de vitesse envoyée'); },
+
+  /* ---------- Fin de partie ---------- */
+  result(b, victory) { return { victory, l: b.lives, L: b.startLives, s: b.score, w: b.wave, W: b.level.waves, k: b.kills, sent: b.mpSent || 0, got: b.mpGot || 0 }; },
+  end(victory) {
+    const b = GameView.battle;
+    if (!b || !b.multi) return;
+    if (b.multi.mode === 'coop') { this.myRes = this.result(b, victory); this.final(); return; }
+    if (this.myRes) return;
+    this.myRes = this.result(b, victory);
+    this.send({ t: 'done', r: this.myRes });
+    this.checkEnd();
+  },
+  /* Duel : une défaite de l'un donne la victoire à l'autre tout de suite. Course : on attend les deux résultats. */
+  checkEnd() {
+    const b = GameView.battle, g = this.game; if (!b || !g) return;
+    const me = this.myRes, op = this.oppRes;
+    if (g.mode === 'duel' && op && !op.victory && !me) { this.myRes = this.result(b, true); this.myRes.alive = true; GameView.paused = true; GameView.setLabels(); this.send({ t: 'done', r: this.myRes }); this.final(); return; }
+    if (me && (op || b.multi.solo || !this.linked)) { this.final(); return; }
+    if (me) this.waiting();
+  },
+  waiting() {
+    const b = GameView.battle, me = this.myRes;
+    $('nextWave').hidden = true; Radial.close();
+    $('endCard').innerHTML = `<h2 style="color:${me.victory ? 'var(--cyan)' : 'var(--red)'}">${me.victory ? 'Niveau terminé' : 'Éliminé'}</h2>` +
+      `<p>${me.victory ? `Score ${fmtBig(me.s)} · ♥ ${me.l} / ${me.L}` : `Tombé à la vague ${me.w}`}</p><div class="mpwait"><i class="mpspin"></i><p>${esc(this.themName)} joue encore…</p></div>` +
+      `<div class="row"><button class="btn" data-a="leave" type="button">Quitter</button></div>`;
+    $('endCard').querySelector('[data-a="leave"]').onclick = () => { this.send({ t: 'leave' }); this.leaveGame(); setTimeout(() => this.lobby(), 30); };
+    $('endOverlay').hidden = false;
+    void b;
+  },
+  winner() {
+    const me = this.myRes, op = this.oppRes, g = this.game;
+    if (g.mode === 'coop') return me.victory ? 'win' : 'lose';
+    if (!op) return me.victory ? 'win' : 'lose';
+    if (me.victory !== op.victory) return me.victory ? 'win' : 'lose';
+    if (g.mode === 'duel' && me.victory) { const a = me.l / me.L, c = op.l / op.L; if (Math.abs(a - c) > 1e-9) return a > c ? 'win' : 'lose'; }
+    if (!me.victory && me.w !== op.w) return me.w > op.w ? 'win' : 'lose';
+    return me.s === op.s ? 'tie' : me.s > op.s ? 'win' : 'lose';
+  },
+  final() {
+    const b = GameView.battle, me = this.myRes, op = this.oppRes, g = this.game, w = this.winner();
+    if (!b || !g) return;
+    $('nextWave').hidden = true; Radial.close();
+    const head = g.mode === 'coop' ? (me.victory ? ['Victoire à deux !', 'var(--cyan)'] : ['Le Noyau est tombé', 'var(--red)'])
+      : w === 'win' ? ['Tu gagnes !', 'var(--cyan)'] : w === 'tie' ? ['Égalité', 'var(--gold)'] : [`${this.themName} gagne`, 'var(--red)'];
+    const res = r => !r ? '—' : r.alive ? 'debout' : r.victory ? 'fini' : `éliminé (v. ${r.w})`;
+    const row = (k, a, c) => `<tr><td>${k}</td><td>${a}</td><td>${c}</td></tr>`;
+    let html = `<h2 style="color:${head[1]}">${esc(head[0])}</h2><p>${MP_MODES[g.mode].icon} ${MP_MODES[g.mode].name} · ${esc(b.level.name)}</p>`;
+    if (g.mode === 'coop') html += `<dl class="grid4"><div><dt>Vies</dt><dd>${me.l} / ${me.L}</dd></div><div><dt>Vague</dt><dd>${me.w} / ${me.W}</dd></div><div><dt>Score</dt><dd>${fmtBig(me.s)}</dd></div><div><dt>Éliminés</dt><dd>${fmtBig(me.k)}</dd></div></dl>`;
+    else html += `<table class="mptab"><tr><th></th><th>${esc(this.name)}</th><th>${esc(this.themName)}</th></tr>` +
+      row('Résultat', res(me), res(op)) + row('Vies', `${me.l} / ${me.L}`, op ? `${op.l} / ${op.L}` : '—') + row('Vague', `${me.w} / ${me.W}`, op ? `${op.w} / ${op.W}` : '—') +
+      row('Score', fmtBig(me.s), op ? fmtBig(op.s) : '—') + row('Éliminés', fmtBig(me.k), op ? fmtBig(op.k) : '—') +
+      (g.mode === 'duel' ? row('Renforts envoyés', me.sent, op ? op.sent : '—') : '') + '</table>' +
+      (!op ? `<p class="hint">${esc(this.themName)} s’est déconnecté avant la fin.</p>` : '');
+    const host = this.role === 'host';
+    html += `<div class="row">${this.linked ? (host ? '<button class="btn primary" data-a="again" type="button">Revanche</button>' : '') + '<button class="btn" data-a="lobby" type="button">Salon</button>' : ''}<button class="btn" data-a="map" type="button">Quitter</button></div>`;
+    if (this.linked && !host) html += `<p class="hint">${esc(this.themName)} peut relancer une revanche.</p>`;
+    if (g.mode === 'coop') html += GameView.recapHtml(b, me.victory);
+    $('endCard').innerHTML = html;
+    const go = a => {
+      if (a === 'again') { this.leaveGame(true); this.launch(); }
+      if (a === 'lobby') { this.send({ t: 'leave' }); this.leaveGame(); if (host) this.pushLobby(); setTimeout(() => this.lobby(), 30); }
+      if (a === 'map') { this.send({ t: 'leave' }); this.leaveGame(); if (this.linked) setTimeout(() => Modal.open({ title: 'Partie à deux', html: `<p style="text-align:center">Rester connecté avec ${esc(this.themName)} ?</p>`, actions: [{ label: 'Se déconnecter', fn: () => this.disconnect() }, { label: 'Rester', cls: 'primary', fn: () => setTimeout(() => this.lobby(), 30) }] }), 30); }
+    };
+    $('endCard').querySelectorAll('[data-a]').forEach(bt => { bt.onclick = () => go(bt.dataset.a); });
+    $('endOverlay').hidden = false;
+    GameView.clearAll();
+    Sound.sfx && Sound.sfx(w === 'win' || (g.mode === 'coop' && me.victory) ? 'up' : 'ui');
+  },
+  /* Croix pendant une partie à deux. */
+  quitMenu() {
+    const b = GameView.battle, g = this.game;
+    const txt = g.mode === 'coop' ? (this.role === 'host' ? `Si tu quittes, la partie s’arrête aussi pour ${this.themName}.` : `${this.themName} continuera seul.`) : 'Quitter compte comme une défaite.';
+    Modal.open({ title: 'Quitter la partie ?', html: `<p style="text-align:center">${esc(txt)}</p>`, actions: [{ label: 'Rester' }, { label: 'Quitter', cls: 'danger', fn: () => {
+      if (g.mode !== 'coop' && !this.myRes) this.send({ t: 'done', r: Object.assign(this.result(b, false), { forfeit: true }) });
+      this.send({ t: 'leave' }); this.leaveGame(); if (this.linked) setTimeout(() => this.lobby(), 30);
+    } }] });
+  },
+  leaveGame(keepScreen) {
+    Tuto.stop(); Talk.clear(); $('endOverlay').hidden = true; $('mpSend').hidden = true;
+    this.detach();
+    if (!keepScreen) { App.show('map'); }
+  }
+};
+
 const GameView = {
   battle: null, bg: null, padLayer: null,
   speed: 1, paused: false, hover: null, time: 0, frame: 0, cache: {},
@@ -14710,7 +15312,7 @@ const GameView = {
     this.canvas.addEventListener('click', ev => this.onClick(this.toWorld(ev)));
     $('dialog').onclick = () => Talk.next();
     $('btnWave').onclick = () => this.startWave();
-    $('btnSpeed').onclick = () => { this.speed = this.speed >= 5 ? 1 : this.speed + 1; GFX.s.speed = this.speed; GFX.save(); this.setLabels(); };
+    $('btnSpeed').onclick = () => { if (this.battle && this.battle.ghost) { Multi.ctl('speed'); return; } this.speed = this.speed >= 5 ? 1 : this.speed + 1; GFX.s.speed = this.speed; GFX.save(); this.setLabels(); };
     $('btnPause').onclick = () => this.togglePause();
     $('btnQuit').onclick = () => this.quit();
     window.addEventListener('keydown', ev => {
@@ -14751,18 +15353,20 @@ const GameView = {
     if (GPU.active && GPU.canvas) GPU.canvas.hidden = false;
   },
 
-  start(levelN, snapshot, picked) {
+  start(levelN, snapshot, picked, mp) {
     const slot = App.slot, world = worldOf(levelN);
+    if (!mp && Multi.game) Multi.detach();
     // Plus de 10 tourelles débloquées : choix de l'équipe avant de jouer
-    if (!snapshot && !picked && Loadout.needed(slot, levelN)) { Loadout.pick(levelN, ids => this.start(levelN, null, ids)); return; }
+    if (!mp && !snapshot && !picked && Loadout.needed(slot, levelN)) { Loadout.pick(levelN, ids => this.start(levelN, null, ids)); return; }
     // Premier passage dans un monde : cinématique et choix du chapitre d'abord
-    if (!slot.story.seen[world]) { Cine.play(world, () => this.start(levelN, snapshot, picked)); return; }
+    if (!mp && !slot.story.seen[world]) { Cine.play(world, () => this.start(levelN, snapshot, picked)); return; }
     Talk.clear();
-    const boosts = snapshot ? (snapshot.boosts || []) : Meta.consumeBoosts();
-    const mods = buildMods(slot, levelN, boosts);
+    const boosts = mp ? [] : snapshot ? (snapshot.boosts || []) : Meta.consumeBoosts();
+    const mods = mp && mp.mods ? mp.mods : buildMods(slot, levelN, boosts);
     this.battle = new Battle(levelN, mods, snapshot);
     const b = this.battle;
     if (picked) b.allowed = picked.slice();
+    if (mp) Multi.attach(b, mp);
     b.boosts = boosts;
     this.flushed = JSON.parse(JSON.stringify(b.stats));
     R.reset();
@@ -14783,12 +15387,12 @@ const GameView = {
     this.clearAll();
     this.renderEnemyList();
     this.saveRun();
-    Tuto.start(b);
-    if (!Tuto.active) PowerIntro.start(b);
+    if (!mp) Tuto.start(b);
+    if (!Tuto.active && !mp) PowerIntro.start(b);
     for (const ms of [300, 1200]) setTimeout(() => { if (this.battle === b && App.current === 'game') this.resize(); }, ms);
-    if (!snapshot && !Tuto.active) Toast.show('Pose tes tourelles puis lance la première vague');
+    if (!snapshot && !Tuto.active && !mp) Toast.show('Pose tes tourelles puis lance la première vague');
     if (boosts.length) Toast.show('Boost actif : ' + boosts.map(id => BOOST_BY_ID[id].name).join(', '));
-    setTimeout(() => { if (this.battle === b && App.current === 'game') Talk.levelIntro(b.level); }, 600);
+    if (!mp) setTimeout(() => { if (this.battle === b && App.current === 'game') Talk.levelIntro(b.level); }, 600);
   },
 
   /* Reporte la progression de la partie dans les compteurs de la sauvegarde (quêtes, succès). */
@@ -14803,7 +15407,7 @@ const GameView = {
 
   saveRun() {
     const b = this.battle;
-    if (!b || !App.slot || b.state !== 'build') return;
+    if (!b || !App.slot || b.state !== 'build' || b.multi) return;   // une partie à deux n'écrase pas la partie de campagne
     App.slot.run = b.snapshot();
     Store.touch(App.slot);
   },
@@ -14950,6 +15554,7 @@ const GameView = {
   togglePause() {
     const b = this.battle;
     if (!b || b.state === 'victory' || b.state === 'defeat') return;
+    if (b.ghost) { Multi.ctl('pause'); return; }
     this.paused = !this.paused;
     this.setLabels();
   },
@@ -14957,6 +15562,7 @@ const GameView = {
   quit() {
     const b = this.battle;
     if (!b) return;
+    if (b.multi && Multi.game) { Multi.quitMenu(); return; }
     const leave = () => { Tuto.stop(); this.flushStats(); this.saveRun(); Talk.clear(); App.show('map'); };
     const restart = () => { Tuto.stop(); this.flushStats(); App.slot.run = null; Store.touch(App.slot); Talk.clear(); const ids = b.allowed ? b.allowed.slice() : null; this.start(b.level.n, null, ids); };
     const wasPaused = this.paused;
@@ -15113,7 +15719,7 @@ const GameView = {
     on('sellcancel', () => { this.sellArmed = null; this.renderInspector(); });
     for (let i = 0; i < 3; i++) on('spec' + i, () => { if (t && b.specialize(t, i)) { this.saveRun(); Radial.close(); this.renderInspector(); } });
     on('fuse', () => { this.selectedTower = null; this.fuseFrom = t; this.fuseTarget = null; this.renderInspector(); });
-    on('mode', () => { const o = ['first', 'close', 'strong', 'last']; t.mode = o[(o.indexOf(t.mode) + 1) % o.length]; this.saveRun(); this.renderInspector(); });
+    on('mode', () => { const o = ['first', 'close', 'strong', 'last']; b.setMode(t, o[(o.indexOf(t.mode) + 1) % o.length]); this.saveRun(); this.renderInspector(); });
     on('buy', () => { const p = this.selectedPad; if (b.buyPad(p)) { this.selectedPad = null; this.renderInspector(); if (!this.selectedType) Toast.show('Case achetée : choisis une tourelle à y construire'); } });
   },
 
@@ -15176,6 +15782,7 @@ const GameView = {
     this.flushStats();
     Talk.clear();
     Sound.setTrack('menu', lv.world);
+    if (b.multi && Multi.game) { Multi.end(victory); return; }
     let html;
     if (victory) {
       slot.run = null;
@@ -15320,6 +15927,7 @@ const GameView = {
     this.updateHud();
     this.updateLive();
     Events.sync(b);
+    if (b.multi) Multi.tick(b, dt);
   },
 
   /* Barre de pouvoirs : un bouton par pouvoir débloqué (selon le niveau le plus haut atteint). */
