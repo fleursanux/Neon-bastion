@@ -1134,6 +1134,40 @@ body.fsgame .infobar .evchips{margin-top:2px}
 .mpsendbox button:disabled{opacity:.45;cursor:default}
 .mptab{width:100%;border-collapse:collapse;margin:8px 0;font-size:.88rem}.mptab th,.mptab td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.08);text-align:center}.mptab td:first-child{text-align:left;opacity:.75}
 body.mpgame .hudmini{right:auto}
+.mptier{display:flex;align-items:baseline;justify-content:center;gap:8px;margin:6px 0;padding:8px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid color-mix(in srgb,var(--tc) 50%,transparent)}
+.mptier b{color:var(--tc);font-size:1.1rem}.mptier span{font-weight:800;color:var(--tc)}.mptier small{opacity:.7}
+.mpfriends{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.mpfair{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}
+.mpfair button{padding:8px 6px;border-radius:10px;border:2px solid var(--line);background:rgba(0,0,0,.22);color:var(--fg);font:inherit;font-size:.82rem;cursor:pointer}
+.mpfair button.on{border-color:var(--cyan);background:rgba(62,242,200,.14)}.mpfair button:disabled{cursor:default}.mpfair button:disabled:not(.on){opacity:.5}
+.mpresume{display:block;width:100%;margin:6px 0}
+.mpbar .mpme{color:var(--cyan);font-weight:700}
+.mppinbtn{border:0;background:rgba(255,255,255,.1);border-radius:999px;width:28px;height:24px;font-size:.85rem;cursor:pointer;padding:0}
+.mppinbtn.on{background:var(--gold)}
+.mppin{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;animation:mppin 3.5s ease-out forwards}
+.mppin i{width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#ff6fb5;box-shadow:0 0 0 3px rgba(255,111,181,.35),0 0 18px #ff6fb5}
+.mppin.mine i{background:#3ef2c8;box-shadow:0 0 0 3px rgba(62,242,200,.35),0 0 18px #3ef2c8}
+.mppin b{order:-1;font-size:.7rem;background:rgba(8,12,26,.85);padding:2px 6px;border-radius:6px;margin-bottom:4px;white-space:nowrap}
+@keyframes mppin{0%{opacity:0;transform:translate(-50%,-130%)}10%{opacity:1;transform:translate(-50%,-100%)}80%{opacity:1}100%{opacity:0}}
+.mpalert{position:absolute;left:50%;top:44px;z-index:6;transform:translateX(-50%);padding:7px 14px;border-radius:999px;background:linear-gradient(#ff7a59,#c0392b);color:#fff;font-weight:800;font-size:.8rem;white-space:nowrap;pointer-events:none;box-shadow:0 4px 18px rgba(224,80,58,.5)}
+.mpalert[hidden]{display:none}.mpalert.go{animation:mpalert .5s ease-out}
+@keyframes mpalert{0%{transform:translateX(-50%) scale(.6);opacity:0}60%{transform:translateX(-50%) scale(1.08);opacity:1}100%{transform:translateX(-50%) scale(1)}}
+.sfbox{margin:10px 0;padding:10px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1)}
+.sfbox .eyebrow{margin:0 0 6px;text-align:center}
+.sfitem{display:flex;gap:10px;align-items:center;padding:8px;border-radius:12px;background:color-mix(in srgb,var(--rc) 14%,transparent);border:1px solid color-mix(in srgb,var(--rc) 55%,transparent);text-align:left}
+.sfitem div{display:flex;flex-direction:column;gap:2px}.sfitem small{opacity:.8;font-size:.75rem}
+.sfpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 4px}
+.sfpick button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:14px;border:2px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg);font:inherit;cursor:pointer}
+.sfpick button b{font-size:2rem;line-height:1}.sfpick button small{font-size:.75rem;opacity:.8}
+.sfpick button.on{border-color:var(--gold);background:rgba(255,207,74,.16)}.sfpick button:disabled:not(.on){opacity:.4}
+.sfreveal{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 2px}
+.sfreveal span{display:flex;flex-direction:column;align-items:center;font-size:.78rem}.sfreveal span b{font-size:2.6rem;animation:sfpop .5s ease-out}.sfreveal i{opacity:.6}
+@keyframes sfpop{0%{transform:scale(.3) rotate(-30deg)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.sfres{text-align:center;font-weight:800;margin:4px 0}
+.coopgearbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;margin:0 0 8px;border-radius:12px;background:linear-gradient(90deg,rgba(255,111,181,.18),rgba(62,242,200,.18));border:1px solid rgba(255,255,255,.14);font-size:.85rem}
+.coopgearbar[hidden]{display:none}
+body.coopgear #gearShop{display:none}
+
 </style>
 
 <div class="bgfx" aria-hidden="true"></div>
@@ -1290,6 +1324,7 @@ body.mpgame .hudmini{right:auto}
         <button class="btn small" id="btnCrewBack" type="button">Retour à la carte</button>
       </div>
     </div>
+    <div class="coopgearbar" id="coopGearBar" hidden><span>🎒 Équipement de <b>coopération</b> : il ne sert qu’en partie à deux. La campagne garde son propre équipement.</span><button class="btn small primary" type="button" onclick="App.show('map'); if (Multi.linked) setTimeout(() => Multi.lobby(), 60);">‹ Retour au salon</button></div>
     <div class="tabs" id="crewTabs" role="tablist"></div>
     <div id="crewBody" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
@@ -1341,7 +1376,7 @@ body.mpgame .hudmini{right:auto}
           <span class="chip wave"><i>≋</i><b id="miniWave">0/0</b></span>
         </div>
         <div class="nextwave" id="nextWave" hidden></div>
-        <div class="mpbar" id="mpBar" hidden></div><div class="mpsendbox" id="mpSend" hidden></div>
+        <div class="mpbar" id="mpBar" hidden></div><div class="mpsendbox" id="mpSend" hidden></div><div class="mpalert" id="mpAlert" hidden></div>
         <div class="radial" id="radial" hidden></div>
         <div class="evts" id="evts"><div class="evbanner" id="evBanner" hidden></div><div class="evchips" id="evChips"></div></div>
         <div class="toast" id="toast" style="opacity:0"></div>
@@ -1422,7 +1457,8 @@ const CONFIG = {
   upCostBase: 0.65,       // 1re amélioration = 65 % du prix de la tourelle
   upCostGrowth: 1.3,      // chaque amélioration coûte 30 % de plus que la précédente…
   upCostGrowth2: 1.36,    // … et 36 % de plus à partir de la 6e : une seule super-tourelle ne suffit plus
-  gearThreat: 0.5,         // exposant : PV ennemis × (1 + puissance d'équipement)^0.5 (la difficulté suit l'équipement, l'équipement garde un avantage)
+  gearThreat: 0.5,
+  coopHp: 1.3,             // coopération : PV des ennemis × 1,3 (deux défenseurs)         // exposant : PV ennemis × (1 + puissance d'équipement)^0.5 (la difficulté suit l'équipement, l'équipement garde un avantage)
   fusionLevel: (typeof NB_MODE !== 'undefined' ? NB_MODE === 'd2' : (() => { try { return localStorage.getItem('nb-mode') === 'd2'; } catch (e) { return false; } })()) ? Infinity : 2,    // niveau de jeu à partir duquel la fusion est possible (pas de fusion en mode Diablo II)
   // ---- Difficulté ----
   lvlHpWorld1: 0.2,       // monde 1 : +20 % de PV ennemis par niveau
@@ -1484,8 +1520,12 @@ const wavesFor = n => {
 };
 /* Multiplicateur de PV d'une vague w (indépendant du niveau). */
 const waveHp = w => Math.pow(CONFIG.waveHpGrowth, w - 1) * (1 + CONFIG.waveHpLin * (w - 1));
-const W = CONFIG.cols * CONFIG.tile;
-const H = CONFIG.rows * CONFIG.tile;
+let W = CONFIG.cols * CONFIG.tile;
+let H = CONFIG.rows * CONFIG.tile;
+/* Taille du plateau : 16 × 10 en campagne, plus grande en coopération (cases plus petites à l'écran). */
+const GRID0 = [CONFIG.cols, CONFIG.rows], COOP_GRID = [22, 14];
+function setGrid(c, r) { CONFIG.cols = c; CONFIG.rows = r; W = c * CONFIG.tile; H = r * CONFIG.tile; }
+function withGrid(c, r, fn) { const c0 = CONFIG.cols, r0 = CONFIG.rows; if (c0 === c && r0 === r) return fn(); setGrid(c, r); try { return fn(); } finally { setGrid(c0, r0); } }
 const TAU = Math.PI * 2;
 
 /* =====================================================================
@@ -2137,11 +2177,11 @@ function worldInfo(w) {
 
 /* Génère un chemin aléatoire (mais toujours identique pour un même niveau) :
    segments droits, jamais collés entre eux, d'un bord à l'autre. */
-function genPath(n) {
+function genPath(n, o) {
   const rng = mulberry32(n * 7349 + 101);
-  const C = CONFIG.cols, R = CONFIG.rows, key = (c, r) => c + ',' + r;
+  const C = CONFIG.cols, R = CONFIG.rows, key = (c, r) => c + ',' + r, maxLen = o ? o.max : 80;
   for (let attempt = 0; attempt < 600; attempt++) {
-    const minLen = 30 + Math.floor(rng() * 14);
+    const minLen = o ? o.min + Math.floor(rng() * 16) : 30 + Math.floor(rng() * 14);
     let r = 1 + Math.floor(rng() * (R - 2)), c = 0, dir = null, len = 1, stuck = 0, done = false;
     const visited = new Set([key(c, r)]);
     const wps = [[-1, r]];
@@ -2173,7 +2213,7 @@ function genPath(n) {
       wps.push([c, r]);
       dir = d;
     }
-    if (!done || len > 80) continue;
+    if (!done || len > maxLen) continue;
     const fh = rng() < 0.5, fv = rng() < 0.5;
     return wps.map(([x, y]) => [fh ? C - 1 - x : x, fv ? R - 1 - y : y]);
   }
@@ -2254,6 +2294,7 @@ function genBranches(n, main, count) {
 const levelCache = new Map();
 function getLevel(n) {
   if (levelCache.has(n)) return levelCache.get(n);
+  if (CONFIG.cols !== GRID0[0] || CONFIG.rows !== GRID0[1]) return withGrid(GRID0[0], GRID0[1], () => getLevel(n));   // la campagne se génère toujours sur la grille normale
   if (D2) { const lv = d2Level(n); levelCache.set(n, lv); return lv; }
   const world = Math.ceil(n / 10), idx = (n - 1) % 10 + 1, boss = idx === 10;
   const rng = mulberry32(n * 2246822519);
@@ -2279,6 +2320,27 @@ function getLevel(n) {
   if (lvl.branches.length) { lvl.gold = Math.round(lvl.gold * (1 + 0.2 * lvl.branches.length)); lvl.freePads += 2 * lvl.branches.length; }
   levelCache.set(n, lvl);
   return lvl;
+}
+
+/* ---------- Opérations de coopération : grande carte, deux entrées ou plus ---------- */
+const COOP_NAMES = ['Tête de pont', 'Double front', 'Carrefour rouillé', 'Les deux rives', 'Bastion jumeau', 'Grand échangeur', 'Faille croisée', 'Delta de cuivre', 'Fournaise commune', 'Dernier rempart'];
+const coopCache = new Map();
+const coopEff = k => Math.min(MAX_LEVEL, 1 + k);   // niveau de campagne équivalent (force des ennemis, or, vagues)
+function getCoopLevel(k) {
+  if (coopCache.has(k)) return coopCache.get(k);
+  const base = getLevel(coopEff(k));
+  const lv = withGrid(COOP_GRID[0], COOP_GRID[1], () => {
+    const o = Object.assign({}, base, { coop: k, key: 'coop' + k, boss: k % 5 === 0, branches: [],
+      name: COOP_NAMES[(k - 1) % COOP_NAMES.length] + (k > COOP_NAMES.length ? ' ' + (Math.floor((k - 1) / COOP_NAMES.length) + 1) : '') });
+    o.path = genPath(9001 + k * 13, { min: 48, max: 118 });
+    o.branches = genBranches(9001 + k * 13, o.path, k <= 3 ? 1 : k <= 8 ? 2 : 3);
+    o.freePads = 2 * base.freePads + 2 * o.branches.length;
+    o.gold = Math.round((CONFIG.startGold + CONFIG.startGoldStep * Math.min(o.n - 1, 9)) * base.econ * (1 + 0.15 * o.branches.length));
+    o.waves = base.waves + 2;
+    return o;
+  });
+  coopCache.set(k, lv);
+  return lv;
 }
 
 /* =====================================================================
@@ -3358,8 +3420,8 @@ const POWERS = [
 const POWER_BY_ID = Object.fromEntries(POWERS.map(p => [p.id, p]));
 
 class Battle {
-  constructor(levelN, mods, snapshot) {
-    this.level = getLevel(levelN);
+  constructor(levelN, mods, snapshot, coop) {
+    this.level = typeof levelN === 'object' ? levelN : getLevel(levelN);
     this.mods = mods || NO_MODS;
     this.path = buildPaths(this.level);
     this.paths = this.path.all;  // chemin principal + chemins secondaires
@@ -3394,17 +3456,36 @@ class Battle {
     this.revives = 0;
     this.boosts = [];
     this.gone = [];             // tourelles vendues (pour le récapitulatif)
+    if (coop) this.setupCoop(coop);
     if (snapshot) this.restore(snapshot);
   }
+  /* Coopération : chacun son or (mais chaque élimination et chaque bonus de vague rapportent la somme entière aux deux),
+     ses cases (la carte est coupée en deux), ses tourelles avec ses propres bonus ; vies et énergie communes. */
+  setupCoop(c) {
+    this.coop = true; this.pm = c.pm; this.allowedBy = c.allowedBy || {}; this.me = c.me || 'h'; this.actor = this.me;
+    this.coopHp = CONFIG.coopHp;
+    this.wallet = {}; for (const k of ['h', 'g']) this.wallet[k] = Math.round(this.level.gold * (1 + ((this.pm[k] && this.pm[k].gold) || 0)));
+    Object.defineProperty(this, 'gold', { get() { return this.wallet[this.actor]; }, set(v) { this.wallet[this.actor] = v; }, configurable: true });
+    for (const free of [false, true]) {
+      const list = this.pads.filter(p => !p.locked === free).sort((a, b) => a.x - b.x || a.y - b.y);
+      list.forEach((p, i) => { p.owner = i < list.length / 2 ? 'h' : 'g'; });
+    }
+  }
+  /* Bonus de l'acteur (en coopération, les tourelles de chacun utilisent son équipement). */
+  get amods() { return this.coop ? this.pm[this.actor] : this.mods; }
+  earn(v) { if (this.coop) { for (const k in this.wallet) this.wallet[k] += v; } else this.gold += v; }
+  mine(t) { return !this.coop || !t.owner || t.owner === this.actor; }
+  notMine(t) { if (this.mine(t)) return false; this.emit('toast', 'Cette tourelle appartient à ton coéquipier'); return true; }
+  canUseTower(def) { const al = this.coop ? this.allowedBy[this.actor] : this.allowed; return !!def && (this.coop || def.unlock <= this.level.n) && (!al || al.includes(def.id)); }
 
   emit(type, data) { this.events.push({ type, data }); }
   fx(effect) { if (this.effects.length < 400) this.effects.push(effect); }
   vfx(o) { if (this.vq.length < 600) this.vq.push(o); }
 
-  get availableTowers() { return TOWERS.filter(t => t.unlock <= this.level.n && (!this.allowed || this.allowed.includes(t.id))); }
+  get availableTowers() { return TOWERS.filter(t => this.canUseTower(t)); }
   get canFuseHere() { return this.level.n >= CONFIG.fusionLevel; }
-  get padCost() { return Math.max(1, Math.round(CONFIG.padBase * this.level.econ * Math.pow(CONFIG.padGrowth, this.padsBought) * (1 - this.mods.land))); }
-  towerCost(def) { return towerCost(def, this.mods); }
+  get padCost() { return Math.max(1, Math.round(CONFIG.padBase * this.level.econ * Math.pow(CONFIG.padGrowth, this.padsBought) * (1 - this.amods.land))); }
+  towerCost(def) { return towerCost(def, this.amods); }
   waveBonus(w) { return Math.round((20 + w * 6) * (1 + 0.1 * Math.min(this.level.n - 1, 9)) * this.level.econ * (1 + this.mods.wave)); }
 
   /* ---------- Sauvegarde de l'état entre deux vagues ---------- */
@@ -3413,7 +3494,7 @@ class Battle {
       v: 2, level: this.level.n, wave: this.wave, gold: Math.floor(this.gold), lives: this.lives,
       score: this.score, kills: this.kills, padsBought: this.padsBought,
       unlocked: this.pads.filter(p => !p.locked).map(p => p.i),
-      towers: this.towers.map(t => ({ p: t.pad.i, id: t.id, lv: t.level, spent: t.spent, mode: t.mode, kills: t.kills, sp: t.spec, d: Math.round(t.dmgDone || 0) })), gone: this.gone,
+      towers: this.towers.map(t => ({ p: t.pad.i, id: t.id, lv: t.level, spent: t.spent, mode: t.mode, kills: t.kills, sp: t.spec, d: Math.round(t.dmgDone || 0), o: t.owner })), gone: this.gone, wallet: this.coop ? Object.assign({}, this.wallet) : undefined,
       stats: JSON.parse(JSON.stringify(this.stats)), boosts: this.boosts, allowed: this.allowed || null,
       closed: this.closed.slice(), energy: Math.round(this.energy), traps: this.traps.map(t => ({ kind: t.kind, x: t.x, y: t.y, t: t.t }))
     };
@@ -3432,13 +3513,14 @@ class Battle {
     for (const p of this.pads) p.locked = true;
     for (const i of s.unlocked || []) if (this.pads[i]) this.pads[i].locked = false;
     for (const t of s.towers || []) {
-      const pad = this.pads[t.p], def = getTowerDef(t.id, this.mods);
+      const om = this.coop && t.o && this.pm[t.o] ? this.pm[t.o] : this.mods, pad = this.pads[t.p], def = getTowerDef(t.id, om);
       if (!pad || pad.tower || !def) continue;
-      const tw = new Tower(def, pad, this.mods);
+      const tw = new Tower(def, pad, om); if (t.o) tw.owner = t.o;
       tw.level = Math.max(1, t.lv); tw.spent = t.spent; tw.mode = t.mode || tw.mode; tw.kills = t.kills || 0; tw.dmgDone = t.d || 0;
       if (t.sp !== undefined && t.sp !== null && def.specs) tw.specialize(t.sp);
       pad.locked = false; pad.tower = tw; this.towers.push(tw);
     }
+    if (this.coop && s.wallet) this.wallet = Object.assign({}, s.wallet);
   }
 
   /* ---------- Chemins multiples et barricades ---------- */
@@ -3532,7 +3614,7 @@ class Battle {
     if (id === 'surcharge') this.powerT.surcharge = 8;
     if (id === 'reparation') { this.lives = Math.min(this.startLives, this.lives + 2); this.baseHit = 0; }
     this.pcd[id] = p.cd || 0;
-    if (id === 'pluie') { this.pluieWave = this.wave; const g = Math.round(this.waveBonus(Math.max(1, this.wave)) * 0.6); this.gold += g; this.fx(new Effect('text', this.path.end.x, this.path.end.y - 30, { text: '+' + fmtBig(g), color: '#ffcf4a', life: 1.2 })); }
+    if (id === 'pluie') { this.pluieWave = this.wave; const g = Math.round(this.waveBonus(Math.max(1, this.wave)) * 0.6); this.earn(g); this.fx(new Effect('text', this.path.end.x, this.path.end.y - 30, { text: '+' + fmtBig(g), color: '#ffcf4a', life: 1.2 })); }
     for (let i = 0; i < 3; i++) this.fx(new Effect('ring', W / 2, H / 2, { color: p.color, radius: 420 + i * 90, life: 0.55 + i * 0.12, grow: true }));
     this.shake = Math.max(this.shake, id === 'nova' ? 0.3 : 0.12);
     this.emit('power', id);
@@ -3541,14 +3623,15 @@ class Battle {
 
   /* ---------- Actions ---------- */
   /* On peut lancer la vague suivante à tout moment, même pendant une vague (enchaînement). */
-  get canCallWave() { return (this.state === 'build' || this.state === 'wave') && this.wave < this.level.waves; }
+  get canCallWave() { return (this.state === 'build' || this.state === 'wave') && (this.wave < this.level.waves || this.endless); }
   earlyBonus(chain) { return Math.round(this.waveBonus(this.wave + 1) * 0.3 * (1 + 0.25 * Math.max(0, chain - 2))); }
   startWave() {
     if (!this.canCallWave) return false;
     const early = this.state === 'wave';
     this.wave++;
-    const w = buildWave(this.level, this.wave);
-    this.streams.push({ queue: w.spawns, hpMul: w.hpMul * this.threat, speedMul: w.speedMul, rewMul: w.rewMul, timer: early ? 0.8 : 0.3 });
+    const w = buildWave(this.level, this.endless ? Math.min(this.wave, this.level.waves) : this.wave);
+    if (this.endless && this.wave > this.level.waves) { const ot = Math.pow(1.15, this.wave - this.level.waves); w.hpMul *= ot; this.emit('wave', `Prolongation · vague bonus ${this.wave - this.level.waves} (PV ×${ot.toFixed(1)})`); }
+    this.streams.push({ queue: w.spawns, hpMul: w.hpMul * this.threat * (this.coopHp || 1), speedMul: w.speedMul, rewMul: w.rewMul, timer: early ? 0.8 : 0.3 });
     // Événement surprise : programmé quelques secondes après le début de la vague
     if (this.pendingSend) { this.streams.push(...this.pendingSend); this.pendingSend = null; }   // renforts reçus en Duel
     if (!this.noEvents && this.wave >= 2 && this.wave < this.level.waves && !this.evtQ && Math.random() < CONFIG.eventChance) {
@@ -3557,7 +3640,7 @@ class Battle {
       for (const [k, wgt] of pool) { x -= wgt; if (x <= 0) { type = k; break; } }
       this.evtQ = { type, t: 3 + Math.random() * 8 };
     }
-    this.hpMul = w.hpMul * this.threat; this.speedMul = w.speedMul;
+    this.hpMul = w.hpMul * this.threat * (this.coopHp || 1); this.speedMul = w.speedMul;
     this.waveActive = true;
     this.state = 'wave';
     this.chain = early ? this.chain + 1 : 1;
@@ -3565,14 +3648,14 @@ class Battle {
     st.maxChain = Math.max(st.maxChain, this.chain);
     if (this.wave === this.level.waves) this.emit('wave', 'Vague finale !');
     else if (w.menace) this.emit('wave', `Vague ${this.wave} · ${MENACES[w.menace].name} !`);
-    else if (!early) this.emit('wave', `Vague ${this.wave}`);
+    else if (!early && !(this.endless && this.wave > this.level.waves)) this.emit('wave', `Vague ${this.wave}`);
     const nextM = waveMenace(this.level, this.wave + 1);
     if (nextM) this.emit('menace', { w: this.wave + 1, name: MENACES[nextM].name, text: MENACES[nextM].text });
     if (early) {
       // Récompense immédiate pour avoir lancé la vague en avance, croissante avec l'enchaînement
       const bonus = Math.round(this.waveBonus(this.wave) * 0.3 * (1 + 0.25 * Math.max(0, this.chain - 2)));
       st.earlyCalls++;
-      this.gold += bonus;
+      this.earn(bonus);
       this.score += 15 * this.chain;
       this.emit('early', this.chain);
       this.emit('toast', `Vague ${this.wave} en avance · enchaînement ×${this.chain} · +${fmtBig(bonus)} or`);
@@ -3581,11 +3664,13 @@ class Battle {
   }
   build(pad, id) {
     const def = TOWER_BY_ID[id];
-    if (!def || pad.locked || pad.tower || def.unlock > this.level.n || (this.allowed && !this.allowed.includes(id))) return false;
+    if (!def || pad.locked || pad.tower || !this.canUseTower(def)) return false;
+    if (this.coop && pad.owner && pad.owner !== this.actor) { this.emit('toast', 'Case de ton coéquipier : construis dans ta zone'); return false; }
     const cost = this.towerCost(def);
     if (this.gold < cost) { this.emit('toast', 'Pas assez d’or'); return false; }
     this.gold -= cost;
-    pad.tower = new Tower(def, pad, this.mods);
+    pad.tower = new Tower(def, pad, this.amods);
+    if (this.coop) pad.tower.owner = this.actor;
     this.towers.push(pad.tower);
     const st = this.stats; st.built++; st.goldSpent += cost; st.types[id] = 1; st.maxTowers = Math.max(st.maxTowers, this.towers.length);
     this.vfx({ t: 'build', tw: pad.tower });
@@ -3594,6 +3679,7 @@ class Battle {
   }
   buyPad(pad) {
     if (!pad.locked) return false;
+    if (this.coop && pad.owner && pad.owner !== this.actor) { this.emit('toast', 'Case de ton coéquipier : achète dans ta zone'); return false; }
     const cost = this.padCost;
     if (this.gold < cost) { this.emit('toast', 'Pas assez d’or'); return false; }
     this.gold -= cost;
@@ -3615,10 +3701,11 @@ class Battle {
     if (done) { this.vfx({ t: 'upgrade', tw: tower, n: done }); this.emit('changed'); }
     return done;
   }
-  setMode(tower, mode) { if (!tower || !['first', 'close', 'strong', 'last'].includes(mode)) return false; tower.mode = mode; this.emit('changed'); return true; }
+  setMode(tower, mode) { if (!tower || this.notMine(tower) || !['first', 'close', 'strong', 'last'].includes(mode)) return false; tower.mode = mode; this.emit('changed'); return true; }
   /* Fiche d'une tourelle pour le récapitulatif de fin de niveau. */
   towerRec(t, end) { return { id: t.def.id, name: t.def.name, color: t.def.color, lv: t.level, kills: t.kills, dmg: Math.round(t.dmgDone || 0), spent: t.spent, end, fused: !!t.def.fused, x: t.pad.col, y: t.pad.row }; }
   sell(tower) {
+    if (this.notMine(tower)) return false;
     this.gone.push(this.towerRec(tower, 'vendue · +' + fmtBig(tower.sellValue)));
     this.stats.soldBack = (this.stats.soldBack || 0) + tower.sellValue;
     this.gold += tower.sellValue;
@@ -3629,6 +3716,7 @@ class Battle {
     this.towers = this.towers.filter(t => t !== tower);
     for (const m of this.minions) if (m.owner === tower) this.killMinion(m, true);
     this.emit('changed', 'pads');
+    return true;
   }
   fusionBlock(a, b) {
     if (!this.canFuseHere) return `La fusion se débloque au niveau ${CONFIG.fusionLevel}`;
@@ -3646,8 +3734,10 @@ class Battle {
   /* La tourelle A reste sur sa case et devient la fusion, la case de B est libérée. */
   fuse(a, b) {
     if (this.fusionBlock(a, b)) return null;
+    if (this.coop && (!this.mine(a) || !this.mine(b))) { this.emit('toast', 'Tu ne peux fusionner que tes propres tourelles'); return null; }
     const { def, level } = this.fusionPreview(a, b);
-    const t = new Tower(def, a.pad, this.mods);
+    const t = new Tower(def, a.pad, this.coop ? this.pm[a.owner || this.actor] : this.mods);
+    if (this.coop) t.owner = a.owner || this.actor;
     t.level = level; t.spent = a.spent + b.spent; t.kills = a.kills + b.kills; t.mode = a.mode; t.dmgDone = (a.dmgDone || 0) + (b.dmgDone || 0);
     a.pad.tower = t; b.pad.tower = null;
     this.towers = this.towers.filter(x => x !== a && x !== b);
@@ -3662,7 +3752,7 @@ class Battle {
 
   /* ---------- Mode Diablo II : arbres, invocations, pièges ---------- */
   specialize(tower, i) {
-    if (!tower.specialize(i)) return false;
+    if (this.notMine(tower) || !tower.specialize(i)) return false;
     this.vfx({ t: 'upgrade', tw: tower, n: 1 });
     this.fx(new Effect('ring', tower.x, tower.y, { color: tower.def.color, radius: 46, life: 0.6 }));
     this.emit('changed');
@@ -3862,7 +3952,8 @@ class Battle {
     const reward = Math.max(1, Math.round(e.reward * this.level.econ * (1 + this.mods.bounty + this.auraBounty) * this.mods.rewardMul * (this.stormT > 0 ? 2 : 1))) + (e.treasure || 0);
     if (e.treasure) this.emit('treasure', e.treasure);
     if (e.carrier) this.emit('artifact');
-    this.gold += reward;
+    this.earn(reward);
+    if (this.coop && e.type.boss && !this.ghost) Multi.loot(this, 'boss');
     this.stats.goldKills = (this.stats.goldKills || 0) + reward;
     this.score += reward * 2;
     this.kills++;
@@ -3958,11 +4049,12 @@ class Battle {
       this.clearedUpTo = to;
       this.emit('wavedone', this.wave);
       if (to - from >= 1) this.emit('chaincleared', to - from + 1);
-      if (this.wave >= this.level.waves) { this.state = 'victory'; this.emit('victory'); }
+      if (this.wave >= this.level.waves && !this.endless) { this.state = 'victory'; this.emit('victory'); }
       else {
         let bonus = 0;
         for (let w = from; w <= to; w++) { bonus += this.waveBonus(w); this.score += w * 25; }
-        this.gold += bonus;
+        this.earn(bonus);
+        if (this.coop && !this.ghost) Multi.loot(this, 'wave');
         if (this.auraHeal && this.lives < this.startLives) { this.lives = Math.min(this.startLives, this.lives + this.auraHeal); this.emit('healed', this.auraHeal); }
         this.state = 'build';
         this.chain = 0;
@@ -9213,11 +9305,11 @@ const Loadout = {
     for (const id of avail.slice().reverse()) if (keep.length < LOADOUT_MAX && !keep.includes(id)) keep.push(id);
     return keep.slice(0, LOADOUT_MAX);
   },
-  grid(s, n, sel) {
+  grid(s, n, sel, pool) {
     return '<div class="lgrid">' + TOWERS.map(t => {
-      const lock = t.unlock > n, on = sel.includes(t.id);
+      const lock = pool ? !pool.includes(t.id) : t.unlock > n, on = sel.includes(t.id);
       return `<button class="ltile${on ? ' on' : ''}${lock ? ' locked' : ''}" data-t="${t.id}" type="button" ${lock ? 'disabled' : ''} style="--tc:${t.color}" aria-pressed="${on}">` +
-        `<canvas width="56" height="56" data-ticon="${t.id}"></canvas><b>${esc(t.name)}</b><small>${lock ? `Niveau ${t.unlock}` : esc(t.role) + ' · ' + t.cost}</small></button>`;
+        `<canvas width="56" height="56" data-ticon="${t.id}"></canvas><b>${esc(t.name)}</b><small>${lock ? (pool ? 'Opération à réussir' : `Niveau ${t.unlock}`) : esc(t.role) + ' · ' + t.cost}</small></button>`;
     }).join('') + '</div>';
   },
   bindGrid(root, sel, onChange) {
@@ -9230,19 +9322,19 @@ const Loadout = {
     }; });
   },
   /* Fenêtre de choix avant de lancer un niveau. */
-  pick(levelN, done) {
-    const s = App.slot, a = this.data(s), sel = this.initial(s, levelN);
+  pick(levelN, done, opt) {
+    const s = App.slot, a = this.data(s), pool = opt && opt.pool, sel = pool ? ((a.last || []).filter(id => pool.includes(id)).concat(pool.slice().reverse()).filter((id, i, l) => l.indexOf(id) === i).slice(0, LOADOUT_MAX)) : this.initial(s, levelN);
     const render = () => {
-      Modal.open({ title: `Tourelles pour le niveau ${levelN}`,
+      Modal.open({ title: opt && opt.title ? opt.title : `Tourelles pour le niveau ${levelN}`,
         html: `<p class="hint">Choisis jusqu’à ${LOADOUT_MAX} tourelles pour cette partie. <b id="lcount">${sel.length} / ${LOADOUT_MAX}</b></p>` +
           `<div class="lpresets">${a.presets.map((p, i) => `<button class="btn tiny" data-load="${i}" type="button" ${p.ids.length ? '' : 'disabled'}>${esc(p.name)} (${p.ids.length})</button>`).join('')}</div>` +
-          this.grid(s, levelN, sel),
-        actions: [{ label: 'Annuler' }, { label: 'Jouer', cls: 'primary', fn: () => { if (!sel.length) return; a.last = sel.slice(); Store.touch(s); done(sel.slice()); } }] });
+          this.grid(s, levelN, sel, pool),
+        actions: [{ label: 'Annuler', fn: opt && opt.cancel }, { label: 'Jouer', cls: 'primary', fn: () => { if (!sel.length) return; a.last = sel.slice(); Store.touch(s); done(sel.slice()); } }] });
       const card = $('modalCard');
       card.classList.add('wide');
       const upd = () => { $('lcount').textContent = `${sel.length} / ${LOADOUT_MAX}`; };
       this.bindGrid(card, sel, upd);
-      card.querySelectorAll('[data-load]').forEach(bt => { bt.onclick = () => { const ids = a.presets[+bt.dataset.load].ids.filter(id => TOWER_BY_ID[id] && TOWER_BY_ID[id].unlock <= levelN); sel.length = 0; sel.push(...ids.slice(0, LOADOUT_MAX)); render(); }; });
+      card.querySelectorAll('[data-load]').forEach(bt => { bt.onclick = () => { const ids = a.presets[+bt.dataset.load].ids.filter(id => TOWER_BY_ID[id] && (pool ? pool.includes(id) : TOWER_BY_ID[id].unlock <= levelN)); sel.length = 0; sel.push(...ids.slice(0, LOADOUT_MAX)); render(); }; });
     };
     render();
   },
@@ -10316,8 +10408,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.25.0';
+const APP_VERSION = '7.26.0';
 const CHANGELOG = [
+  { v: '7.26.0', date: '04.11.2026', items: ['Coopération revue : une campagne à deux (« opérations ») sur une grande carte 22 × 14 avec deux entrées ou plus. Chacun a sa zone (bleu chez toi, rose chez l’autre), ses tourelles et son or ; chaque ennemi tué et chaque bonus de vague rapportent la somme entière aux deux. Vies et énergie communes.', 'Coopération : 10 tourelles au départ, une de plus par opération réussie (20 au total) ; chacun choisit les siennes. Partie sauvegardée par équipe à chaque vague : on peut la reprendre ou rejouer une opération réussie.', 'Coopération : équipement à part (🎒 dans le salon), gagné en jouant. Le butin se partage à la fin au Shifumi, un coup par objet. Repère 📍 pour montrer un endroit à l’autre.', 'Duel : six renforts fixes débloqués au fil des vagues, chaque envoi augmente ton revenu (versé toutes les 6 s), alerte 3 s avant l’arrivée, vagues lancées automatiquement après 15 s, prolongation sans fin après la dernière vague.', 'Course : 10 vagues au plus, chrono, +5 s par vie perdue, le meilleur temps gagne.', 'Course et Duel : vitesse fixée à ×2, pas de pause, option « Équitable » (sans équipement ni compétences).', 'Récompenses (gemmes), trophées et rangs (Bronze à Néon) en Course et en Duel, liste d’amis pour se retrouver sans code.'] },
   { v: '7.25.0', date: '04.11.2026', items: ['Multijoueur (prototype) : tuile « À deux » sur la carte. Un joueur crée une partie et donne son code de 5 caractères, l’autre le tape. Connexion directe entre les deux téléphones (iPhone ou Android), sans compte.', 'Trois modes : Coopération (même carte, or et vies en commun), Course (même niveau, meilleur score) et Duel (envoi de renforts ennemis chez l’adversaire).', 'Les parties à deux ne touchent pas à la campagne : pas d’étoiles, pas d’objets, la partie solo en cours est conservée.'] },
   { v: '7.24.8', date: '04.11.2026', items: ['Fusion : un objet porté n’est jamais consommé, ni par « Tout fusionner » ni par une fusion manuelle ; s’il fait partie du groupe, c’est lui qui monte de rareté.'] },
   { v: '7.24.7', date: '04.11.2026', items: ['Équipement : « Équiper le meilleur » met les meilleurs objets sur le personnage choisi, quitte à les reprendre aux autres ; « Meilleur du reste » n’utilise que les objets que personne ne porte.', 'Le verrou des objets est supprimé : recycler un objet porté demande une confirmation.'] },
@@ -12250,10 +12343,11 @@ function drawPadLeds(ctx, b, time) {
   ctx.globalCompositeOperation = 'lighter';
   for (const p of b.pads) {
     if (p.tower || p.locked) continue;
-    const a = 0.55 + 0.25 * Math.sin(time * 2 + p.x * 0.05);
-    ctx.globalAlpha = a * 0.5; ctx.drawImage(Spr.soft('#5ef0ff'), p.x - 12, p.y - 12, 24, 24);
-    ctx.globalAlpha = a; ctx.fillStyle = '#9ff7ff'; ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+    const a = 0.55 + 0.25 * Math.sin(time * 2 + p.x * 0.05), mate = b.coop && p.owner !== b.me;
+    ctx.globalAlpha = a * 0.5; ctx.drawImage(Spr.soft(mate ? '#ff6fb5' : '#5ef0ff'), p.x - 12, p.y - 12, 24, 24);
+    ctx.globalAlpha = a; ctx.fillStyle = mate ? '#ffb3d9' : '#9ff7ff'; ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
   }
+  if (b.coop) for (const t of b.towers) if (t.owner && t.owner !== b.me) { ctx.globalAlpha = 0.5; ctx.drawImage(Spr.soft('#ff6fb5'), t.x - 30, t.y - 30, 60, 60); }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 }
 
@@ -13196,7 +13290,7 @@ const R3 = {
 
   /* ---------- Arène du niveau : sol, route, bordures, décor, portail, noyau ---------- */
   buildLevel(b) {
-    const T = this.T, key = b.level.n + '|' + (THEME_COLOR || '');
+    const T = this.T, key = (b.level.key || b.level.n) + '|' + (THEME_COLOR || '');
     if (this.levelKey === key && this.levelObj) return;
     if (this.levelObj) { this.scene.remove(this.levelObj); this.levelObj.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material !== this.mat) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
     for (const [k, im] of this.inst) if (k.startsWith('lv:')) { this.scene.remove(im); im.geometry.dispose(); this.inst.delete(k); }
@@ -13501,7 +13595,8 @@ const R3 = {
     if (rt) this.rangeAt(rt.x, rt.y, rt.range, towerColor(rt.def), time);
     else if (ghost) { const def = TOWER_BY_ID[ghost.id]; this.rangeAt(ghost.pad.x, ghost.pad.y, towerStats(def, startLevel(def, b.mods), b.mods).range, b.gold >= b.towerCost(def) ? towerColor(def) : '#ff5468', time); }
     if (view.radialPad) this.ring(view.radialPad.x, view.radialPad.y, 0.5, '#ffffff', 1 + 0.5 * Math.sin(time * 6), 0.06);
-    if (view.selectedType) for (const p of b.pads) if (!p.locked && !p.tower) this.ring(p.x, p.y, 0.46, TOWER_BY_ID[view.selectedType].color, 0.5 + 0.3 * Math.sin(time * 5), 0.08);
+    if (view.selectedType) for (const p of b.pads) if (!p.locked && !p.tower && (!b.coop || p.owner === b.me)) this.ring(p.x, p.y, 0.46, TOWER_BY_ID[view.selectedType].color, 0.5 + 0.3 * Math.sin(time * 5), 0.08);
+    if (b.coop) { for (const p of b.pads) if (!p.locked && !p.tower && p.owner !== b.me) this.ring(p.x, p.y, 0.42, '#ff6fb5', 1.6, 0.05); for (const tw of b.towers) if (tw.owner && tw.owner !== b.me) this.ring(tw.x, tw.y, 0.55, '#ff6fb5', 1.8, 0.05); }
     if (view.fuseFrom) for (const tw of b.towers) if (!b.fusionBlock(view.fuseFrom, tw)) this.ring(tw.x, tw.y, 0.55, tw === view.fuseTarget ? '#ffffff' : '#c58bff', 1.2, 0.06);
     // Particules : lumineuses (additives), fumée, débris
     this.drawParticles();
@@ -13868,6 +13963,9 @@ const App = {
   },
 
   show(name) {
+    if (name !== 'crew' && this._realSlot) Coop.closeGear();
+    document.body.classList.toggle('coopgear', name === 'crew' && !!this._realSlot);
+    const cb = $('coopGearBar'); if (cb) cb.hidden = !(name === 'crew' && this._realSlot);
     for (const s of ['menu', 'map', 'tree', 'codex', 'game', 'quests', 'shop', 'journal', 'crew', 'arsenal', 'events']) {
       const el = $('scr' + s[0].toUpperCase() + s.slice(1));
       el.hidden = s !== name;
@@ -14723,7 +14821,8 @@ const Tuto = {
    - Ensuite tout passe directement d'un téléphone à l'autre ; relais gratuit (Open Relay) si le réseau bloque.
    - Modes : Coopération (même carte, l'hôte fait tourner la partie), Course (meilleur score), Duel (renforts ennemis).
    ===================================================================== */
-const MP_PROTO = 1;
+const MP_PROTO = 2;
+const COOP_MAX = 30;
 const MP_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const Net = {
   ws: null, pc: null, dc: null, id: null, remote: null, hb: null, sid: null, connected: false, pend: [],
@@ -14824,51 +14923,113 @@ const Net = {
 };
 
 const MP_MODES = {
-  coop: { name: 'Coopération', icon: '🤝', desc: 'La même carte à deux : or et vies en commun. Chacun pose, améliore et vend des tourelles, lance les vagues et les pouvoirs.' },
-  race: { name: 'Course', icon: '🏁', desc: 'Le même niveau, chacun sur son téléphone. Le meilleur score gagne ; une défaite élimine. Lancer les vagues en avance rapporte gros.' },
-  duel: { name: 'Duel', icon: '⚔', desc: 'Le même niveau, chacun de son côté. Dépense ton or pour envoyer des renforts ennemis chez l’autre. Le dernier debout gagne.' }
+  coop: { name: 'Coopération', icon: '🤝', desc: 'Votre campagne à deux sur une grande carte. Chacun sa zone et ses tourelles, chaque ennemi tué rapporte la même somme aux deux. Vies et énergie communes. Le butin se partage au Shifumi.' },
+  race: { name: 'Course', icon: '🏁', desc: 'Le même niveau en 10 vagues au plus, chacun sur son téléphone, chrono lancé. Le meilleur temps gagne (+5 s par vie perdue). Pas de pause.' },
+  duel: { name: 'Duel', icon: '⚔', desc: 'Le même niveau, chacun de son côté. Envoie des renforts chez l’autre : chaque envoi augmente ton revenu. Après la dernière vague, prolongation jusqu’à ce que l’un tombe.' }
 };
-/* Renforts du mode Duel : coût en or selon la vague de l'envoyeur, ennemis tirés du niveau du receveur. */
-const MP_PACKS = [
-  { id: 'essaim', name: 'Essaim', icon: '»', n: 8, pick: 'fast', mul: 0.45, desc: '8 ennemis rapides' },
-  { id: 'blindes', name: 'Blindés', icon: '■', n: 3, pick: 'tank', mul: 0.8, desc: '3 ennemis résistants' },
-  { id: 'elite', name: 'Élite', icon: '◆', n: 1, pick: 'tank', elite: true, mul: 1.3, desc: '1 élite renforcé' }
+/* Renforts du Duel : ennemis fixes, débloqués au fil des vagues. Chaque envoi augmente le revenu de l'envoyeur (versé toutes les 6 s). */
+const MP_SENDS = [
+  { id: 'essaim', name: 'Essaim', icon: '»', e: 'eclaireur', n: 10, w: 1, cost: 30, eco: 3, hp: 1, desc: '10 éclaireurs rapides' },
+  { id: 'blindes', name: 'Blindés', icon: '■', e: 'blinde', n: 4, w: 2, cost: 60, eco: 5, hp: 1, desc: '4 blindés lents et durs' },
+  { id: 'boucliers', name: 'Boucliers', icon: '◐', e: 'bouclier', n: 5, w: 3, cost: 75, eco: 6, hp: 1, desc: '5 porte-boucliers' },
+  { id: 'spectres', name: 'Spectres', icon: '◌', e: 'spectre', n: 6, w: 4, cost: 90, eco: 7, hp: 1, desc: '6 spectres qui deviennent intouchables' },
+  { id: 'elites', name: 'Élites', icon: '◆', e: 'regen', n: 2, w: 5, cost: 130, eco: 10, hp: 1, elite: true, desc: '2 régénérateurs élites' },
+  { id: 'colosse', name: 'Colosse', icon: '⬢', e: 'colosse', n: 1, w: 7, cost: 220, eco: 15, hp: 0.5, desc: '1 colosse (mini-boss)' }
 ];
+const MP_TIERS = [['Bronze', 0, '#c98b52'], ['Argent', 200, '#c8d4e8'], ['Or', 500, '#ffcf4a'], ['Platine', 900, '#7fe8ff'], ['Diamant', 1400, '#9f8bff'], ['Néon', 2000, '#ff6fb5']];
 const MP_ACTS = ['build', 'buyPad', 'upgrade', 'sell', 'fuse', 'specialize', 'closePath', 'usePower', 'placePower', 'startWave', 'setMode'];
 const MP_FWD = ['toast', 'wave', 'menace', 'early', 'chaincleared', 'boss', 'unique', 'wavedone', 'victory', 'defeat', 'healed'];
+const RPS = [['pierre', '✊'], ['feuille', '✋'], ['ciseaux', '✌']];
+const RACE_WAVES = 10, RACE_PEN = 5;
+
+/* ---------- Coopération : équipement à part, campagne et sauvegarde par équipe ---------- */
+const Coop = {
+  gear(s) { if (!s.coopGear) s.coopGear = { items: [], equip: {}, scrap: 0, next: 1, fresh: 0, day: '', offers: [] }; return s.coopGear; },
+  /* Faux profil qui partage tout avec la sauvegarde sauf l'équipement (celui de la coopération). */
+  pseudo(s) {
+    if (s.__coop) return s;
+    this.gear(s);
+    const p = Object.create(s);
+    Object.defineProperty(p, 'gear', { get() { return s.coopGear; }, set(v) { s.coopGear = v; }, enumerable: true, configurable: true });
+    p.unlocked = Math.max(s.unlocked || 1, ...CREW_IDS.map(c => CREW_TOWERS[c] ? crewLevel(c) : 1)); p.__coop = true;   // tout l'équipage disponible p.__real = s;
+    Gear.migrate(p);
+    return p;
+  },
+  /* Bonus d'un joueur en coopération : uniquement son équipement de coopération (pas l'arbre ni l'équipement de campagne). */
+  mods(s) {
+    const ps = this.pseudo(s), m = computeMods({}), gm = Gear.mods(ps);
+    for (const k in gm.global) m[k] = (m[k] || 0) + gm.global[k];
+    m.crew = gm.crew;
+    for (const k in GEAR_STATS) if (GEAR_STATS[k].cap !== undefined && m[k] > GEAR_STATS[k].cap) m[k] = GEAR_STATS[k].cap;
+    m.gearP = Gear.power(ps);
+    return JSON.parse(JSON.stringify(m));
+  },
+  avg(a, b) { const o = {}; for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) { const x = a[k], y = b[k]; o[k] = typeof x === 'number' && typeof y === 'number' ? (x + y) / 2 : x !== undefined ? x : y; } return o; },
+  /* Tourelles : 10 au départ, une de plus par opération réussie (20 au total). */
+  pool(cleared) { return TOWERS.filter(t => t.unlock).sort((a, b) => a.unlock - b.unlock).slice(0, Math.min(20, 10 + (cleared || 0))).map(t => t.id); },
+  pid(s) { if (!s.pid) { s.pid = Math.random().toString(36).slice(2, 12); Store.touch(s); } return s.pid; },
+  key(a, b) { return [a, b].sort().join('~'); },
+  rec(s, key, name) { s.coopTeams = s.coopTeams || {}; const r = s.coopTeams[key] || (s.coopTeams[key] = { name, cleared: 0, stars: {}, run: null, t: 0 }); if (name) r.name = name; return r; },
+  merge(a, b) {
+    const o = { name: a.name, cleared: Math.max(a.cleared || 0, b.cleared || 0), stars: Object.assign({}, a.stars), run: null, t: Math.max(a.t || 0, b.t || 0) };
+    for (const k in b.stars || {}) o.stars[k] = Math.max(o.stars[k] || 0, b.stars[k]);
+    const ra = a.run, rb = b.run; o.run = ra && rb ? (ra.t >= rb.t ? ra : rb) : ra || rb || null;
+    return o;
+  },
+  /* Écran Équipage, mais sur l'équipement de coopération. */
+  openGear() {
+    Modal.close();
+    if (!App._realSlot) { App._realSlot = App.slot; App.slot = this.pseudo(App.slot); }
+    App.show('crew');
+  },
+  closeGear() { if (App._realSlot) { App.slot = App._realSlot; App._realSlot = null; } },
+  /* Objet gagné : rangé dans l'équipement de coopération et porté tout de suite si un emplacement est libre. */
+  take(s, it) {
+    const ps = this.pseudo(s), item = Gear.give(ps, it), sl = GEAR_BY_ID[item.t].slot;
+    const c = CREW_IDS.find(x => CREW_TOWERS[x] && ps.gear.equip[x] && !ps.gear.equip[x][sl]);
+    if (c) Gear.equip(ps, c, item);
+    Store.touch(s);
+    return item;
+  }
+};
 
 const Multi = {
-  code: null, role: null, them: null, mode: 'coop', level: 1, linked: false, game: null, opp: null, myRes: null, oppRes: null,
-  outbox: [], dead: [], snapT: 0, stT: 0, pingT: 0, ping: 0, lastSnap: null,
+  code: null, role: null, them: null, mode: 'coop', level: 1, coopK: 1, fair: false, linked: false, game: null, opp: null, myRes: null, oppRes: null,
+  outbox: [], dead: [], snapT: 0, stT: 0, pingT: 0, ping: 0, team: null, teamKey: null, prep: null, sf: null, pinMode: false,
   get name() { return (App.slot && App.slot.name) || 'Joueur'; },
   get themName() { return (this.them && this.them.name) || 'Ton ami'; },
+  get real() { return App._realSlot || App.slot; },
   send(o) { return Net.send(o); },
 
   /* ---------- Écrans du salon ---------- */
   open() {
     if (this.linked) { this.lobby(); return; }
+    const s = this.real, fr = Object.values(s.mpFriends || {}).sort((a, b) => b.t - a.t).slice(0, 6), tr = this.trophies(), tier = this.tier(tr);
     Modal.open({ title: 'Multijoueur', html:
       `<p class="hint" style="text-align:center">Jouez à deux, chacun sur son téléphone (iPhone ou Android), avec une connexion Internet. Pas de compte, pas de serveur à payer.</p>` +
+      `<div class="mptier" style="--tc:${tier[2]}"><b>🏆 ${fmtBig(tr)}</b><span>${tier[0]}</span><small>${this.nextTier(tr)}</small></div>` +
+      (fr.length ? `<p class="eyebrow" style="text-align:center;margin:8px 0 4px">Tes amis</p><div class="mpfriends">${fr.map(f => `<button type="button" class="btn small" data-friend="${esc(f.pid)}">👥 ${esc(f.name)}</button>`).join('')}</div>` : '') +
       `<div class="mpgo"><button class="btn primary" type="button" id="mpCreate"><b>Créer une partie</b><small>Tu reçois un code à donner à ton ami</small></button>` +
       `<button class="btn" type="button" id="mpJoin"><b>Rejoindre</b><small>Entre le code de ton ami</small></button></div>` +
-      `<p class="hint" style="text-align:center">Les parties à deux ne comptent pas pour la campagne : ni étoiles, ni objets, ni sauvegarde de la partie.</p>`,
+      `<p class="hint" style="text-align:center">Les parties à deux ont leurs propres récompenses (gemmes, trophées, butin de coopération) et ne touchent pas à ta partie de campagne en cours.</p>`,
       actions: [{ label: 'Fermer' }] });
     $('mpCreate').onclick = () => this.create();
     $('mpJoin').onclick = () => this.joinForm();
+    $('modalCard').querySelectorAll('[data-friend]').forEach(b => { b.onclick = () => this.withFriend(b.dataset.friend); });
   },
   wait(title, text, cancel) {
-    Modal.open({ title, html: `<div class="mpwait"><i class="mpspin"></i><p>${esc(text)}</p></div>`, actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; if (cancel) cancel(); } }] });
+    Modal.open({ title, html: `<div class="mpwait"><i class="mpspin"></i><p id="mpWaitTxt">${esc(text)}</p></div>`, actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; if (cancel) cancel(); } }] });
   },
   error(msg) {
     this.linked = false;
     Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(msg)}</p>`, actions: [{ label: 'Fermer' }, { label: 'Réessayer', cls: 'primary', fn: () => setTimeout(() => this.open(), 30) }] });
   },
   hook() {
-    Net.onOpen = () => { this.linked = true; this.send({ t: 'hello', v: MP_PROTO, app: APP_VERSION, name: this.name, top: Math.min(App.slot.unlocked || 1, MAX_LEVEL) }); };
+    Net.onOpen = () => { this.linked = true; this.send({ t: 'hello', v: MP_PROTO, app: APP_VERSION, name: this.name, top: Math.min(this.real.unlocked || 1, MAX_LEVEL), pid: Coop.pid(this.real) }); };
     Net.onMsg = m => this.onMsg(m);
     Net.onClose = () => this.lost();
     Net.onFail = msg => { if (this.linked || this.game) this.lost(); else this.error(msg); };
-    Net.onKnock = () => { const p = $('mpHostSt'); if (p) p.textContent = 'Ton ami arrive, connexion en cours…'; };
+    Net.onKnock = () => { const p = $('mpHostSt') || $('mpWaitTxt'); if (p) p.textContent = 'Ton ami arrive, connexion en cours…'; };
   },
   async create() {
     this.hook(); this.role = 'host';
@@ -14907,55 +15068,118 @@ const Multi = {
     inp.onkeydown = e => { if (e.key === 'Enter') go(); };
     setTimeout(() => inp.focus(), 50);
   },
-  maxLevel() { return Math.max(1, Math.min(MAX_LEVEL, App.slot.unlocked || 1, (this.them && this.them.top) || 1)); },
+  /* Ami enregistré : on se retrouve sur un identifiant propre à votre duo, sans code. Le premier arrivé attend l'autre. */
+  async withFriend(fpid) {
+    const f = (this.real.mpFriends || {})[fpid]; if (!f) return;
+    const key = Coop.key(Coop.pid(this.real), fpid);
+    let h = 0; for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const room = 'F' + h.toString(36).toUpperCase();
+    this.hook(); this.wait('Jouer avec ' + f.name, `Connexion avec ${f.name}… Il doit aussi toucher ton nom dans sa liste d’amis.`);
+    try { await Net.host(room); this.role = 'host'; this.code = room; const p = $('mpWaitTxt'); if (p) p.textContent = `En attente de ${f.name}… Il doit toucher ton nom dans sa liste d’amis (menu « À deux »).`; }
+    catch (e) {
+      if (e.code !== 'ID-TAKEN') { this.error(e.message); return; }
+      this.role = 'guest'; this.code = room;   // l'ami attend déjà : on le rejoint
+      try { await Net.join(room); } catch (e2) { this.error(e2.message); }
+    }
+  },
+  maxLevel() { return Math.max(1, Math.min(MAX_LEVEL, this.real.unlocked || 1, (this.them && this.them.top) || 1)); },
+  coopMax() { return Math.min(COOP_MAX, ((this.team && this.team.cleared) || 0) + 1); },
   lobby() {
     if (!this.linked) { this.open(); return; }
-    const host = this.role === 'host', lv = getLevel(this.level), md = MP_MODES[this.mode];
-    const modes = Object.entries(MP_MODES).map(([id, m]) => `<button type="button" class="mpmode${id === this.mode ? ' on' : ''}" data-mode="${id}" ${host ? '' : 'disabled'}><span>${m.icon}</span><b>${m.name}</b></button>`).join('');
+    const host = this.role === 'host', md = MP_MODES[this.mode], coop = this.mode === 'coop', dis = host ? '' : 'disabled';
+    const modes = Object.entries(MP_MODES).map(([id, m]) => `<button type="button" class="mpmode${id === this.mode ? ' on' : ''}" data-mode="${id}" ${dis}><span>${m.icon}</span><b>${m.name}</b></button>`).join('');
+    let mid;
+    if (coop) {
+      const t = this.team || { cleared: 0, stars: {} }, k = Math.min(this.coopK, this.coopMax()), lv = getCoopLevel(k), st = t.stars[k] || 0, pool = Coop.pool(t.cleared);
+      mid = `<div class="mplvl"><button class="btn small" type="button" id="mpLm" ${dis} aria-label="Opération précédente">−</button>` +
+        `<div><small>Opération ${k} · ${'★'.repeat(st)}${'☆'.repeat(3 - st)}</small><b>${esc(lv.name)}</b><small>${lv.waves} vagues · ${lv.paths ? '' : ''}${lv.branches.length + 1} entrées${lv.boss ? ' · boss' : ''}</small></div>` +
+        `<button class="btn small" type="button" id="mpLp" ${dis} aria-label="Opération suivante">+</button></div>` +
+        `<p class="hint" style="text-align:center">Équipe ${esc(this.name)} + ${esc(this.themName)} : ${t.cleared} opération${t.cleared > 1 ? 's' : ''} réussie${t.cleared > 1 ? 's' : ''} · ${pool.length} tourelles (une de plus par opération réussie, 20 au maximum).</p>` +
+        (t.run ? `<button class="btn gold mpresume" type="button" id="mpResume" ${dis}>↻ Reprendre l’opération ${t.run.k} à la vague ${t.run.w + 1}</button>` : '') +
+        `<div class="mprow"><button class="btn small" type="button" id="mpGear">🎒 Mon équipement de coopération</button></div>`;
+    } else {
+      const lv = getLevel(this.level);
+      mid = `<div class="mplvl"><button class="btn small" type="button" id="mpLm" ${dis} aria-label="Niveau précédent">−</button>` +
+        `<div><small>${esc(worldLabel(lv.world))} · niveau ${lv.n}</small><b>${esc(lv.name)}</b><small>${this.mode === 'race' ? Math.min(RACE_WAVES, lv.waves) + ' vagues · chrono' : lv.waves + ' vagues + prolongation'}</small></div>` +
+        `<button class="btn small" type="button" id="mpLp" ${dis} aria-label="Niveau suivant">+</button></div>` +
+        `<div class="mpfair"><button type="button" class="${!this.fair ? 'on' : ''}" data-fair="0" ${dis}>🎒 Avec ta progression</button><button type="button" class="${this.fair ? 'on' : ''}" data-fair="1" ${dis}>⚖ Équitable</button></div>` +
+        `<p class="hint" style="text-align:center">${this.fair ? 'Équitable : aucun équipement ni compétence pour personne. Seul le placement compte.' : 'Chacun joue avec son arbre et son équipement ; les ennemis se renforcent avec l’équipement de chacun.'} ${host ? `Niveaux jusqu’au ${this.maxLevel()}.` : ''}</p>`;
+    }
     Modal.open({ title: 'Partie à deux', html:
       `<div class="mpwho"><span class="mpdot"></span><b>${esc(this.name)}</b><i>${host ? 'hôte' : 'invité'}</i><span class="mpvs">+</span><b>${esc(this.themName)}</b><i>${host ? 'invité' : 'hôte'}</i></div>` +
-      `<div class="mpmodes">${modes}</div><p class="hint mpdesc">${esc(md.desc)}</p>` +
-      `<div class="mplvl"><button class="btn small" type="button" id="mpLm" ${host ? '' : 'disabled'} aria-label="Niveau précédent">−</button>` +
-      `<div><small>${esc(worldLabel(lv.world))} · niveau ${lv.n}</small><b>${esc(lv.name)}</b><small>${lv.waves} vagues${lv.boss ? ' · boss' : ''}</small></div>` +
-      `<button class="btn small" type="button" id="mpLp" ${host ? '' : 'disabled'} aria-label="Niveau suivant">+</button></div>` +
-      `<p class="hint" style="text-align:center">${host ? `Niveaux jusqu’au ${this.maxLevel()} : le plus haut débloqué par vous deux.` : `${esc(this.themName)} choisit le mode et le niveau.`}${this.mode === 'coop' ? ' En coopération, ce sont les bonus d’équipement et de compétences de l’hôte qui comptent.' : ''}</p>`,
+      `<div class="mpmodes">${modes}</div><p class="hint mpdesc">${esc(md.desc)}</p>` + mid +
+      (host ? '' : `<p class="hint" style="text-align:center">${esc(this.themName)} choisit le mode et le niveau.</p>`),
       actions: host ? [{ label: 'Quitter', fn: () => this.disconnect() }, { label: 'Lancer la partie', cls: 'primary', fn: () => this.launch() }]
         : [{ label: 'Quitter', fn: () => this.disconnect() }, { label: `En attente de ${this.themName}…`, keep: true, fn: () => Toast2.show(`${this.themName} lance la partie`) }] });
+    const g = $('mpGear'); if (g) g.onclick = () => Coop.openGear();
     if (!host) return;
     $('modalCard').querySelectorAll('[data-mode]').forEach(b => { b.onclick = () => { this.mode = b.dataset.mode; this.pushLobby(); this.lobby(); }; });
-    $('mpLm').onclick = () => { this.level = Math.max(1, this.level - 1); this.pushLobby(); this.lobby(); };
-    $('mpLp').onclick = () => { this.level = Math.min(this.maxLevel(), this.level + 1); this.pushLobby(); this.lobby(); };
+    $('modalCard').querySelectorAll('[data-fair]').forEach(b => { b.onclick = () => { this.fair = b.dataset.fair === '1'; this.pushLobby(); this.lobby(); }; });
+    const step = d => { if (coop) this.coopK = clamp(this.coopK + d, 1, this.coopMax()); else this.level = clamp(this.level + d, 1, this.maxLevel()); this.pushLobby(); this.lobby(); };
+    $('mpLm').onclick = () => step(-1); $('mpLp').onclick = () => step(1);
+    const r = $('mpResume'); if (r) r.onclick = () => { Modal.close(); this.launch(true); };
   },
-  pushLobby() { this.send({ t: 'lobby', mode: this.mode, level: this.level }); },
+  pushLobby() { this.send({ t: 'lobby', mode: this.mode, level: this.level, k: this.coopK, fair: this.fair }); },
   inLobby() { return !$('modal').hidden && $('modalCard').querySelector('.mpmodes'); },
   disconnect() { this.send({ t: 'bye' }); setTimeout(() => Net.close(), 150); this.linked = false; this.them = null; if (this.game) this.leaveGame(); },
 
   /* ---------- Lancement ---------- */
-  launch() {
+  fairMods() { const m = computeMods({}); m.gearP = 0; return JSON.parse(JSON.stringify(m)); },
+  launch(resume) {
     if (this.role !== 'host' || !this.linked) return;
-    const lv = this.level, mode = this.mode, go = ids => {
-      const mods = mode === 'coop' ? buildMods(App.slot, lv, []) : null;
-      this.send({ t: 'start', mode, level: lv, allowed: mode === 'coop' ? ids : null, mods });
-      this.begin({ mode, level: lv, role: 'host', mods }, ids);
+    if (this.mode === 'coop') { this.coopPrepare(resume); return; }
+    const lv = this.level, mode = this.mode, fair = this.fair, go = ids => {
+      this.send({ t: 'start', mode, level: lv, fair });
+      this.begin({ mode, level: lv, role: 'host', fair }, ids);
     };
-    if (Loadout.needed(App.slot, lv)) Loadout.pick(lv, ids => go(ids)); else go(null);
+    if (Loadout.needed(this.real, lv)) Loadout.pick(lv, ids => go(ids)); else go(null);
+  },
+  /* Coopération : chacun choisit ses tourelles dans la réserve de l'équipe (si plus de 10), puis l'hôte lance. */
+  coopPrepare(resume) {
+    const t = this.team, run = resume && t.run, k = run ? run.k : Math.min(this.coopK, this.coopMax()), pool = Coop.pool(t.cleared);
+    this.prep = { k, pool, run, h: null, g: null, hm: Coop.mods(this.real), gm: null };
+    if (run && run.allowedBy) { this.prep.h = run.allowedBy.h; this.prep.g = run.allowedBy.g; }
+    this.send({ t: 'prep', k, pool, resume: !!run, picks: run ? run.allowedBy : null });
+    const done = () => this.coopTryStart();
+    if (!this.prep.h) this.coopPick(k, pool, ids => { this.prep.h = ids; done(); }); else { this.wait('Préparation', `En attente de ${this.themName}…`); }
+  },
+  coopPick(k, pool, done) {
+    if (pool.length <= LOADOUT_MAX) { done(pool.slice()); return; }
+    Loadout.pick(k, ids => { done(ids); if (!this.game) this.wait('Préparation', `En attente de ${this.themName}…`); }, { pool, title: `Tes tourelles · Opération ${k}`, cancel: () => { this.send({ t: 'prepcancel' }); setTimeout(() => this.lobby(), 30); } });
+  },
+  coopTryStart() {
+    const p = this.prep; if (!p || !p.h || !p.g || !p.gm) { if (p && p.h) this.wait('Préparation', `${this.themName} choisit ses tourelles…`); return; }
+    const pm = { h: p.hm, g: p.gm }, allowedBy = { h: p.h, g: p.g }, snap = p.run ? p.run.snap : null;
+    this.send({ t: 'start', mode: 'coop', k: p.k, pm, allowedBy, snap });
+    this.begin({ mode: 'coop', k: p.k, role: 'host', pm, allowedBy, snap });
+    this.prep = null;
   },
   begin(opt, ids) {
-    this.myRes = null; this.oppRes = null; this.opp = null; this.dead = []; this.outbox = []; this.lastSnap = null; this.sendCd = 0;
-    this.game = { mode: opt.mode, role: opt.role, level: opt.level, ghost: opt.mode === 'coop' && opt.role === 'guest', host: opt.mode === 'coop' && opt.role === 'host' };
+    this.myRes = null; this.oppRes = null; this.opp = null; this.dead = []; this.outbox = []; this.sendCd = 0; this.sf = null; this.pinMode = false;
+    this.game = { mode: opt.mode, role: opt.role, level: opt.level, k: opt.k, ghost: opt.mode === 'coop' && opt.role === 'guest', host: opt.mode === 'coop' && opt.role === 'host', fair: !!opt.fair, t0: 0, eco: 0, ecoT: 6, buildT: 0, loot: [], savedW: -1, notes: {} };
     Modal.close();
-    GameView.start(opt.level, null, ids || null, { mode: opt.mode, mods: opt.mods || null, ghost: this.game.ghost });
+    if (opt.mode === 'coop') {
+      const lv = getCoopLevel(opt.k), me = opt.role === 'host' ? 'h' : 'g';
+      GameView.start(lv, opt.snap || null, null, { mode: 'coop', mods: Coop.avg(opt.pm.h, opt.pm.g), ghost: this.game.ghost, coop: { pm: opt.pm, allowedBy: opt.allowedBy, me } });
+      return;
+    }
+    const base = getLevel(opt.level), lv = opt.mode === 'race' ? Object.assign({}, base, { waves: Math.min(RACE_WAVES, base.waves) }) : base;
+    GameView.start(lv, null, ids || null, { mode: opt.mode, mods: opt.fair ? this.fairMods() : buildMods(this.real, opt.level, []) });
   },
   /* Appelé par GameView.start une fois la bataille créée. */
   attach(b, mp) {
     b.multi = this.game || { mode: mp.mode };
     b.noEvents = true;
+    if (mp.mode === 'duel') b.endless = true;
     if (mp.ghost) this.ghostWrap(b); else if (b.multi.host) this.hostWrap(b);
+    if (mp.mode !== 'coop') GameView.speed = 2;
+    b.multi.t0 = performance.now();
     $('mpBar').hidden = false; this.bar(b, true);
     document.body.classList.add('mpgame');
-    Toast.show(mp.mode === 'coop' ? `${MP_MODES.coop.icon} Coopération avec ${this.themName} : posez vos tourelles !` : mp.mode === 'race' ? `${MP_MODES.race.icon} Course contre ${this.themName} : fais le meilleur score !` : `${MP_MODES.duel.icon} Duel contre ${this.themName} : envoie-lui des renforts !`);
+    const lbl = { coop: `${MP_MODES.coop.icon} Opération à deux avec ${this.themName} : ta zone est en bleu, la sienne en rose`, race: `${MP_MODES.race.icon} Course contre ${this.themName} : le chrono tourne !`, duel: `${MP_MODES.duel.icon} Duel contre ${this.themName} : chaque envoi augmente ton revenu` };
+    Toast.show(lbl[mp.mode]);
   },
-  detach() { $('mpBar').hidden = true; document.body.classList.remove('mpgame'); this.game = null; },
+  detach() { $('mpBar').hidden = true; $('mpSend').hidden = true; document.body.classList.remove('mpgame'); this.game = null; this.pinMode = false; setGrid(GRID0[0], GRID0[1]); },
 
   /* ---------- Messages ---------- */
   onMsg(m) {
@@ -14964,34 +15188,61 @@ const Multi = {
       case 'hello':
         this.them = m;
         if (m.v !== MP_PROTO) { Modal.open({ title: 'Versions différentes', html: `<p style="text-align:center">Ton jeu (${esc(APP_VERSION)}) et celui de ${esc(m.name)} (${esc(m.app)}) ne sont pas compatibles. Mettez tous les deux le jeu à jour (recharger la page), puis recommencez.</p>`, actions: [{ label: 'Fermer' }] }); this.disconnect(); return; }
-        if (this.role === 'host') { this.level = Math.min(this.maxLevel(), Math.max(1, App.selectedLevel || this.maxLevel())); this.pushLobby(); }
+        this.rememberFriend(m);
+        this.teamKey = Coop.key(Coop.pid(this.real), m.pid || m.name);
+        this.team = Coop.rec(this.real, this.teamKey, m.name);
+        this.send({ t: 'team', rec: this.team });
+        if (this.role === 'host') { this.level = Math.min(this.maxLevel(), Math.max(1, App.selectedLevel || this.maxLevel())); this.coopK = this.coopMax(); this.pushLobby(); }
         Sound.sfx && Sound.sfx('up'); buzz(30);
         this.lobby();
         return;
-      case 'lobby': this.mode = m.mode; this.level = m.level; if (this.inLobby() || !this.game) this.lobby(); return;
+      case 'team':
+        if (!this.teamKey) return;
+        this.team = m.final ? m.rec : Coop.merge(this.team || {}, m.rec || {});
+        this.team.name = this.themName;
+        this.real.coopTeams[this.teamKey] = this.team; Store.touch(this.real);
+        if (this.role === 'host' && !m.final) { this.send({ t: 'team', rec: this.team, final: 1 }); this.coopK = this.coopMax(); this.pushLobby(); }
+        if (this.inLobby()) this.lobby();
+        return;
+      case 'lobby': this.mode = m.mode; this.level = m.level; this.coopK = m.k || 1; this.fair = !!m.fair; if (this.inLobby() || (!this.game && !this.prepping)) this.lobby(); return;
+      case 'prep':
+        this.prepping = true;
+        if (m.picks && m.picks.g) { this.send({ t: 'pick', ids: m.picks.g, mods: Coop.mods(this.real) }); this.wait('Préparation', `${this.themName} lance l’opération…`); return; }
+        this.coopPick(m.k, m.pool, ids => { this.send({ t: 'pick', ids, mods: Coop.mods(this.real) }); });
+        return;
+      case 'pick': if (this.prep) { this.prep.g = m.ids; this.prep.gm = m.mods; this.coopTryStart(); } return;
+      case 'prepcancel': this.prep = null; this.prepping = false; Toast2.show(`${this.themName} a annulé`); this.lobby(); return;
       case 'start':
+        this.prepping = false;
         if (this.game) this.leaveGame(true);
-        this.mode = m.mode; this.level = m.level;
-        if (m.mode !== 'coop' && Loadout.needed(App.slot, m.level)) { Modal.close(); Loadout.pick(m.level, ids => this.begin({ mode: m.mode, level: m.level, role: 'guest' }, ids)); }
-        else this.begin({ mode: m.mode, level: m.level, role: 'guest', mods: m.mods }, m.allowed);
+        this.mode = m.mode;
+        if (m.mode === 'coop') { this.begin({ mode: 'coop', k: m.k, role: 'guest', pm: m.pm, allowedBy: m.allowedBy, snap: m.snap }); return; }
+        this.level = m.level; this.fair = !!m.fair;
+        if (Loadout.needed(this.real, m.level)) { Modal.close(); Loadout.pick(m.level, ids => this.begin({ mode: m.mode, level: m.level, role: 'guest', fair: m.fair }, ids)); }
+        else this.begin({ mode: m.mode, level: m.level, role: 'guest', fair: m.fair });
         return;
       case 'ping': this.send({ t: 'pong', k: m.k }); return;
       case 'pong': this.ping = Math.round(performance.now() - m.k); return;
       case 'bye': this.linked = false; Net.close(); this.lost(true); return;
+      case 'sfs': this.sfStart(m.items); return;
+      case 'sf': if (this.sf && this.role === 'host') { this.sf.g = m.c; this.sfResolve(); } return;
+      case 'sfr': this.sfShow(m); return;
     }
     if (!inGame) return;
     switch (m.t) {
       case 'st': this.opp = m; return;
-      case 'done': this.oppRes = m.r; this.opp = Object.assign(this.opp || {}, { st: m.r.victory ? 'victory' : 'defeat' }); this.checkEnd(); return;
+      case 'note': Toast.show(m.txt); return;
+      case 'done': this.oppRes = m.r; this.opp = Object.assign(this.opp || {}, { st: m.r.victory ? 'victory' : 'defeat' }); if (m.r.victory && b.multi.mode === 'race') Toast.show(`🏁 ${this.themName} a fini en ${this.fmtT(m.r.time)}`); this.checkEnd(); return;
       case 'send': this.receive(b, m); return;
       case 'snap': if (b.ghost) this.apply(b, m); return;
       case 'act': if (b.ghost) this.replay(b, m); return;
       case 'ev': if (b.ghost) for (const e of m.e) b.events.push(e); return;
       case 'req': if (b.multi.host) this.request(b, m); return;
-      case 'ctl': if (b.multi.host) { if (m.k === 'pause') GameView.togglePause(); if (m.k === 'speed') $('btnSpeed').click(); if (m.k === 'wave') b.startWave(); } return;
+      case 'pin': this.showPin(m.x, m.y, false); return;
+      case 'ctl': if (b.multi.host) { if (m.k === 'pause') GameView.togglePause(); if (m.k === 'speed') $('btnSpeed').click(); } return;
       case 'leave':
         if (b.multi.mode === 'coop') {
-          if (b.ghost) { this.leaveGame(); Modal.open({ title: 'Partie terminée', html: `<p style="text-align:center">${esc(this.themName)} a quitté la partie.</p>`, actions: [{ label: 'Salon', cls: 'primary', fn: () => setTimeout(() => this.lobby(), 30) }] }); }
+          if (b.ghost) { this.leaveGame(); Modal.open({ title: 'Partie terminée', html: `<p style="text-align:center">${esc(this.themName)} a quitté la partie. Elle est sauvegardée : vous pourrez la reprendre depuis le salon.</p>`, actions: [{ label: 'Salon', cls: 'primary', fn: () => setTimeout(() => this.lobby(), 30) }] }); }
           else { b.multi.solo = true; Toast.show(`${this.themName} a quitté la partie : tu continues seul`); }
         }
         return;
@@ -14999,78 +15250,123 @@ const Multi = {
   },
   lost(bye) {
     const b = GameView.battle, inGame = !!(this.game && b && b.multi);
-    this.linked = false;
-    if (inGame && b.ghost) { this.leaveGame(); Modal.open({ title: 'Connexion perdue', html: `<p style="text-align:center">La liaison avec ${esc(this.themName)} est coupée${bye ? ' (il a quitté)' : ''}. La partie s’arrête.</p>`, actions: [{ label: 'Retour à la carte', cls: 'primary' }] }); return; }
+    this.linked = false; this.prep = null; this.prepping = false;
+    if (inGame && b.ghost) { this.leaveGame(); Modal.open({ title: 'Connexion perdue', html: `<p style="text-align:center">La liaison avec ${esc(this.themName)} est coupée${bye ? ' (il a quitté)' : ''}. L’opération est sauvegardée à la dernière vague terminée.</p>`, actions: [{ label: 'Retour à la carte', cls: 'primary' }] }); return; }
     if (inGame) { b.multi.solo = true; Toast.show(`Connexion perdue avec ${this.themName} : tu continues seul`); return; }
-    if (!$('modal').hidden && $('modalCard').querySelector('.mpmodes, .mpwait')) Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(this.themName)} ${bye ? 'a quitté le salon' : 'n’est plus connecté'}.</p>`, actions: [{ label: 'Fermer' }] });
+    if (!$('modal').hidden && $('modalCard').querySelector('.mpmodes, .mpwait, .sfbox')) Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(this.themName)} ${bye ? 'a quitté le salon' : 'n’est plus connecté'}.</p>`, actions: [{ label: 'Fermer' }] });
+  },
+  rememberFriend(m) {
+    if (!m.pid) return;
+    const s = this.real; s.mpFriends = s.mpFriends || {};
+    s.mpFriends[m.pid] = { pid: m.pid, name: m.name, t: Date.now() };
+    Store.touch(s);
   },
 
   /* ---------- Pendant la partie ---------- */
   tick(b, dt) {
-    if (!this.game || !b.multi) return;
-    const real = dt;
+    const g = this.game;
+    if (!g || !b.multi) return;
+    const real = dt, sim = !GameView.paused && b.state !== 'victory' && b.state !== 'defeat' ? dt * GameView.speed : 0;
+    g.simT = (g.simT || 0) + sim;
     this.pingT -= real; if (this.pingT <= 0 && this.linked) { this.pingT = 3; this.send({ t: 'ping', k: performance.now() }); }
-    if (b.multi.mode === 'coop') {
-      if (b.multi.host && !b.multi.solo) {
+    if (g.mode === 'coop') {
+      if (g.host && !b.multi.solo) {
         this.snapT -= real;
         if (this.snapT <= 0) { this.snapT = 0.15; this.send({ t: 'snap', ...this.snap(b) }); }
-        if (this.outbox.length) { this.send({ t: 'ev', e: this.outbox.splice(0) }); }
+        if (this.outbox.length) this.send({ t: 'ev', e: this.outbox.splice(0) });
       }
-    } else {
+      if (g.host && b.state === 'build' && b.wave > 0 && g.savedW !== b.wave) { g.savedW = b.wave; this.coopSaveRun(b); }
+    } else if (!this.myRes) {
       this.stT -= real;
-      if (this.stT <= 0 && !this.myRes) { this.stT = 1; this.send({ t: 'st', w: b.wave, W: b.level.waves, l: b.lives, L: b.startLives, s: b.score, k: b.kills, st: b.state }); }
+      if (this.stT <= 0) { this.stT = 1; this.send({ t: 'st', w: b.wave, W: b.level.waves, l: b.lives, L: b.startLives, s: b.score, k: b.kills, st: b.state, tm: this.elapsed(b) }); }
       if (this.sendCd > 0) this.sendCd -= real;
+      if (g.mode === 'duel' && b.state !== 'victory' && b.state !== 'defeat') {
+        g.ecoT -= sim;
+        if (g.ecoT <= 0) { g.ecoT = 6; const inc = this.income(b); if (inc > 0) { b.gold += inc; b.fx(new Effect('text', b.path.end.x, b.path.end.y - 40, { text: '+' + fmtBig(inc) + ' revenu', color: '#ffcf4a', life: 1 })); } }
+        if (b.state === 'build') { g.buildT += sim; if (g.buildT > 15) { g.buildT = 0; GameView.startWave(); Toast.show('Vague lancée automatiquement'); } } else g.buildT = 0;
+      }
+      if (g.mode === 'race' && b.chain >= 3 && !g.notes['c' + b.wave]) { g.notes['c' + b.wave] = 1; this.send({ t: 'note', txt: `🏁 ${this.name} enchaîne les vagues ×${b.chain} !` }); }
     }
     this.bar(b);
   },
+  elapsed() { const g = this.game; return g ? (g.simT || 0) / 2 : 0; },   // temps de jeu (vitesse ×2) : un téléphone plus lent n'est pas pénalisé
+  fmtT(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); },
+  income(b) { return Math.round(this.game.eco * b.level.econ); },
   bar(b, force) {
     const el = $('mpBar'); if (!el || !this.game) return;
     const g = this.game, o = this.opp, warn = this.linked && Net.last && performance.now() - Net.last > 9000, off = !this.linked;
     const net = off ? '<i class="mpnet off">hors ligne</i>' : warn ? '<i class="mpnet warn">connexion instable</i>' : `<i class="mpnet">${this.ping ? this.ping + ' ms' : 'connecté'}</i>`;
     let h;
-    if (g.mode === 'coop') h = `<span class="mpic">🤝</span><b>${esc(this.themName)}</b>${net}`;
-    else {
+    if (g.mode === 'coop') {
+      const mate = b.coop ? b.wallet[b.me === 'h' ? 'g' : 'h'] : 0;
+      h = `<span class="mpic">🤝</span><b>${esc(this.themName)}</b><span class="mpst"><em class="s">◉ ${fmtBig(Math.floor(mate))}</em>${g.loot.length ? ` · 🎁 ${g.loot.length}` : ''}</span>${net}<button type="button" class="mppinbtn${this.pinMode ? ' on' : ''}" id="mpPinBtn" aria-label="Montrer un endroit à ton coéquipier">📍</button>`;
+    } else {
       const st = !o ? 'en route…' : o.st === 'defeat' ? 'éliminé' : o.st === 'victory' ? 'a fini' : `vague ${o.w}/${o.W}`;
-      h = `<span class="mpic">${MP_MODES[g.mode].icon}</span><b>${esc(this.themName)}</b><span class="mpst">${st}${o ? ` · <em class="l">♥ ${o.l}</em> · <em class="s">${fmtBig(o.s)}</em>` : ''}</span>${net}`;
-      if (g.mode === 'duel' && !this.myRes) h += `<button type="button" class="mpsend${this.sendCd > 0 ? ' cd' : ''}" id="mpSendBtn">⚔ Renforts</button>`;
+      h = `<span class="mpic">${MP_MODES[g.mode].icon}</span><b>${esc(this.themName)}</b><span class="mpst">${st}${o ? ` · <em class="l">♥ ${o.l}</em>${g.mode === 'race' ? ` · ⏱ ${this.fmtT(o.tm || 0)}` : ` · <em class="s">${fmtBig(o.s)}</em>`}` : ''}</span>`;
+      if (g.mode === 'race' && !this.myRes) h += `<span class="mpst mpme">⏱ ${this.fmtT(this.elapsed(b))}</span>`;
+      h += net;
+      if (g.mode === 'duel' && !this.myRes) h += `<span class="mpst mpme">+${fmtBig(this.income(b))}/6 s</span><button type="button" class="mpsend${this.sendCd > 0 ? ' cd' : ''}" id="mpSendBtn">⚔ Renforts</button>`;
     }
     if (!force && el._h === h) return;
     el._h = h; el.innerHTML = h;
     const sb = $('mpSendBtn'); if (sb) sb.onclick = ev => { ev.stopPropagation(); this.sendMenu(); };
+    const pb = $('mpPinBtn'); if (pb) pb.onclick = ev => { ev.stopPropagation(); this.pinMode = !this.pinMode; if (this.pinMode) Toast.show('📍 Touche la carte pour montrer un endroit'); this.bar(b, true); };
   },
-  packCost(b, p) { return Math.max(10, Math.round(b.waveBonus(Math.max(1, b.wave)) * p.mul)); },
+  /* Repère : un appui sur la carte montre l'endroit à l'autre joueur pendant quelques secondes. */
+  pin(pt) { this.pinMode = false; this.send({ t: 'pin', x: Math.round(pt.x), y: Math.round(pt.y) }); this.showPin(pt.x, pt.y, true); this.bar(GameView.battle, true); },
+  showPin(x, y, mine) {
+    const board = $('board'), cv = GameView.canvas; if (!board || !cv) return;
+    const br = board.getBoundingClientRect(), cr = cv.getBoundingClientRect(), p = GameView.worldToCss(x, y, cr.width, cr.height);
+    const el = document.createElement('div');
+    el.className = 'mppin' + (mine ? ' mine' : '');
+    el.style.left = (cr.left - br.left + p.x) + 'px'; el.style.top = (cr.top - br.top + p.y) + 'px';
+    el.innerHTML = `<i></i><b>${esc(mine ? this.name : this.themName)}</b>`;
+    board.appendChild(el); setTimeout(() => el.remove(), 3500);
+    if (!mine) { Sound.sfx && Sound.sfx('ui'); buzz(25); }
+  },
+
+  /* ---------- Duel : renforts ---------- */
+  sendCost(b, p) { return Math.max(10, Math.round(p.cost * b.level.econ * (1 + 0.06 * Math.max(0, b.wave - 1)))); },
   sendMenu() {
     const b = GameView.battle; if (!b || this.myRes) return;
     const box = $('mpSend');
     if (!box.hidden) { box.hidden = true; return; }
-    box.innerHTML = `<p>Envoyer chez ${esc(this.themName)}${this.sendCd > 0 ? ` · prêt dans ${Math.ceil(this.sendCd)} s` : ''}</p>` + MP_PACKS.map(p => { const c = this.packCost(b, p); return `<button type="button" data-p="${p.id}" ${b.gold >= c && this.sendCd <= 0 ? '' : 'disabled'}><span>${p.icon}</span><b>${p.name}</b><small>${p.desc}</small><em>${fmtBig(c)} or</em></button>`; }).join('');
+    const w = Math.max(1, b.wave);
+    box.innerHTML = `<p>Envoyer chez ${esc(this.themName)}${this.sendCd > 0 ? ` · prêt dans ${Math.ceil(this.sendCd)} s` : ''} · revenu actuel +${fmtBig(this.income(b))} / 6 s</p>` + MP_SENDS.map(p => {
+      const c = this.sendCost(b, p), lock = w < p.w;
+      return `<button type="button" data-p="${p.id}" ${!lock && b.gold >= c && this.sendCd <= 0 ? '' : 'disabled'}><span>${p.icon}</span><b>${p.name}</b><small>${lock ? `dès la vague ${p.w}` : `${p.desc} · revenu +${fmtBig(Math.round(p.eco * b.level.econ))}`}</small><em>${lock ? '🔒' : fmtBig(c) + ' or'}</em></button>`;
+    }).join('');
     box.hidden = false;
     box.querySelectorAll('[data-p]').forEach(bt => { bt.onclick = ev => { ev.stopPropagation(); this.sendPack(bt.dataset.p); box.hidden = true; }; });
   },
   sendPack(id) {
-    const b = GameView.battle, p = MP_PACKS.find(x => x.id === id); if (!b || !p || this.myRes) return;
-    const c = this.packCost(b, p);
+    const b = GameView.battle, p = MP_SENDS.find(x => x.id === id); if (!b || !p || this.myRes) return;
+    const c = this.sendCost(b, p);
+    if (Math.max(1, b.wave) < p.w) { Toast.show(`${p.name} : disponible dès la vague ${p.w}`); return; }
     if (this.sendCd > 0) { Toast.show(`Renforts prêts dans ${Math.ceil(this.sendCd)} s`); return; }
     if (b.gold < c) { Toast.show(`Il manque ${fmtBig(c - b.gold)} or`); return; }
     if (!this.linked) { Toast.show('Ton ami n’est plus connecté'); return; }
-    b.gold -= c; b.stats.goldSpent += c; this.sendCd = 8;
+    b.gold -= c; b.stats.goldSpent += c; this.sendCd = 4; this.game.eco += p.eco;
     b.mpSent = (b.mpSent || 0) + 1;
     this.send({ t: 'send', p: id });
-    Toast.show(`⚔ ${p.name} envoyé chez ${this.themName} !`); Sound.sfx && Sound.sfx('wave'); buzz(20);
+    Toast.show(`⚔ ${p.name} envoyé · ton revenu passe à +${fmtBig(this.income(b))} / 6 s`); Sound.sfx && Sound.sfx('wave'); buzz(20);
   },
-  /* Renforts reçus : ennemis du niveau du receveur, à la force de sa vague en cours. Ils arrivent tout de suite pendant une vague, sinon au début de la suivante. */
+  /* Renforts reçus : à la force de la vague en cours du receveur. Annoncés 3 s avant d'arriver. */
   receive(b, m) {
-    const p = MP_PACKS.find(x => x.id === m.p);
-    if (!p || b.state === 'victory' || b.state === 'defeat' || this.myRes) return;
-    const w = buildWave(b.level, Math.max(1, Math.min(b.level.waves, b.wave || 1)));
-    const pool = [...new Set(w.spawns.map(s => s.id))].map(id => ENEMY_BY_ID[id]).filter(t => t && !t.boss && !t.unique && !t.fly && !t.treasure);
-    if (!pool.length) return;
-    const t = pool.slice().sort((a, c) => p.pick === 'fast' ? c.speed - a.speed : c.hp - a.hp)[0];
-    const sw = { queue: Array.from({ length: p.n }, () => ({ id: t.id, elite: !!p.elite, delay: p.pick === 'fast' ? 0.35 : 0.9 })), hpMul: w.hpMul * b.threat, speedMul: w.speedMul, rewMul: 0.5, timer: 1.5 };
+    const p = MP_SENDS.find(x => x.id === m.p);
+    if (!p || b.state === 'victory' || b.state === 'defeat' || this.myRes || !ENEMY_BY_ID[p.e]) return;
+    const w = buildWave(b.level, Math.max(1, Math.min(b.level.waves, b.wave || 1))), ot = b.wave > b.level.waves ? Math.pow(1.15, b.wave - b.level.waves) : 1;
+    const sw = { queue: Array.from({ length: p.n }, () => ({ id: p.e, elite: !!p.elite, delay: p.n > 5 ? 0.35 : 0.9 })), hpMul: w.hpMul * b.threat * p.hp * ot, speedMul: w.speedMul, rewMul: 0.5, timer: 3 };
     b.mpGot = (b.mpGot || 0) + 1;
-    if (b.waveActive) { b.streams.push(sw); Toast.show(`⚔ ${this.themName} t’envoie ${p.n > 1 ? p.n + ' × ' : ''}${t.name}${p.elite ? ' élite' : ''} !`); }
-    else { (b.pendingSend = b.pendingSend || []).push(sw); Toast.show(`⚔ ${this.themName} t’envoie ${p.n > 1 ? p.n + ' × ' : ''}${t.name}${p.elite ? ' élite' : ''} : ils arrivent avec ta prochaine vague`); }
+    const nm = ENEMY_BY_ID[p.e].name;
+    if (b.waveActive) { b.streams.push(sw); this.alert(`⚔ ${p.n > 1 ? p.n + ' × ' : ''}${nm}${p.elite ? ' élite' : ''} arrivent dans 3 s`); }
+    else { (b.pendingSend = b.pendingSend || []).push(sw); this.alert(`⚔ ${p.n > 1 ? p.n + ' × ' : ''}${nm}${p.elite ? ' élite' : ''} : avec ta prochaine vague`); }
     Sound.sfx && Sound.sfx('alarm'); buzz(40);
+  },
+  alert(txt) {
+    const el = $('mpAlert'); if (!el) return;
+    el.textContent = txt; el.hidden = false; el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+    clearTimeout(this.alertT); this.alertT = setTimeout(() => { el.hidden = true; }, 3200);
   },
 
   /* ---------- Coopération : l'hôte fait tourner la partie ---------- */
@@ -15093,7 +15389,7 @@ const Multi = {
     const self = this, emit = b.emit;
     b.emit = function (type, data) {
       if (MP_FWD.includes(type) && !this.multi.solo) {
-        const personal = type === 'toast' && /^(Pas assez|Il manque|Ce chemin|Il faut laisser)/.test(String(data));
+        const personal = type === 'toast' && /^(Pas assez|Il manque|Ce chemin|Il faut laisser|Case de ton|Cette tourelle|Tu ne peux)/.test(String(data));
         if (this._fromGuest && type === 'toast') { if (personal) { self.outbox.push({ type, data }); return; } }
         else if (!personal) self.outbox.push({ type, data });
       }
@@ -15102,8 +15398,8 @@ const Multi = {
     for (const m of MP_ACTS) {
       const f = Battle.prototype[m];
       b[m] = function (...a) {
-        const g = this.gold, e = this.energy, r = f.apply(this, a);
-        if ((r || m === 'sell') && !this.multi.solo) self.send({ t: 'act', m, a: a.map(x => self.enc(this, x)), g, e });
+        const who = this.actor, g = this.gold, e = this.energy, r = f.apply(this, a);
+        if (r && !this.multi.solo) self.send({ t: 'act', m, a: a.map(x => self.enc(this, x)), g, e, who });
         return r;
       };
     }
@@ -15115,51 +15411,55 @@ const Multi = {
     b.emit = function (type, data) { if (type === 'changed' || type === 'fused') return emit.call(this, type, data); };   // le reste arrive de l'hôte
     for (const m of MP_ACTS) {
       b._orig[m] = Battle.prototype[m];
-      b[m] = function (...a) { self.send({ t: 'req', m, a: a.map(x => self.enc(this, x)) }); return m === 'fuse' ? null : true; };
+      b[m] = function (...a) {
+        // Contrôles locaux immédiats (zone, propriétaire) pour un retour clair ; l'hôte valide le reste
+        if ((m === 'build' || m === 'buyPad') && a[0] && a[0].owner && a[0].owner !== this.me) { Toast.show('Case de ton coéquipier : construis dans ta zone (en bleu)'); return false; }
+        if (['sell', 'specialize', 'setMode'].includes(m) && a[0] instanceof Tower && a[0].owner && a[0].owner !== this.me) { Toast.show('Cette tourelle appartient à ton coéquipier'); return false; }
+        self.send({ t: 'req', m, a: a.map(x => self.enc(this, x)) }); return m === 'fuse' ? null : true;
+      };
     }
   },
   request(b, m) {
     const a = (m.a || []).map(x => this.dec(b, x));
     if (!MP_ACTS.includes(m.m) || a.some(x => x === undefined)) return;
-    b._fromGuest = true;
-    try { b[m.m](...a); } catch (e) {} finally { b._fromGuest = false; }
+    b._fromGuest = true; b.actor = 'g';
+    try { b[m.m](...a); } catch (e) {} finally { b._fromGuest = false; b.actor = b.me; }
   },
   replay(b, m) {
     const a = (m.a || []).map(x => this.dec(b, x));
     if (!b._orig[m.m] || a.some(x => x === undefined)) return;
-    b.gold = m.g; if (m.e !== undefined) b.energy = m.e;
-    try { b._orig[m.m].apply(b, a); } catch (e) {}
+    b.actor = m.who || 'h'; b.gold = m.g; if (m.e !== undefined) b.energy = m.e;
+    try { b._orig[m.m].apply(b, a); } catch (e) {} finally { b.actor = b.me; }
   },
   snap(b) {
     const r1 = v => Math.round(v * 10) / 10, pi = e => e.path === b.airPath ? -1 : Math.max(0, b.paths.indexOf(e.path));
-    const s = {
-      g: Math.floor(b.gold), l: b.lives, w: b.wave, s: b.state, wa: b.waveActive ? 1 : 0, en: Math.round(b.energy * 10) / 10, sc: b.score, k: b.kills,
+    return {
+      wl: b.wallet, l: b.lives, w: b.wave, s: b.state, wa: b.waveActive ? 1 : 0, en: Math.round(b.energy * 10) / 10, sc: b.score, k: b.kills,
       cu: b.clearedUpTo, pb: b.padsBought, cl: b.closed, pcd: b.pcd, pt: b.powerT, ch: b.chain, sp: GameView.speed, pa: GameView.paused || !$('modal').hidden ? 1 : 0,
-      pads: b.pads.map(p => p.locked ? 1 : 0).join(''),
-      T: b.towers.map(t => [t.pad.i, t.def.id, t.level, t.spec, t.mode, t.kills, Math.round(t.dmgDone || 0), t.spent]),
+      pads: b.pads.map(p => p.locked ? 1 : 0).join(''), lo: this.game.loot.length,
+      T: b.towers.map(t => [t.pad.i, t.def.id, t.level, t.spec, t.mode, t.kills, Math.round(t.dmgDone || 0), t.spent, t.owner || 'h']),
       E: b.enemies.filter(e => e.alive).map(e => [e.uid, e.id, pi(e), r1(e.distance), Math.ceil(e.hp), e.maxHp, Math.ceil(e.shield), e.elite ? 1 : 0, r1(e.slowF), e.stunT > 0 ? 1 : 0, e.held ? 1 : 0, e.speedMul, e.hpMul]),
       D: this.dead.splice(0), tr: b.traps.map(t => [t.kind, Math.round(t.x), Math.round(t.y), r1(t.t)])
     };
-    return s;
   },
   apply(b, m) {
-    b.gold = m.g; b.lives = m.l; b.wave = m.w; b.state = m.s; b.waveActive = !!m.wa; b.energy = m.en; b.score = m.sc; b.kills = m.k;
+    if (m.wl) b.wallet = Object.assign({}, m.wl);
+    b.lives = m.l; b.wave = m.w; b.state = m.s; b.waveActive = !!m.wa; b.energy = m.en; b.score = m.sc; b.kills = m.k;
     b.clearedUpTo = m.cu; b.padsBought = m.pb; b.closed = m.cl || []; b.pcd = m.pcd || {}; b.powerT = m.pt || {}; b.chain = m.ch;
+    if (this.game) this.game.lootN = m.lo || 0;
     GameView.speed = m.sp || 1; if (GameView.paused !== !!m.pa) { GameView.paused = !!m.pa; GameView.setLabels(); }
     let padsChanged = false;
     b.pads.forEach((p, i) => { const lk = m.pads[i] === '1'; if (p.locked !== lk) { p.locked = lk; padsChanged = true; } });
-    // Tourelles
     const want = new Map(m.T.map(t => [t[0], t]));
-    for (const t of b.towers.slice()) { const w = want.get(t.pad.i); if (!w || w[1] !== t.def.id) { t.pad.tower = null; b.towers = b.towers.filter(x => x !== t); padsChanged = true; } }
+    for (const t of b.towers.slice()) { const w = want.get(t.pad.i); if (!w || w[1] !== t.def.id || (w[8] || 'h') !== (t.owner || 'h')) { t.pad.tower = null; b.towers = b.towers.filter(x => x !== t); padsChanged = true; } }
     for (const w of m.T) {
       const pad = b.pads[w[0]]; if (!pad) continue;
       let t = pad.tower;
-      if (!t) { const def = getTowerDef(w[1], b.mods); if (!def) continue; t = new Tower(def, pad, b.mods); pad.tower = t; b.towers.push(t); padsChanged = true; }
+      if (!t) { const om = (b.pm && b.pm[w[8]]) || b.mods, def = getTowerDef(w[1], om); if (!def) continue; t = new Tower(def, pad, om); t.owner = w[8]; pad.tower = t; b.towers.push(t); padsChanged = true; }
       if (w[3] !== null && w[3] !== undefined && t.spec === null && t.def.specs) t.specialize(w[3]);
-      if (t.level !== w[2]) { t.level = w[2]; }
+      if (t.level !== w[2]) t.level = w[2];
       t.mode = w[4]; t.kills = w[5]; t.dmgDone = w[6]; t.spent = w[7];
     }
-    // Ennemis
     const dead = new Set(m.D || []), have = new Map(b.enemies.map(e => [e.uid, e])), seen = new Set();
     for (const r of m.E) {
       const [uid, id, pi, d, hp, mhp, sh, el, sf, stun, held, sm, hm] = r;
@@ -15184,15 +15484,53 @@ const Multi = {
     b.traps = (m.tr || []).map(t => ({ kind: t[0], x: t[1], y: t[2], t: t[3], alive: true }));
     if (padsChanged) b.emit('changed', 'pads');
   },
-  /* Pause et vitesse : en coopération, c'est la partie de l'hôte qui compte. */
   ctl(k) { this.send({ t: 'ctl', k }); Toast.show(k === 'pause' ? 'Demande de pause envoyée' : 'Demande de vitesse envoyée'); },
+  /* Butin de coopération (côté hôte) : un objet de temps en temps à la fin d'une vague, toujours sur un boss. */
+  loot(b, why) {
+    const g = this.game; if (!g || !g.host) return;
+    if (why === 'wave' && Math.random() > 0.22) return;
+    this.addLoot(b, why === 'boss' ? 2 : 0);
+  },
+  addLoot(b, min) {
+    const it = Gear.roll({ unlocked: Math.min(MAX_LEVEL, b.level.n + 6) }, min || 0, Math.random, false);
+    if (!it || !GEAR_BY_ID[it.t]) return;
+    this.game.loot.push(it);
+    b.emit('toast', `🎁 Butin : ${GEAR_BY_ID[it.t].name} (${RARITY[it.r].name}) · partage au Shifumi à la fin`);
+  },
+  coopSaveRun(b) {
+    if (!this.team) return;
+    this.team.run = { k: this.game.k, w: b.wave, snap: b.snapshot(), allowedBy: b.allowedBy, t: Date.now() };
+    this.team.t = Date.now();
+    this.real.coopTeams[this.teamKey] = this.team; Store.touch(this.real);
+    this.send({ t: 'team', rec: this.team, final: 1 });
+  },
+  coopFinish(b, victory) {
+    if (!this.team || !this.game.host) return;
+    const k = this.game.k, t = this.team;
+    if (victory) { t.cleared = Math.max(t.cleared || 0, k); t.stars[k] = Math.max(t.stars[k] || 0, b.stars); }
+    t.run = null; t.t = Date.now();
+    this.real.coopTeams[this.teamKey] = t; Store.touch(this.real);
+    this.send({ t: 'team', rec: t, final: 1 });
+  },
 
   /* ---------- Fin de partie ---------- */
-  result(b, victory) { return { victory, l: b.lives, L: b.startLives, s: b.score, w: b.wave, W: b.level.waves, k: b.kills, sent: b.mpSent || 0, got: b.mpGot || 0 }; },
+  result(b, victory) {
+    const r = { victory, l: b.lives, L: b.startLives, s: b.score, w: b.wave, W: b.level.waves, k: b.kills, sent: b.mpSent || 0, got: b.mpGot || 0 };
+    if (this.game && this.game.mode === 'race') { r.raw = this.elapsed(b); r.time = r.raw + RACE_PEN * (b.startLives - b.lives); }
+    return r;
+  },
   end(victory) {
     const b = GameView.battle;
     if (!b || !b.multi) return;
-    if (b.multi.mode === 'coop') { this.myRes = this.result(b, victory); this.final(); return; }
+    if (b.multi.mode === 'coop') {
+      if (this.myRes) return;
+      this.myRes = this.result(b, victory);
+      if (this.game.host) {
+        if (victory) { this.addLoot(b, 1); this.addLoot(b, 0); for (let i = 1; i < b.stars; i++) this.addLoot(b, 0); }
+        this.coopFinish(b, victory);
+      }
+      this.final(); return;
+    }
     if (this.myRes) return;
     this.myRes = this.result(b, victory);
     this.send({ t: 'done', r: this.myRes });
@@ -15207,65 +15545,145 @@ const Multi = {
     if (me) this.waiting();
   },
   waiting() {
-    const b = GameView.battle, me = this.myRes;
+    const me = this.myRes, g = this.game;
     $('nextWave').hidden = true; Radial.close();
     $('endCard').innerHTML = `<h2 style="color:${me.victory ? 'var(--cyan)' : 'var(--red)'}">${me.victory ? 'Niveau terminé' : 'Éliminé'}</h2>` +
-      `<p>${me.victory ? `Score ${fmtBig(me.s)} · ♥ ${me.l} / ${me.L}` : `Tombé à la vague ${me.w}`}</p><div class="mpwait"><i class="mpspin"></i><p>${esc(this.themName)} joue encore…</p></div>` +
+      `<p>${me.victory ? (g.mode === 'race' ? `Temps ${this.fmtT(me.time)} (dont ${RACE_PEN * (me.L - me.l)} s de pénalité)` : `Score ${fmtBig(me.s)}`) + ` · ♥ ${me.l} / ${me.L}` : `Tombé à la vague ${me.w}`}</p><div class="mpwait"><i class="mpspin"></i><p>${esc(this.themName)} joue encore…</p></div>` +
       `<div class="row"><button class="btn" data-a="leave" type="button">Quitter</button></div>`;
     $('endCard').querySelector('[data-a="leave"]').onclick = () => { this.send({ t: 'leave' }); this.leaveGame(); setTimeout(() => this.lobby(), 30); };
     $('endOverlay').hidden = false;
-    void b;
   },
   winner() {
     const me = this.myRes, op = this.oppRes, g = this.game;
     if (g.mode === 'coop') return me.victory ? 'win' : 'lose';
-    if (!op) return me.victory ? 'win' : 'lose';
+    if (!op) return me.victory || me.alive ? 'win' : 'lose';
+    if (g.mode === 'duel') {
+      if (me.alive || op.alive) return me.alive ? 'win' : 'lose';
+      if (me.victory !== op.victory) return me.victory ? 'win' : 'lose';
+      if (me.w !== op.w) return me.w > op.w ? 'win' : 'lose';
+      return me.s === op.s ? 'tie' : me.s > op.s ? 'win' : 'lose';
+    }
     if (me.victory !== op.victory) return me.victory ? 'win' : 'lose';
-    if (g.mode === 'duel' && me.victory) { const a = me.l / me.L, c = op.l / op.L; if (Math.abs(a - c) > 1e-9) return a > c ? 'win' : 'lose'; }
-    if (!me.victory && me.w !== op.w) return me.w > op.w ? 'win' : 'lose';
+    if (me.victory) return Math.abs(me.time - op.time) < 0.5 ? 'tie' : me.time < op.time ? 'win' : 'lose';
+    if (me.w !== op.w) return me.w > op.w ? 'win' : 'lose';
     return me.s === op.s ? 'tie' : me.s > op.s ? 'win' : 'lose';
   },
+  /* Récompenses : gemmes pour tous, trophées en Course et en Duel. */
+  reward(w) {
+    const g = this.game, s = this.real, gems = g.mode === 'coop' ? (this.myRes.victory ? 15 : 5) : w === 'win' ? 12 : w === 'tie' ? 8 : 4;
+    let dt = 0;
+    if (g.mode !== 'coop' && this.oppRes) dt = w === 'win' ? 30 : w === 'tie' ? 0 : -15;
+    s.gems += gems; s.mpTrophies = Math.max(0, (s.mpTrophies || 0) + dt);
+    s.mpStats = s.mpStats || { games: 0, wins: 0 }; s.mpStats.games++; if (w === 'win') s.mpStats.wins++;
+    Store.touch(s);
+    return { gems, dt };
+  },
+  trophies() { return this.real.mpTrophies || 0; },
+  tier(tr) { let t = MP_TIERS[0]; for (const x of MP_TIERS) if (tr >= x[1]) t = x; return t; },
+  nextTier(tr) { const n = MP_TIERS.find(x => x[1] > tr); return n ? `${n[1] - tr} trophées pour ${n[0]}` : 'Rang maximum'; },
   final() {
     const b = GameView.battle, me = this.myRes, op = this.oppRes, g = this.game, w = this.winner();
     if (!b || !g) return;
     $('nextWave').hidden = true; Radial.close();
-    const head = g.mode === 'coop' ? (me.victory ? ['Victoire à deux !', 'var(--cyan)'] : ['Le Noyau est tombé', 'var(--red)'])
+    const rw = g.rewarded ? g.rewarded : (g.rewarded = this.reward(w));
+    const head = g.mode === 'coop' ? (me.victory ? ['Opération réussie !', 'var(--cyan)'] : ['Le Noyau est tombé', 'var(--red)'])
       : w === 'win' ? ['Tu gagnes !', 'var(--cyan)'] : w === 'tie' ? ['Égalité', 'var(--gold)'] : [`${this.themName} gagne`, 'var(--red)'];
     const res = r => !r ? '—' : r.alive ? 'debout' : r.victory ? 'fini' : `éliminé (v. ${r.w})`;
     const row = (k, a, c) => `<tr><td>${k}</td><td>${a}</td><td>${c}</td></tr>`;
-    let html = `<h2 style="color:${head[1]}">${esc(head[0])}</h2><p>${MP_MODES[g.mode].icon} ${MP_MODES[g.mode].name} · ${esc(b.level.name)}</p>`;
-    if (g.mode === 'coop') html += `<dl class="grid4"><div><dt>Vies</dt><dd>${me.l} / ${me.L}</dd></div><div><dt>Vague</dt><dd>${me.w} / ${me.W}</dd></div><div><dt>Score</dt><dd>${fmtBig(me.s)}</dd></div><div><dt>Éliminés</dt><dd>${fmtBig(me.k)}</dd></div></dl>`;
-    else html += `<table class="mptab"><tr><th></th><th>${esc(this.name)}</th><th>${esc(this.themName)}</th></tr>` +
-      row('Résultat', res(me), res(op)) + row('Vies', `${me.l} / ${me.L}`, op ? `${op.l} / ${op.L}` : '—') + row('Vague', `${me.w} / ${me.W}`, op ? `${op.w} / ${op.W}` : '—') +
+    let html = `<h2 style="color:${head[1]}">${esc(head[0])}</h2><p>${MP_MODES[g.mode].icon} ${MP_MODES[g.mode].name} · ${esc(b.level.name)}${g.fair ? ' · ⚖ équitable' : ''}</p>`;
+    if (g.mode === 'coop') {
+      let s = ''; for (let k = 0; k < 3; k++) s += `<span class="${me.victory && k < b.stars ? 'on' : 'off'}">★</span>`;
+      html += (me.victory ? `<div class="bigstars">${s}</div>` : '') + `<dl class="grid4"><div><dt>Vies</dt><dd>${me.l} / ${me.L}</dd></div><div><dt>Vague</dt><dd>${me.w} / ${me.W}</dd></div><div><dt>Score</dt><dd>${fmtBig(me.s)}</dd></div><div><dt>Éliminés</dt><dd>${fmtBig(me.k)}</dd></div></dl>`;
+      if (me.victory && g.k >= ((this.team && this.team.cleared) || 0) && Coop.pool(g.k).length > Coop.pool(g.k - 1).length) { const nt = TOWER_BY_ID[Coop.pool(g.k).slice(-1)[0]]; html += `<p>Nouvelle tourelle pour l’équipe : <b style="color:${nt.color}">${esc(nt.name)}</b></p>`; }
+    } else html += `<table class="mptab"><tr><th></th><th>${esc(this.name)}</th><th>${esc(this.themName)}</th></tr>` +
+      row('Résultat', res(me), res(op)) + (g.mode === 'race' ? row('Temps', me.time !== undefined && me.victory ? this.fmtT(me.time) : '—', op && op.victory && op.time !== undefined ? this.fmtT(op.time) : '—') : '') +
+      row('Vies', `${me.l} / ${me.L}`, op ? `${op.l} / ${op.L}` : '—') + row('Vague', `${me.w}`, op ? `${op.w}` : '—') +
       row('Score', fmtBig(me.s), op ? fmtBig(op.s) : '—') + row('Éliminés', fmtBig(me.k), op ? fmtBig(op.k) : '—') +
       (g.mode === 'duel' ? row('Renforts envoyés', me.sent, op ? op.sent : '—') : '') + '</table>' +
       (!op ? `<p class="hint">${esc(this.themName)} s’est déconnecté avant la fin.</p>` : '');
-    const host = this.role === 'host';
-    html += `<div class="row">${this.linked ? (host ? '<button class="btn primary" data-a="again" type="button">Revanche</button>' : '') + '<button class="btn" data-a="lobby" type="button">Salon</button>' : ''}<button class="btn" data-a="map" type="button">Quitter</button></div>`;
-    if (this.linked && !host) html += `<p class="hint">${esc(this.themName)} peut relancer une revanche.</p>`;
+    html += `<p class="gem">+${rw.gems} ${GEM}${rw.dt ? ` · <span style="color:${rw.dt > 0 ? 'var(--cyan)' : 'var(--red)'}">${rw.dt > 0 ? '+' : ''}${rw.dt} 🏆</span> (${fmtBig(this.trophies())} · ${this.tier(this.trophies())[0]})` : ''}</p>`;
+    html += '<div id="sfZone"></div><div id="endBtns"></div>';
     if (g.mode === 'coop') html += GameView.recapHtml(b, me.victory);
     $('endCard').innerHTML = html;
+    $('endOverlay').hidden = false;
+    GameView.clearAll();
+    Sound.sfx && Sound.sfx(w === 'win' ? 'up' : 'ui');
+    if (g.mode === 'coop' && g.host && g.loot.length && this.linked) { if (this.outbox.length) this.send({ t: 'ev', e: this.outbox.splice(0) }); const items = g.loot.splice(0); this.send({ t: 'sfs', items }); this.sfStart(items); }
+    else if (this.sf) this.sfRender();
+    else if (g.mode === 'coop' && g.ghost && (g.lootN || 0) > 0 && this.linked) $('sfZone').innerHTML = '<div class="mpwait"><i class="mpspin"></i><p>Partage du butin…</p></div>';
+    else this.endButtons();
+  },
+  endButtons() {
+    const host = this.role === 'host', g = this.game, box = $('endBtns'); if (!box) return;
+    box.innerHTML = `<div class="row">${this.linked ? (host ? `<button class="btn primary" data-a="again" type="button">${g.mode === 'coop' ? (this.myRes.victory ? 'Opération suivante' : 'Réessayer') : 'Revanche'}</button>` : '') + '<button class="btn" data-a="lobby" type="button">Salon</button>' : ''}<button class="btn" data-a="map" type="button">Quitter</button></div>` +
+      (this.linked && !host ? `<p class="hint">${esc(this.themName)} peut relancer la partie.</p>` : '');
     const go = a => {
-      if (a === 'again') { this.leaveGame(true); this.launch(); }
+      if (a === 'again') { if (g.mode === 'coop' && this.myRes.victory) this.coopK = Math.min(this.coopMax(), g.k + 1); else if (g.mode === 'coop') this.coopK = g.k; this.leaveGame(true); this.pushLobby(); this.launch(); }
       if (a === 'lobby') { this.send({ t: 'leave' }); this.leaveGame(); if (host) this.pushLobby(); setTimeout(() => this.lobby(), 30); }
       if (a === 'map') { this.send({ t: 'leave' }); this.leaveGame(); if (this.linked) setTimeout(() => Modal.open({ title: 'Partie à deux', html: `<p style="text-align:center">Rester connecté avec ${esc(this.themName)} ?</p>`, actions: [{ label: 'Se déconnecter', fn: () => this.disconnect() }, { label: 'Rester', cls: 'primary', fn: () => setTimeout(() => this.lobby(), 30) }] }), 30); }
     };
-    $('endCard').querySelectorAll('[data-a]').forEach(bt => { bt.onclick = () => go(bt.dataset.a); });
-    $('endOverlay').hidden = false;
-    GameView.clearAll();
-    Sound.sfx && Sound.sfx(w === 'win' || (g.mode === 'coop' && me.victory) ? 'up' : 'ui');
+    box.querySelectorAll('[data-a]').forEach(bt => { bt.onclick = () => go(bt.dataset.a); });
   },
+
+  /* ---------- Shifumi : un coup par objet du butin (égalité : on rejoue) ---------- */
+  sfStart(items) {
+    this.sf = { items, i: 0, h: null, g: null, mine: null, won: [], lost: [] };
+    if (!$('sfZone')) return;
+    this.sfRender();
+  },
+  sfRender(reveal) {
+    const sf = this.sf, z = $('sfZone'); if (!sf || !z) return;
+    if (sf.i >= sf.items.length) {
+      z.innerHTML = `<div class="sfbox"><p class="eyebrow">Butin partagé</p><p>${sf.won.length ? `Tu remportes : ${sf.won.map(it => `<b style="color:${RARITY[it.r].color}">${esc(GEAR_BY_ID[it.t].name)}</b>`).join(', ')}` : 'Tu ne remportes rien cette fois.'}</p>` +
+        `<p class="hint">Les objets gagnés vont dans ton équipement de coopération (salon › 🎒).</p></div>`;
+      this.endButtons(); return;
+    }
+    const it = sf.items[sf.i], R = RARITY[it.r], me = this.role === 'host' ? 'h' : 'g';
+    z.innerHTML = `<div class="sfbox"><p class="eyebrow">Partage du butin · objet ${sf.i + 1} / ${sf.items.length}</p>` +
+      `<div class="sfitem r${it.r}" style="--rc:${R.color}">${gearIcon(it, 44)}<div><b style="color:${R.color}">${esc(GEAR_BY_ID[it.t].name)}</b><small>${esc(R.name)} · ${esc(GEAR_SLOT_BY_ID[GEAR_BY_ID[it.t].slot].name)}</small><small>${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join(' · ')}</small></div></div>` +
+      (reveal ? `<div class="sfreveal"><span>${esc(this.name)}<b>${RPS[reveal[me]][1]}</b></span><i>vs</i><span>${esc(this.themName)}<b>${RPS[reveal[me === 'h' ? 'g' : 'h']][1]}</b></span></div><p class="sfres">${reveal.w === 'd' ? 'Égalité : on rejoue !' : reveal.w === me ? 'Tu remportes l’objet !' : `${esc(this.themName)} remporte l’objet`}</p>`
+        : `<div class="sfpick">${RPS.map(([n, ic], i) => `<button type="button" data-rps="${i}" class="${sf.mine === i ? 'on' : ''}" ${sf.mine !== null ? 'disabled' : ''} aria-label="${n}"><b>${ic}</b><small>${n}</small></button>`).join('')}</div>` +
+          `<p class="hint">${sf.mine === null ? 'Pierre, feuille ou ciseaux ? Un seul coup.' : `En attente de ${esc(this.themName)}…`}</p>`) + '</div>';
+    z.querySelectorAll('[data-rps]').forEach(bt => { bt.onclick = () => this.sfPick(+bt.dataset.rps); });
+  },
+  sfPick(c) {
+    const sf = this.sf; if (!sf || sf.mine !== null) return;
+    sf.mine = c; Sound.sfx && Sound.sfx('ui');
+    if (this.role === 'host') { sf.h = c; this.sfResolve(); } else this.send({ t: 'sf', i: sf.i, c });
+    this.sfRender();
+  },
+  sfResolve() {
+    const sf = this.sf; if (!sf || sf.h === null || sf.g === null) return;
+    const d = (sf.h - sf.g + 3) % 3, w = d === 0 ? 'd' : d === 1 ? 'h' : 'g';   // feuille bat pierre, ciseaux battent feuille, pierre bat ciseaux
+    const m = { i: sf.i, h: sf.h, g: sf.g, w };
+    this.send({ t: 'sfr', ...m }); this.sfShow(m);
+  },
+  sfShow(m) {
+    const sf = this.sf; if (!sf || m.i !== sf.i) return;
+    const me = this.role === 'host' ? 'h' : 'g', it = sf.items[sf.i];
+    this.sfRender(m); buzz(30);
+    Sound.sfx && Sound.sfx(m.w === me ? 'up' : 'ui');
+    setTimeout(() => {
+      if (m.w !== 'd') {
+        if (m.w === me) { Coop.take(this.real, it); sf.won.push(it); } else sf.lost.push(it);
+        sf.i++;
+      }
+      sf.h = null; sf.g = null; sf.mine = null;
+      this.sfRender();
+    }, 1800);
+  },
+
   /* Croix pendant une partie à deux. */
   quitMenu() {
     const b = GameView.battle, g = this.game;
-    const txt = g.mode === 'coop' ? (this.role === 'host' ? `Si tu quittes, la partie s’arrête aussi pour ${this.themName}.` : `${this.themName} continuera seul.`) : 'Quitter compte comme une défaite.';
+    const txt = g.mode === 'coop' ? (this.role === 'host' ? `Si tu quittes, la partie s’arrête aussi pour ${this.themName}. Elle est sauvegardée à la dernière vague terminée.` : `${this.themName} continuera seul. La partie est sauvegardée à la dernière vague terminée.`) : 'Quitter compte comme une défaite.';
     Modal.open({ title: 'Quitter la partie ?', html: `<p style="text-align:center">${esc(txt)}</p>`, actions: [{ label: 'Rester' }, { label: 'Quitter', cls: 'danger', fn: () => {
       if (g.mode !== 'coop' && !this.myRes) this.send({ t: 'done', r: Object.assign(this.result(b, false), { forfeit: true }) });
       this.send({ t: 'leave' }); this.leaveGame(); if (this.linked) setTimeout(() => this.lobby(), 30);
     } }] });
   },
   leaveGame(keepScreen) {
-    Tuto.stop(); Talk.clear(); $('endOverlay').hidden = true; $('mpSend').hidden = true;
+    Tuto.stop(); Talk.clear(); $('endOverlay').hidden = true; $('mpSend').hidden = true; $('mpAlert').hidden = true;
     this.detach();
     if (!keepScreen) { App.show('map'); }
   }
@@ -15312,7 +15730,7 @@ const GameView = {
     this.canvas.addEventListener('click', ev => this.onClick(this.toWorld(ev)));
     $('dialog').onclick = () => Talk.next();
     $('btnWave').onclick = () => this.startWave();
-    $('btnSpeed').onclick = () => { if (this.battle && this.battle.ghost) { Multi.ctl('speed'); return; } this.speed = this.speed >= 5 ? 1 : this.speed + 1; GFX.s.speed = this.speed; GFX.save(); this.setLabels(); };
+    $('btnSpeed').onclick = () => { if (this.battle && this.battle.ghost) { Multi.ctl('speed'); return; } if (this.battle && this.battle.multi && this.battle.multi.mode !== 'coop') { Toast.show('Vitesse fixée à ×2 pour les deux joueurs'); return; } this.speed = this.speed >= 5 ? 1 : this.speed + 1; GFX.s.speed = this.speed; GFX.save(); this.setLabels(); };
     $('btnPause').onclick = () => this.togglePause();
     $('btnQuit').onclick = () => this.quit();
     window.addEventListener('keydown', ev => {
@@ -15354,7 +15772,8 @@ const GameView = {
   },
 
   start(levelN, snapshot, picked, mp) {
-    const slot = App.slot, world = worldOf(levelN);
+    const slot = App.slot, lvObj = typeof levelN === 'object' ? levelN : null, world = lvObj ? lvObj.world : worldOf(levelN);
+    if (lvObj && lvObj.coop) setGrid(COOP_GRID[0], COOP_GRID[1]); else setGrid(GRID0[0], GRID0[1]);
     if (!mp && Multi.game) Multi.detach();
     // Plus de 10 tourelles débloquées : choix de l'équipe avant de jouer
     if (!mp && !snapshot && !picked && Loadout.needed(slot, levelN)) { Loadout.pick(levelN, ids => this.start(levelN, null, ids)); return; }
@@ -15363,7 +15782,7 @@ const GameView = {
     Talk.clear();
     const boosts = mp ? [] : snapshot ? (snapshot.boosts || []) : Meta.consumeBoosts();
     const mods = mp && mp.mods ? mp.mods : buildMods(slot, levelN, boosts);
-    this.battle = new Battle(levelN, mods, snapshot);
+    this.battle = new Battle(levelN, mods, snapshot, mp && mp.coop);
     const b = this.battle;
     if (picked) b.allowed = picked.slice();
     if (mp) Multi.attach(b, mp);
@@ -15373,13 +15792,14 @@ const GameView = {
     Events.reset();
     Radial.close();
     this.speed = GFX.s.speed || 1; this.paused = false;
+    if (mp && mp.mode !== 'coop') this.speed = 2;   // Course et Duel : vitesse fixée pour les deux
     this.setLabels();
     $('endOverlay').hidden = true;
     this.cache = {};
-    $('hudLvlNum').textContent = `${worldLabel(b.level.world)} · Niveau ${b.level.n}`;
+    $('hudLvlNum').textContent = b.level.coop ? `Coopération · Opération ${b.level.coop}` : `${worldLabel(b.level.world)} · Niveau ${b.level.n}`;
     $('hudLvlName').textContent = b.level.name;
     $('hudTrack').textContent = '♪ ' + TRACKS[levelTrack(b.level)].name;
-    App.selectedLevel = levelN;
+    if (!lvObj) App.selectedLevel = levelN;
     this.buildShop();
     this.renderPowers();
     App.show('game');
@@ -15462,7 +15882,7 @@ const GameView = {
   setLabels() {
     const fs = document.body.classList.contains('fsgame'), full = !!document.fullscreenElement;
     $('btnSpeed').textContent = fs ? '×' + this.speed : 'Vitesse x' + this.speed;
-    if (this.battle) { const lv = this.battle.level, port = fs && !document.body.classList.contains('fsland'); $('hudLvlNum').textContent = port ? `M${lv.world} · N${lv.n}` : `${worldLabel(lv.world)} · Niveau ${lv.n}`; }
+    if (this.battle) { const lv = this.battle.level, port = fs && !document.body.classList.contains('fsland'); $('hudLvlNum').textContent = lv.coop ? (port ? `Coop · Op. ${lv.coop}` : `Coopération · Opération ${lv.coop}`) : port ? `M${lv.world} · N${lv.n}` : `${worldLabel(lv.world)} · Niveau ${lv.n}`; }
     $('btnPause').textContent = this.paused ? (fs ? '▶' : 'Reprendre') : (fs ? '❚❚' : 'Pause');
     $('btnSheet').textContent = 'Tours';
     $('btnSoundGame').textContent = fs ? '⚙' : 'Réglages';
@@ -15491,6 +15911,7 @@ const GameView = {
   onClick(pt) {
     const b = this.battle;
     if (!b || b.state === 'victory' || b.state === 'defeat') return;
+    if (Multi.pinMode && b.multi) { Multi.pin(pt); return; }
     // Pouvoir à poser sur un chemin (mine, leurre)
     if (this.aimPower) {
       const id = this.aimPower, p = POWER_BY_ID[id];
@@ -15499,6 +15920,7 @@ const GameView = {
       return;
     }
     const pad = this.padAt(pt);
+    if (b.coop && pad && !pad.tower && pad.owner && pad.owner !== b.me && !this.aimPower) { Radial.close(); Toast.show('Zone de ton coéquipier (en rose) : construis dans la tienne (en bleu)'); return; }
     // Mode fusion : on choisit la seconde tourelle
     if (this.fuseFrom) {
       if (pad && pad.tower) {
@@ -15555,6 +15977,7 @@ const GameView = {
     const b = this.battle;
     if (!b || b.state === 'victory' || b.state === 'defeat') return;
     if (b.ghost) { Multi.ctl('pause'); return; }
+    if (b.multi && b.multi.mode !== 'coop') { Toast.show('Pas de pause en Course ni en Duel'); return; }
     this.paused = !this.paused;
     this.setLabels();
   },
@@ -15875,7 +16298,7 @@ const GameView = {
   tick(dt) {
     const b = this.battle;
     this.time += dt;
-    const run = !this.paused && $('modal').hidden;
+    const run = !this.paused && ($('modal').hidden || (b.multi && b.multi.mode !== 'coop'));   // Course et Duel : une fenêtre n'arrête pas le jeu
     if (R.hitstop > 0) R.hitstop -= dt;
     else if (run) for (let i = 0; i < this.speed; i++) b.update(dt);
     Tuto.tick(b, run ? dt : 0);
