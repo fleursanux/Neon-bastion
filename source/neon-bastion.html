@@ -10233,8 +10233,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.24';
+const APP_VERSION = '7.24.1';
 const CHANGELOG = [
+  { v: '7.24.1', date: '04.11.2026', items: ['Tutoriels des niveaux 1 et 2 : on construit sur la case de son choix. La case qui clignote n’est qu’un conseil, désormais choisie au début du chemin (elle couvre le plus long morceau que tous les ennemis traversent) et jamais à côté du Noyau.', 'Fusion du tutoriel offerte : l’or de la tourelle absorbée est remboursé.'] },
   { v: '7.24', date: '04.11.2026', items: ['La difficulté suit l’équipement : la puissance d’équipement de l’équipage (affichée dans l’écran Équipage et sur la fiche de chaque niveau) renforce les PV ennemis de (1 + puissance)^0,5. L’équipement garde un avantage, mais le placement des tourelles redevient décisif.', 'Mini-cinématique pour chaque nouveau pouvoir : au début de la partie où il devient disponible, une fenêtre montre une scène animée du pouvoir en action, quand et comment l’utiliser, son coût et sa recharge.', 'En paysage sur téléphone, les messages de l’équipage deviennent une petite bulle translucide en bas à gauche du plateau.', 'Les pièces de set sont cliquables dans la fiche d’un objet. Correction d’une comparaison qui affichait « NaN ».'] },
   { v: '7.23', date: '04.11.2026', items: ['Équipement de l’équipage refait sur le modèle des mini-jeux : 10 emplacements par personnage (arme principale, plastron, casque, module, bottes, arme auxiliaire, gants, ceinture, sac à outils, insigne), 18 nouveaux objets, 20 sets de 3 à 5 pièces (deux sets complets portables), nouvelles statistiques liées aux pouvoirs, aux cases et aux barricades.', 'Écran Équipage en onglets : Équipement (toucher un emplacement pour choisir, comparaison vert/rouge avec l’objet porté), Inventaire (filtres, tri, tout fusionner, recyclage groupé, verrouillage), Sets (fiche de chaque pièce), Chances (raretés par source). « Équiper tout l’équipage » et « Améliorer ×N ».', 'Chaque victoire rapporte un objet et de la ferraille. Les bonus globaux de tout l’équipage ont un rendement décroissant (détail dans l’écran Équipage).', 'Fiche ennemi complète : touche une icône de la prochaine vague, de la liste des ennemis, du codex ou de la fiche d’un niveau (statistiques, version élite, capacités, apparitions par vague, conseils pour le contrer).', 'Récapitulatif de fin de niveau par tourelle : éliminations, dégâts et part des dégâts, or investi, rendement, plus le bilan de la partie (cases, barricades, reventes, énergie, pouvoirs).', 'Pouvoirs : temps de recharge, énergie rééquilibrée, Pluie d’or limitée à une fois par vague ; au premier appui, un pouvoir explique ce qu’il fait. Nouvelle compétence Condensateur. Onglet Chances dans les mini-jeux.', 'Corrections : message qui cachait la prochaine vague en portrait, bouton du son par-dessus les infos, capacités des ennemis récents absentes des fiches, boss de fin mal annoncés dans la fiche de niveau.'] },
   { v: '7.22', date: '04.11.2026', items: ['La fusion se débloque au niveau 2, avec un mini-tutoriel en 4 étapes : poser une Stase à côté de la Gatling, ouvrir le menu d’une tourelle et toucher « Fusion », choisir l’autre tourelle, confirmer. Les repères s’affichent sur le plateau en 2D comme en 3D ; on peut annuler et reprendre à tout moment.'] },
@@ -14539,16 +14540,16 @@ const Tuto = {
   active: false, step: 0, pad: null, t: 0, kind: 'base',
   /* Mini-tutoriel du niveau 2 : la fusion. L'étape est recalculée à chaque image (on peut annuler et reprendre). */
   FUSE: [
-    { title: 'Fusion · 1/4', icon: '🔧', text: 'Nouveau : la Stase ralentit les ennemis. Pose une Stase sur la case qui clignote (garde aussi ta Gatling).',
+    { title: 'Fusion · 1/4', icon: '🔧', text: 'Nouveau : la Stase ralentit les ennemis. Pose une Stase sur la case de ton choix (celle qui clignote est un bon choix) et garde ta Gatling. La fusion du tutoriel est offerte.',
       ok: b => new Set(b.towers.filter(t => !t.def.fused).map(t => t.def.id)).size >= 2 || b.stats.fusions >= 1,
-      wait: b => { const need = b.towers.some(t => t.def.id === 'gatling') ? 'stase' : 'gatling', c = b.towerCost(TOWER_BY_ID[need]); return b.gold < c ? `Il te faut ${c} or pour la ${TOWER_BY_ID[need].name}. Lance la vague : chaque ennemi vaincu rapporte de l’or.` : (need === 'gatling' ? (b.towers.length ? 'Pose aussi une Gatling sur la case qui clignote.' : 'Nouveau : la fusion ! Pose d’abord une Gatling sur la case qui clignote, puis une Stase.') : null); } },
+      wait: b => { const need = b.towers.some(t => t.def.id === 'gatling') ? 'stase' : 'gatling', c = b.towerCost(TOWER_BY_ID[need]); return b.gold < c ? `Il te faut ${c} or pour la ${TOWER_BY_ID[need].name}. Lance la vague : chaque ennemi vaincu rapporte de l’or.` : (need === 'gatling' ? (b.towers.length ? 'Pose aussi une Gatling, sur la case de ton choix.' : 'Nouveau : la fusion ! Pose d’abord une Gatling, puis une Stase, où tu veux près du chemin (la case qui clignote est un bon choix).') : null); } },
     { title: 'Fusion · 2/4', icon: '✦', text: 'Touche une de tes deux tourelles, puis le bouton violet « Fusion ».', ok: b => !!GameView.fuseFrom || b.stats.fusions >= 1 },
     { title: 'Fusion · 3/4', icon: '✦', text: 'Touche maintenant l’autre tourelle (entourée en violet) : c’est elle qui sera absorbée.', ok: b => !!GameView.fuseTarget || b.stats.fusions >= 1 },
     { title: 'Fusion · 4/4', icon: '✔', text: 'Vérifie l’aperçu puis touche « Confirmer la fusion ». La nouvelle tourelle garde le tir de la première et ajoute les effets de la seconde.', ok: b => b.stats.fusions >= 1 }
   ],
   get steps() { return this.kind === 'fusion' ? this.FUSE : this.STEPS; },
   STEPS: [
-    { title: 'Étape 1 · Construire', icon: '🔧', text: 'Touche la case qui clignote près du chemin, puis choisis la Gatling.', ok: b => b.towers.length >= 1 },
+    { title: 'Étape 1 · Construire', icon: '🔧', text: 'Touche une case libre près du chemin, puis choisis la Gatling. La case qui clignote est un bon choix (elle couvre un long morceau du chemin), mais tu peux construire où tu veux.', ok: b => b.towers.length >= 1 },
     { title: 'Étape 2 · Lancer', icon: '▶', text: 'Appuie sur « Lancer la vague ». Les ennemis suivent le chemin jusqu’au Noyau.', ok: b => b.wave >= 1 },
     { title: 'Étape 3 · Améliorer', icon: '⬆', text: 'Touche ta tourelle puis « Améliorer » : chaque rang augmente ses dégâts de 32 %.', ok: b => b.stats.upgrades >= 1, wait: b => b.towers.length && b.gold < b.towers[0].upgradeCost ? 'Chaque ennemi éliminé rapporte de l’or : attends d’en avoir assez pour améliorer ta tourelle.' : null },
     { title: 'Étape 4 · Enchaîner', icon: '⚡', text: 'Pas besoin d’attendre : lance la vague suivante pendant celle-ci. Chaque enchaînement rapporte un bonus d’or.', ok: b => b.stats.earlyCalls >= 1 || b.wave >= 5 }
@@ -14562,9 +14563,13 @@ const Tuto = {
     if (!this.active) return;
     this.pad = this.bestPad(b);
   },
+  /* Case conseillée : couvre beaucoup de chemin, surtout la première moitié (les ennemis y passent tous), loin du Noyau. */
   bestPad(b) {
-    const near = b.pads.filter(p => !p.locked && !p.tower), cov = p => { let k = 0; for (const c of b.path.cells) { const [x, y] = c.split(',').map(Number); if (Math.hypot(x - p.col, y - p.row) <= 2.2) k++; } return k; };
-    return near.sort((a, c) => cov(c) - cov(a))[0] || null;
+    const T = CONFIG.tile, P = b.path, end = P.end, pts = [];
+    for (let d = 0; d < P.length; d += T / 2) { const q = P.pointAt(d), f = d / P.length; pts.push([q.x, q.y, f < 0.6 ? 1 : f < 0.8 ? 0.5 : 0.15]); }
+    const near = b.pads.filter(p => !p.locked && !p.tower && Math.hypot(p.x - end.x, p.y - end.y) > 3 * T);
+    const sc = p => { let k = 0; for (const [x, y, w] of pts) if (Math.hypot(x - p.x, y - p.y) <= 2.3 * T) k += w; return k; };
+    return near.sort((a, c) => sc(c) - sc(a))[0] || b.pads.find(p => !p.locked && !p.tower) || null;
   },
   /* Ce qu'il faut montrer sur le plateau à l'étape en cours (ou null). */
   target(b) {
@@ -15033,7 +15038,12 @@ const GameView = {
     on('close', () => this.clearAll());
     on('esheet', () => { const e = this.selectedEnemy; if (e) enemySheet(e.type); });
     on('fcancel', () => { const from = this.fuseFrom; this.clearSelection(); this.selectedTower = from; this.renderInspector(); });
-    on('fconfirm', () => { const r = b.fuse(this.fuseFrom, this.fuseTarget); this.clearSelection(); this.selectedTower = r; this.renderInspector(); });
+    on('fconfirm', () => {
+      const gift = Tuto.active && Tuto.kind === 'fusion' && b.stats.fusions === 0 ? this.fuseTarget.spent : 0;
+      const r = b.fuse(this.fuseFrom, this.fuseTarget);
+      if (r && gift) { b.gold += gift; r.spent -= gift; b.fx(new Effect('text', r.x, r.y - 26, { text: '+' + fmtBig(gift) + ' or', color: '#ffcf4a', life: 1.4 })); Toast.show(`Fusion offerte pour le tutoriel : +${fmtBig(gift)} or remboursés`); }
+      this.clearSelection(); this.selectedTower = r; this.renderInspector();
+    });
     on('up', () => { if (b.upgrade(t, 1)) this.renderInspector(); });
     on('up5', () => { if (b.gold >= t.costFor(5) && b.upgrade(t, 5)) this.renderInspector(); });
     on('upmax', () => { if (b.upgrade(t, Infinity)) this.renderInspector(); });
