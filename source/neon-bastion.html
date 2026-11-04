@@ -10257,8 +10257,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.24.3';
+const APP_VERSION = '7.24.4';
 const CHANGELOG = [
+  { v: '7.24.4', date: '04.11.2026', items: ['iPhone en portrait : le plateau ne recouvre plus les vies, l’or et la vague (calcul sur la zone réellement visible, recalcul quand la barre de commandes change de taille).'] },
   { v: '7.24.3', date: '04.11.2026', items: ['La croix (ou « Quitter ») ouvre une fenêtre de pause : Reprendre, Recommencer le niveau (avec confirmation) ou Retour à la carte.'] },
   { v: '7.24.2', date: '04.11.2026', items: ['Écran Équipage : chaque emplacement montre l’image de l’objet sur le fond de sa couleur de rareté (niveau, étoiles et fusion possible en pastilles). Toucher un objet porté l’agrandit avec ses statistiques et ses actions, dont « Changer d’objet » ; toucher un emplacement vide ouvre directement le choix.'] },
   { v: '7.24.1', date: '04.11.2026', items: ['Tutoriels des niveaux 1 et 2 : on construit sur la case de son choix. La case qui clignote n’est qu’un conseil, désormais choisie au début du chemin (elle couvre le plus long morceau que tous les ennemis traversent) et jamais à côté du Noyau.', 'Fusion du tutoriel offerte : l’or de la tourelle absorbée est remboursé.'] },
@@ -14671,6 +14672,9 @@ const GameView = {
     if (GFX.s.view === '3d') setTimeout(() => R3.load(), 50);
     let rt = 0;
     window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { Radial.close(); this.resize(); }, 150); });
+    if (window.visualViewport) visualViewport.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (App.current === 'game') this.resize(); }, 150); });
+    // Si la barre de commandes ou le bandeau changent de hauteur (pouvoirs débloqués, texte sur deux lignes), on recalcule le plateau
+    if (window.ResizeObserver) { let last = ''; const ro = new ResizeObserver(() => { if (App.current !== 'game' || !document.body.classList.contains('fsgame')) return; const c = document.querySelector('#scrGame .ctrl'), hd = document.querySelector('#scrGame .hud'), k = (c ? c.offsetHeight : 0) + ':' + (hd ? hd.offsetHeight : 0); if (k !== last) { last = k; clearTimeout(rt); rt = setTimeout(() => this.resize(), 60); } }); ro.observe(document.querySelector('#scrGame .ctrl')); ro.observe(document.querySelector('#scrGame .hud')); }
     const fs = $('btnFull'), standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     if (document.fullscreenEnabled && !standalone) {
       fs.hidden = false;
@@ -14763,6 +14767,7 @@ const GameView = {
     this.saveRun();
     Tuto.start(b);
     if (!Tuto.active) PowerIntro.start(b);
+    for (const ms of [300, 1200]) setTimeout(() => { if (this.battle === b && App.current === 'game') this.resize(); }, ms);
     if (!snapshot && !Tuto.active) Toast.show('Pose tes tourelles puis lance la première vague');
     if (boosts.length) Toast.show('Boost actif : ' + boosts.map(id => BOOST_BY_ID[id].name).join(', '));
     setTimeout(() => { if (this.battle === b && App.current === 'game') Talk.levelIntro(b.level); }, 600);
@@ -14816,15 +14821,17 @@ const GameView = {
     if (fs && ctrl.parentNode !== $('scrGame')) $('scrGame').appendChild(ctrl);
     if (!fs && ctrl.parentNode !== side) side.insertBefore(ctrl, side.firstChild);
     if (!fs) { board.style.width = board.style.height = ''; return; }
-    const cs = getComputedStyle($('scrGame')), px = v => parseFloat(v) || 0;
+    const sg = $('scrGame'), cs = getComputedStyle(sg), px = v => parseFloat(v) || 0;
     const padW = px(cs.paddingLeft) + px(cs.paddingRight), padH = px(cs.paddingTop) + px(cs.paddingBottom), gap = 4;
     const hud = document.querySelector('#scrGame .hud').offsetHeight;
+    // Taille réellement visible : sur iPhone, innerHeight peut dépasser la zone affichée (barres de Safari, écran d'accueil)
+    const vv = window.visualViewport, VH = Math.min(sg.clientHeight || innerHeight, vv ? vv.height : innerHeight, innerHeight), VW = Math.min(sg.clientWidth || innerWidth, vv ? vv.width : innerWidth, innerWidth);
     let bw, bh;
     if (land) {
-      const availH = innerHeight - padH, availW = innerWidth - padW - gap - 170;
+      const availH = VH - padH, availW = VW - padW - gap - 170;
       bw = use3d ? Math.min(availW, availH * 1.9) : Math.min(availH * 1.6, availW); bh = use3d ? availH : bw / 1.6;
     } else {
-      const availW = innerWidth - padW, availH = innerHeight - padH - hud - info.offsetHeight - ctrl.offsetHeight - gap * 3;
+      const availW = VW - padW, availH = VH - padH - hud - info.offsetHeight - ctrl.offsetHeight - gap * 3 - 2;
       bw = use3d ? availW : Math.min(availW, availH * 0.625); bh = use3d ? availH : bw / 0.625;
     }
     board.style.width = Math.floor(bw) + 'px'; board.style.height = Math.floor(bh) + 'px';
