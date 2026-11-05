@@ -3,6 +3,7 @@ name = "neon-bastion-relay"
 main = "worker.js"
 compatibility_date = "2025-09-01"
 workers_dev = true
+preview_urls = false
 
 [[durable_objects.bindings]]
 name = "ROOM"

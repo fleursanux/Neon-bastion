@@ -10413,8 +10413,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.26.3';
+const APP_VERSION = '7.27.0';
 const CHANGELOG = [
+  { v: '7.27.0', date: '05.11.2026', items: ['Multijoueur : ton propre serveur de mise en relation sur Cloudflare (gratuit). Chaque code de partie ouvre un salon privé : les deux téléphones s’y retrouvent, et il sert de relais quand la connexion directe est impossible. PeerJS et MQTT restent en secours.', 'Test de connexion : nouvelle ligne « Ton serveur Cloudflare ».'] },
   { v: '7.26.3', date: '05.11.2026', items: ['Multijoueur : second service de mise en relation (MQTT, gratuit) utilisé en même temps que PeerJS. Si l’un ne transmet pas les messages entre les deux téléphones, l’autre prend le relais, y compris pour le relais de secours en partie.', 'Multijoueur : les écrans d’attente affichent chaque étape de la connexion (demande envoyée, réponse reçue, par quel service), et l’écran d’erreur les garde pour une capture.', 'Test de connexion : vérifie aussi le service de secours.'] },
   { v: '7.26.2', date: '05.11.2026', items: ['Multijoueur : au retour dans le jeu après l’envoi du code, la partie de l’hôte restait injoignable (le service ne confirmait pas la reprise). Corrigé : la liaison est rouverte tout de suite.', 'Multijoueur : si iOS recharge la page pendant l’envoi du code, la partie se rouvre avec le même code.', 'Multijoueur : l’ami attend jusqu’à 90 s et voit quand le créateur n’est pas joignable.', 'Test de connexion : vérifie l’échange réel de messages ; le relais TURN gratuit, hors service, est retiré.'] },
   { v: '7.26.1', date: '05.11.2026', items: ['Multijoueur : sur iPhone, envoyer le code par message coupait la partie de l’hôte (Safari en arrière-plan). La connexion se rétablit maintenant toute seule, et l’ami renouvelle sa demande jusqu’à la réponse.', 'Multijoueur : relais de secours quand la connexion directe entre les deux téléphones échoue (réseau mobile trop fermé).', 'Multijoueur : bouton « 🔧 Tester ma connexion » qui vérifie chaque étape et dit laquelle bloque.'] },
@@ -14883,6 +14884,35 @@ class MqLink {
   close() { this.want = false; this.ready = false; clearInterval(this.pi); clearTimeout(this.rt); const ws = this.ws; this.ws = null; if (ws) { try { ws.send(new Uint8Array([0xE0, 0])); ws.close(); } catch (e) {} } }
 }
 
+/* Serveur de mise en relation à toi, installé sur ton compte Cloudflare (dossier relay/ du dépôt).
+   Chaque code de partie est un salon ; c'est le canal principal, PeerJS et MQTT restent en secours. */
+const CF_RELAY = 'https://neon-bastion-relay.antoinemalroux.workers.dev';
+class CfLink {
+  constructor(base, room, id, onMsg, onReady) { this.kind = 'cf'; this.base = base; this.room = room; this.id = id; this.onMsg = onMsg; this.onReady = onReady; this.want = true; this.ready = false; this.fails = 0; this.open(); }
+  open() {
+    if (!this.want) return;
+    let ws; try { ws = this.ws = new WebSocket(`${this.base}/ws?room=${encodeURIComponent(this.room)}&id=${encodeURIComponent(this.id)}`); } catch (e) { this.retry(); return; }
+    this.ready = false;
+    ws.onmessage = e => {
+      if (ws !== this.ws) return;
+      let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.type === 'OPEN') {
+        this.ready = true; this.fails = 0; clearInterval(this.pi);
+        this.pi = setInterval(() => { try { ws.send('{"type":"HEARTBEAT"}'); } catch (x) {} }, 20000);
+        if (this.onReady) this.onReady(this); return;
+      }
+      if (m.type === 'HB') return;
+      if (this.onMsg) this.onMsg(m);
+    };
+    ws.onclose = () => { if (ws !== this.ws) return; this.ready = false; clearInterval(this.pi); this.retry(); };
+    ws.onerror = () => {};
+  }
+  retry() { if (!this.want) return; this.fails++; clearTimeout(this.rt); this.rt = setTimeout(() => this.open(), Math.min(10000, 1000 * this.fails)); }
+  pub(topic, text) { if (!this.ready || !this.ws || this.ws.readyState !== 1) return false; try { this.ws.send(text); return true; } catch (e) { return false; } }
+  kick() { if (this.want && !this.ready && (!this.ws || this.ws.readyState > 1)) { clearTimeout(this.rt); this.open(); } }
+  close() { this.want = false; this.ready = false; clearInterval(this.pi); clearTimeout(this.rt); const ws = this.ws; this.ws = null; if (ws) { try { ws.close(); } catch (e) {} } }
+}
+
 const Net = {
   ws: null, pc: null, dc: null, id: null, token: null, remote: null, hb: null, sid: null, connected: false, relay: false, pend: [], sigQ: [],
   onOpen: null, onMsg: null, onClose: null, onFail: null, onKnock: null, onWait: null, onTrace: null, mqs: [], kseq: 0, seen: new Set(), logs: [], last: 0, want: false, offer: null, answer: null,
@@ -14899,12 +14929,23 @@ const Net = {
     return this.local() ? [] : MQ_BROKERS;
   },
   topic(id) { return 'neonbastion/v1/' + id; },
+  cfBase() {
+    let q = null; try { q = new URLSearchParams(location.search).get('cf'); } catch (e) {}
+    if (q) return 'ws://' + q;
+    return CF_RELAY ? CF_RELAY.replace(/^http/, 'ws').replace(/\/$/, '') : '';
+  },
   log(t) { this.logs.push(t); if (this.logs.length > 12) this.logs.shift(); if (this.onTrace) this.onTrace(t, this.logs); },
-  chans() { const p = this.ws && this.ws.readyState === 1, m = this.mqs.filter(x => x.ready).length; return `PeerJS ${p ? '✓' : '✗'} · MQTT ${m}/${this.mqs.length}`; },
+  chans() {
+    const p = this.ws && this.ws.readyState === 1, mq = this.mqs.filter(x => x.kind !== 'cf'), cf = this.mqs.find(x => x.kind === 'cf');
+    return (cf ? `Cloudflare ${cf.ready ? '✓' : '✗'} · ` : '') + `PeerJS ${p ? '✓' : '✗'} · MQTT ${mq.filter(x => x.ready).length}/${mq.length}`;
+  },
   /* Tous les canaux de présentation : PeerJS + MQTT. Il suffit que l'un d'eux fonctionne. */
   async connect(id, tok) {
     const ready = new Promise(res => {
-      this.mqs = this.brokers().map(u => new MqLink(u, this.topic(id), m => this.recv(m, 'MQTT'), () => { res(); this.flushQ(); }));
+      const ok = () => { res(); this.flushQ(); };
+      this.mqs = this.brokers().map(u => new MqLink(u, this.topic(id), m => this.recv(m, 'MQTT'), ok));
+      const cf = this.cfBase();
+      if (cf && this.room) this.mqs.unshift(new CfLink(cf, this.room, id, m => this.recv(m, 'Cloudflare'), ok));
       if (!this.mqs.length) res();
     });
     try { await this.openSig(id, tok); }
@@ -15052,9 +15093,10 @@ const Net = {
       else if (this.onWait) this.onWait();   // l'hôte n'est pas joignable en ce moment (téléphone en veille, jeu en arrière-plan) : on continue d'envoyer la demande
     }
   },
-  async host(code, tok) { this.reset(); this.role = 'host'; this.want = true; await this.connect('neonbastion-' + code, tok); },
+  async host(code, tok) { this.reset(); this.role = 'host'; this.want = true; this.room = code; await this.connect('neonbastion-' + code, tok); },
   async join(code) {
     this.reset(); this.role = 'guest'; this.want = true;
+    this.room = code;
     await this.connect('neonbastion-g' + Math.random().toString(36).slice(2, 10));
     this.remote = 'neonbastion-' + code; this.sid = Math.random().toString(36).slice(2, 10);
     const pc = await this.makePc();
@@ -15107,6 +15149,19 @@ const Net = {
       step(relayOk, 'Échange de messages (relais de secours)', 'Les messages ne passent pas par le service : la partie ne pourra pas se connecter sur ce réseau. Essaie en Wi-Fi ou en 4G/5G.');
     }
     for (const w of [a, b]) if (w) { try { w.send('{"type":"LEAVE"}'); w.close(); } catch (e) {} }
+    const cfb = this.cfBase(); let cfOk = false;
+    if (cfb) {
+      const room = 'test' + Math.random().toString(36).slice(2, 8), ia = 'a' + Math.random().toString(36).slice(2, 8);
+      const okc = await new Promise(done => {
+        let la = null, lb = null; const end = v => { clearTimeout(to); if (la) la.close(); if (lb) lb.close(); done(v); };
+        const to = setTimeout(() => end(false), 9000);
+        la = new CfLink(cfb, room, ia, m => { if (m && m.payload && m.payload.ping) end(true); }, () => {
+          lb = new CfLink(cfb, room, 'b' + ia, null, x => x.pub(null, JSON.stringify({ type: 'CANDIDATE', dst: ia, payload: { ping: 1 } })));
+        });
+      });
+      cfOk = okc;
+      step(okc, 'Ton serveur Cloudflare', 'Ton serveur de mise en relation ne répond pas. Les services de secours (PeerJS, MQTT) sont utilisés à la place.', relayOk);
+    }
     const br = this.brokers();
     if (br.length) {
       const tp = this.topic('t' + Math.random().toString(36).slice(2, 9));
@@ -15115,8 +15170,8 @@ const Net = {
         l = new MqLink(u, tp, m => { if (m && m.ping) { clearTimeout(to); l.close(); done(true); } }, x => x.pub(tp, '{"ping":1}'));
       })));
       const n = res.filter(Boolean).length, ok2 = n > 0;
-      step(ok2, `Service de secours (MQTT) : ${n}/${br.length}`, 'Les services de secours ne répondent pas sur ce réseau. Le service principal (PeerJS) reste utilisé.', relayOk);
-      if (ok2 && !relayOk) for (const o of out) if (/PeerJS|Échange/.test(o.label)) o.opt = true;
+      step(ok2, `Service de secours (MQTT) : ${n}/${br.length}`, 'Les services de secours ne répondent pas sur ce réseau. Le service principal (PeerJS) reste utilisé.', relayOk || cfOk);
+      if ((ok2 || cfOk) && !relayOk) for (const o of out) if (/PeerJS|Échange/.test(o.label)) o.opt = true;
       report(out);
     }
     const rtc = typeof RTCPeerConnection === 'function';
