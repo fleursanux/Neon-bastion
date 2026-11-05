@@ -1100,6 +1100,10 @@ body.fsgame .infobar .evchips{margin-top:2px}
 
 /* ---------- Multijoueur ---------- */
 .mprow{display:flex;justify-content:center;margin:4px 0}
+.mpdiag{list-style:none;padding:0;margin:10px 0;display:flex;flex-direction:column;gap:6px;text-align:left}
+.mpdiag li{padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.22);display:flex;flex-direction:column;gap:3px}
+.mpdiag li.ko{background:rgba(224,80,58,.16)}.mpdiag li small{opacity:.85;font-size:.78rem}.mpdiag li.run{flex-direction:row;align-items:center;gap:8px;opacity:.8}
+.mpdiagsum{text-align:center;font-weight:700}
 .mpgo{display:flex;flex-direction:column;gap:10px;margin:12px 0}
 .mpgo .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 12px;width:100%}
 .mpgo .btn b{font-size:1.1rem}.mpgo .btn small{opacity:.8;font-weight:500}
@@ -10408,8 +10412,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.26.0';
+const APP_VERSION = '7.26.1';
 const CHANGELOG = [
+  { v: '7.26.1', date: '05.11.2026', items: ['Multijoueur : sur iPhone, envoyer le code par message coupait la partie de l’hôte (Safari en arrière-plan). La connexion se rétablit maintenant toute seule, et l’ami renouvelle sa demande jusqu’à la réponse.', 'Multijoueur : relais de secours quand la connexion directe entre les deux téléphones échoue (réseau mobile trop fermé).', 'Multijoueur : bouton « 🔧 Tester ma connexion » qui vérifie chaque étape et dit laquelle bloque.'] },
   { v: '7.26.0', date: '04.11.2026', items: ['Coopération revue : une campagne à deux (« opérations ») sur une grande carte 22 × 14 avec deux entrées ou plus. Chacun a sa zone (bleu chez toi, rose chez l’autre), ses tourelles et son or ; chaque ennemi tué et chaque bonus de vague rapportent la somme entière aux deux. Vies et énergie communes.', 'Coopération : 10 tourelles au départ, une de plus par opération réussie (20 au total) ; chacun choisit les siennes. Partie sauvegardée par équipe à chaque vague : on peut la reprendre ou rejouer une opération réussie.', 'Coopération : équipement à part (🎒 dans le salon), gagné en jouant. Le butin se partage à la fin au Shifumi, un coup par objet. Repère 📍 pour montrer un endroit à l’autre.', 'Duel : six renforts fixes débloqués au fil des vagues, chaque envoi augmente ton revenu (versé toutes les 6 s), alerte 3 s avant l’arrivée, vagues lancées automatiquement après 15 s, prolongation sans fin après la dernière vague.', 'Course : 10 vagues au plus, chrono, +5 s par vie perdue, le meilleur temps gagne.', 'Course et Duel : vitesse fixée à ×2, pas de pause, option « Équitable » (sans équipement ni compétences).', 'Récompenses (gemmes), trophées et rangs (Bronze à Néon) en Course et en Duel, liste d’amis pour se retrouver sans code.'] },
   { v: '7.25.0', date: '04.11.2026', items: ['Multijoueur (prototype) : tuile « À deux » sur la carte. Un joueur crée une partie et donne son code de 5 caractères, l’autre le tape. Connexion directe entre les deux téléphones (iPhone ou Android), sans compte.', 'Trois modes : Coopération (même carte, or et vies en commun), Course (même niveau, meilleur score) et Duel (envoi de renforts ennemis chez l’adversaire).', 'Les parties à deux ne touchent pas à la campagne : pas d’étoiles, pas d’objets, la partie solo en cours est conservée.'] },
   { v: '7.24.8', date: '04.11.2026', items: ['Fusion : un objet porté n’est jamais consommé, ni par « Tout fusionner » ni par une fusion manuelle ; s’il fait partie du groupe, c’est lui qui monte de rareté.'] },
@@ -14825,19 +14830,19 @@ const MP_PROTO = 2;
 const COOP_MAX = 30;
 const MP_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const Net = {
-  ws: null, pc: null, dc: null, id: null, remote: null, hb: null, sid: null, connected: false, pend: [],
-  onOpen: null, onMsg: null, onClose: null, onFail: null, last: 0,
+  ws: null, pc: null, dc: null, id: null, token: null, remote: null, hb: null, sid: null, connected: false, relay: false, pend: [], sigQ: [],
+  onOpen: null, onMsg: null, onClose: null, onFail: null, onKnock: null, last: 0, want: false, offer: null, answer: null,
   /* Serveur de mise en relation : le service public de PeerJS (ou un serveur local de test : ?peer=127.0.0.1:9000). */
+  local() { try { return new URLSearchParams(location.search).get('peer'); } catch (e) { return null; } },
   server() {
-    let q = null; try { q = new URLSearchParams(location.search).get('peer'); } catch (e) {}
+    const q = this.local();
     if (q) { const [h, p] = q.split(':'); return `ws://${h}:${p || 9000}/peerjs?key=peerjs`; }
     return 'wss://0.peerjs.com:443/peerjs?key=peerjs';
   },
   /* Serveurs STUN publics + relais TURN gratuit Open Relay (identifiants temporaires calculés sur place). */
-  async ice() {
-    const list = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
-    let q = null; try { q = new URLSearchParams(location.search).get('peer'); } catch (e) {}
-    if (q) return [];   // test local : pas besoin de relais
+  async ice(onlyTurn) {
+    const list = onlyTurn ? [] : [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }];
+    if (this.local()) return [];   // test local : pas besoin de relais
     try {
       const user = Math.floor(Date.now() / 1000 + 8 * 3600) + ':neonbastion', enc = new TextEncoder();
       const k = await crypto.subtle.importKey('raw', enc.encode('openrelayprojectsecret'), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
@@ -14845,82 +14850,168 @@ const Net = {
       let s = ''; for (const c of sig) s += String.fromCharCode(c);
       const h = 'staticauth.openrelay.metered.ca';
       list.push({ urls: [`turn:${h}:80`, `turn:${h}:80?transport=tcp`, `turn:${h}:443`, `turns:${h}:443?transport=tcp`], username: user, credential: btoa(s) });
-    } catch (e) { /* pas de relais : la connexion directe reste possible */ }
+    } catch (e) { /* pas de relais TURN : connexion directe ou relais de secours */ }
     return list;
   },
-  /* Canal de présentation (WebSocket) : sert uniquement à échanger l'offre de connexion. */
+  /* Canal de présentation (WebSocket). Sur iPhone, il est coupé dès que Safari passe en arrière-plan
+     (par exemple pour envoyer le code par message) : on le rouvre automatiquement avec le même identifiant. */
   openSig(id) {
+    if (id !== this.id || !this.token) { this.id = id; this.token = Math.random().toString(36).slice(2, 12); }
     return new Promise((res, rej) => {
       let ws, done = false;
-      try { ws = new WebSocket(`${this.server()}&id=${encodeURIComponent(id)}&token=${Math.random().toString(36).slice(2, 12)}&version=1.5.5`); }
+      try { ws = new WebSocket(`${this.server()}&id=${encodeURIComponent(id)}&token=${this.token}&version=1.5.5`); }
       catch (e) { rej(new Error('Connexion Internet indisponible')); return; }
       const to = setTimeout(() => { if (!done) { done = true; try { ws.close(); } catch (e) {} rej(new Error('Le service de mise en relation ne répond pas. Vérifie ta connexion Internet.')); } }, 12000);
       ws.onmessage = ev => {
         let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
         if (!done) {
-          if (m.type === 'OPEN') { done = true; clearTimeout(to); this.ws = ws; this.id = id; clearInterval(this.hb); this.hb = setInterval(() => { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 5000); res(); return; }
+          if (m.type === 'OPEN') {
+            done = true; clearTimeout(to); this.ws = ws; clearInterval(this.hb);
+            this.hb = setInterval(() => { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 5000);
+            for (const q of this.sigQ.splice(0)) { try { ws.send(q); } catch (e) {} }
+            res(); return;
+          }
           if (m.type === 'ID-TAKEN' || m.type === 'ERROR') { done = true; clearTimeout(to); try { ws.close(); } catch (e) {} rej(Object.assign(new Error(m.type === 'ID-TAKEN' ? 'Code déjà pris' : 'Le service de mise en relation a refusé la connexion'), { code: m.type })); return; }
         }
         this.signal(m);
       };
       ws.onerror = () => { if (!done) { done = true; clearTimeout(to); rej(new Error('Impossible de joindre le service de mise en relation. Vérifie ta connexion Internet.')); } };
-      ws.onclose = () => { if (this.ws === ws) { this.ws = null; clearInterval(this.hb); } };
+      ws.onclose = () => { if (this.ws === ws) { this.ws = null; clearInterval(this.hb); this.reopenSoon(); } };
     });
   },
-  closeSig() { clearInterval(this.hb); if (this.ws) { try { this.ws.send(JSON.stringify({ type: 'LEAVE' })); this.ws.close(); } catch (e) {} } this.ws = null; },
-  sig(type, payload) { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify({ type, payload, dst: this.remote })); },
+  reopenSoon(delay) {
+    clearTimeout(this.reT);
+    if (!this.want || !this.id || (this.connected && !this.relay)) return;
+    this.reT = setTimeout(() => { if (this.want && !this.ws && document.visibilityState !== 'hidden') this.openSig(this.id).catch(() => this.reopenSoon(3000)); }, delay || 800);
+  },
+  closeSig() { clearInterval(this.hb); clearTimeout(this.reT); const ws = this.ws; this.ws = null; if (ws) { try { ws.send(JSON.stringify({ type: 'LEAVE' })); ws.close(); } catch (e) {} } },
+  sig(type, payload) {
+    const s = JSON.stringify({ type, payload, dst: this.remote });
+    if (this.ws && this.ws.readyState === 1) { try { this.ws.send(s); return true; } catch (e) {} }
+    if (type !== 'CANDIDATE' || (payload && payload.rl)) { this.sigQ.push(s); if (this.sigQ.length > 60) this.sigQ.shift(); }
+    this.reopenSoon(0);
+    return false;
+  },
   async makePc() {
     const pc = this.pc = new RTCPeerConnection({ iceServers: await this.ice() });
-    pc.onicecandidate = e => { if (e.candidate) this.sig('CANDIDATE', { c: e.candidate.toJSON ? e.candidate.toJSON() : { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex }, sid: this.sid }); };
-    pc.onconnectionstatechange = () => { if (pc !== this.pc) return; const s = pc.connectionState; if (s === 'failed') this.fail(this.connected ? 'Connexion perdue' : 'La connexion directe a échoué : un des deux réseaux bloque. Essayez en Wi-Fi.'); };
+    pc.onicecandidate = e => { if (e.candidate && pc === this.pc) this.sig('CANDIDATE', { c: e.candidate.toJSON ? e.candidate.toJSON() : { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex }, sid: this.sid }); };
+    pc.onconnectionstatechange = () => { if (pc !== this.pc) return; const s = pc.connectionState; if (s === 'failed') { if (this.connected && !this.relay) this.lostDc(); else this.startRelay(); } };
     pc.ondatachannel = e => this.bindDc(e.channel);
     return pc;
   },
   bindDc(dc) {
     this.dc = dc;
-    dc.onopen = () => { clearTimeout(this.cto); this.connected = true; this.last = performance.now(); if (this.onOpen) this.onOpen(); setTimeout(() => this.closeSig(), 3000); };
+    dc.onopen = () => { if (this.relay) return; clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); this.connected = true; this.last = performance.now(); if (this.onOpen) this.onOpen(); setTimeout(() => { if (!this.relay) this.closeSig(); }, 3000); };
     dc.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } this.last = performance.now(); if (this.onMsg) this.onMsg(m); };
-    dc.onclose = () => { if (this.dc !== dc) return; const was = this.connected; this.connected = false; if (was && this.onClose) this.onClose(); };
+    dc.onclose = () => { if (this.dc === dc && !this.relay) this.lostDc(); };
   },
+  lostDc() { const was = this.connected; this.connected = false; if (was && this.onClose) this.onClose(); },
+  /* Relais de secours : si la connexion directe échoue (réseau mobile trop fermé), les messages passent par le service de mise en relation. */
+  startRelay() {
+    if (this.relay || !this.remote || !this.want) return;
+    this.relay = true;
+    clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint);
+    try { if (this.pc) this.pc.close(); } catch (e) {} this.pc = null; this.dc = null;
+    this.sig('CANDIDATE', { rl: 1 });
+    if (!this.connected) { this.connected = true; this.last = performance.now(); if (this.onOpen) this.onOpen(); }
+  },
+  armRelay() { clearTimeout(this.rto); this.rto = setTimeout(() => { if (!this.connected) this.startRelay(); }, 12000); },
   async addCand(c) { try { if (this.pc && this.pc.remoteDescription) await this.pc.addIceCandidate(c); else this.pend.push(c); } catch (e) {} },
   async flushCand() { const p = this.pend.splice(0); for (const c of p) { try { await this.pc.addIceCandidate(c); } catch (e) {} } },
   async signal(m) {
     const pl = m.payload || {};
+    if (pl.rl && m.src === this.remote) {   // message du relais de secours
+      if (!this.relay) { this.relay = true; clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); try { if (this.pc) this.pc.close(); } catch (e) {} this.pc = null; this.dc = null; }
+      if (!this.connected) { this.connected = true; if (this.onOpen) this.onOpen(); }
+      this.last = performance.now();
+      if (pl.m && this.onMsg) this.onMsg(pl.m);
+      return;
+    }
     if (m.type === 'OFFER' && this.role === 'host') {
-      if (this.pc) { if (m.src !== this.remote) { const keep = this.remote; this.remote = m.src; this.sig('LEAVE', {}); this.remote = keep; } return; }   // partie déjà pleine
+      if (this.pc || this.relay) {
+        if (m.src === this.remote && pl.sid === this.sid && this.answer) this.sig('ANSWER', this.answer);   // l'invité n'a pas reçu la réponse : on la renvoie
+        else if (m.src !== this.remote) { const keep = this.remote; this.remote = m.src; this.sig('LEAVE', {}); this.remote = keep; }   // partie déjà pleine
+        return;
+      }
       this.remote = m.src; this.sid = pl.sid;
       try {
         const pc = await this.makePc();
         await pc.setRemoteDescription(pl.sdp); await this.flushCand();
         await pc.setLocalDescription(await pc.createAnswer());
-        this.sig('ANSWER', { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid });
+        this.answer = { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid };
+        this.sig('ANSWER', this.answer);
+        this.armRelay();
         if (this.onKnock) this.onKnock();
-      } catch (e) { this.fail('La connexion a échoué'); }
-    } else if (m.type === 'ANSWER' && this.role === 'guest' && this.pc && !this.pc.remoteDescription) {
-      try { await this.pc.setRemoteDescription(pl.sdp); await this.flushCand(); } catch (e) { this.fail('La connexion a échoué'); }
+      } catch (e) { this.startRelay(); }
+    } else if (m.type === 'ANSWER' && this.role === 'guest' && this.pc && !this.pc.remoteDescription && pl.sid === this.sid) {
+      clearInterval(this.oint);
+      try { await this.pc.setRemoteDescription(pl.sdp); await this.flushCand(); this.armRelay(); } catch (e) { this.startRelay(); }
     } else if (m.type === 'CANDIDATE' && pl.c && m.src === this.remote) this.addCand(pl.c);
-    else if ((m.type === 'LEAVE' || m.type === 'EXPIRE') && !this.connected && this.role === 'guest' && m.src === this.remote) this.fail(m.type === 'EXPIRE' ? 'Aucune partie ne correspond à ce code.' : 'Cette partie est déjà complète.');
+    else if ((m.type === 'LEAVE' || m.type === 'EXPIRE') && !this.connected && this.role === 'guest' && m.src === this.remote) {
+      if (m.type === 'LEAVE') this.fail('Cette partie est déjà complète.');
+      // EXPIRE : l'hôte n'était pas joignable à ce moment-là ; on continue d'envoyer la demande
+    }
   },
-  async host(code) { this.reset(); this.role = 'host'; await this.openSig('neonbastion-' + code); },
+  async host(code) { this.reset(); this.role = 'host'; this.want = true; await this.openSig('neonbastion-' + code); },
   async join(code) {
-    this.reset(); this.role = 'guest';
+    this.reset(); this.role = 'guest'; this.want = true;
     await this.openSig('neonbastion-g' + Math.random().toString(36).slice(2, 10));
     this.remote = 'neonbastion-' + code; this.sid = Math.random().toString(36).slice(2, 10);
     const pc = await this.makePc();
     this.bindDc(pc.createDataChannel('nb', { ordered: true }));
     await pc.setLocalDescription(await pc.createOffer());
-    this.sig('OFFER', { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid, type: 'data' });
-    this.cto = setTimeout(() => { if (!this.connected) this.fail('Personne ne répond à ce code. Vérifie le code et que ton ami attend bien sur l’écran de création.'); }, 20000);
+    this.offer = { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid, type: 'data' };
+    this.sig('OFFER', this.offer);
+    // L'hôte a pu être coupé un instant (iPhone en arrière-plan) : on renouvelle la demande jusqu'à la réponse
+    clearInterval(this.oint); this.oint = setInterval(() => { if (!this.connected && this.pc && !this.pc.remoteDescription) this.sig('OFFER', this.offer); }, 4000);
+    this.cto = setTimeout(() => { if (!this.connected) this.fail('Personne ne répond à ce code. Vérifie le code, et que ton ami garde le jeu ouvert sur l’écran « Ta partie est prête ».'); }, 45000);
   },
-  send(o) { if (this.dc && this.dc.readyState === 'open') { if (o.t === 'snap' && this.dc.bufferedAmount > 256e3) return false; try { this.dc.send(JSON.stringify(o)); return true; } catch (e) {} } return false; },
+  send(o) {
+    if (this.relay) { if (!this.connected) return false; return this.sig('CANDIDATE', { rl: 2, m: o }) || o.t !== 'snap'; }
+    if (this.dc && this.dc.readyState === 'open') { if (o.t === 'snap' && this.dc.bufferedAmount > 256e3) return false; try { this.dc.send(JSON.stringify(o)); return true; } catch (e) {} }
+    return false;
+  },
   fail(msg) { const f = this.onFail; this.close(); if (f) f(msg); },
-  reset() { this.close(); this.pend = []; },
+  reset() { this.close(); this.pend = []; this.sigQ = []; this.relay = false; this.offer = null; this.answer = null; this.token = null; this.id = null; },
   close() {
-    clearTimeout(this.cto); this.closeSig();
-    const dc = this.dc, pc = this.pc; this.dc = null; this.pc = null; this.connected = false; this.remote = null;
+    this.want = false;
+    clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); this.closeSig();
+    const dc = this.dc, pc = this.pc; this.dc = null; this.pc = null; this.connected = false; this.remote = null; this.relay = false;
     try { if (dc) dc.close(); } catch (e) {} try { if (pc) pc.close(); } catch (e) {}
+  },
+  /* Diagnostic : chaque étape de la connexion, testée à part. */
+  async test(report) {
+    const out = [], step = (ok, label, hint) => { out.push({ ok, label, hint }); report(out); };
+    step(navigator.onLine !== false, 'Connexion Internet', 'Le téléphone ne semble pas connecté à Internet.');
+    let sigOk = false;
+    try {
+      await new Promise((res, rej) => {
+        const ws = new WebSocket(`${this.server()}&id=neonbastion-t${Math.random().toString(36).slice(2, 9)}&token=${Math.random().toString(36).slice(2, 9)}&version=1.5.5`);
+        const to = setTimeout(() => { try { ws.close(); } catch (e) {} rej(); }, 9000);
+        ws.onmessage = ev => { try { const m = JSON.parse(ev.data); if (m.type === 'OPEN') { clearTimeout(to); ws.close(); res(); } else { clearTimeout(to); ws.close(); rej(); } } catch (e) {} };
+        ws.onerror = () => { clearTimeout(to); rej(); };
+      });
+      sigOk = true;
+    } catch (e) {}
+    step(sigOk, 'Service de mise en relation (PeerJS)', 'Le service gratuit qui échange les codes ne répond pas : il est peut-être en panne, ou bloqué par le réseau (Wi-Fi d’entreprise, VPN, bloqueur). Réessaie plus tard ou sur un autre réseau.');
+    const rtc = typeof RTCPeerConnection === 'function';
+    step(rtc, 'Connexion directe (WebRTC)', 'Ce navigateur ne gère pas WebRTC. Mets iOS ou le navigateur à jour.');
+    if (!rtc) return out;
+    const gather = async (servers, policy) => {
+      const pc = new RTCPeerConnection({ iceServers: servers, iceTransportPolicy: policy || 'all' }), types = new Set();
+      pc.onicecandidate = e => { if (e.candidate && e.candidate.candidate) { const t = / typ (\w+)/.exec(e.candidate.candidate); if (t) types.add(t[1]); } };
+      pc.createDataChannel('t'); await pc.setLocalDescription(await pc.createOffer());
+      await new Promise(r => { const to = setTimeout(r, 6000); pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') { clearTimeout(to); r(); } }; });
+      pc.close(); return types;
+    };
+    try { const t = await gather((await this.ice()).slice(0, 1)); step(t.has('srflx'), 'Adresse publique (STUN)', 'Le téléphone ne trouve pas son adresse publique : la connexion directe sera difficile. Le relais de secours prendra le relais.'); }
+    catch (e) { step(false, 'Adresse publique (STUN)', 'Test impossible sur ce navigateur.'); }
+    try { const t = await gather(await this.ice(true), 'relay'); step(t.has('relay'), 'Relais TURN gratuit (Open Relay)', 'Le relais TURN gratuit ne répond pas. Si la connexion directe échoue, les messages passeront par le relais de secours (plus lent).'); }
+    catch (e) { step(false, 'Relais TURN gratuit (Open Relay)', 'Test impossible sur ce navigateur.'); }
+    return out;
   }
 };
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Net.want && !Net.ws && (!Net.connected || Net.relay)) Net.reopenSoon(0); });
 
 const MP_MODES = {
   coop: { name: 'Coopération', icon: '🤝', desc: 'Votre campagne à deux sur une grande carte. Chacun sa zone et ses tourelles, chaque ennemi tué rapporte la même somme aux deux. Vies et énergie communes. Le butin se partage au Shifumi.' },
@@ -15011,11 +15102,29 @@ const Multi = {
       (fr.length ? `<p class="eyebrow" style="text-align:center;margin:8px 0 4px">Tes amis</p><div class="mpfriends">${fr.map(f => `<button type="button" class="btn small" data-friend="${esc(f.pid)}">👥 ${esc(f.name)}</button>`).join('')}</div>` : '') +
       `<div class="mpgo"><button class="btn primary" type="button" id="mpCreate"><b>Créer une partie</b><small>Tu reçois un code à donner à ton ami</small></button>` +
       `<button class="btn" type="button" id="mpJoin"><b>Rejoindre</b><small>Entre le code de ton ami</small></button></div>` +
+      `<div class="mprow"><button class="btn small" type="button" id="mpTest">🔧 Tester ma connexion</button></div>` +
       `<p class="hint" style="text-align:center">Les parties à deux ont leurs propres récompenses (gemmes, trophées, butin de coopération) et ne touchent pas à ta partie de campagne en cours.</p>`,
       actions: [{ label: 'Fermer' }] });
     $('mpCreate').onclick = () => this.create();
     $('mpJoin').onclick = () => this.joinForm();
+    $('mpTest').onclick = () => this.diag();
     $('modalCard').querySelectorAll('[data-friend]').forEach(b => { b.onclick = () => this.withFriend(b.dataset.friend); });
+  },
+  /* Diagnostic de connexion, étape par étape. */
+  diag() {
+    const show = (list, done) => {
+      if ($('modal').hidden || !$('mpDiag')) return;
+      $('mpDiag').innerHTML = list.map(r => `<li class="${r.ok ? 'ok' : 'ko'}"><b>${r.ok ? '✅' : '❌'} ${esc(r.label)}</b>${r.ok ? '' : `<small>${esc(r.hint)}</small>`}</li>`).join('') + (done ? '' : '<li class="run"><i class="mpspin"></i> Test en cours…</li>');
+    };
+    Modal.open({ title: 'Tester ma connexion', html: `<p class="hint" style="text-align:center">Quelques secondes : on vérifie chaque étape de la liaison entre les deux téléphones.</p><ul class="mpdiag" id="mpDiag"></ul>`,
+      actions: [{ label: 'Retour', fn: () => setTimeout(() => this.open(), 30) }] });
+    show([], false);
+    Net.test(list => show(list, false)).then(list => {
+      show(list, true);
+      const bad = list.filter(r => !r.ok).map(r => r.label);
+      const sum = !bad.length ? 'Tout est bon de ton côté. Si la partie ne se connecte pas, fais faire le test à ton ami.' : bad.length === 1 && /TURN|STUN/.test(bad[0]) ? 'La partie devrait fonctionner : si la connexion directe échoue, le relais de secours prend la main.' : 'Fais une capture d’écran de ce résultat et envoie-la : elle montre exactement l’étape qui bloque.';
+      if ($('mpDiag')) $('mpDiag').insertAdjacentHTML('afterend', `<p class="mpdiagsum">${esc(sum)}</p>`);
+    });
   },
   wait(title, text, cancel) {
     Modal.open({ title, html: `<div class="mpwait"><i class="mpspin"></i><p id="mpWaitTxt">${esc(text)}</p></div>`, actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; if (cancel) cancel(); } }] });
@@ -15042,7 +15151,7 @@ const Multi = {
     if ($('modal').hidden) { Net.close(); return; }   // annulé entre-temps
     const share = `Rejoins ma partie Neon Bastion à deux : code ${this.code}`;
     Modal.open({ title: 'Ta partie est prête', html:
-      `<p class="hint" style="text-align:center">Donne ce code à ton ami. Il touche « Rejoindre » et le tape.</p><div class="mpcode" id="mpCode">${this.code}</div>` +
+      `<p class="hint" style="text-align:center">Donne ce code à ton ami. Il touche « Rejoindre » et le tape. Tu peux l’envoyer par message puis revenir ici : la partie t’attend.</p><div class="mpcode" id="mpCode">${this.code}</div>` +
       `<div class="mprow"><button class="btn small" type="button" id="mpShare">${navigator.share ? 'Partager le code' : 'Copier le code'}</button></div>` +
       `<div class="mpwait"><i class="mpspin"></i><p id="mpHostSt">En attente de ton ami…</p></div>`,
       actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; } }] });
@@ -15272,7 +15381,7 @@ const Multi = {
     if (g.mode === 'coop') {
       if (g.host && !b.multi.solo) {
         this.snapT -= real;
-        if (this.snapT <= 0) { this.snapT = 0.15; this.send({ t: 'snap', ...this.snap(b) }); }
+        if (this.snapT <= 0) { this.snapT = Net.relay ? 0.35 : 0.15; this.send({ t: 'snap', ...this.snap(b) }); }
         if (this.outbox.length) this.send({ t: 'ev', e: this.outbox.splice(0) });
       }
       if (g.host && b.state === 'build' && b.wave > 0 && g.savedW !== b.wave) { g.savedW = b.wave; this.coopSaveRun(b); }
@@ -15295,7 +15404,7 @@ const Multi = {
   bar(b, force) {
     const el = $('mpBar'); if (!el || !this.game) return;
     const g = this.game, o = this.opp, warn = this.linked && Net.last && performance.now() - Net.last > 9000, off = !this.linked;
-    const net = off ? '<i class="mpnet off">hors ligne</i>' : warn ? '<i class="mpnet warn">connexion instable</i>' : `<i class="mpnet">${this.ping ? this.ping + ' ms' : 'connecté'}</i>`;
+    const net = off ? '<i class="mpnet off">hors ligne</i>' : warn ? '<i class="mpnet warn">connexion instable</i>' : `<i class="mpnet">${Net.relay ? 'relais · ' : ''}${this.ping ? this.ping + ' ms' : 'connecté'}</i>`;
     let h;
     if (g.mode === 'coop') {
       const mate = b.coop ? b.wallet[b.me === 'h' ? 'g' : 'h'] : 0;
