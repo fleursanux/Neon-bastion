@@ -21,7 +21,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then echo "::error::Secrets CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID manquants"; exit 1; fi
-          npx --yes wrangler@4 deploy 2>&1 | tee deploy.log
+          set -o pipefail
+          # juste après la création, l'API peut répondre « Worker inexistant » : on réessaie
+          for i in 1 2 3; do npx --yes wrangler@4 deploy 2>&1 | tee deploy.log && break; [ $i = 3 ] && exit 1; sleep 10; done
           grep -o 'https://[a-z0-9.-]*workers.dev' deploy.log | head -1 > url.txt || true
           echo "Adresse du serveur : $(cat url.txt)"
       - name: Vérifier
