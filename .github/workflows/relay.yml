@@ -1,0 +1,31 @@
+# Installe le serveur de mise en relation multijoueur sur le compte Cloudflare (offre gratuite).
+# Secrets nécessaires : CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID.
+name: Serveur multijoueur
+on:
+  push:
+    branches: [main]
+    paths: ['relay/**', '.github/workflows/relay.yml']
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer sur Cloudflare
+        working-directory: relay
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then echo "::error::Secrets CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID manquants"; exit 1; fi
+          npx --yes wrangler@4 deploy 2>&1 | tee deploy.log
+          grep -o 'https://[a-z0-9.-]*workers.dev' deploy.log | head -1 > url.txt || true
+          echo "Adresse du serveur : $(cat url.txt)"
+      - name: Vérifier
+        working-directory: relay
+        run: |
+          U=$(cat url.txt); [ -n "$U" ] || exit 0
+          for i in 1 2 3 4 5 6; do curl -fsS "$U" && exit 0; sleep 5; done; exit 1
