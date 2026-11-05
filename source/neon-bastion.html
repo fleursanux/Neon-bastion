@@ -1100,6 +1100,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
 
 /* ---------- Multijoueur ---------- */
 .mprow{display:flex;justify-content:center;margin:4px 0}
+.mptrace{list-style:none;margin:10px 0 0;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.22);font-size:.72rem;line-height:1.45;color:#a9b6d8;max-height:150px;overflow:auto}.mptrace:empty{display:none}.mptrace li::before{content:'› ';color:#3ef2c8}
 .mpdiag{list-style:none;padding:0;margin:10px 0;display:flex;flex-direction:column;gap:6px;text-align:left}
 .mpdiag li{padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.22);display:flex;flex-direction:column;gap:3px}
 .mpdiag li.ko{background:rgba(224,80,58,.16)}.mpdiag li small{opacity:.85;font-size:.78rem}.mpdiag li.run{flex-direction:row;align-items:center;gap:8px;opacity:.8}
@@ -10412,8 +10413,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.26.2';
+const APP_VERSION = '7.26.3';
 const CHANGELOG = [
+  { v: '7.26.3', date: '05.11.2026', items: ['Multijoueur : second service de mise en relation (MQTT, gratuit) utilisé en même temps que PeerJS. Si l’un ne transmet pas les messages entre les deux téléphones, l’autre prend le relais, y compris pour le relais de secours en partie.', 'Multijoueur : les écrans d’attente affichent chaque étape de la connexion (demande envoyée, réponse reçue, par quel service), et l’écran d’erreur les garde pour une capture.', 'Test de connexion : vérifie aussi le service de secours.'] },
   { v: '7.26.2', date: '05.11.2026', items: ['Multijoueur : au retour dans le jeu après l’envoi du code, la partie de l’hôte restait injoignable (le service ne confirmait pas la reprise). Corrigé : la liaison est rouverte tout de suite.', 'Multijoueur : si iOS recharge la page pendant l’envoi du code, la partie se rouvre avec le même code.', 'Multijoueur : l’ami attend jusqu’à 90 s et voit quand le créateur n’est pas joignable.', 'Test de connexion : vérifie l’échange réel de messages ; le relais TURN gratuit, hors service, est retiré.'] },
   { v: '7.26.1', date: '05.11.2026', items: ['Multijoueur : sur iPhone, envoyer le code par message coupait la partie de l’hôte (Safari en arrière-plan). La connexion se rétablit maintenant toute seule, et l’ami renouvelle sa demande jusqu’à la réponse.', 'Multijoueur : relais de secours quand la connexion directe entre les deux téléphones échoue (réseau mobile trop fermé).', 'Multijoueur : bouton « 🔧 Tester ma connexion » qui vérifie chaque étape et dit laquelle bloque.'] },
   { v: '7.26.0', date: '04.11.2026', items: ['Coopération revue : une campagne à deux (« opérations ») sur une grande carte 22 × 14 avec deux entrées ou plus. Chacun a sa zone (bleu chez toi, rose chez l’autre), ses tourelles et son or ; chaque ennemi tué et chaque bonus de vague rapportent la somme entière aux deux. Vies et énergie communes.', 'Coopération : 10 tourelles au départ, une de plus par opération réussie (20 au total) ; chacun choisit les siennes. Partie sauvegardée par équipe à chaque vague : on peut la reprendre ou rejouer une opération réussie.', 'Coopération : équipement à part (🎒 dans le salon), gagné en jouant. Le butin se partage à la fin au Shifumi, un coup par objet. Repère 📍 pour montrer un endroit à l’autre.', 'Duel : six renforts fixes débloqués au fil des vagues, chaque envoi augmente ton revenu (versé toutes les 6 s), alerte 3 s avant l’arrivée, vagues lancées automatiquement après 15 s, prolongation sans fin après la dernière vague.', 'Course : 10 vagues au plus, chrono, +5 s par vie perdue, le meilleur temps gagne.', 'Course et Duel : vitesse fixée à ×2, pas de pause, option « Équitable » (sans équipement ni compétences).', 'Récompenses (gemmes), trophées et rangs (Bronze à Néon) en Course et en Duel, liste d’amis pour se retrouver sans code.'] },
@@ -14831,15 +14833,104 @@ const Tuto = {
 const MP_PROTO = 2;
 const COOP_MAX = 30;
 const MP_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+/* Second canal de mise en relation, utilisé en même temps que PeerJS : des courtiers MQTT publics et gratuits
+   (WebSocket). Si l'un des services ne transmet pas les messages entre les deux téléphones, l'autre prend le relais. */
+const MQ_BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt'];
+class MqLink {
+  constructor(url, topic, onMsg, onReady) { this.url = url; this.topic = topic; this.onMsg = onMsg; this.onReady = onReady; this.want = true; this.ready = false; this.fails = 0; this.open(); }
+  static rl(n) { const o = []; do { let d = n % 128; n = Math.floor(n / 128); if (n) d |= 128; o.push(d); } while (n); return o; }
+  static str(s) { const b = new TextEncoder().encode(s); return [b.length >> 8, b.length & 255, ...b]; }
+  static pkt(t, body) { return new Uint8Array([t, ...MqLink.rl(body.length), ...body]); }
+  open() {
+    if (!this.want) return;
+    let ws; try { ws = this.ws = new WebSocket(this.url, ['mqtt']); } catch (e) { this.retry(); return; }
+    ws.binaryType = 'arraybuffer'; this.buf = new Uint8Array(0); this.ready = false;
+    const cid = 'nb' + Math.random().toString(36).slice(2, 12);
+    ws.onopen = () => { try { ws.send(MqLink.pkt(0x10, [...MqLink.str('MQTT'), 4, 2, 0, 60, ...MqLink.str(cid)])); } catch (e) {} };
+    ws.onmessage = e => { if (ws === this.ws) this.data(new Uint8Array(e.data)); };
+    ws.onclose = () => { if (ws !== this.ws) return; this.ready = false; clearInterval(this.pi); this.retry(); };
+    ws.onerror = () => {};
+  }
+  retry() { if (!this.want) return; this.fails++; clearTimeout(this.rt); this.rt = setTimeout(() => this.open(), Math.min(10000, 1500 * this.fails)); }
+  data(chunk) {
+    const b = new Uint8Array(this.buf.length + chunk.length); b.set(this.buf); b.set(chunk, this.buf.length); this.buf = b;
+    for (;;) {
+      const bf = this.buf; if (bf.length < 2) return;
+      let n = 0, mul = 1, i = 1, d;
+      do { if (i >= bf.length) return; d = bf[i++]; n += (d & 127) * mul; mul *= 128; } while (d & 128);
+      if (bf.length < i + n) return;
+      const t = bf[0], body = bf.subarray(i, i + n); this.buf = bf.slice(i + n);
+      const k = t >> 4;
+      if (k === 2) {   // CONNACK
+        if (body[1] !== 0) { try { this.ws.close(); } catch (e) {} return; }
+        try { this.ws.send(MqLink.pkt(0x82, [0, 1, ...MqLink.str(this.topic), 0])); } catch (e) {}
+      } else if (k === 9) {   // SUBACK : prêt
+        this.ready = true; this.fails = 0; clearInterval(this.pi);
+        this.pi = setInterval(() => { try { this.ws.send(new Uint8Array([0xC0, 0])); } catch (e) {} }, 20000);
+        if (this.onReady) this.onReady(this);
+      } else if (k === 3) {   // PUBLISH
+        const tl = (body[0] << 8) | body[1]; let p = 2 + tl; if ((t >> 1) & 3) p += 2;
+        let m; try { m = JSON.parse(new TextDecoder().decode(body.subarray(p))); } catch (e) { continue; }
+        if (this.onMsg) this.onMsg(m);
+      }
+    }
+  }
+  pub(topic, text) {
+    if (!this.ready || !this.ws || this.ws.readyState !== 1) return false;
+    try { this.ws.send(MqLink.pkt(0x30, [...MqLink.str(topic), ...new TextEncoder().encode(text)])); return true; } catch (e) { return false; }
+  }
+  kick() { if (this.want && !this.ready && (!this.ws || this.ws.readyState > 1)) { clearTimeout(this.rt); this.open(); } }
+  close() { this.want = false; this.ready = false; clearInterval(this.pi); clearTimeout(this.rt); const ws = this.ws; this.ws = null; if (ws) { try { ws.send(new Uint8Array([0xE0, 0])); ws.close(); } catch (e) {} } }
+}
+
 const Net = {
   ws: null, pc: null, dc: null, id: null, token: null, remote: null, hb: null, sid: null, connected: false, relay: false, pend: [], sigQ: [],
-  onOpen: null, onMsg: null, onClose: null, onFail: null, onKnock: null, onWait: null, last: 0, want: false, offer: null, answer: null,
+  onOpen: null, onMsg: null, onClose: null, onFail: null, onKnock: null, onWait: null, onTrace: null, mqs: [], kseq: 0, seen: new Set(), logs: [], last: 0, want: false, offer: null, answer: null,
   /* Serveur de mise en relation : le service public de PeerJS (ou un serveur local de test : ?peer=127.0.0.1:9000). */
   local() { try { return new URLSearchParams(location.search).get('peer'); } catch (e) { return null; } },
   server() {
     const q = this.local();
     if (q) { const [h, p] = q.split(':'); return `ws://${h}:${p || 9000}/peerjs?key=peerjs`; }
     return 'wss://0.peerjs.com:443/peerjs?key=peerjs';
+  },
+  brokers() {
+    let q = null; try { q = new URLSearchParams(location.search).get('mq'); } catch (e) {}
+    if (q) return [`ws://${q}/mqtt`];
+    return this.local() ? [] : MQ_BROKERS;
+  },
+  topic(id) { return 'neonbastion/v1/' + id; },
+  log(t) { this.logs.push(t); if (this.logs.length > 12) this.logs.shift(); if (this.onTrace) this.onTrace(t, this.logs); },
+  chans() { const p = this.ws && this.ws.readyState === 1, m = this.mqs.filter(x => x.ready).length; return `PeerJS ${p ? '✓' : '✗'} · MQTT ${m}/${this.mqs.length}`; },
+  /* Tous les canaux de présentation : PeerJS + MQTT. Il suffit que l'un d'eux fonctionne. */
+  async connect(id, tok) {
+    const ready = new Promise(res => {
+      this.mqs = this.brokers().map(u => new MqLink(u, this.topic(id), m => this.recv(m, 'MQTT'), () => { res(); this.flushQ(); }));
+      if (!this.mqs.length) res();
+    });
+    try { await this.openSig(id, tok); }
+    catch (e) {
+      if (e.code === 'ID-TAKEN' || !this.mqs.length) throw e;
+      this.log('PeerJS injoignable : ' + e.message);
+      const ok = await Promise.race([ready.then(() => true), new Promise(r => setTimeout(() => r(false), 8000))]);
+      if (!ok) throw e;
+      this.reopenSoon(3000);
+    }
+    setTimeout(() => this.log('Services : ' + this.chans()), 1500);
+  },
+  recv(m, via) {
+    if (m && m.k !== undefined && m.src) { const key = m.src + ':' + m.k; if (this.seen.has(key)) return; this.seen.add(key); if (this.seen.size > 3000) this.seen = new Set([...this.seen].slice(-1500)); }
+    if (m && m.dst && this.id && m.dst !== this.id) return;
+    this.via = via; this.signal(m);
+  },
+  flushQ() {
+    const q = this.sigQ.splice(0);
+    for (const s of q) { if (!this.out(s)) { this.sigQ.push(s); } }
+  },
+  out(s) {
+    let ok = false;
+    if (this.ws && this.ws.readyState === 1) { try { this.ws.send(s.text); ok = true; } catch (e) {} }
+    for (const l of this.mqs) if (l.pub(this.topic(s.dst), s.text)) ok = true;
+    return ok;
   },
   /* Serveurs STUN publics. (Le relais TURN gratuit Open Relay ne répond plus : si la connexion directe échoue, le relais de secours prend la suite.) */
   ice() { return this.local() ? [] : [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }]; },
@@ -14858,7 +14949,7 @@ const Net = {
         if (this.ws && this.ws !== ws) { const o = this.ws; this.ws = null; try { o.close(); } catch (e) {} }
         this.ws = ws; clearInterval(this.hb); this.sigAt = Date.now();
         this.hb = setInterval(() => { try { ws.send('{"type":"HEARTBEAT"}'); } catch (e) {} }, 5000);
-        for (const q of this.sigQ.splice(0)) { try { ws.send(q); } catch (e) {} }
+        this.flushQ();
         res();
       };
       // Reprise avec le même jeton (retour d'arrière-plan) : le service reprend la session sans renvoyer OPEN.
@@ -14869,7 +14960,7 @@ const Net = {
           if (m.type === 'OPEN') { ready(); return; }
           if (m.type === 'ID-TAKEN' || m.type === 'ERROR') { done = true; clearTimeout(to); clearTimeout(rt); try { ws.close(); } catch (e) {} rej(Object.assign(new Error(m.type === 'ID-TAKEN' ? 'Code déjà pris' : 'Le service de mise en relation a refusé la connexion'), { code: m.type })); return; }
         }
-        this.signal(m);
+        this.recv(m, 'PeerJS');
       };
       ws.onerror = () => { if (!done) { done = true; clearTimeout(to); clearTimeout(rt); rej(new Error('Impossible de joindre le service de mise en relation. Vérifie ta connexion Internet.')); } };
       ws.onclose = () => { clearTimeout(rt); if (!done) { done = true; clearTimeout(to); rej(new Error('Impossible de joindre le service de mise en relation. Vérifie ta connexion Internet.')); } if (this.ws === ws) { this.ws = null; clearInterval(this.hb); this.reopenSoon(); } };
@@ -14889,12 +14980,14 @@ const Net = {
   },
   closeSig() { clearInterval(this.hb); clearTimeout(this.reT); const ws = this.ws; this.ws = null; if (ws) { try { ws.send(JSON.stringify({ type: 'LEAVE' })); ws.close(); } catch (e) {} } },
   sig(type, payload) {
-    const s = JSON.stringify({ type, payload, dst: this.remote });
-    if (this.ws && this.ws.readyState === 1) { try { this.ws.send(s); return true; } catch (e) {} }
+    const s = { dst: this.remote, text: JSON.stringify({ type, payload, dst: this.remote, src: this.id, k: ++this.kseq }) };
+    const ok = this.out(s);
+    if (!(this.ws && this.ws.readyState === 1)) this.reopenSoon(0);
+    if (ok) return true;
     if (type !== 'CANDIDATE' || (payload && payload.rl)) { this.sigQ.push(s); if (this.sigQ.length > 60) this.sigQ.shift(); }
-    this.reopenSoon(0);
     return false;
   },
+  mqClose() { for (const l of this.mqs) l.close(); this.mqs = []; },
   async makePc() {
     const pc = this.pc = new RTCPeerConnection({ iceServers: await this.ice() });
     pc.onicecandidate = e => { if (e.candidate && pc === this.pc) this.sig('CANDIDATE', { c: e.candidate.toJSON ? e.candidate.toJSON() : { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex }, sid: this.sid }); };
@@ -14904,7 +14997,7 @@ const Net = {
   },
   bindDc(dc) {
     this.dc = dc;
-    dc.onopen = () => { if (this.relay) return; clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); this.connected = true; this.last = performance.now(); if (this.onOpen) this.onOpen(); setTimeout(() => { if (!this.relay) this.closeSig(); }, 3000); };
+    dc.onopen = () => { if (this.relay) return; clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); this.connected = true; this.last = performance.now(); if (this.onOpen) this.onOpen(); this.log('Connexion directe établie ✓'); setTimeout(() => { if (!this.relay) { this.closeSig(); this.mqClose(); } }, 3000); };
     dc.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } this.last = performance.now(); if (this.onMsg) this.onMsg(m); };
     dc.onclose = () => { if (this.dc === dc && !this.relay) this.lostDc(); };
   },
@@ -14916,6 +15009,7 @@ const Net = {
     clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint);
     try { if (this.pc) this.pc.close(); } catch (e) {} this.pc = null; this.dc = null;
     this.sig('CANDIDATE', { rl: 1 });
+    this.log('Connexion directe impossible : passage par le relais (' + this.chans() + ')');
     if (!this.connected) { this.connected = true; this.last = performance.now(); if (this.onOpen) this.onOpen(); }
   },
   armRelay() { clearTimeout(this.rto); this.rto = setTimeout(() => { if (!this.connected) this.startRelay(); }, 10000); },
@@ -14924,7 +15018,7 @@ const Net = {
   async signal(m) {
     const pl = m.payload || {};
     if (pl.rl && m.src === this.remote) {   // message du relais de secours
-      if (!this.relay) { this.relay = true; clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); try { if (this.pc) this.pc.close(); } catch (e) {} this.pc = null; this.dc = null; }
+      if (!this.relay) { this.log('Relais actif (via ' + this.via + ')'); this.relay = true; clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); try { if (this.pc) this.pc.close(); } catch (e) {} this.pc = null; this.dc = null; }
       if (!this.connected) { this.connected = true; if (this.onOpen) this.onOpen(); }
       this.last = performance.now();
       if (pl.m && this.onMsg) this.onMsg(pl.m);
@@ -14937,17 +15031,20 @@ const Net = {
         return;
       }
       this.remote = m.src; this.sid = pl.sid;
+      this.log('Demande de ton ami reçue (via ' + this.via + ')');
       try {
         const pc = await this.makePc();
         await pc.setRemoteDescription(pl.sdp); await this.flushCand();
         await pc.setLocalDescription(await pc.createAnswer());
         this.answer = { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid };
         this.sig('ANSWER', this.answer);
+        this.log('Réponse envoyée, connexion directe en cours…');
         this.armRelay();
         if (this.onKnock) this.onKnock();
       } catch (e) { this.startRelay(); }
     } else if (m.type === 'ANSWER' && this.role === 'guest' && this.pc && !this.pc.remoteDescription && pl.sid === this.sid) {
-      clearInterval(this.oint);
+      clearInterval(this.oint); this.answered = true;
+      this.log('Réponse de l’hôte reçue (via ' + this.via + '), connexion directe en cours…');
       try { await this.pc.setRemoteDescription(pl.sdp); await this.flushCand(); this.armRelay(); } catch (e) { this.startRelay(); }
     } else if (m.type === 'CANDIDATE' && pl.c && m.src === this.remote) this.addCand(pl.c);
     else if ((m.type === 'LEAVE' || m.type === 'EXPIRE') && !this.connected && this.role === 'guest' && m.src === this.remote) {
@@ -14955,19 +15052,20 @@ const Net = {
       else if (this.onWait) this.onWait();   // l'hôte n'est pas joignable en ce moment (téléphone en veille, jeu en arrière-plan) : on continue d'envoyer la demande
     }
   },
-  async host(code, tok) { this.reset(); this.role = 'host'; this.want = true; await this.openSig('neonbastion-' + code, tok); },
+  async host(code, tok) { this.reset(); this.role = 'host'; this.want = true; await this.connect('neonbastion-' + code, tok); },
   async join(code) {
     this.reset(); this.role = 'guest'; this.want = true;
-    await this.openSig('neonbastion-g' + Math.random().toString(36).slice(2, 10));
+    await this.connect('neonbastion-g' + Math.random().toString(36).slice(2, 10));
     this.remote = 'neonbastion-' + code; this.sid = Math.random().toString(36).slice(2, 10);
     const pc = await this.makePc();
     this.bindDc(pc.createDataChannel('nb', { ordered: true }));
     await pc.setLocalDescription(await pc.createOffer());
     this.offer = { sdp: { type: pc.localDescription.type, sdp: pc.localDescription.sdp }, sid: this.sid, type: 'data' };
     this.sig('OFFER', this.offer);
+    this.log('Demande envoyée au code ' + code + ' (' + this.chans() + ')');
     // L'hôte a pu être coupé un instant (iPhone en arrière-plan) : on renouvelle la demande jusqu'à la réponse
     clearInterval(this.oint); this.oint = setInterval(() => { if (!this.connected && this.pc && !this.pc.remoteDescription) this.sig('OFFER', this.offer); }, 4000);
-    this.cto = setTimeout(() => { if (!this.connected) this.fail('Personne ne répond à ce code. Vérifie le code, et que ton ami ait le jeu ouvert à l’écran sur « Ta partie est prête » (pas en veille, pas dans une autre app).'); }, 90000);
+    this.cto = setTimeout(() => { if (!this.connected) this.fail(this.answered ? 'La réponse est arrivée, mais la liaison n’a pas pu s’établir.' : 'Personne ne répond à ce code. Vérifie le code, et que ton ami ait le jeu ouvert à l’écran sur « Ta partie est prête » (pas en veille, pas dans une autre app).'); }, 90000);
   },
   send(o) {
     if (this.relay) { if (!this.connected) return false; return this.sig('CANDIDATE', { rl: 2, m: o }) || o.t !== 'snap'; }
@@ -14975,10 +15073,10 @@ const Net = {
     return false;
   },
   fail(msg) { const f = this.onFail; this.close(); if (f) f(msg); },
-  reset() { this.close(); this.pend = []; this.sigQ = []; this.relay = false; this.offer = null; this.answer = null; this.token = null; this.id = null; },
+  reset() { this.close(); this.pend = []; this.sigQ = []; this.logs = []; this.answered = false; this.seen = new Set(); this.relay = false; this.offer = null; this.answer = null; this.token = null; this.id = null; },
   close() {
     this.want = false;
-    clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); this.closeSig();
+    clearTimeout(this.cto); clearTimeout(this.rto); clearInterval(this.oint); this.closeSig(); this.mqClose();
     const dc = this.dc, pc = this.pc; this.dc = null; this.pc = null; this.connected = false; this.remote = null; this.relay = false;
     try { if (dc) dc.close(); } catch (e) {} try { if (pc) pc.close(); } catch (e) {}
   },
@@ -15009,6 +15107,18 @@ const Net = {
       step(relayOk, 'Échange de messages (relais de secours)', 'Les messages ne passent pas par le service : la partie ne pourra pas se connecter sur ce réseau. Essaie en Wi-Fi ou en 4G/5G.');
     }
     for (const w of [a, b]) if (w) { try { w.send('{"type":"LEAVE"}'); w.close(); } catch (e) {} }
+    const br = this.brokers();
+    if (br.length) {
+      const tp = this.topic('t' + Math.random().toString(36).slice(2, 9));
+      const res = await Promise.all(br.map(u => new Promise(done => {
+        let l = null; const to = setTimeout(() => { if (l) l.close(); done(false); }, 9000);
+        l = new MqLink(u, tp, m => { if (m && m.ping) { clearTimeout(to); l.close(); done(true); } }, x => x.pub(tp, '{"ping":1}'));
+      })));
+      const n = res.filter(Boolean).length, ok2 = n > 0;
+      step(ok2, `Service de secours (MQTT) : ${n}/${br.length}`, 'Les services de secours ne répondent pas sur ce réseau. Le service principal (PeerJS) reste utilisé.', relayOk);
+      if (ok2 && !relayOk) for (const o of out) if (/PeerJS|Échange/.test(o.label)) o.opt = true;
+      report(out);
+    }
     const rtc = typeof RTCPeerConnection === 'function';
     step(rtc, 'Connexion directe (WebRTC)', 'Ce navigateur ne gère pas WebRTC. Mets iOS ou le navigateur à jour.');
     if (!rtc) return out;
@@ -15030,6 +15140,7 @@ if (typeof document !== 'undefined') {
     if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
     if (!Net.want || (Net.connected && !Net.relay)) return;
     if (!Net.ws || Date.now() - hiddenAt > 2500) Net.refresh(); else Net.reopenSoon(0);
+    for (const l of Net.mqs) l.kick();
   });
   window.addEventListener('pageshow', e => { if (e.persisted && Net.want) Net.refresh(); });
 }
@@ -15148,17 +15259,20 @@ const Multi = {
     });
   },
   wait(title, text, cancel) {
-    Modal.open({ title, html: `<div class="mpwait"><i class="mpspin"></i><p id="mpWaitTxt">${esc(text)}</p></div>`, actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; if (cancel) cancel(); } }] });
+    Modal.open({ title, html: `<div class="mpwait"><i class="mpspin"></i><p id="mpWaitTxt">${esc(text)}</p></div><ul class="mptrace" id="mpTrace"></ul>`, actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; if (cancel) cancel(); } }] });
   },
+  traceHtml(logs) { return (logs || []).map(t => `<li>${esc(t)}</li>`).join(''); },
   error(msg) {
     this.linked = false;
-    Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(msg)}</p>`, actions: [{ label: 'Fermer' }, { label: 'Réessayer', cls: 'primary', fn: () => setTimeout(() => this.open(), 30) }] });
+    const tr = Net.logs && Net.logs.length ? `<ul class="mptrace">${this.traceHtml(Net.logs)}</ul>` : '';
+    Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(msg)}</p>${tr}`, actions: [{ label: 'Fermer' }, { label: 'Réessayer', cls: 'primary', fn: () => setTimeout(() => this.open(), 30) }] });
   },
   hook() {
     Net.onOpen = () => { this.linked = true; this.forgetHost(); this.send({ t: 'hello', v: MP_PROTO, app: APP_VERSION, name: this.name, top: Math.min(this.real.unlocked || 1, MAX_LEVEL), pid: Coop.pid(this.real) }); };
     Net.onMsg = m => this.onMsg(m);
     Net.onClose = () => this.lost();
     Net.onFail = msg => { if (this.linked || this.game) this.lost(); else this.error(msg); };
+    Net.onTrace = (t, logs) => { const u = $('mpTrace'); if (u) u.innerHTML = this.traceHtml(logs); };
     Net.onWait = () => { const p = $('mpWaitTxt'); if (p && this.role === 'guest') p.textContent = `Code ${this.code} trouvé, mais ton ami n’est pas joignable en ce moment. Il doit rouvrir le jeu (écran « Ta partie est prête »). On réessaie toutes les 4 secondes…`; };
     Net.onKnock = () => { const p = $('mpHostSt') || $('mpWaitTxt'); if (p) p.textContent = 'Ton ami arrive, connexion en cours…'; };
   },
@@ -15186,7 +15300,7 @@ const Multi = {
     Modal.open({ title: 'Ta partie est prête', html:
       `<p class="hint" style="text-align:center">Donne ce code à ton ami. Il touche « Rejoindre » et le tape. Si tu l’envoies par message, <b>reviens tout de suite ici</b> et garde cet écran allumé jusqu’à son arrivée.</p><div class="mpcode" id="mpCode">${this.code}</div>` +
       `<div class="mprow"><button class="btn small" type="button" id="mpShare">${navigator.share ? 'Partager le code' : 'Copier le code'}</button></div>` +
-      `<div class="mpwait"><i class="mpspin"></i><p id="mpHostSt">En attente de ton ami…</p></div>`,
+      `<div class="mpwait"><i class="mpspin"></i><p id="mpHostSt">En attente de ton ami…</p></div><ul class="mptrace" id="mpTrace">${this.traceHtml(Net.logs)}</ul>`,
       actions: [{ label: 'Annuler', fn: () => { Net.close(); this.linked = false; this.forgetHost(); } }] });
     $('mpShare').onclick = async () => {
       try { if (navigator.share) await navigator.share({ text: share }); else { await navigator.clipboard.writeText(this.code); Toast2.show('Code copié'); } } catch (e) {}
