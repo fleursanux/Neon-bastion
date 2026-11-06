@@ -1100,6 +1100,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
 
 /* ---------- Multijoueur ---------- */
 .mprow{display:flex;justify-content:center;margin:4px 0}
+.mptowers{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0}.mptowers canvas{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.06)}.mpready{text-align:center;font-weight:800;margin:10px 0 4px;color:#ffd84a}.mpready.ok{color:#3ef2c8}
 .mptrace{list-style:none;margin:10px 0 0;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.22);font-size:.72rem;line-height:1.45;color:#a9b6d8;max-height:150px;overflow:auto}.mptrace:empty{display:none}.mptrace li::before{content:'› ';color:#3ef2c8}
 .mpdiag{list-style:none;padding:0;margin:10px 0;display:flex;flex-direction:column;gap:6px;text-align:left}
 .mpdiag li{padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.22);display:flex;flex-direction:column;gap:3px}
@@ -9347,7 +9348,7 @@ const Loadout = {
         html: `<p class="hint">Choisis jusqu’à ${LOADOUT_MAX} tourelles pour cette partie. <b id="lcount">${sel.length} / ${LOADOUT_MAX}</b></p>` +
           `<div class="lpresets">${a.presets.map((p, i) => `<button class="btn tiny" data-load="${i}" type="button" ${p.ids.length ? '' : 'disabled'}>${esc(p.name)} (${p.ids.length})</button>`).join('')}</div>` +
           this.grid(s, levelN, sel, pool),
-        actions: [{ label: 'Annuler', fn: opt && opt.cancel }, { label: 'Jouer', cls: 'primary', fn: () => { if (!sel.length) return; a.last = sel.slice(); Store.touch(s); done(sel.slice()); } }] });
+        actions: [{ label: 'Annuler', fn: opt && opt.cancel }, { label: (opt && opt.ok) || 'Jouer', cls: 'primary', fn: () => { if (!sel.length) return; a.last = sel.slice(); Store.touch(s); done(sel.slice()); } }] });
       const card = $('modalCard');
       card.classList.add('wide');
       const upd = () => { $('lcount').textContent = `${sel.length} / ${LOADOUT_MAX}`; };
@@ -10426,8 +10427,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.27.1';
+const APP_VERSION = '7.28.0';
 const CHANGELOG = [
+  { v: '7.28.0', date: '06.11.2026', items: ['À deux : au lancement, la sélection des tourelles s’ouvre directement chez les deux joueurs. Ensuite, chacun voit si l’autre est prêt et touche « Je suis prêt » ; la partie démarre quand les deux sont prêts (coopération, course et duel).', 'Coopération : les emplacements de chacun sont mélangés tout le long du parcours.'] },
   { v: '7.27.1', date: '06.11.2026', items: ['Coopération : les emplacements de chacun sont maintenant mélangés tout le long du parcours (en alternance), au lieu d’une moitié de carte chacun.'] },
   { v: '7.27.0', date: '05.11.2026', items: ['Multijoueur : ton propre serveur de mise en relation sur Cloudflare (gratuit). Chaque code de partie ouvre un salon privé : les deux téléphones s’y retrouvent, et il sert de relais quand la connexion directe est impossible. PeerJS et MQTT restent en secours.', 'Test de connexion : nouvelle ligne « Ton serveur Cloudflare ».'] },
   { v: '7.26.3', date: '05.11.2026', items: ['Multijoueur : second service de mise en relation (MQTT, gratuit) utilisé en même temps que PeerJS. Si l’un ne transmet pas les messages entre les deux téléphones, l’autre prend le relais, y compris pour le relais de secours en partie.', 'Multijoueur : les écrans d’attente affichent chaque étape de la connexion (demande envoyée, réponse reçue, par quel service), et l’écran d’erreur les garde pour une capture.', 'Test de connexion : vérifie aussi le service de secours.'] },
@@ -14845,7 +14847,7 @@ const Tuto = {
    - Ensuite tout passe directement d'un téléphone à l'autre ; relais gratuit (Open Relay) si le réseau bloque.
    - Modes : Coopération (même carte, l'hôte fait tourner la partie), Course (meilleur score), Duel (renforts ennemis).
    ===================================================================== */
-const MP_PROTO = 2;
+const MP_PROTO = 3;
 const COOP_MAX = 30;
 const MP_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 /* Second canal de mise en relation, utilisé en même temps que PeerJS : des courtiers MQTT publics et gratuits
@@ -15450,34 +15452,61 @@ const Multi = {
 
   /* ---------- Lancement ---------- */
   fairMods() { const m = computeMods({}); m.gearP = 0; return JSON.parse(JSON.stringify(m)); },
+  /* Lancement, pour tous les modes : chacun choisit ses tourelles (si besoin), puis dit « Je suis prêt ».
+     La partie démarre quand les deux joueurs sont prêts. */
   launch(resume) {
     if (this.role !== 'host' || !this.linked) return;
-    if (this.mode === 'coop') { this.coopPrepare(resume); return; }
-    const lv = this.level, mode = this.mode, fair = this.fair, go = ids => {
-      this.send({ t: 'start', mode, level: lv, fair });
-      this.begin({ mode, level: lv, role: 'host', fair }, ids);
-    };
-    if (Loadout.needed(this.real, lv)) Loadout.pick(lv, ids => go(ids)); else go(null);
+    const coop = this.mode === 'coop', t = this.team, run = coop && resume && t.run ? t.run : null;
+    const p = { mode: this.mode, fair: this.fair, run, level: this.level, k: coop ? (run ? run.k : Math.min(this.coopK, this.coopMax())) : 0, pool: coop ? Coop.pool(t.cleared) : null };
+    this.send({ t: 'prep', mode: p.mode, level: p.level, k: p.k, fair: p.fair, pool: p.pool, picks: run ? run.allowedBy : null });
+    this.prepStart(p, run ? run.allowedBy.h : null);
   },
-  /* Coopération : chacun choisit ses tourelles dans la réserve de l'équipe (si plus de 10), puis l'hôte lance. */
-  coopPrepare(resume) {
-    const t = this.team, run = resume && t.run, k = run ? run.k : Math.min(this.coopK, this.coopMax()), pool = Coop.pool(t.cleared);
-    this.prep = { k, pool, run, h: null, g: null, hm: Coop.mods(this.real), gm: null };
-    if (run && run.allowedBy) { this.prep.h = run.allowedBy.h; this.prep.g = run.allowedBy.g; }
-    this.send({ t: 'prep', k, pool, resume: !!run, picks: run ? run.allowedBy : null });
-    const done = () => this.coopTryStart();
-    if (!this.prep.h) this.coopPick(k, pool, ids => { this.prep.h = ids; done(); }); else { this.wait('Préparation', `En attente de ${this.themName}…`); }
+  prepStart(p, preset) {
+    this.prepping = true;
+    this.prep = Object.assign(p, { me: { ids: preset || null, ready: false }, them: { ids: null, ready: false, mods: null } });
+    if (preset) { this.sendPick(); this.readyView(); } else this.pickTowers();
   },
-  coopPick(k, pool, done) {
-    if (pool.length <= LOADOUT_MAX) { done(pool.slice()); return; }
-    Loadout.pick(k, ids => { done(ids); if (!this.game) this.wait('Préparation', `En attente de ${this.themName}…`); }, { pool, title: `Tes tourelles · Opération ${k}`, cancel: () => { this.send({ t: 'prepcancel' }); setTimeout(() => this.lobby(), 30); } });
+  pickNeeded() { const p = this.prep; return p.mode === 'coop' ? p.pool.length > LOADOUT_MAX : Loadout.needed(this.real, p.level); },
+  pickTowers() {
+    const p = this.prep; if (!p) return;
+    this.prepView = false;
+    if (!this.pickNeeded()) { p.me.ids = p.mode === 'coop' ? p.pool.slice() : null; this.sendPick(); this.readyView(); return; }
+    const title = p.mode === 'coop' ? `Tes tourelles · Opération ${p.k}` : `Tes tourelles · ${MP_MODES[p.mode].name}`;
+    Loadout.pick(p.mode === 'coop' ? p.k : p.level, ids => { if (this.prep !== p) return; p.me.ids = ids; this.sendPick(); this.readyView(); },
+      { pool: p.pool || undefined, title, ok: 'Valider', cancel: () => this.prepCancel() });
   },
-  coopTryStart() {
-    const p = this.prep; if (!p || !p.h || !p.g || !p.gm) { if (p && p.h) this.wait('Préparation', `${this.themName} choisit ses tourelles…`); return; }
-    const pm = { h: p.hm, g: p.gm }, allowedBy = { h: p.h, g: p.g }, snap = p.run ? p.run.snap : null;
-    this.send({ t: 'start', mode: 'coop', k: p.k, pm, allowedBy, snap });
-    this.begin({ mode: 'coop', k: p.k, role: 'host', pm, allowedBy, snap });
-    this.prep = null;
+  sendPick() { const p = this.prep; this.send({ t: 'pick', ids: p.me.ids, mods: p.mode === 'coop' ? Coop.mods(this.real) : null }); },
+  readyView() {
+    const p = this.prep; if (!p || this.game) return;
+    this.prepView = true;
+    const ids = p.me.ids || Loadout.unlocked(this.real, p.level).map(t => t.id);
+    const them = p.them.ready ? `<p class="mpready ok">✅ ${esc(this.themName)} est prêt${p.me.ready ? '' : ' : à toi !'}</p>`
+      : p.them.ids || p.them.picked ? `<p class="mpready">⏳ ${esc(this.themName)} n’est pas encore prêt</p>`
+      : `<p class="mpready">⏳ ${esc(this.themName)} choisit ses tourelles…</p>`;
+    const where = p.mode === 'coop' ? `Opération ${p.k} · ${esc(getCoopLevel(p.k).name)}` : `${MP_MODES[p.mode].icon} ${esc(MP_MODES[p.mode].name)} · niveau ${p.level}`;
+    Modal.open({ title: p.me.ready ? 'Tu es prêt' : 'Prêt ?', html:
+      `<p class="hint" style="text-align:center">${where}</p>` +
+      `<div class="mptowers">${ids.map(id => `<canvas width="40" height="40" data-ticon="${id}" title="${esc(TOWER_BY_ID[id].name)}"></canvas>`).join('')}</div>` + them +
+      (p.me.ready ? `<div class="mpwait"><i class="mpspin"></i><p>${p.them.ready ? 'C’est parti…' : `En attente de ${esc(this.themName)}…`}</p></div>` : ''),
+      actions: p.me.ready
+        ? [{ label: 'Annuler', fn: () => this.prepCancel() }, { label: 'Modifier', keep: true, fn: () => { p.me.ready = false; this.send({ t: 'ready', on: false }); this.pickTowers(); } }]
+        : [{ label: 'Annuler', fn: () => this.prepCancel() }, ...(this.pickNeeded() ? [{ label: 'Modifier', keep: true, fn: () => this.pickTowers() }] : []),
+           { label: 'Je suis prêt', cls: 'primary', keep: true, fn: () => { p.me.ready = true; this.send({ t: 'ready', on: true }); buzz(20); this.readyView(); this.tryStart(); } }] });
+    $('modalCard').querySelectorAll('[data-ticon]').forEach(cv => towerIcon(cv, TOWER_BY_ID[cv.dataset.ticon]));
+  },
+  prepCancel() { if (!this.prep) return; this.send({ t: 'prepcancel' }); this.prep = null; this.prepping = false; this.prepView = false; setTimeout(() => this.lobby(), 30); },
+  /* L'hôte lance quand les deux sont prêts. */
+  tryStart() {
+    const p = this.prep; if (this.role !== 'host' || !p || !p.me.ready || !p.them.ready) return;
+    this.prep = null; this.prepping = false; this.prepView = false;
+    if (p.mode === 'coop') {
+      const pm = { h: Coop.mods(this.real), g: p.them.mods || Coop.mods(this.real) }, allowedBy = { h: p.me.ids, g: p.them.ids || p.pool.slice() }, snap = p.run ? p.run.snap : null;
+      this.send({ t: 'start', mode: 'coop', k: p.k, pm, allowedBy, snap });
+      this.begin({ mode: 'coop', k: p.k, role: 'host', pm, allowedBy, snap });
+      return;
+    }
+    this.send({ t: 'start', mode: p.mode, level: p.level, fair: p.fair });
+    this.begin({ mode: p.mode, level: p.level, role: 'host', fair: p.fair }, p.me.ids);
   },
   begin(opt, ids) {
     this.myRes = null; this.oppRes = null; this.opp = null; this.dead = []; this.outbox = []; this.sendCd = 0; this.sf = null; this.pinMode = false;
@@ -15531,20 +15560,20 @@ const Multi = {
         return;
       case 'lobby': this.mode = m.mode; this.level = m.level; this.coopK = m.k || 1; this.fair = !!m.fair; if (this.inLobby() || (!this.game && !this.prepping)) this.lobby(); return;
       case 'prep':
-        this.prepping = true;
-        if (m.picks && m.picks.g) { this.send({ t: 'pick', ids: m.picks.g, mods: Coop.mods(this.real) }); this.wait('Préparation', `${this.themName} lance l’opération…`); return; }
-        this.coopPick(m.k, m.pool, ids => { this.send({ t: 'pick', ids, mods: Coop.mods(this.real) }); });
+        if (this.game) this.leaveGame(true);
+        this.mode = m.mode; this.level = m.level; this.fair = !!m.fair; if (m.k) this.coopK = m.k;
+        this.prepStart({ mode: m.mode, level: m.level, k: m.k, fair: !!m.fair, pool: m.pool, run: null }, m.picks ? m.picks.g : null);
         return;
-      case 'pick': if (this.prep) { this.prep.g = m.ids; this.prep.gm = m.mods; this.coopTryStart(); } return;
-      case 'prepcancel': this.prep = null; this.prepping = false; Toast2.show(`${this.themName} a annulé`); this.lobby(); return;
+      case 'pick': if (this.prep) { this.prep.them.ids = m.ids; this.prep.them.picked = true; this.prep.them.mods = m.mods; if (this.prepView) this.readyView(); } return;
+      case 'ready': if (this.prep) { this.prep.them.ready = !!m.on; if (this.prepView) this.readyView(); else if (m.on) Toast2.show(`${this.themName} est prêt`); this.tryStart(); } return;
+      case 'prepcancel': if (!this.prep) return; this.prep = null; this.prepping = false; this.prepView = false; Toast2.show(`${this.themName} a annulé`); this.lobby(); return;
       case 'start':
-        this.prepping = false;
+        this.prepping = false; if (m.mode === 'coop') { this.prep = null; this.prepView = false; }
         if (this.game) this.leaveGame(true);
         this.mode = m.mode;
         if (m.mode === 'coop') { this.begin({ mode: 'coop', k: m.k, role: 'guest', pm: m.pm, allowedBy: m.allowedBy, snap: m.snap }); return; }
         this.level = m.level; this.fair = !!m.fair;
-        if (Loadout.needed(this.real, m.level)) { Modal.close(); Loadout.pick(m.level, ids => this.begin({ mode: m.mode, level: m.level, role: 'guest', fair: m.fair }, ids)); }
-        else this.begin({ mode: m.mode, level: m.level, role: 'guest', fair: m.fair });
+        { const ids = this.prep && this.prep.me.ids; this.prep = null; this.prepView = false; this.begin({ mode: m.mode, level: m.level, role: 'guest', fair: m.fair }, ids || null); }
         return;
       case 'ping': this.send({ t: 'pong', k: m.k }); return;
       case 'pong': this.ping = Math.round(performance.now() - m.k); return;
@@ -15575,7 +15604,7 @@ const Multi = {
   },
   lost(bye) {
     const b = GameView.battle, inGame = !!(this.game && b && b.multi);
-    this.linked = false; this.prep = null; this.prepping = false;
+    this.linked = false; this.prep = null; this.prepping = false; this.prepView = false;
     if (inGame && b.ghost) { this.leaveGame(); Modal.open({ title: 'Connexion perdue', html: `<p style="text-align:center">La liaison avec ${esc(this.themName)} est coupée${bye ? ' (il a quitté)' : ''}. L’opération est sauvegardée à la dernière vague terminée.</p>`, actions: [{ label: 'Retour à la carte', cls: 'primary' }] }); return; }
     if (inGame) { b.multi.solo = true; Toast.show(`Connexion perdue avec ${this.themName} : tu continues seul`); return; }
     if (!$('modal').hidden && $('modalCard').querySelector('.mpmodes, .mpwait, .sfbox')) Modal.open({ title: 'Multijoueur', html: `<p style="text-align:center">${esc(this.themName)} ${bye ? 'a quitté le salon' : 'n’est plus connecté'}.</p>`, actions: [{ label: 'Fermer' }] });
