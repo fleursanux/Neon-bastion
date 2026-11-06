@@ -3471,9 +3471,22 @@ class Battle {
     this.coopHp = CONFIG.coopHp;
     this.wallet = {}; for (const k of ['h', 'g']) this.wallet[k] = Math.round(this.level.gold * (1 + ((this.pm[k] && this.pm[k].gold) || 0)));
     Object.defineProperty(this, 'gold', { get() { return this.wallet[this.actor]; }, set(v) { this.wallet[this.actor] = v; }, configurable: true });
+    // Emplacements répartis équitablement tout le long du parcours : classés selon l'avancée sur le chemin
+    // le plus proche, puis attribués en alternance (gratuits et payants séparément).
+    const prog = p => {
+      let best = Infinity, f = 0;
+      for (const path of this.paths) for (const sg of path.segments) {
+        const dx = sg.b.x - sg.a.x, dy = sg.b.y - sg.a.y, l2 = dx * dx + dy * dy || 1;
+        const t = clamp(((p.x - sg.a.x) * dx + (p.y - sg.a.y) * dy) / l2, 0, 1);
+        const d = Math.hypot(sg.a.x + dx * t - p.x, sg.a.y + dy * t - p.y);
+        if (d < best - 0.01) { best = d; f = (sg.start + sg.len * t) / (path.length || 1); }
+      }
+      return f;
+    };
+    for (const p of this.pads) p.prog = prog(p);
     for (const free of [false, true]) {
-      const list = this.pads.filter(p => !p.locked === free).sort((a, b) => a.x - b.x || a.y - b.y);
-      list.forEach((p, i) => { p.owner = i < list.length / 2 ? 'h' : 'g'; });
+      const list = this.pads.filter(p => !p.locked === free).sort((a, b) => a.prog - b.prog || a.i - b.i);
+      list.forEach((p, i) => { p.owner = i % 2 ? 'g' : 'h'; });
     }
   }
   /* Bonus de l'acteur (en coopération, les tourelles de chacun utilisent son équipement). */
@@ -3520,7 +3533,7 @@ class Battle {
     for (const t of s.towers || []) {
       const om = this.coop && t.o && this.pm[t.o] ? this.pm[t.o] : this.mods, pad = this.pads[t.p], def = getTowerDef(t.id, om);
       if (!pad || pad.tower || !def) continue;
-      const tw = new Tower(def, pad, om); if (t.o) tw.owner = t.o;
+      const tw = new Tower(def, pad, om); if (t.o) { tw.owner = t.o; if (this.coop) pad.owner = t.o; }   // partie reprise : la tourelle reste chez son propriétaire
       tw.level = Math.max(1, t.lv); tw.spent = t.spent; tw.mode = t.mode || tw.mode; tw.kills = t.kills || 0; tw.dmgDone = t.d || 0;
       if (t.sp !== undefined && t.sp !== null && def.specs) tw.specialize(t.sp);
       pad.locked = false; pad.tower = tw; this.towers.push(tw);
@@ -10413,8 +10426,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.27.0';
+const APP_VERSION = '7.27.1';
 const CHANGELOG = [
+  { v: '7.27.1', date: '06.11.2026', items: ['Coopération : les emplacements de chacun sont maintenant mélangés tout le long du parcours (en alternance), au lieu d’une moitié de carte chacun.'] },
   { v: '7.27.0', date: '05.11.2026', items: ['Multijoueur : ton propre serveur de mise en relation sur Cloudflare (gratuit). Chaque code de partie ouvre un salon privé : les deux téléphones s’y retrouvent, et il sert de relais quand la connexion directe est impossible. PeerJS et MQTT restent en secours.', 'Test de connexion : nouvelle ligne « Ton serveur Cloudflare ».'] },
   { v: '7.26.3', date: '05.11.2026', items: ['Multijoueur : second service de mise en relation (MQTT, gratuit) utilisé en même temps que PeerJS. Si l’un ne transmet pas les messages entre les deux téléphones, l’autre prend le relais, y compris pour le relais de secours en partie.', 'Multijoueur : les écrans d’attente affichent chaque étape de la connexion (demande envoyée, réponse reçue, par quel service), et l’écran d’erreur les garde pour une capture.', 'Test de connexion : vérifie aussi le service de secours.'] },
   { v: '7.26.2', date: '05.11.2026', items: ['Multijoueur : au retour dans le jeu après l’envoi du code, la partie de l’hôte restait injoignable (le service ne confirmait pas la reprise). Corrigé : la liaison est rouverte tout de suite.', 'Multijoueur : si iOS recharge la page pendant l’envoi du code, la partie se rouvre avec le même code.', 'Multijoueur : l’ami attend jusqu’à 90 s et voit quand le créateur n’est pas joignable.', 'Test de connexion : vérifie l’échange réel de messages ; le relais TURN gratuit, hors service, est retiré.'] },
