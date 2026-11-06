@@ -1117,7 +1117,7 @@ body.fsgame .infobar .evchips{margin-top:2px}
 @keyframes mpspin{to{transform:rotate(360deg)}}
 .mpwho{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:6px;margin:6px 0 10px}.mpwho i{font-size:.75rem;opacity:.7}.mpwho .mpvs{opacity:.6;margin:0 4px}
 .mpdot{width:9px;height:9px;border-radius:50%;background:#4be37a;box-shadow:0 0 8px #4be37a;align-self:center}
-.mpmodes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mpmodes{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.mpmodes .mpmode{grid-column:span 2}.mpmodes .mpmode.ev{grid-column:span 3}.mpmode small{font-size:.62rem;opacity:.7}.mpmode:disabled{opacity:.45}
 .mpmode{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border-radius:12px;border:2px solid var(--line);background:rgba(0,0,0,.22);color:var(--fg);font:inherit;cursor:pointer}
 .mpmode span{font-size:1.5rem}.mpmode b{font-size:.85rem}
 .mpmode.on{border-color:var(--cyan);background:rgba(62,242,200,.14);box-shadow:0 0 0 1px var(--cyan) inset}
@@ -6720,6 +6720,7 @@ const Minigames = {
       ov.innerHTML = `<div class="card mgend"><h2>${esc(rew.title)}</h2><p>${esc(rew.text)}</p><p class="mggain">${msg ? 'Tu remportes : <b>' + esc(msg) + '</b>' : 'Pas de récompense cette fois.'}</p><div class="row"><button class="btn primary" id="mgClose" type="button">${game.closeLabel || 'Retour aux événements'}</button></div></div>`;
       if (grant.items && grant.items.length) { const items = grant.items; grant.items = null; setTimeout(() => Reveal.show(items, game.title, true), 300); }
       $('mgClose').onclick = () => this.close();
+      if (game.co && MgCoop.g) MgCoop.endCard(ov);
       Sound.sfx && Sound.sfx('up');
     };
     $('mgQuit').onclick = () => game.quit ? game.quit() : this.finish(game.result());
@@ -7298,7 +7299,7 @@ const EXP_SPAWN = [
 /* Actions spéciales des ennemis (appelées quand leur minuterie arrive à zéro). */
 const EXP_ACT = {
   weaver(g, e) { const v = 150 * g.esp(); for (const da of [-0.3, 0, 0.3]) g.eshots.push({ x: e.x, y: e.y, vx: Math.cos(Math.PI / 2 + da) * v, vy: Math.sin(Math.PI / 2 + da) * v }); e.fire = 2.4 * g.fk(); },
-  carrier(g, e) { if (g.en.length < 70) for (const dx of [-12, 12]) g.spawn('mini', e.x + dx, e.y + 14); e.fire = 3.6; },
+  carrier(g, e) { if (g.en.length < 70) for (const dx of [-12, 12]) g.spawn('mini', e.x + dx, e.y + 14, null, e); e.fire = 3.6; },
   healer(g, e) { for (const o of g.en) if (o !== e && !o.dead && (o.x - e.x) ** 2 + (o.y - e.y) ** 2 < 110 * 110) o.hp = Math.min(o.max, o.hp + o.max * (o.type === 'boss' ? 0.02 : 0.12)); g.fx.push({ ring: true, x: e.x, y: e.y, c: '#7dff6a', r: 80, t: 0.35 }); e.fire = 2.6; },
   layer(g, e) { g.eshots.push({ x: e.x, y: e.y + 8, vx: 0, vy: 40, mine: true, r: 7 }); e.fire = 1.8 * g.fk(); },
   bomber(g, e) { const n = 8 + Math.floor(g.wave / 10), v = 115 * g.esp(), off = e.ph; for (let i = 0; i < n; i++) { const a = off + i * TAU / n; g.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); } e.fire = 3.2 * g.fk(); }
@@ -7326,7 +7327,10 @@ const Expedition = {
   init() {
     const s = App.slot, st = ExpData.stats(s), o = this.opts || { wave: 1 }, r = o.resume;
     this.opts = null;
-    Object.assign(this, { st, paused: false, t: 0, x: 180, y: 560, cleared: 0, kills: 0, cd: 0, inv: 0, en: [], shots: [], eshots: [], fx: [], drops: [], mines: [], bolts: [],
+    // À deux : même secteur, mêmes ennemis (tirage commun), chacun son vaisseau et son équipement.
+    this.co = o.coop ? Object.assign(o.coop, { out: {}, pend: {}, sendT: 0, mate: null, mcd: 0, wd: 0, wc: 0, waitT: 0 }) : null;
+    this.down = false; this.waiting = false;
+    Object.assign(this, { st, paused: false, t: 0, x: this.co ? (this.co.role === 'host' ? 130 : 230) : 180, y: 560, cleared: 0, kills: 0, cd: 0, inv: 0, en: [], shots: [], eshots: [], fx: [], drops: [], mines: [], bolts: [],
       spawnQ: [], banner: null, power: {}, modT: { missile: 1.5, laser: 3, arc: 1, nova: 2, mine: 1, drone: 0 }, beam: 0, over: false,
       wave: (r ? r.wave : o.wave) - 1, startWave: r ? r.startWave || r.wave : o.wave, score: r ? r.score : 0, kills: r ? r.kills : 0,
       runEc: r ? r.ec : 0, runItems: r ? r.items : 0, crewItems: r ? r.crew || 0 : 0, waveEc: 0, waveItems: [], ups: {},
@@ -7362,36 +7366,46 @@ const Expedition = {
   snapshot() {
     const s = App.slot, e = ExpData.get(s);
     const ups = Object.assign({}, this.ups); delete ups.heal;
+    if (this.co) { MgCoop.saveRun({ wave: this.wave, hp: this.hp, ups, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, crew: this.crewItems, startWave: this.startWave }); return; }
     e.run = { wave: this.wave, hp: this.hp, ups, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, crew: this.crewItems, startWave: this.startWave };
     Store.touch(s);
   },
+  /* Hasard : commun aux deux joueurs en coopération (même graine), libre en solo. */
+  rnd() { return this.wrng ? this.wrng() : Math.random(); },
+  idRand(id, salt) { return mulberry32(hashStr((this.co ? this.co.seed : '') + ':' + id + ':' + (salt || '')))(); },
   nextWave() {
     this.wave++;
     const w = this.wave, boss = w % 5 === 0, q = [];
+    if (this.co) { this.wrng = mulberry32(hashStr(this.co.seed + ':w' + w)); this.co.wc = Math.min(this.co.wc, w - 1); this.co.kid = 0; }
     this.snapshot();
     this.shields = this.shieldMax;
-    if (boss) q.push({ type: 'boss', delay: 1 });
-    const n = Math.min(50, boss ? 4 + w : 6 + w * 2), pool = EXP_SPAWN.filter(t => w >= t.from), fresh = EXP_SPAWN.find(t => t.from === w && t.from > 1);
+    if (boss) q.push({ type: 'boss', delay: 1, id: 'w' + w + '-b' });
+    const n = Math.round(Math.min(50, boss ? 4 + w : 6 + w * 2) * (this.co ? 1.3 : 1)), pool = EXP_SPAWN.filter(t => w >= t.from), fresh = EXP_SPAWN.find(t => t.from === w && t.from > 1);
     const wt = t => t.w * (t.from === 1 ? Math.max(0.25, 1 - w * 0.025) : 1), tot = pool.reduce((a, t) => a + wt(t), 0);
     for (let i = 0; i < n; i++) {
-      let x = Math.random() * tot, type = 'drone';
+      let x = this.rnd() * tot, type = 'drone';
       for (const t of pool) { x -= wt(t); if (x <= 0) { type = t.t; break; } }
       if (fresh && i % 4 === 1) type = fresh.t;
-      q.push({ type, delay: Math.max(0.15, 0.5 - w * 0.012) + Math.random() * 0.45 });
+      q.push({ type, delay: Math.max(0.15, 0.5 - w * 0.012) + this.rnd() * 0.45, id: 'w' + w + '-' + i });
     }
     this.spawnQ = q; this.spawnT = 1.2;
     this.banner = { text: boss ? `Secteur ${w} · Colosse !` : `Secteur ${w}`, sub: fresh ? `Nouvel ennemi : ${fresh.name}` : '', t: fresh ? 2.6 : 1.6 };
   },
-  spawn(type, x, y) {
-    const w = this.wave, hpk = (1 + 0.25 * (w - 1)) * Math.pow(1.05, w - 1), b = EXP_EN[type], elite = type !== 'boss' && type !== 'mini' && Math.random() < Math.min(0.2, 0.04 + w * 0.003);
-    const hp = b[0] * hpk * (type === 'boss' ? 1 + 0.15 * (w / 5 - 1) : 1) * (elite ? 3 : 1);
-    this.en.push({ type, x: x ?? 30 + Math.random() * 300, y: y ?? -30, hp, max: hp, sp: b[1] * (1 + Math.min(0.8, 0.02 * w)), r: b[2] * (elite ? 1.3 : 1), c: b[3], ec: b[4], elite,
-      ph: Math.random() * 6, fire: 1 + Math.random() * 1.5, mode: 0, aim: 0, blink: 2 + Math.random(), hid: 0 });
+  spawn(type, x, y, id, parent) {
+    if (!id) id = parent ? parent.id + '.' + (parent.kids = (parent.kids || 0) + 1) : 'k' + this.wave + '-' + (this.co ? ++this.co.kid : Math.random());
+    const R = this.co ? mulberry32(hashStr(this.co.seed + ':' + id)) : Math.random;
+    const w = this.wave, hpk = (1 + 0.25 * (w - 1)) * Math.pow(1.05, w - 1), b = EXP_EN[type], elite = type !== 'boss' && type !== 'mini' && R() < Math.min(0.2, 0.04 + w * 0.003);
+    const hp = b[0] * hpk * (type === 'boss' ? 1 + 0.15 * (w / 5 - 1) : 1) * (elite ? 3 : 1) * (this.co ? (type === 'boss' ? 1.8 : 1.5) : 1);
+    const e = { id, rng: R, type, x: x ?? 30 + R() * 300, y: y ?? -30, hp, max: hp, sp: b[1] * (1 + Math.min(0.8, 0.02 * w)), r: b[2] * (elite ? 1.3 : 1), c: b[3], ec: b[4], elite,
+      ph: R() * 6, fire: 1 + R() * 1.5, mode: 0, aim: 0, blink: 2 + R(), hid: 0 };
+    this.en.push(e);
+    if (this.co && this.co.pend[id]) { e.hp -= this.co.pend[id]; delete this.co.pend[id]; if (e.hp <= 0) this.kill(e); }
   },
   fk() { return Math.max(0.5, 1 - 0.012 * this.wave); },
   esp() { return 1 + Math.min(0.6, 0.01 * this.wave); },
   gainEc(n) { this.waveEc += n * this.ecMul * (this.power.aimant > 0 ? 2 : 1); },
   dropItem(minR) {
+    if (this.co) { MgCoop.chestAdd(this, minR); return; }
     const setChance = this.wave >= 5 ? (minR !== undefined && minR !== null ? 0.15 : 0.03) * this.luck : 0;
     const res = ExpData.roll(App.slot, this.wave, this.luck, minR, setChance), R = ExpData.rar(res.it);
     this.waveItems.push(res.it);
@@ -7413,6 +7427,7 @@ const Expedition = {
     if (this.over) return;
     if (this.banner) { this.banner.t -= dt; if (this.banner.t <= 0) this.banner = null; }
     for (const k in this.power) this.power[k] -= dt;
+    if (this.co) this.coTick(dt);
     // Déplacement libre : vers le doigt (pendant l'appui) ou au clavier
     let tx = this.x, ty = this.y;
     if (P.down) { tx = P.x; ty = P.y - 40; }
@@ -7424,10 +7439,11 @@ const Expedition = {
     if (this.inv > 0) this.inv -= dt; if (this.hitFx > 0) this.hitFx -= dt;
     if (this.shieldRegen && this.shields < this.shieldMax) { this.shT += dt; if (this.shT >= this.shieldRegen) { this.shT = 0; this.shields++; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#4fa3ff', r: 26, t: 0.4 }); } } else this.shT = 0;
     // Apparitions
-    if (this.spawnQ.length) { this.spawnT -= dt; if (this.spawnT <= 0) { const s = this.spawnQ.shift(); this.spawn(s.type); this.spawnT = s.delay; } }
+    if (this.spawnQ.length) { this.spawnT -= dt; if (this.spawnT <= 0) { const s = this.spawnQ.shift(); this.spawn(s.type, undefined, undefined, s.id); this.spawnT = s.delay; } }
     // Arme principale : tir automatique vers l'ennemi le plus proche
     this.cd -= dt;
     const rafale = this.power.rafale > 0, triple = this.power.triple > 0;
+    if (this.down) this.cd = 1;   // vaisseau détruit : il attend la fin du secteur
     if (this.cd <= 0 && this.en.length) {
       this.cd = this.rate * (rafale ? 0.5 : 1);
       const tgt = this.nearest(this.x, this.y), base = tgt ? Math.atan2(tgt.y - this.y, tgt.x - this.x) : -Math.PI / 2, n = this.multi + (triple ? 2 : 0);
@@ -7436,18 +7452,18 @@ const Expedition = {
       for (let k = 0; k < this.rear; k++) this.shoot(this.x, this.y + 10, Math.PI / 2 + (k - (this.rear - 1) / 2) * 0.2, 440, this.dmg * 0.7, { side: true });
     }
     // Armes secondaires
-    const T = this.modT;
-    if (this.missile) { T.missile -= dt; if (T.missile <= 0) { T.missile = Math.max(0.8, 3.2 - 0.4 * this.missile); for (let i = 0; i < 1 + Math.floor(this.missile / 2); i++) { const tg = this.en[Math.floor(Math.random() * this.en.length)]; if (tg) this.shoot(this.x + (i ? 10 : -10), this.y, -Math.PI / 2 + (Math.random() - 0.5), 180, this.dmg * (2.5 + 0.6 * this.missile), { mis: true, tg, splash: 26 }); } } }
-    if (this.laser) { T.laser -= dt; if (T.laser <= 0) { T.laser = Math.max(2.5, 7 - this.laser); this.beam = 0.5; } }
+    const T = this.modT, dn = this.down;
+    if (this.missile && !dn) { T.missile -= dt; if (T.missile <= 0) { T.missile = Math.max(0.8, 3.2 - 0.4 * this.missile); for (let i = 0; i < 1 + Math.floor(this.missile / 2); i++) { const tg = this.en[Math.floor(Math.random() * this.en.length)]; if (tg) this.shoot(this.x + (i ? 10 : -10), this.y, -Math.PI / 2 + (Math.random() - 0.5), 180, this.dmg * (2.5 + 0.6 * this.missile), { mis: true, tg, splash: 26 }); } } }
+    if (this.laser && !dn) { T.laser -= dt; if (T.laser <= 0) { T.laser = Math.max(2.5, 7 - this.laser); this.beam = 0.5; } }
     if (this.beam > 0) { this.beam -= dt; const bw = 8 + 3 * this.laser; for (const e of this.en) if (e.y < this.y && Math.abs(e.x - this.x) < bw / 2 + e.r) this.damage(e, this.dmg * (4 + 2 * this.laser) * dt); }
-    if (this.arc) { T.arc -= dt; if (T.arc <= 0) { T.arc = Math.max(1, 2.6 - 0.4 * this.arc); let from = { x: this.x, y: this.y }, pts = [[this.x, this.y]], hit = new Set();
+    if (this.arc && !dn) { T.arc -= dt; if (T.arc <= 0) { T.arc = Math.max(1, 2.6 - 0.4 * this.arc); let from = { x: this.x, y: this.y }, pts = [[this.x, this.y]], hit = new Set();
       for (let i = 0; i < 2 + this.arc * 2; i++) { let best = null, bd = 190 ** 2; for (const e of this.en) { if (hit.has(e) || e.dead) continue; const dd = (e.x - from.x) ** 2 + (e.y - from.y) ** 2; if (dd < bd) { bd = dd; best = e; } } if (!best) break; hit.add(best); pts.push([best.x, best.y]); this.damage(best, this.dmg * (1.4 + 0.4 * this.arc)); from = best; }
       if (pts.length > 1) this.bolts.push({ pts, t: 0.2 }); } }
-    if (this.nova) { T.nova -= dt; if (T.nova <= 0) { T.nova = Math.max(2, 5 - 0.8 * this.nova); const R = 70 + 15 * this.nova; for (const e of this.en) if ((e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (R + e.r) ** 2) { this.damage(e, this.dmg * (2 + this.nova)); e.y -= 14; } for (const b of this.eshots) if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < R * R) b.dead = true; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#9fe8ff', r: R, t: 0.35 }); } }
-    if (this.mine) { T.mine -= dt; if (T.mine <= 0 && this.mines.length < 2 + this.mine) { T.mine = 1.4; this.mines.push({ x: this.x, y: this.y + 8, t: 0 }); } }
+    if (this.nova && !dn) { T.nova -= dt; if (T.nova <= 0) { T.nova = Math.max(2, 5 - 0.8 * this.nova); const R = 70 + 15 * this.nova; for (const e of this.en) if ((e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (R + e.r) ** 2) { this.damage(e, this.dmg * (2 + this.nova)); e.y -= 14; } for (const b of this.eshots) if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < R * R) b.dead = true; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#9fe8ff', r: R, t: 0.35 }); } }
+    if (this.mine && !dn) { T.mine -= dt; if (T.mine <= 0 && this.mines.length < 2 + this.mine) { T.mine = 1.4; this.mines.push({ x: this.x, y: this.y + 8, t: 0 }); } }
     for (const m of this.mines) { m.t += dt; for (const e of this.en) if (!m.dead && (e.x - m.x) ** 2 + (e.y - m.y) ** 2 < (e.r + 10) ** 2) { m.dead = true; const R = 40 + 8 * this.mine; for (const o of this.en) if ((o.x - m.x) ** 2 + (o.y - m.y) ** 2 < R * R) this.damage(o, this.dmg * (4 + 2 * this.mine)); this.fx.push({ ring: true, x: m.x, y: m.y, c: '#ffa94d', r: R, t: 0.35 }); } }
     this.mines = this.mines.filter(m => !m.dead && m.t < 14);
-    if (this.drone) { T.drone -= dt; if (T.drone <= 0) { T.drone = 0.6; for (let i = 0; i < this.drone; i++) { const [ox, oy] = this.dronePos(i), tg = this.nearest(ox, oy); this.shoot(ox, oy, tg ? Math.atan2(tg.y - oy, tg.x - ox) : -Math.PI / 2, 480, this.dmg * 0.6, { side: true }); } } }
+    if (this.drone && !dn) { T.drone -= dt; if (T.drone <= 0) { T.drone = 0.6; for (let i = 0; i < this.drone; i++) { const [ox, oy] = this.dronePos(i), tg = this.nearest(ox, oy); this.shoot(ox, oy, tg ? Math.atan2(tg.y - oy, tg.x - ox) : -Math.PI / 2, 480, this.dmg * 0.6, { side: true }); } } }
     for (const b of this.bolts) b.t -= dt;
     this.bolts = this.bolts.filter(b => b.t > 0);
     // Tirs
@@ -7458,15 +7474,15 @@ const Expedition = {
     // Ennemis
     const slow = 1 - 0.12 * this.slow;
     for (const e of this.en) {
-      e.ph += dt; const sp = e.sp * slow;
+      e.ph += dt; const sp = e.sp * slow, A = this.aimAt(e), rr = e.rng || Math.random;
       if (e.type === 'zig' || e.type === 'mini') { e.y += sp * dt; e.x += Math.sin(e.ph * 3) * 90 * dt; }
       else if (e.type === 'shooter' || e.type === 'boss' || e.type === 'sniper') { const stopY = e.type === 'boss' ? 110 : e.type === 'sniper' ? 80 + (e.r * 9) % 50 : 140 + (e.r * 7) % 60; if (e.y < stopY) e.y += sp * dt * 1.6; else e.x += Math.sin(e.ph) * 40 * dt; }
-      else if (e.type === 'dart') { if (e.mode === 0) { e.y += sp * dt; if (e.y > 90 + (e.ph * 37) % 120) { e.mode = 1; e.aim = 0.6; } } else if (e.mode === 1) { e.aim -= dt; if (e.aim <= 0) { const a = Math.atan2(this.y - e.y, this.x - e.x); e.vx = Math.cos(a) * 330; e.vy = Math.sin(a) * 330; e.mode = 2; } } else { e.x += e.vx * dt * slow; e.y += e.vy * dt * slow; } }
+      else if (e.type === 'dart') { if (e.mode === 0) { e.y += sp * dt; if (e.y > 90 + (e.ph * 37) % 120) { e.mode = 1; e.aim = 0.6; } } else if (e.mode === 1) { e.aim -= dt; if (e.aim <= 0) { const a = Math.atan2(A.y - e.y, A.x - e.x); e.vx = Math.cos(a) * 330; e.vy = Math.sin(a) * 330; e.mode = 2; } } else { e.x += e.vx * dt * slow; e.y += e.vy * dt * slow; } }
       else if (e.type === 'weaver') { e.y += sp * dt * 0.8; e.x += Math.cos(e.ph * 1.5) * 120 * dt; }
       else if (e.type === 'carrier' || e.type === 'healer' || e.type === 'bomber') { const stopY = 90 + (e.r * 13) % 80; if (e.y < stopY) e.y += sp * dt * 1.6; else e.x += Math.sin(e.ph * 0.7) * 35 * dt; }
       else if (e.type === 'layer') { e.y += sp * dt * 0.6; e.x += Math.sin(e.ph * 0.9) * 70 * dt; }
-      else if (e.type === 'seeker') { if (e.va === undefined) e.va = Math.PI / 2; let d2 = Math.atan2(this.y - e.y, this.x - e.x) - e.va; while (d2 > Math.PI) d2 -= TAU; while (d2 < -Math.PI) d2 += TAU; e.va += clamp(d2, -2 * dt, 2 * dt); e.x += Math.cos(e.va) * sp * dt; e.y += Math.sin(e.va) * sp * dt; }
-      else if (e.type === 'phantom') { e.y += sp * dt * 0.7; e.blink -= dt; if (e.hid > 0) { e.hid -= dt; if (e.hid <= 0) { e.x = clamp(e.x + (Math.random() - 0.5) * 180, 20, 340); e.y = Math.max(-10, e.y - 40); } } else if (e.blink <= 0 && e.y > 20) { e.hid = 0.8; e.blink = 2.2 + Math.random(); } }
+      else if (e.type === 'seeker') { if (e.va === undefined) e.va = Math.PI / 2; let d2 = Math.atan2(A.y - e.y, A.x - e.x) - e.va; while (d2 > Math.PI) d2 -= TAU; while (d2 < -Math.PI) d2 += TAU; e.va += clamp(d2, -2 * dt, 2 * dt); e.x += Math.cos(e.va) * sp * dt; e.y += Math.sin(e.va) * sp * dt; }
+      else if (e.type === 'phantom') { e.y += sp * dt * 0.7; e.blink -= dt; if (e.hid > 0) { e.hid -= dt; if (e.hid <= 0) { e.x = clamp(e.x + (rr() - 0.5) * 180, 20, 340); e.y = Math.max(-10, e.y - 40); } } else if (e.blink <= 0 && e.y > 20) { e.hid = 0.8; e.blink = 2.2 + rr(); } }
       else e.y += sp * dt;
       if (e.type !== 'dart') e.x = clamp(e.x, 12, 348);
       if (EXP_ACT[e.type]) { e.fire -= dt; if (e.fire <= 0 && e.y > 30) EXP_ACT[e.type](this, e); }
@@ -7476,13 +7492,13 @@ const Expedition = {
           if (e.type === 'boss') {
             e.mode = (e.mode + 1) % 3;
             if (e.mode === 0) { const n = 10 + Math.min(8, Math.floor(this.wave / 5)), off = e.ph; for (let i = 0; i < n; i++) { const a = off + i * TAU / n; this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140 }); } e.fire = 1.6; }
-            else if (e.mode === 1) { const a = Math.atan2(this.y - e.y, this.x - e.x); for (let i = -2; i <= 2; i++) this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a + i * 0.12) * 200, vy: Math.sin(a + i * 0.12) * 200 }); e.fire = 1.4; }
-            else { for (let i = 0; i < 4; i++) this.spawn(i % 2 ? 'zig' : 'drone', e.x - 45 + i * 30, e.y + 30); e.fire = 2.2; }
-          } else { const a = Math.atan2(this.y - e.y, this.x - e.x), v = 170 * this.esp(); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); e.fire = (1.8 + Math.random()) * this.fk(); }
+            else if (e.mode === 1) { const a = Math.atan2(A.y - e.y, A.x - e.x); for (let i = -2; i <= 2; i++) this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a + i * 0.12) * 200, vy: Math.sin(a + i * 0.12) * 200 }); e.fire = 1.4; }
+            else { for (let i = 0; i < 4; i++) this.spawn(i % 2 ? 'zig' : 'drone', e.x - 45 + i * 30, e.y + 30, null, e); e.fire = 2.2; }
+          } else { const a = Math.atan2(A.y - e.y, A.x - e.x), v = 170 * this.esp(); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v }); e.fire = (1.8 + rr()) * this.fk(); }
         }
       }
-      if (e.type === 'sniper') { e.fire -= dt; if (e.fire <= 0 && e.y > 60) { if (!e.aim) { e.aim = 0.8; e.ax = this.x; e.ay = this.y; } e.aim -= dt; if (e.aim <= 0.01) { const a = Math.atan2(e.ay - e.y, e.ax - e.x); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 420, vy: Math.sin(a) * 420, fast: true }); e.aim = 0; e.fire = 3 + Math.random(); } } }
-      if (e.y > 680 || e.x < -60 || e.x > 420) { e.y = -30; e.x = 30 + Math.random() * 300; if (e.type === 'dart') e.mode = 0; } else if (e.y < -200) { e.dead = true; e.gone = true; }
+      if (e.type === 'sniper') { e.fire -= dt; if (e.fire <= 0 && e.y > 60) { if (!e.aim) { e.aim = 0.8; e.ax = A.x; e.ay = A.y; } e.aim -= dt; if (e.aim <= 0.01) { const a = Math.atan2(e.ay - e.y, e.ax - e.x); this.eshots.push({ x: e.x, y: e.y, vx: Math.cos(a) * 420, vy: Math.sin(a) * 420, fast: true }); e.aim = 0; e.fire = 3 + rr(); } } }
+      if (e.y > 680 || e.x < -60 || e.x > 420) { e.y = -30; e.x = 30 + rr() * 300; if (e.type === 'dart') e.mode = 0; } else if (e.y < -200) { e.dead = true; e.gone = true; }
     }
     // Drones orbitaux
     for (let i = 0; i < this.orbs; i++) { const a = this.t * 3 + i * TAU / this.orbs, ox = this.x + Math.cos(a) * 40, oy = this.y + Math.sin(a) * 40; for (const e of this.en) if ((e.x - ox) ** 2 + (e.y - oy) ** 2 < (e.r + 7) ** 2) this.damage(e, this.dmg * 2.2 * dt); }
@@ -7491,24 +7507,27 @@ const Expedition = {
       if (e.dead || s.dead || s.hit.has(e) || e.hid > 0) continue;
       if ((e.x - s.x) ** 2 + (e.y - s.y) ** 2 < (e.r + 4) ** 2) {
         s.hit.add(e);
+        if (s.ghost) { s.dead = true; break; }   // tir du coéquipier : ses dégâts arrivent par le réseau
         if (s.splash) { for (const o of this.en) if ((o.x - s.x) ** 2 + (o.y - s.y) ** 2 < (s.splash + o.r) ** 2) this.damage(o, s.dmg * (o === e ? 1 : 0.5)); this.fx.push({ ring: true, x: s.x, y: s.y, c: '#ff9b3d', r: s.splash + 6, t: 0.3 }); s.dead = true; break; }
         this.damage(e, s.dmg, true); if (s.p-- <= 0) s.dead = true;
       }
     }
     for (const s of this.shots) if (!s.dead) for (const m of this.eshots) if (m.mine && !m.dead && (m.x - s.x) ** 2 + (m.y - s.y) ** 2 < (m.r + 4) ** 2) { m.dead = true; s.dead = true; this.fx.push({ ring: true, x: m.x, y: m.y, c: '#c8a2ff', r: 12, t: 0.3 }); break; }
     const ek = 1 - this.eslow;
-    for (const s of this.eshots) { s.x += s.vx * dt * ek; s.y += s.vy * dt * ek; if ((s.x - this.x) ** 2 + (s.y - this.y) ** 2 < (9 + (s.r || 4)) ** 2) { s.dead = true; this.hurt(); } }
-    for (const e of this.en) if (!e.dead && !(e.hid > 0) && (e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (e.r + 10) ** 2) { if (e.type !== 'boss') { e.dead = true; e.gone = true; } this.hurt(); }
+    for (const s of this.eshots) { s.x += s.vx * dt * ek; s.y += s.vy * dt * ek; if (!this.down && (s.x - this.x) ** 2 + (s.y - this.y) ** 2 < (9 + (s.r || 4)) ** 2) { s.dead = true; this.hurt(); } }
+    for (const e of this.en) if (!e.dead && !this.down && !(e.hid > 0) && (e.x - this.x) ** 2 + (e.y - this.y) ** 2 < (e.r + 10) ** 2) { if (e.type !== 'boss') { e.dead = true; e.gone = true; this.coEv(['gone', e.id]); } this.hurt(); }
     // Bonus qui tombent
-    for (const d of this.drops) { d.y += 80 * dt; if ((d.x - this.x) ** 2 + (d.y - this.y) ** 2 < 24 * 24) { d.dead = true; const P2 = EXP_POWERS[d.k]; if (d.k === 'bouclier') this.shields++; else if (d.k === 'repar') this.hp = Math.min(this.maxHp, this.hp + 1); else this.power[d.k] = P2.d * this.powMul; this.fx.push({ txt: P2.name, c: P2.c, x: this.x, y: this.y - 30, t: 1 }); Sound.sfx && Sound.sfx('up'); } }
+    for (const d of this.drops) { d.y += 80 * dt; if (!this.down && (d.x - this.x) ** 2 + (d.y - this.y) ** 2 < 24 * 24) { d.dead = true; this.coEv(['pk', d.id]); const P2 = EXP_POWERS[d.k]; if (d.k === 'bouclier') this.shields++; else if (d.k === 'repar') this.hp = Math.min(this.maxHp, this.hp + 1); else this.power[d.k] = P2.d * this.powMul; this.fx.push({ txt: P2.name, c: P2.c, x: this.x, y: this.y - 30, t: 1 }); Sound.sfx && Sound.sfx('up'); } }
     this.shots = this.shots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -20 && s.x < 380);
     this.eshots = this.eshots.filter(s => !s.dead && s.y > -20 && s.y < 660 && s.x > -20 && s.x < 380);
     this.drops = this.drops.filter(d => !d.dead && d.y < 660);
     this.en = this.en.filter(e => !e.dead);
-    if (this.hp <= 0) { this.gameOver(); return; }
+    if (this.hp <= 0 && !this.down) { if (this.co && !this.co.solo && !(this.co.mate && this.co.mate.dn)) { this.down = true; this.coEv(['dn']); this.fx.push({ txt: 'Vaisseau détruit : survis… ton coéquipier tient le secteur', c: '#ff5468', x: 180, y: 330, t: 3 }); } else { this.gameOver(); return; } }
+    if (this.co && this.down && (this.co.solo || (this.co.mate && this.co.mate.dn))) { this.gameOver(); return; }
     // Secteur nettoyé : 3 améliorations au choix
     if (!this.spawnQ.length && !this.en.length) {
       this.cleared = this.wave;
+      if (this.co) { this.coEv(['wc', this.wave]); if (this.down) { this.down = false; this.hp = Math.max(1, Math.ceil(this.maxHp / 2)); this.inv = 2; this.coEv(['up']); this.fx.push({ txt: 'Vaisseau réparé', c: '#5dff9a', x: 180, y: 380, t: 2 }); } }
       this.gainEc(5 + this.wave);
       // Palier : tous les 10 secteurs franchis, un objet d'équipement pour l'équipage de Neon Bastion (rareté minimale croissante)
       { const got = crewMilestone(this.wave); if (got.length) { this.crewItems = (this.crewItems || 0) + got.length; this.palier = got; } }
@@ -7519,7 +7538,7 @@ const Expedition = {
       shuffle(pool, Math.random);
       for (const u of pool) { if (pick.length >= 3) break; if (!pick.some(p => p.cat === u.cat) || pick.length >= 2) pick.push(u); }
       Minigames.choose(`Secteur ${this.wave} nettoyé · choisis une amélioration`, pick.map(u => ({ id: u.id, name: `${u.name}${this.ups[u.id] && u.max < 99 ? ' · niv. ' + (this.ups[u.id] + 1) : ''}`, desc: `${u.cat} · ${u.desc}` })),
-        u => { this.applyUp(u.id); Sound.sfx && Sound.sfx('up'); this.paused = false; this.nextWave(); },
+        u => { this.applyUp(u.id); Sound.sfx && Sound.sfx('up'); if (this.co) this.coNext(); else { this.paused = false; this.nextWave(); } },
         this.palier ? crewMilestoneHtml(this.wave, this.palier) : '');
       this.palier = null;
     }
@@ -7528,25 +7547,29 @@ const Expedition = {
   damage(e, v, direct) {
     if (e.dead) return;
     if (e.hid > 0) return;
-    const crit = direct && Math.random() < this.crit;
+    const crit = direct && Math.random() < this.crit, h0 = e.hp;
     e.hp -= v * (crit ? this.critMul : 1) * (e.type === 'boss' || e.elite ? 1 + this.bossDmg : 1);
     if (e.hp > 0 && this.execute && e.type !== 'boss' && e.hp < e.max * this.execute) e.hp = 0;
+    if (this.co) this.co.out[e.id] = (this.co.out[e.id] || 0) + (e.hp <= 0 ? Math.max(h0, 0) + 1 : h0 - e.hp);
     if (crit) this.fx.push({ txt: 'Critique', c: '#ffcf4a', x: e.x, y: e.y - 14, t: 0.5, small: true });
-    if (e.hp <= 0) {
+    if (e.hp <= 0) this.kill(e);
+  },
+  kill(e) {
+    {
       e.dead = true; this.kills++; this.score += Math.round(e.max) * this.wave;
       if (this.vamp && ++this.vampK >= this.vamp) { this.vampK = 0; if (this.hp < this.maxHp) { this.hp++; this.fx.push({ txt: '+1 coque', c: '#5dff9a', x: clamp(this.x, 44, 316), y: this.y - 34, t: 1 }); } }
       this.gainEc(e.ec * (e.elite ? 4 : 1));
       this.fx.push({ ring: true, x: e.x, y: e.y, c: e.c, r: e.r * 1.6, t: 0.35 });
       for (let i = 0; i < 8; i++) { const a = Math.random() * TAU, sp = 40 + Math.random() * 120; this.fx.push({ p: true, x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: e.c, t: 0.5 }); }
-      if (e.type === 'splitter') for (let i = 0; i < 2; i++) this.spawn('mini', e.x + (i ? 10 : -10), e.y);
+      if (e.type === 'splitter') for (let i = 0; i < 2; i++) this.spawn('mini', e.x + (i ? 10 : -10), e.y, null, e);
       if (e.type === 'boss') { this.gainEc(30 + 5 * this.wave); this.dropItem(this.wave >= 15 ? 2 : this.wave >= 10 ? 1 : 0); buzz(120); }
-      else if (e.elite && Math.random() < 0.35 * this.luck) this.dropItem(0);
-      if (e.type !== 'boss' && Math.random() < 0.03 * this.powMul) { const ks = Object.keys(EXP_POWERS); this.drops.push({ x: e.x, y: e.y, k: ks[Math.floor(Math.random() * ks.length)] }); }
+      else if (e.elite && (this.co ? this.idRand(e.id, 'it') : Math.random()) < 0.35 * this.luck) this.dropItem(0);
+      if (e.type !== 'boss' && (this.co ? this.idRand(e.id, 'pw') : Math.random()) < 0.03 * this.powMul) { const ks = Object.keys(EXP_POWERS); this.drops.push({ id: e.id, x: e.x, y: e.y, k: ks[Math.floor((this.co ? this.idRand(e.id, 'pk') : Math.random()) * ks.length)] }); }
       Sound.sfx && Sound.sfx(e.type === 'boss' ? 'boom' : 'build');
     }
   },
   hurt() {
-    if (this.inv > 0 || this.over) return;
+    if (this.inv > 0 || this.over || this.down) return;
     if (this.shields > 0) { this.shields--; this.inv = 0.8; this.fx.push({ ring: true, x: this.x, y: this.y, c: '#4fa3ff', r: 30, t: 0.4 }); Sound.sfx && Sound.sfx('build'); return; }
     if (this.hp <= 1 && this.revive > 0) { this.revive--; this.inv = 2.5; this.hitFx = 0.35; this.eshots = []; this.fx.push({ txt: 'Sursaut de survie !', c: '#3ddc5a', x: 180, y: 330, t: 2 }); this.fx.push({ ring: true, x: this.x, y: this.y, c: '#3ddc5a', r: 60, t: 0.5 }); return; }
     this.hp--; this.inv = this.invT; this.hitFx = 0.35; this.fx.push({ txt: '−1 coque', c: '#ff5468', x: clamp(this.x, 44, 316), y: this.y - 34, t: 1 }); buzz(60); Sound.sfx && Sound.sfx('alarm');
@@ -7555,7 +7578,7 @@ const Expedition = {
     if (this.over) return;
     this.over = true;
     this.bankWave();
-    const e = ExpData.get(App.slot); e.run = null; e.runs++; e.kills += this.kills; Store.touch(App.slot);
+    const e = ExpData.get(App.slot); if (this.co) { this.coEv(['over']); MgCoop.saveRun(null); } else e.run = null; e.runs++; e.kills += this.kills; Store.touch(App.slot);
     setTimeout(() => Minigames.finish(this.result()), 900);
   },
   draw(g) {
@@ -7592,7 +7615,7 @@ const Expedition = {
     for (const b of this.bolts) { g.strokeStyle = '#fff27a'; g.lineWidth = 2; g.globalAlpha = b.t * 5; g.beginPath(); b.pts.forEach(([x, y], i) => { const jx = i ? (Math.random() - 0.5) * 8 : 0; i ? g.lineTo(x + jx, y + jx) : g.moveTo(x, y); }); g.stroke(); g.globalAlpha = 1; }
     for (const s of this.shots) {
       if (s.mis) { g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx)); g.fillStyle = '#ff9b3d'; g.fillRect(-6, -2, 12, 4); g.fillStyle = 'rgba(255,207,74,.6)'; g.fillRect(-12, -1.5, 6, 3); g.restore(); }
-      else { g.fillStyle = s.side ? '#9afff0' : '#5ef0ff'; g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx) + Math.PI / 2); g.fillRect(-1.5, -5, 3, 10); g.restore(); }
+      else { g.fillStyle = s.ghost ? '#ff9ee8' : s.side ? '#9afff0' : '#5ef0ff'; g.save(); g.translate(s.x, s.y); g.rotate(Math.atan2(s.vy, s.vx) + Math.PI / 2); g.fillRect(-1.5, -5, 3, 10); g.restore(); }
     }
     for (const s of this.eshots) { if (s.mine) { g.strokeStyle = '#c8a2ff'; g.lineWidth = 2; g.globalAlpha = 0.7 + 0.3 * Math.sin(this.t * 8); g.beginPath(); g.arc(s.x, s.y, s.r, 0, TAU); g.stroke(); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + this.t; g.beginPath(); g.moveTo(s.x + Math.cos(a) * s.r, s.y + Math.sin(a) * s.r); g.lineTo(s.x + Math.cos(a) * (s.r + 4), s.y + Math.sin(a) * (s.r + 4)); g.stroke(); } g.globalAlpha = 1; g.fillStyle = '#c8a2ff'; g.beginPath(); g.arc(s.x, s.y, 2.5, 0, TAU); g.fill(); continue; } if (s.fast) { const k = 0.05; g.strokeStyle = 'rgba(255,120,60,.55)'; g.lineWidth = 3; g.beginPath(); g.moveTo(s.x - s.vx * k, s.y - s.vy * k); g.lineTo(s.x, s.y); g.stroke(); } g.fillStyle = s.fast ? '#ff8a3d' : '#ff5468'; g.beginPath(); g.arc(s.x, s.y, s.fast ? 4 : 4, 0, TAU); g.fill(); }
     for (const d of this.drops) { const P2 = EXP_POWERS[d.k]; g.save(); g.shadowColor = P2.c; g.shadowBlur = 10; g.strokeStyle = P2.c; g.lineWidth = 2; g.fillStyle = '#05070d'; g.beginPath(); g.arc(d.x, d.y, 9, 0, TAU); g.fill(); g.stroke(); g.restore(); g.fillStyle = P2.c; g.font = '800 11px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(P2.l, d.x, d.y + 1); g.textBaseline = 'alphabetic'; }
@@ -7603,8 +7626,20 @@ const Expedition = {
     }
     for (let i = 0; i < this.orbs; i++) { const a = this.t * 3 + i * TAU / this.orbs; g.fillStyle = '#3ef2c8'; g.beginPath(); g.arc(this.x + Math.cos(a) * 40, this.y + Math.sin(a) * 40, 5, 0, TAU); g.fill(); }
     for (let i = 0; i < this.drone; i++) { const [ox, oy] = this.dronePos(i); g.fillStyle = '#9afff0'; g.beginPath(); g.moveTo(ox, oy - 7); g.lineTo(ox + 5, oy + 5); g.lineTo(ox - 5, oy + 5); g.closePath(); g.fill(); }
-    // L'Arche
-    if (!this.over && !(this.inv > 0 && Math.floor(this.t * 12) % 2)) {
+    // Le vaisseau du coéquipier (rose), puis l'Arche
+    const mt = this.co && this.co.mate;
+    if (mt && !mt.gone) {
+      g.save(); g.translate(mt.x, mt.y); g.globalAlpha = mt.dn ? 0.35 : 1;
+      if (!mt.dn) { g.fillStyle = 'rgba(255,122,224,.35)'; g.beginPath(); g.moveTo(-5, 14); g.lineTo(0, 24 + Math.random() * 8); g.lineTo(5, 14); g.fill(); }
+      g.fillStyle = '#1d1124'; g.strokeStyle = '#ff7ae0'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(0, -18); g.lineTo(13, 12); g.lineTo(0, 7); g.lineTo(-13, 12); g.closePath(); g.fill(); g.stroke();
+      if (mt.sh > 0 && !mt.dn) { g.strokeStyle = 'rgba(255,122,224,.6)'; g.beginPath(); g.arc(0, 0, 22, 0, TAU); g.stroke(); }
+      g.globalAlpha = 1; g.fillStyle = '#ff9ee8'; g.font = '700 9px "Chakra Petch", sans-serif'; g.textAlign = 'center';
+      g.fillText(mt.dn ? `${Multi.themName} · détruit` : Multi.themName, 0, 32);
+      g.restore();
+    }
+    if (this.down) { g.save(); g.globalAlpha = 0.35 + 0.15 * Math.sin(this.t * 6); g.strokeStyle = '#ff5468'; g.lineWidth = 2; g.setLineDash([4, 4]); g.beginPath(); g.arc(this.x, this.y, 16, 0, TAU); g.stroke(); g.setLineDash([]); g.restore(); }
+    if (!this.over && !this.down && !(this.inv > 0 && Math.floor(this.t * 12) % 2)) {
       g.save(); g.translate(this.x, this.y);
       g.fillStyle = 'rgba(94,240,255,.35)'; g.beginPath(); g.moveTo(-5, 14); g.lineTo(0, 26 + Math.random() * 8); g.lineTo(5, 14); g.fill();
       g.fillStyle = '#111829'; g.strokeStyle = '#e4ecfb'; g.lineWidth = 2;
@@ -7617,6 +7652,7 @@ const Expedition = {
     if (this.hitFx > 0) { g.fillStyle = `rgba(255,40,70,${(this.hitFx / 0.35 * 0.28).toFixed(3)})`; g.fillRect(0, 0, 360, 640); }
     for (let i = 0; i < this.maxHp; i++) { g.fillStyle = i < this.hp ? '#ff5468' : '#24314f'; g.fillRect(10 + i * 16, 10, 12, 12); }
     for (let i = 0; i < this.shields; i++) { g.strokeStyle = '#4fa3ff'; g.lineWidth = 2; g.beginPath(); g.arc(16 + i * 16, 34, 6, 0, TAU); g.stroke(); }
+    if (mt && !mt.gone) { for (let i = 0; i < (mt.mh || 0); i++) { g.fillStyle = i < mt.hp ? '#ff7ae0' : '#2a2040'; g.fillRect(10 + i * 11, 46, 8, 8); } }
     g.font = '700 11px "JetBrains Mono", monospace'; g.textAlign = 'right'; g.fillStyle = '#c58bff'; g.fillText(`${EXC} ${Math.round(this.runEc + this.waveEc)}`, 350, 20);
     let py = 38; for (const k in this.power) if (this.power[k] > 0) { const P2 = EXP_POWERS[k]; g.fillStyle = P2.c; g.fillText(`${P2.name} ${Math.ceil(this.power[k])} s`, 350, py); py += 15; }
     if (this.banner) { g.globalAlpha = Math.min(1, this.banner.t * 2); g.fillStyle = '#e4ecfb'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(this.banner.text, 180, 300); if (this.banner.sub) { g.fillStyle = '#ff8a3d'; g.font = '700 15px "Chakra Petch", sans-serif'; g.fillText(this.banner.sub, 180, 328); } g.globalAlpha = 1; }
@@ -7624,11 +7660,12 @@ const Expedition = {
     if (this.over) { g.fillStyle = 'rgba(5,7,13,.55)'; g.fillRect(0, 0, 360, 640); g.fillStyle = '#ff5468'; g.font = '800 26px "Orbitron", "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('FIN DE L’EXPÉDITION', 180, 300); }
   },
   info() { return `Secteur ${this.wave} · ${this.kills} détruits`; },
-  quit() { if (this.over) return; this.paused = true; this.quitting = true; Minigames.finish(this.result()); },
+  quit() { if (this.over) return; this.paused = true; this.quitting = true; if (this.co) this.coEv(['quit']); Minigames.finish(this.result()); },
   result() { return { wave: this.wave, cleared: this.cleared, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, crew: this.crewItems, quit: !!this.quitting }; },
   reward(r) {
     const s = App.slot, e = ExpData.get(s);
     this.quitting = false;
+    if (this.co) return MgCoop.reward(this, r);
     if (r.quit) return { summary: 'partie sauvegardée', title: 'Partie en pause', text: `Tu reprendras au début du secteur ${r.wave}, avec tes améliorations. Les éclats de ce secteur n’étaient pas encore gagnés.` };
     const cleared = r.cleared, prev = e.best;
     let gems = 0;
@@ -7641,7 +7678,82 @@ const Expedition = {
     if (gems) parts.push(mgGrant(s, { gems }));
     return { best: e.best, summary: parts.join(' · '), title: cleared > prev ? 'Nouveau record !' : 'Fin de l’expédition', text: `Secteurs franchis : ${cleared} · score ${fmtBig(r.score)} · ${r.kills} ennemis détruits.` };
   },
-  afterClose() { ExpHub.open(); }
+  afterClose() { if (MgCoop.after()) return; ExpHub.open(); },
+  /* ---------- Coopération ---------- */
+  coEv(e) { if (this.co) MgCoop.ev(e); },
+  aimAt(e) {
+    const m = this.co && this.co.mate;
+    if (!m || m.dn || m.gone) return this;
+    if (this.down) return m;
+    return (m.x - e.x) ** 2 + (m.y - e.y) ** 2 < (this.x - e.x) ** 2 + (this.y - e.y) ** 2 ? m : this;
+  },
+  /* Échanges réguliers : position du vaisseau et dégâts infligés (le coéquipier les applique à ses ennemis). */
+  coTick(dt) {
+    const co = this.co, m = co.mate;
+    co.sendT -= dt;
+    if (co.sendT <= 0) {
+      co.sendT = Net.relay ? 0.12 : 0.07;
+      const d = co.out; co.out = {};
+      for (const k in d) d[k] = Math.round(d[k] * 10) / 10;
+      MgCoop.send({ t: 'xs', x: Math.round(this.x), y: Math.round(this.y), hp: this.hp, mh: this.maxHp, sh: this.shields, dn: this.down ? 1 : 0, r: this.rate, n: this.multi, w: this.wave, d });
+    }
+    for (const id in co.pend) if (co.pend[id] && (co.pendT = (co.pendT || 0) + dt) > 4) { co.pend = {}; co.pendT = 0; break; }
+    if (m && !m.dn && !m.gone) {
+      // déplacement adouci du vaisseau du coéquipier et tirs d'apparence (ses vrais dégâts arrivent par le réseau)
+      m.x += (m.tx - m.x) * Math.min(1, dt * 12); m.y += (m.ty - m.y) * Math.min(1, dt * 12);
+      co.mcd -= dt;
+      if (co.mcd <= 0 && this.en.length) {
+        co.mcd = m.r || 0.4;
+        const tg = this.nearest(m.x, m.y), base = tg ? Math.atan2(tg.y - m.y, tg.x - m.x) : -Math.PI / 2, n = Math.min(5, m.n || 1);
+        for (let i = 0; i < n; i++) this.shoot(m.x, m.y - 14, base + (i - (n - 1) / 2) * 0.14, 520, 0, { ghost: true });
+      }
+    }
+    // Le coéquipier a fini le secteur : on rattrape (ennemis restants retirés) au bout de 4 s
+    if (co.wc >= this.wave && (this.en.length || this.spawnQ.length)) { co.waitT += dt; if (co.waitT > 4) { co.waitT = 0; this.spawnQ = []; for (const e of this.en) { e.dead = true; } this.en = []; } } else co.waitT = 0;
+  },
+  coMsg(m) {
+    const co = this.co; if (!co) return;
+    if (m.t === 'xs') {
+      const mt = co.mate || (co.mate = { x: m.x, y: m.y });
+      Object.assign(mt, { tx: m.x, ty: m.y, hp: m.hp, mh: m.mh, sh: m.sh, dn: !!m.dn, r: m.r, n: m.n, gone: false });
+      for (const id in m.d || {}) {
+        const e = this.en.find(o => o.id === id);
+        if (e) { if (!e.dead && !(e.hid > 0)) { e.hp -= m.d[id]; if (e.hp <= 0) this.kill(e); } }
+        else co.pend[id] = (co.pend[id] || 0) + m.d[id];
+      }
+      return;
+    }
+    if (m.t !== 'xe') return;
+    for (const ev of m.e) {
+      const [k, a] = ev;
+      if (k === 'gone') { const e = this.en.find(o => o.id === a); if (e) { e.dead = true; e.gone = true; } }
+      else if (k === 'pk') { const d = this.drops.find(o => o.id === a); if (d) d.dead = true; }
+      else if (k === 'dn') { if (co.mate) co.mate.dn = true; this.fx.push({ txt: `${Multi.themName} est à terre : tiens jusqu’à la fin du secteur !`, c: '#ff7ae0', x: 180, y: 250, t: 3 }); }
+      else if (k === 'up') { if (co.mate) co.mate.dn = false; }
+      else if (k === 'wc') co.wc = Math.max(co.wc, a);
+      else if (k === 'wd') { co.wd = Math.max(co.wd, a); if (this.waiting && co.wd >= this.wave) this.coGo(); }
+      else if (k === 'over') { if (co.mate) co.mate.dn = true; }
+      else if (k === 'quit') this.coSolo(`${Multi.themName} a quitté l’expédition : tu continues seul`);
+      else if (k === 'chest') MgCoop.chestShow(this, a);
+      else if (k === 'gift') MgCoop.gift(a);
+    }
+  },
+  coSolo(msg) {
+    const co = this.co; if (!co || co.solo) return;
+    co.solo = true; if (co.mate) co.mate.gone = true;
+    this.fx.push({ txt: msg, c: '#ffcf4a', x: 180, y: 300, t: 3.5 });
+    if (this.waiting) this.coGo();
+  },
+  /* Amélioration choisie : on attend que le coéquipier ait choisi la sienne. */
+  coNext() {
+    const co = this.co;
+    this.coEv(['wd', this.wave]);
+    if (co.solo || co.wd >= this.wave) { this.coGo(); return; }
+    this.waiting = true;
+    const ov = $('mgOver'); ov.hidden = false;
+    ov.innerHTML = `<div class="card mgend"><h2>Secteur ${this.wave} nettoyé</h2><div class="mpwait"><i class="mpspin"></i><p>${esc(Multi.themName)} choisit son amélioration…</p></div></div>`;
+  },
+  coGo() { this.waiting = false; const ov = $('mgOver'); ov.hidden = true; ov.innerHTML = ''; this.paused = false; this.nextWave(); }
 };
 
 /* ---------- Course des Toits : plateforme à défilement, équipement partagé avec l'Expédition ----------
@@ -7883,6 +7995,9 @@ const Plat = {
   init() {
     const s = App.slot, st = PlatData.stats(s), o = this.opts || { lvl: 1 }, r = o.resume;
     this.opts = null;
+    // À deux : même niveau (même graine), chacun son Pip ; positions, dégâts, ramassages et mécanismes s'échangent.
+    this.co = o.coop ? Object.assign(o.coop, { out: {}, kills: [], pend: {}, sendT: 0, mate: null, mcd: 0, wd: 0, arr: 0, finT: 0 }) : null;
+    this.down = false; this.waiting = false; this.arrived = false;
     Object.assign(this, { st, t: 0, over: false, paused: false, kills: r ? r.kills : 0, score: r ? r.score : 0, runEc: r ? r.ec : 0, runItems: r ? r.items : 0,
       startLvl: r ? r.startLvl || r.lvl : o.wave || 1, lvl: (r ? r.lvl : o.wave || 1) - 1, cleared: 0, touches: new Map(), fx: [],
       dmg: 10 * st.dmg, rate: 1 / st.rate, multi: st.multi, pierce: st.pierce, maxHp: st.hp, hp: st.hp, shieldMax: st.shield, crit: st.crit, critMul: 2 + st.critMul,
@@ -7933,6 +8048,7 @@ const Plat = {
   },
   snapshot() {
     const e = PlatData.get(App.slot);
+    if (this.co) { const ups = Object.assign({}, this.ups); delete ups.pheal; MgCoop.saveRun({ wave: this.lvl, lvl: this.lvl, hp: this.hp, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, gems: this.runGems, startLvl: this.startLvl, ups, wpn: Object.assign({}, this.wpn) }); return; }
     e.run = { lvl: this.lvl, hp: this.hp, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, gems: this.runGems, startLvl: this.startLvl, ups: Object.assign({}, this.ups), wpn: Object.assign({}, this.wpn) };
     delete e.run.ups.pheal;
     Store.touch(App.slot);
@@ -7970,7 +8086,7 @@ const Plat = {
     { const T = this.T, rr = Math.ceil(s.splash / T); for (let dc = -rr; dc <= rr; dc++) for (let dr = -rr; dr <= rr; dr++) this.hitTile(Math.floor(s.x / T) + dc, Math.floor(s.y / T) + dr, s.dmg); }
     for (const e of this.en) if (!e.dead && Math.hypot(e.x + e.w / 2 - s.x, e.y + e.h / 2 - s.y) < s.splash + e.w / 2) { this.damage(e, s.dmg); this.status(e, s); }
   },
-  dot(e, v) { if (e.dead) return; e.hp -= v; if (e.hp <= 0) this.kill(e); },
+  dot(e, v) { if (e.dead) return; e.hp -= v; if (this.co && e.id) this.co.out[e.id] = (this.co.out[e.id] || 0) + v; if (e.hp <= 0) this.kill(e); },
   chain(tgt, n, d) {
     let from = { x: this.px + 9, y: this.py + 11 }; const pts = [[from.x, from.y]], hit = new Set();
     for (let e = tgt; e && hit.size < n;) {
@@ -7983,7 +8099,8 @@ const Plat = {
   /* ---------- Génération d'un niveau ---------- */
   nextLevel(first) {
     this.lvl++;
-    const lvl = this.lvl, T = this.T, R = this.ROWS, rng = mulberry32(hashStr('toits' + lvl + ':' + (Math.random() * 1e9 | 0)));
+    const lvl = this.lvl, T = this.T, R = this.ROWS, rng = mulberry32(hashStr('toits' + lvl + ':' + (this.co ? this.co.seed : (Math.random() * 1e9 | 0))));
+    if (this.co) { this.co.arr = 0; this.co.finT = 0; this.arrived = false; this.co.kid = 0; }
     const boss = lvl % 5 === 0, run = boss ? 34 + Math.min(20, lvl) : 60 + Math.min(110, lvl * 5), arena = boss ? 20 : 0, L = run + arena + 12;
     const g = new Uint8Array(L * R), set = (c, r, v) => { if (c >= 0 && c < L && r >= 0 && r < R) g[c * R + r] = v; };
     const ground = (c, gh) => { for (let r = gh; r < R; r++) set(c, r, 1); };
@@ -7996,7 +8113,7 @@ const Plat = {
       ['tunnel', 5, 1], ['saws', 6, 1], ['gates', 7, 0.9], ['jets', 8, 0.8], ['press', 10, 0.8],
       ['lever', 3, 1.1], ['tramp', 2, 0.8], ['crumble', 4, 0.9], ['mov', 5, 0.9], ['button', 6, 0.8], ['switch', 7, 0.6], ['key', 9, 0.7]].filter(x => lvl >= x[1]);
     const segTot = SEG.reduce((a, x) => a + x[2], 0);
-    let c = 0, gh = this.G0, gid = 0, cs = 0, gold = lvl >= 3 && rng() < 0.3 * this.luck, secret = lvl >= 4 && !boss && rng() < 0.12;
+    let c = 0, gh = this.G0, gid = 0, cs = 0, gold = lvl >= 3 && rng() < 0.3 * (this.co ? 1 : this.luck), secret = lvl >= 4 && !boss && rng() < 0.12 && !this.co;
     for (; c < 8; c++) ground(c, gh);
     while (c < run) {
       cs = c;
@@ -8130,7 +8247,9 @@ const Plat = {
     for (; c < L; c++) ground(c, this.G0);
     if (boss) for (let r = 0; r < this.G0; r++) { set(arenaStart + arena + 1, r, 1); }
     this.setMap({ L, g, tall, haz, boss, arenaStart, arenaEnd: arenaStart + arena, bolts, pows, mech, gates, movs, beacon: { x: (boss ? arenaStart + arena - 3 : L - 5) * T, y: this.G0 * T, on: !boss } });
-    for (const e of en) this.spawn(e.t, (e.c + 0.5) * T, e.gh * T);
+    en.forEach((e, i) => this.spawn(e.t, (e.c + 0.5) * T, e.gh * T, 'L' + lvl + '-' + i));
+    this.bolts.forEach((b, i) => { b.id = 'b' + i; });
+    if (this.co) { const m = this.co.mate; if (m) { m.arr = false; } this.px += this.co.role === 'host' ? 0 : 14; }
     this.banner = { text: boss ? `Niveau ${lvl} · Gardien !` : `Niveau ${lvl}`, sub: '', t: 1.8 };
     const fresh = PLT_SPAWN.find(t => t.from === lvl && t.from > 1);
     if (fresh) this.banner.sub = `Nouvel ennemi : ${fresh.name}`;
@@ -8173,8 +8292,9 @@ const Plat = {
   },
   hk() { const l = this.lvl; return (1 + 0.28 * (l - 1)) * Math.pow(1.055, l - 1); },
   /* Murs destructibles : chaque bloc a des points de vie. */
-  hitTile(c, r, d) {
+  hitTile(c, r, d, remote) {
     if (this.tile(c, r) !== 6) return false;
+    if (this.co && !remote) this.coEv(['brk', c, r]);
     // Le mur de briques entier s'effondre d'un seul tir
     const R = this.ROWS, T = this.T, todo = [[c, r]], seen = new Set([c * R + r]);
     let n = 0;
@@ -8184,7 +8304,7 @@ const Plat = {
       if (Math.abs(rr - r) < 6) for (let i = 0; i < 2; i++) { const a = Math.random() * TAU, sp = 60 + Math.random() * 140; this.fx.push({ p: true, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: '#c8925a', t: 0.6 }); }
       for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nc = cc + dc, nr = rr + dr, nk = nc * R + nr; if (!seen.has(nk) && nr >= 0 && nr < R && this.tile(nc, nr) === 6) { seen.add(nk); todo.push([nc, nr]); } }
     }
-    for (let i = 0; i < Math.min(4, Math.ceil(n / 6)); i++) this.bolts.push({ x: (c + 0.5) * T, y: (r + 0.5) * T, vx: (Math.random() - 0.5) * 160, vy: -200, a: 1, fall: true });
+    for (let i = 0; i < Math.min(4, Math.ceil(n / 6)); i++) this.bolts.push({ id: 'w' + c + '-' + r + '-' + i, x: (c + 0.5) * T, y: (r + 0.5) * T, vx: ((i * 0.37) % 1 - 0.5) * 160, vy: -200, a: 1, fall: true });
     this.fx.push({ ring: true, x: (c + 0.5) * T, y: (r + 0.5) * T, c: '#c8925a', r: 40, t: 0.4 });
     buzz(40); Sound.sfx && Sound.sfx('boom'); return true;
   },
@@ -8194,12 +8314,16 @@ const Plat = {
     for (let dc = 0; dc <= 7; dc++) for (const dr of [0, -1, 1]) { const c = c0 + dc * dir, r = r0 + dr; if (this.tile(c, r) === 6) return { x: c * T, y: r * T, w: T, h: T, dead: false, tile: true, dc }; }
     return null;
   },
-  spawn(t, x, groundY) {
-    const b = PLT_EN[t], elite = Math.random() < Math.min(0.2, 0.03 + this.lvl * 0.003), hp = b[0] * this.hk() * (elite ? 3 : 1);
-    if (t === 'swarm' && !this._sw) { this._sw = true; for (let i = 0; i < 3; i++) this.spawn('swarm', x + (i - 1) * 22, groundY - i * 12); this._sw = false; return; }
+  spawn(t, x, groundY, id, parent) {
+    if (!id) id = parent ? parent.id + '.' + (parent.kids = (parent.kids || 0) + 1) : 'k' + this.lvl + '-' + (this.co ? ++this.co.kid : Math.random());
+    const R = this.co ? mulberry32(hashStr(this.co.seed + ':' + id)) : Math.random;
+    const b = PLT_EN[t], elite = R() < Math.min(0.2, 0.03 + this.lvl * 0.003), hp = b[0] * this.hk() * (elite ? 3 : 1) * (this.co ? 1.5 : 1);
+    if (t === 'swarm' && !this._sw) { this._sw = true; for (let i = 0; i < 3; i++) this.spawn('swarm', x + (i - 1) * 22, groundY - i * 12, id + '.s' + i); this._sw = false; return; }
     const fly = t === 'fly' || t === 'bomber' || t === 'swarm' || t === 'jelly';
-    this.en.push({ t, x: x - b[2] / 2, y: fly ? groundY - 110 - Math.random() * 40 : groundY - b[3], w: b[2] * (elite ? 1.2 : 1), h: b[3] * (elite ? 1.2 : 1), vx: (Math.random() < 0.5 ? -1 : 1) * b[1] * (1 + Math.min(0.6, this.lvl * 0.015)), vy: 0,
-      hp, max: hp, c: b[4], ec: b[5], stomp: b[6], elite, fly, y0: groundY - 120, ph: Math.random() * 6, fire: 1.5 + Math.random() * 2, hitT: 0, onG: false });
+    const e = { id, rng: R, t, x: x - b[2] / 2, y: fly ? groundY - 110 - R() * 40 : groundY - b[3], w: b[2] * (elite ? 1.2 : 1), h: b[3] * (elite ? 1.2 : 1), vx: (R() < 0.5 ? -1 : 1) * b[1] * (1 + Math.min(0.6, this.lvl * 0.015)), vy: 0,
+      hp, max: hp, c: b[4], ec: b[5], stomp: b[6], elite, fly, y0: groundY - 120, ph: R() * 6, fire: 1.5 + R() * 2, hitT: 0, onG: false };
+    this.en.push(e);
+    if (this.co && this.co.pend[id]) { const d = this.co.pend[id]; delete this.co.pend[id]; if (d === 'k') this.kill(e, true); else { e.hp -= d; if (e.hp <= 0) this.kill(e, true); } }
   },
   tile(c, r) { if (c < 0 || c >= this.L) return r < this.ROWS ? 1 : 0; if (r >= this.ROWS) return 0; if (r < 0) return 0; return this.g[c * this.ROWS + r]; },
   solid(c, r) { if (r < 0) return c < 0 || c >= this.L || (this.boss && c === this.arenaEnd + 1) || (this.tall && this.tall.has(c)); const v = this.tile(c, r); return v >= 1 && v !== 8; },
@@ -8215,19 +8339,22 @@ const Plat = {
     if (o.vy > 0) { const r = Math.floor((o.y + o.h) / T); for (let c = c0; c <= c1; c++) if (this.solid(c, r)) { o.y = r * T - o.h; o.vy = 0; o.onG = true; o.gt = this.tile(c, r); o.gr = r; break; } }
     else if (o.vy < 0) { const r = Math.floor(o.y / T); for (let c = c0; c <= c1; c++) if (this.solid(c, r)) { o.y = (r + 1) * T; o.vy = 0; if (onHead) onHead(c, r); break; } }
   },
-  hitCrate(c, r) {
+  hitCrate(c, r, remote) {
     const v = this.tile(c, r), T = this.T;
     if (v !== 2 && v !== 4) return;
     this.g[c * this.ROWS + r] = 3;
+    if (this.co && !remote) this.coEv(['crate', c, r]);
+    const Rc = this.co ? mulberry32(hashStr(this.co.seed + ':c' + this.lvl + ':' + c + ':' + r)) : Math.random, cid = 'c' + c + '-' + r + '-';
     const x = (c + 0.5) * T, y = r * T - 6;
     this.fx.push({ ring: true, x, y: y + 6, c: v === 4 ? '#ffd84a' : '#ff9b3d', r: 18, t: 0.3 });
     Sound.sfx && Sound.sfx('build');
-    if (v === 4) { this.dropItem(1, x, y); return; }
-    const k = Math.random();
-    if (k < 0.62) for (let i = 0; i < 5; i++) this.bolts.push({ x: x + (i - 2) * 6, y, vx: (i - 2) * 40, vy: -260 - Math.random() * 80, a: 1, fall: true });
-    else { const opts = ['bouclier', ...Object.keys(PLT_POW).filter(k => this.lvl >= PLT_POW[k].from)]; if (this.hp < this.maxHp) opts.push('coeur'); this.pows.push({ k: opts[Math.floor(Math.random() * opts.length)], x, y, vy: -200 }); }
+    if (v === 4) { if (!remote) this.dropItem(1, x, y); return; }
+    const k = Rc();
+    if (k < 0.62) for (let i = 0; i < 5; i++) this.bolts.push({ id: cid + i, x: x + (i - 2) * 6, y, vx: (i - 2) * 40, vy: -260 - Rc() * 80, a: 1, fall: true });
+    else { const opts = ['bouclier', ...Object.keys(PLT_POW).filter(k => this.lvl >= PLT_POW[k].from)]; if (this.hp < this.maxHp || this.co) opts.push('coeur'); this.pows.push({ id: cid + 'p', k: opts[Math.floor(Rc() * opts.length)], x, y, vy: -200 }); }
   },
   dropItem(minR, x, y) {
+    if (this.co) { MgCoop.chestAdd(this, minR); return; }
     const setChance = this.lvl >= 5 ? (minR ? 0.15 : 0.03) * this.luck : 0;
     const res = PlatData.roll(App.slot, this.lvl, this.luck, minR, setChance), R = PlatData.rar(res.it);
     this.lvItems.push(res.it); if (res.auto) this.lvEc += res.auto;
@@ -8235,38 +8362,41 @@ const Plat = {
   },
   gain(n) { this.lvEc += n * this.ecMul * (this.power.pluie > 0 ? 2 : 1); },
   hurt(pit) {
-    if (this.over || (!pit && (this.inv > 0 || this.power.surcharge > 0))) return;
+    if (this.over || this.down || this.arrived || (!pit && (this.inv > 0 || this.power.surcharge > 0))) return;
     if (!pit && this.shields > 0) { this.shields--; this.inv = 0.8; this.fx.push({ ring: true, x: this.px + 9, y: this.py + 13, c: '#4fa3ff', r: 26, t: 0.4 }); Sound.sfx && Sound.sfx('build'); return; }
     if (this.hp <= 1 && this.revive > 0) { this.revive--; this.inv = 2.5; this.hitFx = 0.35; this.fx.push({ txt: 'Sursaut de survie !', c: '#3ddc5a', x: 180, y: 220, t: 2, screen: true }); if (pit) this.respawn(); return; }
     this.hp--; this.inv = this.invT; this.hitFx = 0.35; buzz(60); Sound.sfx && Sound.sfx('alarm');
     this.fx.push({ txt: '−1 cœur', c: '#ff5468', x: this.px + 9, y: this.py - 10, t: 1 });
     if (pit) this.respawn();
-    if (this.hp <= 0) this.gameOver();
+    if (this.hp <= 0) { if (this.co && !this.co.solo && !(this.co.mate && (this.co.mate.dn || this.co.mate.gone))) this.coDown(); else this.gameOver(); }
   },
   respawn() { this.px = this.safe.x; this.py = this.safe.y - 4; this.vx = 0; this.vy = 0; this.inv = Math.max(this.inv, 1.5); },
   damage(e, v, direct) {
     if (e.dead) return;
-    const crit = direct && Math.random() < this.crit;
+    const crit = direct && Math.random() < this.crit, h0 = e.hp;
     e.hp -= v * (crit ? this.critMul : 1) * (e.boss || e.elite ? 1 + this.bossDmg : 1) * (e.acid > 0 ? 1.25 : 1); e.hitT = 0.12;
+    if (this.co && e.id) this.co.out[e.id] = (this.co.out[e.id] || 0) + Math.max(0, h0 - Math.max(0, e.hp));
     if (crit) this.fx.push({ txt: 'Critique', c: '#ffcf4a', x: e.x + e.w / 2, y: e.y - 6, t: 0.5, small: true });
     if (e.hp <= 0) this.kill(e);
   },
-  kill(e) {
+  kill(e, remote) {
+    if (e.dead) return;
     e.dead = true; this.kills++; this.score += Math.round(e.max) * this.lvl;
+    if (this.co && !remote && e.id) this.co.kills.push(e.id);
     this.gain(e.ec * (e.elite ? 4 : 1));
-    const cx = e.x + e.w / 2, cy = e.y + e.h / 2;
+    const cx = e.x + e.w / 2, cy = e.y + e.h / 2, Rk = this.co ? mulberry32(hashStr(this.co.seed + ':k' + e.id)) : Math.random;
     this.fx.push({ ring: true, x: cx, y: cy, c: e.c, r: e.w, t: 0.35 });
     for (let i = 0; i < 8; i++) { const a = Math.random() * TAU, sp = 40 + Math.random() * 120; this.fx.push({ p: true, x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: e.c, t: 0.5 }); }
     if (this.vamp && ++this.vampK >= this.vamp) { this.vampK = 0; if (this.hp < this.maxHp) { this.hp++; this.fx.push({ txt: '+1 cœur', c: '#5dff9a', x: this.px + 9, y: this.py - 12, t: 1 }); } }
-    if (e.boss) { this.pows.push({ k: 'arme', x: cx - 14, y: cy, vy: -260 }, { k: 'gemme', n: 5, x: cx + 14, y: cy, vy: -260 }); this.gain(30 + 5 * this.lvl); this.dropItem(this.lvl >= 15 ? 2 : this.lvl >= 10 ? 1 : 0, cx, cy); this.beacon.on = true; this.bossObj = null; buzz(120); Sound.sfx && Sound.sfx('boom'); this.fx.push({ txt: 'Gardien vaincu : la balise s’allume', c: '#3ef2c8', x: 180, y: 160, t: 2.6, screen: true }); }
+    if (e.boss) { this.pows.push({ id: e.id + 'a', k: 'arme', x: cx - 14, y: cy, vy: -260 }, { id: e.id + 'g', k: 'gemme', n: 5, x: cx + 14, y: cy, vy: -260 }); this.gain(30 + 5 * this.lvl); this.dropItem(this.lvl >= 15 ? 2 : this.lvl >= 10 ? 1 : 0, cx, cy); this.beacon.on = true; this.bossObj = null; buzz(120); Sound.sfx && Sound.sfx('boom'); this.fx.push({ txt: 'Gardien vaincu : la balise s’allume', c: '#3ef2c8', x: 180, y: 160, t: 2.6, screen: true }); }
     else {
-      if (e.elite && Math.random() < 0.35 * this.luck) this.dropItem(0, cx, cy);
-      if (e.t === 'splitter') for (const dx of [-12, 12]) { this.spawn('crawl', cx + dx, e.y + e.h); const m = this.en[this.en.length - 1]; m.w *= 0.7; m.h *= 0.7; m.y += 5; m.hp = m.max = e.max * 0.3; m.c = '#7dff6a'; }
+      if (e.elite && Rk() < 0.35 * this.luck) this.dropItem(0, cx, cy);
+      if (e.t === 'splitter') for (const dx of [-12, 12]) { this.spawn('crawl', cx + dx, e.y + e.h, null, e); const m = this.en[this.en.length - 1]; m.w *= 0.7; m.h *= 0.7; m.y += 5; m.hp = m.max = e.max * 0.3; m.c = '#7dff6a'; }
       // Butin des monstres : boulons, parfois des gemmes ou une caisse d'arme
-      for (let i = 0; i < (Math.random() < 0.5 ? 1 : 2); i++) this.bolts.push({ x: cx, y: cy, vx: (Math.random() - 0.5) * 160, vy: -200 - Math.random() * 120, a: 1, fall: true });
-      if (Math.random() < (e.elite ? 0.3 : 0.025) * this.luck) this.pows.push({ k: 'gemme', n: e.elite ? 2 : 1, x: cx, y: cy, vy: -220 });
-      if (Math.random() < (e.elite ? 0.08 : 0.005)) this.pows.push({ k: 'arme', x: cx, y: cy, vy: -220 });
-      else if (Math.random() < 0.02) { const ks = Object.keys(PLT_POW).filter(k => this.lvl >= PLT_POW[k].from); this.pows.push({ k: ks[Math.floor(Math.random() * ks.length)], x: cx, y: cy, vy: -220 }); }
+      for (let i = 0; i < (Rk() < 0.5 ? 1 : 2); i++) this.bolts.push({ id: e.id + 'b' + i, x: cx, y: cy, vx: (Rk() - 0.5) * 160, vy: -200 - Rk() * 120, a: 1, fall: true });
+      if (Rk() < (e.elite ? 0.3 : 0.025) * (this.co ? 1 : this.luck)) this.pows.push({ id: e.id + 'g', k: 'gemme', n: e.elite ? 2 : 1, x: cx, y: cy, vy: -220 });
+      if (Rk() < (e.elite ? 0.08 : 0.005)) this.pows.push({ id: e.id + 'a', k: 'arme', x: cx, y: cy, vy: -220 });
+      else if (Rk() < 0.02) { const ks = Object.keys(PLT_POW).filter(k => this.lvl >= PLT_POW[k].from); this.pows.push({ id: e.id + 'p', k: ks[Math.floor(Rk() * ks.length)], x: cx, y: cy, vy: -220 }); }
       Sound.sfx && Sound.sfx('build');
     }
   },
@@ -8289,7 +8419,8 @@ const Plat = {
     while (steps-- > 0 && !this.over && !this.done) this.step(h, keys);
   },
   step(dt, keys) {
-    const T = this.T, inp = this.input(keys);
+    const T = this.T, inp = this.co && (this.down || this.arrived) ? { mx: 0, my: 0, J: false } : this.input(keys);
+    if (this.co) { this.coTick(dt); if (this.done) return; }
     // Pip
     const want = inp.mx, tv = want * this.spd;
     const acc = this.onG ? 1600 : 1100;
@@ -8345,21 +8476,24 @@ const Plat = {
     if (this.inv > 0) this.inv -= dt;
     if (this.shieldRegen && this.shields < this.shieldMax) { this.shT += dt; if (this.shT >= this.shieldRegen) { this.shT = 0; this.shields++; } } else this.shT = 0;
     // Caméra
-    const maxCam = this.boss && this.bossOn ? (this.arenaEnd + 2) * T - 360 : this.L * T - 360;
+    const inArena = this.boss && this.bossOn && this.px > this.arenaStart * T, maxCam = inArena ? (this.arenaEnd + 2) * T - 360 : this.L * T - 360;
     this.camY += (clamp(this.py - 250, 0, this.ROWS * T - 480) - this.camY) * Math.min(1, dt * 6);
-    this.camX += (clamp(this.px - 140, this.boss && this.bossOn ? this.arenaStart * T - 20 : 0, Math.max(0, maxCam)) - this.camX) * Math.min(1, dt * 8);
+    this.camX += (clamp(this.px - 140, inArena ? this.arenaStart * T - 20 : 0, Math.max(0, maxCam)) - this.camX) * Math.min(1, dt * 8);
     // Gardien
-    if (this.boss && !this.bossOn && this.px > (this.arenaStart + 2) * T) {
+    const mtx = this.co && this.co.mate && !this.co.mate.gone ? this.co.mate.x : -1;
+    if (this.boss && !this.bossOn && Math.max(this.px, mtx) > (this.arenaStart + 2) * T) {
       this.bossOn = true;
       const hp = 380 * this.hk() * (1 + 0.15 * (this.lvl / 5 - 1));
-      const b = { t: 'boss', boss: true, x: (this.arenaEnd - 5) * T, y: this.G0 * T - 56, w: 54, h: 56, vx: 0, vy: 0, hp, max: hp, c: '#ff3355', ec: 0, stomp: true, ph: 0, fire: 1.6, mode: 0, hitT: 0, sInv: 0 };
+      const b = { id: 'boss' + this.lvl, t: 'boss', boss: true, x: (this.arenaEnd - 5) * T, y: this.G0 * T - 56, w: 54, h: 56, vx: 0, vy: 0, hp: hp * (this.co ? 1.8 : 1), max: hp * (this.co ? 1.8 : 1), c: '#ff3355', ec: 0, stomp: true, ph: 0, fire: 1.6, mode: 0, hitT: 0, sInv: 0 };
       this.en.push(b); this.bossObj = b; this.banner = { text: 'Le gardien du toit !', sub: '', t: 1.6 };
+      if (this.co && this.co.pend[b.id]) { const d = this.co.pend[b.id]; delete this.co.pend[b.id]; if (d === 'k') this.kill(b, true); else b.hp -= d; }
     }
     // Tir automatique
     this.cd -= dt;
     // Un mur de briques juste devant Pip passe avant les monstres plus lointains : Pip tire droit dessus
     const enT = this.nearest(), brk = this.brkTarget();
     const tgt = brk && (!enT || brk.dc <= 4 || Math.hypot(enT.x - this.px, enT.y - this.py) > brk.dc * this.T + 30) ? brk : enT || brk;
+    if (this.down || this.arrived) this.cd = Math.max(this.cd, 0.3);
     if (this.cd <= 0 && tgt) {
       this.cd = this.rate;
       const cx = this.px + 9, cy = this.py + 10, a = Math.atan2(tgt.y + tgt.h / 2 - cy, tgt.x + tgt.w / 2 - cx), n = this.multi + (this.power.triple > 0 ? 2 : 0);
@@ -8373,6 +8507,7 @@ const Plat = {
     if (this.beam) { const b = this.beam, y = this.py + 11; b.t -= dt; for (const e of this.en) { if (e.dead) continue; const ex = e.x + e.w / 2; if ((ex - this.px - 9) * b.dir > 0 && Math.abs(ex - this.px) < 330 && y > e.y - b.w && y < e.y + e.h + b.w) this.damage(e, b.dps * dt); } if (b.t <= 0) this.beam = null; }
     for (const z of this.zaps) z.t -= dt; this.zaps = this.zaps.filter(z => z.t > 0);
     for (const s of this.shots) {
+      if (s.ghost) { s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; if (s.life <= 0 || this.solid(Math.floor(s.x / T), Math.floor(s.y / T))) s.dead = true; else for (const e of this.en) if (!e.dead && !e.hid && s.x > e.x && s.x < e.x + e.w && s.y > e.y && s.y < e.y + e.h) { s.dead = true; e.hitT = 0.12; break; } continue; }
       if (s.grav) s.vy += s.grav * dt;
       if (s.accel) { const sp = Math.hypot(s.vx, s.vy), k = (sp + s.accel * dt) / sp; s.vx *= k; s.vy *= k; }
       if (s.home) { const tg = s.home.dead ? this.nearest() : s.home; s.home = tg; if (tg) { const a = Math.atan2(tg.y + tg.h / 2 - s.y, tg.x + tg.w / 2 - s.x), cur = Math.atan2(s.vy, s.vx); let d = a - cur; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; const na = cur + clamp(d, -5 * dt, 5 * dt), sp = Math.min(420, Math.hypot(s.vx, s.vy) + 300 * dt); s.vx = Math.cos(na) * sp; s.vy = Math.sin(na) * sp; } }
@@ -8400,30 +8535,31 @@ const Plat = {
     }
     this.shots = this.shots.filter(s => !s.dead);
     // Ennemis
-    const pcx = this.px + 9;
+    const pcx0 = this.px + 9, py0 = this.py;
     for (const e of this.en) {
       if (e.dead) continue;
+      const A = this.aimAt(e), pcx = A.cx;
       e.ph += dt; if (e.hitT > 0) e.hitT -= dt; if (e.sInv > 0) e.sInv -= dt;
       if (e.burn > 0) { e.burn -= dt; this.dot(e, e.burnD * dt); } if (e.acid > 0) { e.acid -= dt; this.dot(e, e.acidD * dt); }
       if (e.slowT > 0) e.slowT -= dt; if (e.frozen > 0) e.frozen -= dt;
       if (e.dead) continue;
       const edt = dt * (e.frozen > 0 ? 0 : e.slowT > 0 ? 0.45 : 1) * (this.power.chrono > 0 ? 0.45 : 1);
-      if (Math.abs(e.x - this.px) > 520 && !e.boss) continue;
+      if (Math.abs(e.x - this.px) > 520 && !e.boss && !(mtx >= 0 && Math.abs(e.x - mtx) < 520)) continue;
       if (e.boss) this.bossAI(e, edt);
       else if (e.fly) {
         e.x += e.vx * edt; if (this.solid(Math.floor((e.x + (e.vx > 0 ? e.w : 0)) / T), Math.floor((e.y + e.h / 2) / T)) || Math.abs(e.x - e.x0 || 0) > 140) e.vx *= -1;
         if (e.x0 === undefined) e.x0 = e.x;
         e.y = e.y0 + Math.sin(e.ph * 1.6) * 24;
-        if (e.t === 'jelly') { e.x += Math.sign(pcx - e.x - e.w / 2) * 30 * edt; e.y0 += clamp(this.py - 10 - e.y0, -1, 1) * 25 * edt; e.x0 = e.x; }
+        if (e.t === 'jelly') { e.x += Math.sign(pcx - e.x - e.w / 2) * 30 * edt; e.y0 += clamp(A.py - 10 - e.y0, -1, 1) * 25 * edt; e.x0 = e.x; }
         if (e.t === 'bomber') { e.fire -= edt; if (e.fire <= 0 && Math.abs(e.x + e.w / 2 - pcx) < 40) { e.fire = 2.2; this.eshots.push({ x: e.x + e.w / 2, y: e.y + e.h, vx: 0, vy: 60, g: 600, r: 6, bomb: true }); } }
       } else {
         e.vy = Math.min(e.vy + 1800 * edt, 900);
-        if (e.t === 'hop' && e.onG) { e.fire -= edt; if (e.fire <= 0) { e.vy = -480; e.vx = Math.sign(pcx - e.x - e.w / 2) * 90; e.fire = 1.2 + Math.random(); } }
-        if (e.t === 'charger') { const dx = pcx - e.x - e.w / 2; if (!e.dash && Math.abs(dx) < 200 && Math.abs(this.py - e.y) < 50) { e.dash = 1.2; e.vx = Math.sign(dx) * 260; } if (e.dash) { e.dash -= edt; if (e.dash <= 0) { e.dash = 0; e.vx = Math.sign(e.vx || 1) * 40; } } }
-        if (e.t === 'sniper') { e.vx = 0; e.fire -= edt; if (e.fire <= 0 && Math.abs(pcx - e.x) < 330) { if (!e.aim) { e.aim = 0.9; e.ax = pcx; e.ay = this.py + 13; } e.aim -= edt; if (e.aim <= 0.01) { const a = Math.atan2(e.ay - e.y - 6, e.ax - e.x - e.w / 2); this.eshots.push({ x: e.x + e.w / 2, y: e.y + 6, vx: Math.cos(a) * 440, vy: Math.sin(a) * 440, r: 4, fast: true }); e.aim = 0; e.fire = Math.max(1.8, 3.2 - this.lvl * 0.03); } } }
-        if (e.t === 'mole') { e.vx = 0; e.mt = (e.mt || 0) + edt; const f = e.mt % 3.4; const was = e.hid; e.hid = f < 1.8; if (was && !e.hid) { const a = Math.atan2(this.py - e.y - 60, pcx - e.x), v = 260; this.eshots.push({ x: e.x + e.w / 2, y: e.y, vx: Math.sign(pcx - e.x) * 120, vy: -360, g: 900, r: 5, rock: true }); } }
+        if (e.t === 'hop' && e.onG) { e.fire -= edt; if (e.fire <= 0) { e.vy = -480; e.vx = Math.sign(pcx - e.x - e.w / 2) * 90; e.fire = 1.2 + (e.rng || Math.random)(); } }
+        if (e.t === 'charger') { const dx = pcx - e.x - e.w / 2; if (!e.dash && Math.abs(dx) < 200 && Math.abs(A.py - e.y) < 50) { e.dash = 1.2; e.vx = Math.sign(dx) * 260; } if (e.dash) { e.dash -= edt; if (e.dash <= 0) { e.dash = 0; e.vx = Math.sign(e.vx || 1) * 40; } } }
+        if (e.t === 'sniper') { e.vx = 0; e.fire -= edt; if (e.fire <= 0 && Math.abs(pcx - e.x) < 330) { if (!e.aim) { e.aim = 0.9; e.ax = pcx; e.ay = A.py + 13; } e.aim -= edt; if (e.aim <= 0.01) { const a = Math.atan2(e.ay - e.y - 6, e.ax - e.x - e.w / 2); this.eshots.push({ x: e.x + e.w / 2, y: e.y + 6, vx: Math.cos(a) * 440, vy: Math.sin(a) * 440, r: 4, fast: true }); e.aim = 0; e.fire = Math.max(1.8, 3.2 - this.lvl * 0.03); } } }
+        if (e.t === 'mole') { e.vx = 0; e.mt = (e.mt || 0) + edt; const f = e.mt % 3.4; const was = e.hid; e.hid = f < 1.8; if (was && !e.hid) { const a = Math.atan2(A.py - e.y - 60, pcx - e.x), v = 260; this.eshots.push({ x: e.x + e.w / 2, y: e.y, vx: Math.sign(pcx - e.x) * 120, vy: -360, g: 900, r: 5, rock: true }); } }
         if (e.t === 'shielder') e.dir = Math.sign(pcx - e.x - e.w / 2) || 1;
-        if (e.t === 'turret') { e.vx = 0; e.fire -= edt; if (e.fire <= 0 && Math.abs(pcx - e.x) < 320) { e.fire = Math.max(1.2, 2.6 - this.lvl * 0.04); const a = Math.atan2(this.py + 13 - e.y, pcx - e.x - e.w / 2), v = 170 * (1 + Math.min(0.5, this.lvl * 0.01)); this.eshots.push({ x: e.x + e.w / 2, y: e.y + 4, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 4 }); } }
+        if (e.t === 'turret') { e.vx = 0; e.fire -= edt; if (e.fire <= 0 && Math.abs(pcx - e.x) < 320) { e.fire = Math.max(1.2, 2.6 - this.lvl * 0.04); const a = Math.atan2(A.py + 13 - e.y, pcx - e.x - e.w / 2), v = 170 * (1 + Math.min(0.5, this.lvl * 0.01)); this.eshots.push({ x: e.x + e.w / 2, y: e.y + 4, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 4 }); } }
         const vx0 = e.vx; e.wall = 0;
         this.move(e, edt);
         if (e.wall) e.vx = -vx0;
@@ -8431,7 +8567,7 @@ const Plat = {
         if (e.y > this.ROWS * T + 60) e.dead = true;
       }
       // Contact avec Pip : écrasement ou choc
-      if (e.hid) continue;
+      if (e.hid || this.down || this.arrived) continue;
       if (this.power.surcharge > 0 && this.px < e.x + e.w && this.px + this.w > e.x && this.py < e.y + e.h && this.py + this.h > e.y) { if (e.boss) { if (!(e.sInv > 0)) { e.sInv = 0.5; this.damage(e, e.max * 0.03); } } else this.kill(e); continue; }
       if (this.px < e.x + e.w && this.px + this.w > e.x && this.py < e.y + e.h && this.py + this.h > e.y) {
         const fromTop = this.vy > 60 && this.py + this.h - e.y < 16;
@@ -8451,34 +8587,35 @@ const Plat = {
       if (s.g) s.vy += s.g * sdt;
       s.x += s.vx * sdt; s.y += s.vy * sdt;
       if (this.solid(Math.floor(s.x / T), Math.floor(s.y / T)) || s.y > this.ROWS * T) { s.dead = true; if (s.bomb) this.fx.push({ ring: true, x: s.x, y: s.y, c: '#ffd84a', r: 24, t: 0.3 }); continue; }
-      if (s.x > this.px - 2 && s.x < this.px + this.w + 2 && s.y > this.py && s.y < this.py + this.h) { s.dead = true; this.hurt(); }
+      if (!this.down && !this.arrived && s.x > this.px - 2 && s.x < this.px + this.w + 2 && s.y > this.py && s.y < this.py + this.h) { s.dead = true; this.hurt(); }
     }
     this.eshots = this.eshots.filter(s => !s.dead && Math.abs(s.x - this.px) < 600);
     // Boulons et bonus
     const mr = 46 * this.magnet * (this.power.aimant > 0 ? 3 : 1);
     for (const b of this.bolts) {
       if (b.fall) { b.vy += 1400 * dt; b.x += b.vx * dt; b.y += b.vy * dt; if (this.solid(Math.floor(b.x / T), Math.floor((b.y + 5) / T))) { b.y = Math.floor((b.y + 5) / T) * T - 5; b.fall = false; } if (b.y > this.ROWS * T) b.dead = true; }
-      const dx = pcx - b.x, dy = this.py + 13 - b.y, d = Math.hypot(dx, dy);
+      if (this.down) continue;
+      const dx = pcx0 - b.x, dy = this.py + 13 - b.y, d = Math.hypot(dx, dy);
       if (d < mr) { b.x += dx / d * 300 * dt; b.y += dy / d * 300 * dt; b.fall = false; }
-      if (d < 16) { b.dead = true; this.gain(1); this.score += 5 * this.lvl; }
+      if (d < 16) { b.dead = true; this.gain(1); this.score += 5 * this.lvl; if (b.id) this.coEv(['bolt', b.id]); }
     }
     this.bolts = this.bolts.filter(b => !b.dead);
     for (const p of this.pows) {
       p.vy = Math.min(p.vy + 1200 * dt, 400); p.y += p.vy * dt;
       if (this.solid(Math.floor(p.x / T), Math.floor((p.y + 9) / T))) { p.y = Math.floor((p.y + 9) / T) * T - 9; p.vy = 0; }
-      if (Math.abs(p.x - pcx) < 18 && Math.abs(p.y - this.py - 13) < 22) {
-        p.dead = true; Sound.sfx && Sound.sfx('up');
-        if (p.k === 'coeur') { this.hp = Math.min(this.maxHp, this.hp + 1); this.fx.push({ txt: '+1 cœur', c: '#ff5468', x: pcx, y: this.py - 10, t: 1 }); }
-        else if (p.k === 'bouclier') { this.shields++; this.fx.push({ txt: 'Bouclier', c: '#4fa3ff', x: pcx, y: this.py - 10, t: 1 }); }
-        else if (p.k === 'gemme') { this.lvGems += p.n; this.fx.push({ txt: `+${p.n} ${GEM}`, c: '#5ef0ff', x: pcx, y: this.py - 10, t: 1 }); }
+      if (!this.down && Math.abs(p.x - pcx0) < 18 && Math.abs(p.y - this.py - 13) < 22) {
+        p.dead = true; Sound.sfx && Sound.sfx('up'); if (p.id) this.coEv(['pow', p.id, p.k === 'gemme' ? p.n : 0]);
+        if (p.k === 'coeur') { this.hp = Math.min(this.maxHp, this.hp + 1); this.fx.push({ txt: '+1 cœur', c: '#ff5468', x: pcx0, y: this.py - 10, t: 1 }); }
+        else if (p.k === 'bouclier') { this.shields++; this.fx.push({ txt: 'Bouclier', c: '#4fa3ff', x: pcx0, y: this.py - 10, t: 1 }); }
+        else if (p.k === 'gemme') { this.lvGems += p.n; this.fx.push({ txt: `+${p.n} ${GEM}`, c: '#5ef0ff', x: pcx0, y: this.py - 10, t: 1 }); }
         else if (p.k === 'arme') this.giveWeapon();
-        else if (p.k === 'impulsion') { for (const e of this.en) if (!e.dead && Math.abs(e.x - this.px) < 380) this.damage(e, e.boss ? e.max * 0.05 : e.max * 0.6); this.eshots = []; this.fx.push({ ring: true, x: pcx, y: this.py + 13, c: '#fff27a', r: 200, t: 0.5 }, { txt: 'Impulsion !', c: '#fff27a', x: pcx, y: this.py - 10, t: 1 }); buzz(60); }
-        else { this.power[p.k] = PLT_POW[p.k].d; this.fx.push({ txt: PLT_POW[p.k].name, c: PLT_POW[p.k].c, x: pcx, y: this.py - 10, t: 1 }); }
+        else if (p.k === 'impulsion') { for (const e of this.en) if (!e.dead && Math.abs(e.x - this.px) < 380) this.damage(e, e.boss ? e.max * 0.05 : e.max * 0.6); this.eshots = []; this.fx.push({ ring: true, x: pcx0, y: this.py + 13, c: '#fff27a', r: 200, t: 0.5 }, { txt: 'Impulsion !', c: '#fff27a', x: pcx0, y: this.py - 10, t: 1 }); buzz(60); }
+        else { this.power[p.k] = PLT_POW[p.k].d; this.fx.push({ txt: PLT_POW[p.k].name, c: PLT_POW[p.k].c, x: pcx0, y: this.py - 10, t: 1 }); }
       }
     }
     this.pows = this.pows.filter(p => !p.dead && p.y < this.ROWS * T);
     // Balise de fin
-    if (this.beacon.on && Math.abs(pcx - this.beacon.x) < 20) { if (this.secretRoom) { this.exitSecret(); return; } this.finishLevel(); } // la balise compte sur toute la hauteur
+    if (this.beacon.on && Math.abs(pcx0 - this.beacon.x) < 20 && !this.down) { if (this.secretRoom) { this.exitSecret(); return; } if (this.co) this.coArrive(); else this.finishLevel(); } // la balise compte sur toute la hauteur
   },
   /* Mécanismes : levier, plaque de pression, clé, interrupteur des lasers. */
   openGate(id, on) {
@@ -8491,15 +8628,15 @@ const Plat = {
   updMech(dt) {
     const T = this.T, over = m => this.px + this.w > m.x - 12 && this.px < m.x + 12 && this.py + this.h > m.y - 34 && this.py < m.y;
     for (const m of this.mech) {
-      if (m.k === 'lever' && !m.on && over(m)) { m.on = true; this.openGate(m.gid, true); this.fx.push({ txt: 'La herse se lève !', c: '#3ef2c8', x: 180, y: 340, t: 1.6, screen: true }); }
-      else if (m.k === 'button') { const G = this.gates[m.gid]; if (this.onG && over(m)) { m.on = true; this.openGate(m.gid, true); G.timer = m.dur; } else m.on = false; if (G && G.open && !m.on) { G.timer -= dt; if (G.timer <= 0) this.openGate(m.gid, false); } }
-      else if (m.k === 'key' && !m.got && Math.abs(this.px + 9 - m.x) < 20 && Math.abs(this.py + 13 - m.y) < 26) { m.got = true; this.key = (this.key || 0) + 1; Sound.sfx && Sound.sfx('up'); this.fx.push({ txt: 'Clé trouvée : la porte verrouillée s’ouvrira', c: '#ffd84a', x: 180, y: 340, t: 2, screen: true }); }
-      else if (m.k === 'switch' && !m.on && over(m)) { m.on = true; for (const z of this.haz) if (z.sw === m.gid) z.off = true; Sound.sfx && Sound.sfx('up'); this.fx.push({ txt: 'Lasers coupés !', c: '#ff9bd0', x: 180, y: 340, t: 1.6, screen: true }); }
+      if (m.k === 'lever' && !m.on && over(m)) { m.on = true; this.coEv(['mech', this.mech.indexOf(m)]); this.openGate(m.gid, true); this.fx.push({ txt: 'La herse se lève !', c: '#3ef2c8', x: 180, y: 340, t: 1.6, screen: true }); }
+      else if (m.k === 'button') { const G = this.gates[m.gid]; if (this.onG && over(m)) { if (!m.on) this.coEv(['mech', this.mech.indexOf(m)]); m.on = true; this.openGate(m.gid, true); G.timer = m.dur; } else m.on = false; if (G && G.open && !m.on) { G.timer -= dt; if (G.timer <= 0) this.openGate(m.gid, false); } }
+      else if (m.k === 'key' && !m.got && Math.abs(this.px + 9 - m.x) < 20 && Math.abs(this.py + 13 - m.y) < 26) { m.got = true; this.coEv(['mech', this.mech.indexOf(m)]); this.key = (this.key || 0) + 1; Sound.sfx && Sound.sfx('up'); this.fx.push({ txt: 'Clé trouvée : la porte verrouillée s’ouvrira', c: '#ffd84a', x: 180, y: 340, t: 2, screen: true }); }
+      else if (m.k === 'switch' && !m.on && over(m)) { m.on = true; this.coEv(['mech', this.mech.indexOf(m)]); for (const z of this.haz) if (z.sw === m.gid) z.off = true; Sound.sfx && Sound.sfx('up'); this.fx.push({ txt: 'Lasers coupés !', c: '#ff9bd0', x: 180, y: 340, t: 1.6, screen: true }); }
     }
     for (const id in this.gates) if (this.gates[id].anim > 0) this.gates[id].anim -= dt;
     if (this.key) { // porte verrouillée devant Pip
       const c = Math.floor((this.px + this.w / 2 + this.face * 20) / T);
-      if (this.tile(c, Math.floor((this.py + 13) / T)) === 10) { for (let r = 0; r < this.ROWS; r++) if (this.tile(c, r) === 10) this.g[c * this.ROWS + r] = 0; this.key--; Sound.sfx && Sound.sfx('up'); this.fx.push({ txt: 'Porte déverrouillée', c: '#ffd84a', x: 180, y: 340, t: 1.4, screen: true }); }
+      if (this.tile(c, Math.floor((this.py + 13) / T)) === 10) { for (let r = 0; r < this.ROWS; r++) if (this.tile(c, r) === 10) this.g[c * this.ROWS + r] = 0; this.coEv(['door', c]); this.key--; Sound.sfx && Sound.sfx('up'); this.fx.push({ txt: 'Porte déverrouillée', c: '#ffd84a', x: 180, y: 340, t: 1.4, screen: true }); }
     }
   },
   updHaz(dt) {
@@ -8518,28 +8655,29 @@ const Plat = {
     }
   },
   bossAI(e, dt) {
-    const T = this.T, pcx = this.px + 9;
+    const T = this.T, A = this.aimAt(e), pcx = A.cx;
     e.vy = Math.min(e.vy + 1800 * dt, 900);
     e.fire -= dt;
     if (e.onG) e.vx *= 0.9;
     if (e.fire <= 0 && e.onG) {
       e.mode = (e.mode + 1) % 3;
       if (e.mode === 0) { e.vy = -720; e.vx = clamp((pcx - e.x - e.w / 2) * 1.1, -260, 260); e.jumping = true; e.fire = 1.6; }
-      else if (e.mode === 1) { const v = 190 * (1 + Math.min(0.5, this.lvl * 0.01)); for (let i = -2; i <= 2; i++) { const a = Math.atan2(this.py + 13 - e.y - 20, pcx - e.x - e.w / 2) + i * 0.16; this.eshots.push({ x: e.x + e.w / 2, y: e.y + 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 5 }); } e.fire = 1.5; }
-      else { if (this.en.length < 8) for (const dx of [-30, 30]) this.spawn(this.lvl >= 7 && Math.random() < 0.4 ? 'spike' : 'crawl', e.x + e.w / 2 + dx, this.G0 * T); e.fire = 2; }
+      else if (e.mode === 1) { const v = 190 * (1 + Math.min(0.5, this.lvl * 0.01)); for (let i = -2; i <= 2; i++) { const a = Math.atan2(A.py + 13 - e.y - 20, pcx - e.x - e.w / 2) + i * 0.16; this.eshots.push({ x: e.x + e.w / 2, y: e.y + 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 5 }); } e.fire = 1.5; }
+      else { if (this.en.length < 8) for (const dx of [-30, 30]) this.spawn(this.lvl >= 7 && (e.rng || Math.random)() < 0.4 ? 'spike' : 'crawl', e.x + e.w / 2 + dx, this.G0 * T, null, e); e.fire = 2; }
     }
     const was = e.onG;
     this.move(e, dt);
     e.x = clamp(e.x, this.arenaStart * T, (this.arenaEnd - 1) * T - e.w);
     if (!was && e.onG && e.jumping) {
       e.jumping = false; this.fx.push({ ring: true, x: e.x + e.w / 2, y: e.y + e.h, c: '#ff3355', r: 90, t: 0.4 }); buzz(40);
-      if (this.onG && Math.abs(pcx - e.x - e.w / 2) < 110) this.hurt();
+      if (this.onG && Math.abs(this.px + 9 - e.x - e.w / 2) < 110) this.hurt();
     }
   },
   dronePos(i) { return [this.px + 9 - this.face * (22 + i * 14), this.py - 14 - i * 6 + Math.sin(this.t * 4 + i) * 3]; },
   finishLevel() {
     if (this.done) return;
     this.done = true; this.cleared = this.lvl;
+    if (this.co) { this.arrived = false; if (this.down) { this.down = false; this.hp = Math.max(1, Math.ceil(this.maxHp / 2)); this.coEv(['up']); } }
     this.gain(5 + this.lvl);
     if (this.regen && Math.random() < this.regen && this.hp < this.maxHp) this.hp++;
     this.bank();
@@ -8553,9 +8691,9 @@ const Plat = {
       const wTurn = this.lvl % 3 === 0 || this.boss, w = pool.filter(u => u.w), o = pool.filter(u => !u.w), pick = wTurn ? [...w.slice(0, 2), ...o.slice(0, 1)] : o.slice(0, 3);
       for (const u of pool) if (pick.length < 3 && !pick.includes(u)) pick.push(u);
       const got = crewMilestone(this.lvl); this.crewItems = (this.crewItems || 0) + got.length;
-      if (!pick.length) { this.paused = false; this.nextLevel(); return; }
+      if (!pick.length) { if (this.co) this.coNext(); else { this.paused = false; this.nextLevel(); } return; }
       Minigames.choose(`Niveau ${this.lvl} terminé · ${wTurn ? 'choisis une arme ou une amélioration' : 'choisis une amélioration'}`, pick.map(u => ({ id: u.id, name: u.name, desc: u.desc })),
-        u => { this.applyRun(u.id); Sound.sfx && Sound.sfx('up'); this.paused = false; this.nextLevel(); }, got.length ? crewMilestoneHtml(this.lvl, got) : '');
+        u => { this.applyRun(u.id); Sound.sfx && Sound.sfx('up'); if (this.co) this.coNext(); else { this.paused = false; this.nextLevel(); } }, got.length ? crewMilestoneHtml(this.lvl, got) : '');
     }, 1100);
   },
   bank() {
@@ -8567,7 +8705,7 @@ const Plat = {
   gameOver() {
     if (this.over) return;
     this.over = true; this.bank();
-    const e = PlatData.get(App.slot); e.run = null; e.runs++; e.kills += this.kills; Store.touch(App.slot);
+    const e = PlatData.get(App.slot); if (this.co) { this.coEv(['over']); MgCoop.saveRun(null); } else e.run = null; e.runs++; e.kills += this.kills; Store.touch(App.slot);
     setTimeout(() => Minigames.finish(this.result()), 900);
   },
   /* ---------- Dessin ---------- */
@@ -8669,7 +8807,14 @@ const Plat = {
     // Pip
     if (!this.over && this.power.surcharge > 0) { g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = `hsla(${(this.t * 600) % 360},100%,60%,.45)`; g.beginPath(); g.arc(this.px + 9, this.py + 13, 20, 0, TAU); g.fill(); g.restore(); }
     if (!this.over && this.power.vol > 0) { for (let i = 0; i < 2; i++) this.fx.push({ p: true, x: this.px + 9 - this.face * 8, y: this.py + 22, vx: (Math.random() - 0.5) * 30, vy: 120 + Math.random() * 60, c: i ? '#3ef2c8' : '#ffd84a', t: 0.25 }); }
-    if (!this.over && !(this.inv > 0 && !(this.power.surcharge > 0) && Math.floor(this.t * 12) % 2)) this.drawPip(g);
+    const mt = this.co && this.co.mate;
+    if (mt && !mt.gone) {
+      this.drawPip(g, mt);
+      g.fillStyle = '#ff9ee8'; g.font = '700 9px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText(mt.dn ? `${Multi.themName} · à relever` : Multi.themName, mt.x + 9, mt.y - 8);
+      if (mt.dn) { g.strokeStyle = `rgba(255,122,224,${0.5 + 0.4 * Math.sin(this.t * 6)})`; g.lineWidth = 2; g.setLineDash([4, 4]); g.beginPath(); g.arc(mt.x + 9, mt.y + 13, 22, 0, TAU); g.stroke(); g.setLineDash([]); }
+    }
+    if (this.down) { g.save(); g.globalAlpha = 0.5; g.translate(this.px + 9, this.py + 18); g.rotate(1.2); g.fillStyle = '#ff9b3d'; g.fillRect(-9, -8, 18, 16); g.restore(); g.strokeStyle = `rgba(255,84,104,${0.5 + 0.4 * Math.sin(this.t * 6)})`; g.lineWidth = 2; g.setLineDash([4, 4]); g.beginPath(); g.arc(this.px + 9, this.py + 13, 22, 0, TAU); g.stroke(); g.setLineDash([]); }
+    else if (!this.over && !(this.inv > 0 && !(this.power.surcharge > 0) && Math.floor(this.t * 12) % 2)) this.drawPip(g);
     if (!this.over && this.shields > 0) { // bulle de bouclier bien visible
       const bx = this.px + 9, by = this.py + 13, br = 24 + Math.sin(this.t * 4) * 1.5;
       const gr = g.createRadialGradient(bx, by, br * 0.4, bx, by, br); gr.addColorStop(0, 'rgba(79,163,255,0)'); gr.addColorStop(0.8, 'rgba(79,163,255,.18)'); gr.addColorStop(1, 'rgba(120,190,255,.45)');
@@ -8688,6 +8833,16 @@ const Plat = {
     // Interface
     if (this.hitFx > 0) { g.fillStyle = `rgba(255,40,70,${(this.hitFx / 0.35 * 0.25).toFixed(3)})`; g.fillRect(0, 0, W, this.CTRL); }
     for (let i = 0; i < this.maxHp; i++) this.heart(g, 16 + i * 20, 18, i < this.hp);
+    { const mt2 = this.co && this.co.mate;
+      if (mt2 && !mt2.gone) {
+        g.fillStyle = '#ff9ee8'; g.font = '700 9px "Chakra Petch", sans-serif'; g.textAlign = 'left'; g.fillText(`${Multi.themName} ${'♥'.repeat(Math.max(0, mt2.hp || 0))}${mt2.dn ? ' · à terre' : mt2.arr ? ' · balise' : ''}`, 8, 52);
+        const sx = mt2.x + 9 - this.camX, sy = mt2.y + 13 + this.VY - this.camY;
+        if (sx < 0 || sx > W || sy < 0 || sy > this.CTRL) {   // repère au bord de l'écran
+          const ex = clamp(sx, 14, W - 14), ey = clamp(sy, 70, this.CTRL - 14), a = Math.atan2(sy - ey, sx - ex);
+          g.save(); g.translate(ex, ey); g.rotate(a); g.fillStyle = '#ff7ae0'; g.beginPath(); g.moveTo(10, 0); g.lineTo(-6, -7); g.lineTo(-6, 7); g.closePath(); g.fill(); g.restore();
+          g.fillStyle = '#ff9ee8'; g.textAlign = 'center'; g.fillText(`${Math.round(Math.abs(mt2.x - this.px) / this.T)} m`, ex, ey + (ey > this.CTRL / 2 ? -12 : 18));
+        }
+      } }
     for (let i = 0; i < this.shields; i++) { g.strokeStyle = '#4fa3ff'; g.lineWidth = 2; g.beginPath(); g.arc(16 + i * 18, 38, 6, 0, TAU); g.stroke(); }
     g.font = '700 12px "JetBrains Mono", monospace'; g.textAlign = 'right'; g.fillStyle = '#ffd84a'; g.fillText(`${PLC} ${Math.round(this.runEc + this.lvEc)}`, 350, 22);
     { let wy = 58; g.textAlign = 'left'; g.font = '700 10px "Chakra Petch", sans-serif';
@@ -8731,17 +8886,18 @@ const Plat = {
     g.beginPath(); g.moveTo(x, y + 6); g.bezierCurveTo(x - 9, y, x - 7, y - 8, x, y - 3); g.bezierCurveTo(x + 7, y - 8, x + 9, y, x, y + 6); g.fill();
   },
   /* Pip, petit robot coursier (personnage original). */
-  drawPip(g) {
-    const x = this.px, y = this.py, f = this.face, run = this.onG && Math.abs(this.vx) > 20, ph = this.walk / 9;
+  drawPip(g, o) {
+    const M = o || this, x = o ? o.x : this.px, y = o ? o.y : this.py, f = M.face || 1, run = M.onG && Math.abs(M.vx || 0) > 20, ph = (M.walk || 0) / 9;
     g.save(); g.translate(x + 9, y); g.scale(f, 1);
+    if (o && o.dn) { g.globalAlpha = 0.45; g.rotate(Math.PI / 2 * 0.8); }
     // écharpe
-    g.strokeStyle = '#3ef2c8'; g.lineWidth = 3; g.beginPath(); g.moveTo(-2, 12); g.quadraticCurveTo(-10, 10 + Math.sin(this.t * 10) * 3, -16, 14 + Math.sin(this.t * 10 + 1) * 4); g.stroke();
+    g.strokeStyle = o ? '#ff7ae0' : '#3ef2c8'; g.lineWidth = 3; g.beginPath(); g.moveTo(-2, 12); g.quadraticCurveTo(-10, 10 + Math.sin(this.t * 10) * 3, -16, 14 + Math.sin(this.t * 10 + 1) * 4); g.stroke();
     // jambes
     g.strokeStyle = '#c9d3ea'; g.lineWidth = 3; g.lineCap = 'round';
     const l1 = run ? Math.sin(ph) * 5 : 0, airy = this.onG ? 0 : -3;
     g.beginPath(); g.moveTo(-4, 20); g.lineTo(-4 + l1, 26 + airy); g.moveTo(4, 20); g.lineTo(4 - l1, 26 + airy); g.stroke();
     // corps
-    g.fillStyle = '#ff9b3d'; g.strokeStyle = '#ffd8a8'; g.lineWidth = 1.5;
+    g.fillStyle = o ? '#ff4fa3' : '#ff9b3d'; g.strokeStyle = o ? '#ffc4e6' : '#ffd8a8'; g.lineWidth = 1.5;
     g.beginPath(); g.roundRect(-9, 4, 18, 17, 6); g.fill(); g.stroke();
     // visière
     g.fillStyle = '#0a0e18'; g.beginPath(); g.roundRect(-5, 7, 13, 7, 3); g.fill();
@@ -8754,11 +8910,12 @@ const Plat = {
     g.restore();
   },
   info() { return `Niveau ${this.lvl} · ${this.kills} détruits`; },
-  quit() { if (this.over) return; this.paused = true; this.quitting = true; Minigames.finish(this.result()); },
+  quit() { if (this.over) return; this.paused = true; this.quitting = true; if (this.co) this.coEv(['quit']); Minigames.finish(this.result()); },
   result() { return { lvl: this.lvl, cleared: this.cleared, score: this.score, kills: this.kills, ec: this.runEc, items: this.runItems, gems: this.runGems, crew: this.crewItems || 0, quit: !!this.quitting }; },
   reward(r) {
     const s = App.slot, e = PlatData.get(s);
     this.quitting = false;
+    if (this.co) return MgCoop.reward(this, r);
     if (r.quit) return { summary: 'partie sauvegardée', title: 'Partie en pause', text: `Tu reprendras au début du niveau ${r.lvl}. Les boulons de ce niveau n’étaient pas encore gagnés.` };
     const cleared = r.cleared, prev = e.best;
     let gems = 0;
@@ -8772,7 +8929,106 @@ const Plat = {
     if (gems) parts.push(mgGrant(s, { gems }));
     return { best: e.best, summary: parts.join(' · '), title: cleared > prev ? 'Nouveau record !' : 'Fin de la course', text: `Niveaux franchis : ${cleared} · score ${fmtBig(r.score)} · ${r.kills} ennemis détruits.` };
   },
-  afterClose() { PlatHub.open(); }
+  afterClose() { if (MgCoop.after()) return; PlatHub.open(); },
+  /* ---------- Coopération ---------- */
+  coEv(e) { if (this.co) MgCoop.ev(e); },
+  aimAt(e) {
+    const me = { cx: this.px + 9, py: this.py }, m = this.co && this.co.mate;
+    if (!m || m.dn || m.gone || m.arr) return me;
+    const mm = { cx: m.x + 9, py: m.y };
+    if (this.down || this.arrived) return mm;
+    const ex = e.x + e.w / 2, ey = e.y + e.h / 2;
+    return (mm.cx - ex) ** 2 + (mm.py - ey) ** 2 < (me.cx - ex) ** 2 + (me.py - ey) ** 2 ? mm : me;
+  },
+  coTick(dt) {
+    const co = this.co, m = co.mate;
+    co.sendT -= dt;
+    if (co.sendT <= 0) {
+      co.sendT = Net.relay ? 0.12 : 0.07;
+      const d = co.out; co.out = {}; for (const k in d) d[k] = Math.round(d[k] * 10) / 10;
+      MgCoop.send({ t: 'xs', x: Math.round(this.px), y: Math.round(this.py), f: this.face, g: this.onG ? 1 : 0, vx: Math.round(this.vx), hp: this.hp, mh: this.maxHp, sh: this.shields, dn: this.down ? 1 : 0, ar: this.arrived ? 1 : 0, r: this.rate, n: this.multi, l: this.lvl, d, k: co.kills.splice(0) });
+    }
+    if (m && !m.gone) {
+      m.x += (m.tx - m.x) * Math.min(1, dt * 14); m.y += (m.ty - m.y) * Math.min(1, dt * 14); m.walk = (m.walk || 0) + Math.abs(m.vx || 0) * dt;
+      // tirs d'apparence du coéquipier (ses vrais dégâts arrivent par le réseau)
+      co.mcd -= dt;
+      if (co.mcd <= 0 && !m.dn && !m.arr) {
+        co.mcd = m.r || 0.4;
+        let best = null, bd = 260 * 260; for (const e of this.en) { if (e.dead || e.hid) continue; const dd = (e.x + e.w / 2 - m.x - 9) ** 2 + (e.y + e.h / 2 - m.y - 10) ** 2; if (dd < bd) { bd = dd; best = e; } }
+        if (best) { const a = Math.atan2(best.y + best.h / 2 - m.y - 10, best.x + best.w / 2 - m.x - 9), n = Math.min(4, m.n || 1); for (let i = 0; i < n; i++) this.shots.push({ ghost: true, x: m.x + 9, y: m.y + 10, vx: Math.cos(a + (i - (n - 1) / 2) * 0.12) * 480, vy: Math.sin(a + (i - (n - 1) / 2) * 0.12) * 480, life: 0.7, hit: new Map() }); }
+      }
+      // relever le coéquipier à terre en le touchant
+      if (m.dn && !this.down && Math.abs(m.x - this.px) < 22 && Math.abs(m.y - this.py) < 30) { m.dn = false; this.coEv(['rv']); this.fx.push({ txt: `${Multi.themName} est relevé !`, c: '#5dff9a', x: 180, y: 200, t: 2, screen: true }); }
+    }
+    // balise : niveau terminé quand les deux y sont, ou 10 s après le premier
+    const mateIn = !m || m.gone || co.solo || m.dn || m.arr;
+    if (this.arrived || (m && m.arr)) {
+      co.finT += dt;
+      if ((this.arrived && mateIn) || (this.down && m && m.arr) || co.finT > 10) { if (!this.arrived) { this.px = this.beacon.x - 9; this.py = this.beacon.y - this.h - 2; this.vx = this.vy = 0; } this.finishLevel(); }
+    }
+  },
+  coArrive() {
+    if (this.arrived) return;
+    this.arrived = true; this.vx = 0; this.coEv(['arr']);
+    this.fx.push({ txt: 'À la balise ! On attend ton coéquipier…', c: '#3ef2c8', x: 180, y: 200, t: 2.5, screen: true });
+  },
+  coDown() {
+    this.down = true; this.hp = 0; this.inv = 99; this.vx = 0; this.coEv(['dn']);
+    this.fx.push({ txt: 'Pip à terre : ton coéquipier peut te relever en te touchant', c: '#ff5468', x: 180, y: 200, t: 3.5, screen: true });
+  },
+  coMsg(m) {
+    const co = this.co; if (!co) return;
+    if (m.t === 'xs') {
+      const mt = co.mate || (co.mate = { x: m.x, y: m.y });
+      Object.assign(mt, { tx: m.x, ty: m.y, face: m.f, onG: !!m.g, vx: m.vx, hp: m.hp, mh: m.mh, sh: m.sh, dn: !!m.dn, arr: !!m.ar, r: m.r, n: m.n, gone: false });
+      if (m.l !== this.lvl) return;   // pas encore dans le même niveau
+      for (const id in m.d || {}) { const e = this.en.find(o => o.id === id); if (e) { if (!e.dead) { e.hp -= m.d[id]; e.hitT = 0.1; if (e.hp <= 0) this.kill(e, true); } } else if (co.pend[id] !== 'k') co.pend[id] = (co.pend[id] || 0) + m.d[id]; }
+      for (const id of m.k || []) { const e = this.en.find(o => o.id === id); if (e) this.kill(e, true); else co.pend[id] = 'k'; }
+      return;
+    }
+    if (m.t !== 'xe') return;
+    for (const ev of m.e) {
+      const [k, a, b, c] = ev;
+      if (k === 'bolt') { const x = this.bolts.find(o => o.id === a); if (x) x.dead = true; this.gain(1); this.score += 5 * this.lvl; }
+      else if (k === 'pow') { const x = this.pows.find(o => o.id === a); if (x) x.dead = true; if (b) this.lvGems += b; }
+      else if (k === 'crate') this.hitCrate(a, b, true);
+      else if (k === 'brk') this.hitTile(a, b, 0, true);
+      else if (k === 'door') { for (let r = 0; r < this.ROWS; r++) if (this.tile(a, r) === 10) this.g[a * this.ROWS + r] = 0; }
+      else if (k === 'mech') {
+        const mm = this.mech[a]; if (!mm) continue;
+        if (mm.k === 'lever' && !mm.on) { mm.on = true; this.openGate(mm.gid, true); }
+        else if (mm.k === 'button') { const G = this.gates[mm.gid]; this.openGate(mm.gid, true); if (G) G.timer = mm.dur; }
+        else if (mm.k === 'key' && !mm.got) { mm.got = true; this.fx.push({ txt: `${Multi.themName} a trouvé la clé`, c: '#ffd84a', x: 180, y: 340, t: 2, screen: true }); }
+        else if (mm.k === 'switch' && !mm.on) { mm.on = true; for (const z of this.haz) if (z.sw === mm.gid) z.off = true; }
+      }
+      else if (k === 'dn') { if (co.mate) co.mate.dn = true; this.fx.push({ txt: `${Multi.themName} est à terre : va le toucher pour le relever !`, c: '#ff7ae0', x: 180, y: 220, t: 3, screen: true }); }
+      else if (k === 'rv') { if (this.down) { this.down = false; this.hp = Math.max(1, Math.ceil(this.maxHp / 2)); this.inv = 2; this.coEv(['up']); this.fx.push({ txt: 'Relevé par ton coéquipier !', c: '#5dff9a', x: 180, y: 200, t: 2, screen: true }); } }
+      else if (k === 'up') { if (co.mate) co.mate.dn = false; }
+      else if (k === 'arr') { if (co.mate) co.mate.arr = true; if (!this.arrived) this.fx.push({ txt: `${Multi.themName} est à la balise : 10 s pour le rejoindre !`, c: '#3ef2c8', x: 180, y: 200, t: 3, screen: true }); }
+      else if (k === 'wd') { co.wd = Math.max(co.wd, a); if (this.waiting && co.wd >= this.lvl) this.coGo(); }
+      else if (k === 'over') { if (co.mate) co.mate.dn = true; if (this.down) this.gameOver(); }
+      else if (k === 'quit') this.coSolo(`${Multi.themName} a quitté la course : tu continues seul`);
+      else if (k === 'chest') MgCoop.chestShow(this, a);
+      else if (k === 'gift') MgCoop.gift(a);
+      void c;
+    }
+  },
+  coSolo(msg) {
+    const co = this.co; if (!co || co.solo) return;
+    co.solo = true; if (co.mate) co.mate.gone = true;
+    this.fx.push({ txt: msg, c: '#ffcf4a', x: 180, y: 220, t: 3.5, screen: true });
+    if (this.down) { this.gameOver(); return; }
+    if (this.waiting) this.coGo();
+  },
+  coNext() {
+    const co = this.co;
+    this.coEv(['wd', this.lvl]);
+    if (co.solo || co.wd >= this.lvl) { this.coGo(); return; }
+    this.waiting = true;
+    const ov = $('mgOver'); ov.hidden = false;
+    ov.innerHTML = `<div class="card mgend"><h2>Niveau ${this.lvl} terminé</h2><div class="mpwait"><i class="mpspin"></i><p>${esc(Multi.themName)} choisit son amélioration…</p></div></div>`;
+  },
+  coGo() { this.waiting = false; const ov = $('mgOver'); ov.hidden = true; ov.innerHTML = ''; this.paused = false; this.nextLevel(); }
 };
 
 /* ---------- Plongée des Abysses ---------- */
@@ -10427,8 +10683,9 @@ function openSoundModal() {
    La page publiée garde toujours la même adresse : chaque nouvelle version
    remplace la précédente, et le raccourci du téléphone ouvre la dernière.
    ===================================================================== */
-const APP_VERSION = '7.28.0';
+const APP_VERSION = '7.29.0';
 const CHANGELOG = [
+  { v: '7.29.0', date: '06.11.2026', items: ['À deux : nouveaux modes « Expédition à deux » et « Toits à deux ». Mêmes ennemis et même niveau pour les deux, chacun son vaisseau ou son Pip avec son équipement ; les dégâts des deux s’additionnent sur chaque ennemi.', 'Éclats et boulons : chaque destruction et chaque ramassage rapportent aux deux. Les objets trouvés vont dans un coffre commun, partagé au Shifumi à la fin.', 'Expédition : un vaisseau détruit revient au secteur suivant si l’autre tient bon. Toits : un Pip à terre se relève quand l’autre le touche ; le niveau se termine quand les deux sont à la balise (10 s après le premier).', 'Après chaque secteur ou niveau, chacun choisit son amélioration. Record d’équipe par ami (gemmes à chaque record), départ tous les 5 secteurs ou niveaux atteints ensemble, reprise de la partie depuis le salon.'] },
   { v: '7.28.0', date: '06.11.2026', items: ['À deux : au lancement, la sélection des tourelles s’ouvre directement chez les deux joueurs. Ensuite, chacun voit si l’autre est prêt et touche « Je suis prêt » ; la partie démarre quand les deux sont prêts (coopération, course et duel).', 'Coopération : les emplacements de chacun sont mélangés tout le long du parcours.'] },
   { v: '7.27.1', date: '06.11.2026', items: ['Coopération : les emplacements de chacun sont maintenant mélangés tout le long du parcours (en alternance), au lieu d’une moitié de carte chacun.'] },
   { v: '7.27.0', date: '05.11.2026', items: ['Multijoueur : ton propre serveur de mise en relation sur Cloudflare (gratuit). Chaque code de partie ouvre un salon privé : les deux téléphones s’y retrouvent, et il sert de relais quand la connexion directe est impossible. PeerJS et MQTT restent en secours.', 'Test de connexion : nouvelle ligne « Ton serveur Cloudflare ».'] },
@@ -14847,7 +15104,7 @@ const Tuto = {
    - Ensuite tout passe directement d'un téléphone à l'autre ; relais gratuit (Open Relay) si le réseau bloque.
    - Modes : Coopération (même carte, l'hôte fait tourner la partie), Course (meilleur score), Duel (renforts ennemis).
    ===================================================================== */
-const MP_PROTO = 3;
+const MP_PROTO = 4;
 const COOP_MAX = 30;
 const MP_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 /* Second canal de mise en relation, utilisé en même temps que PeerJS : des courtiers MQTT publics et gratuits
@@ -15265,7 +15522,8 @@ const Coop = {
   key(a, b) { return [a, b].sort().join('~'); },
   rec(s, key, name) { s.coopTeams = s.coopTeams || {}; const r = s.coopTeams[key] || (s.coopTeams[key] = { name, cleared: 0, stars: {}, run: null, t: 0 }); if (name) r.name = name; return r; },
   merge(a, b) {
-    const o = { name: a.name, cleared: Math.max(a.cleared || 0, b.cleared || 0), stars: Object.assign({}, a.stars), run: null, t: Math.max(a.t || 0, b.t || 0) };
+    const o = { name: a.name, cleared: Math.max(a.cleared || 0, b.cleared || 0), stars: Object.assign({}, a.stars), run: null, t: Math.max(a.t || 0, b.t || 0), mg: {} };
+    for (const k of ['exp', 'plat']) o.mg[k] = Math.max((a.mg || {})[k] || 0, (b.mg || {})[k] || 0);
     for (const k in b.stars || {}) o.stars[k] = Math.max(o.stars[k] || 0, b.stars[k]);
     const ra = a.run, rb = b.run; o.run = ra && rb ? (ra.t >= rb.t ? ra : rb) : ra || rb || null;
     return o;
@@ -15284,6 +15542,120 @@ const Coop = {
     if (c) Gear.equip(ps, c, item);
     Store.touch(s);
     return item;
+  }
+};
+
+
+/* =====================================================================
+   COOPÉRATION DANS LES ÉVÉNEMENTS (Expédition de l'Arche, Course des Toits)
+   Chaque téléphone fait tourner la même partie (même graine : mêmes ennemis, même niveau) avec son propre
+   vaisseau / son propre Pip et son équipement. Les deux s'échangent leur position et les dégâts infligés :
+   chaque ennemi perd les PV retirés par les deux joueurs. Éclats et boulons : chaque destruction rapporte
+   à tous les deux. Les objets trouvés vont dans un coffre commun, partagé au Shifumi à la fin.
+   ===================================================================== */
+const MG_COOP = {
+  exp: { name: 'Expédition à deux', icon: '🚀', game: 'exp', unit: 'Secteur', units: 'Secteurs', desc: 'L’Expédition de l’Arche à deux : vos deux vaisseaux dans le même secteur, chacun avec son équipement. Chaque ennemi détruit rapporte les éclats aux deux. Un vaisseau détruit revient au secteur suivant si l’autre tient bon. Les objets trouvés se partagent au Shifumi.' },
+  plat: { name: 'Toits à deux', icon: '🏃', game: 'plat', unit: 'Niveau', units: 'Niveaux', desc: 'La Course des Toits à deux : le même niveau, chacun son Pip et son équipement. Ce que l’un ramasse rapporte aux deux. Un Pip à terre se relève quand l’autre le touche, ou au niveau suivant. Le niveau se termine quand les deux sont à la balise. Les objets se partagent au Shifumi.' }
+};
+const MgCoop = {
+  g: null,
+  get game() { return this.g ? (this.g.kind === 'exp' ? Expedition : Plat) : null; },
+  send(o) { if (this.g && !this.g.solo && Multi.linked) Multi.send(o); },
+  ev(e) { const g = this.g; if (!g) return; g.evq.push(e); if (!g.evT) g.evT = setTimeout(() => { g.evT = 0; if (g.evq.length) this.send({ t: 'xe', e: g.evq.splice(0) }); }, 30); },
+  open(s, kind) { return Minigames.open(s, MG_COOP[kind].game); },
+  /* Départs possibles : secteur 1 puis tous les 5, jusqu'au record de l'équipe. */
+  starts(kind) { const b = ((Multi.team && Multi.team.mg) || {})[kind] || 0, out = [1]; for (let w = 5; w <= b; w += 5) out.push(w); return out; },
+  runKey(kind) { return (Multi.teamKey || '?') + ':' + kind; },
+  run(kind) { const r = (Multi.real.mgRuns || {})[this.runKey(kind)]; return r || null; },
+  saveRun(r) {
+    const g = this.g; if (!g) return;
+    const s = Multi.real; s.mgRuns = s.mgRuns || {};
+    if (r) s.mgRuns[this.runKey(g.kind)] = Object.assign(r, { t: Date.now() }); else delete s.mgRuns[this.runKey(g.kind)];
+    Store.touch(s);
+  },
+  start(opt) {
+    Modal.close();
+    const kind = opt.mode, own = opt.resume ? this.run(kind) : null;
+    this.g = { kind, role: opt.role, seed: String(opt.seed), solo: false, chest: [], evq: [], evT: 0 }; Multi.sf = null;
+    const G = this.game;
+    G.opts = { wave: opt.wave, resume: own && own.wave === opt.wave ? own : null, coop: this.g };
+    App.show('events');
+    Minigames.run(G);
+    Toast.show(`${MG_COOP[kind].icon} ${MG_COOP[kind].name} avec ${Multi.themName} : ton personnage est en bleu, le sien en rose`);
+  },
+  onMsg(m) {
+    const G = this.game; if (!G || !G.co) return;
+    if (m.t === 'xs' || m.t === 'xe') G.coMsg(m);
+  },
+  lost() { const G = this.game; if (G && G.co && G.coSolo) G.coSolo(`Connexion perdue avec ${Multi.themName} : tu continues seul`); },
+  /* Coffre commun : seul l'hôte tire les objets (pour qu'il n'y en ait qu'un exemplaire). */
+  rollItem(kind, lvl, luck, minR) {
+    const D = kind === 'exp' ? ExpData : PlatData, C = D.C, r = pickRarity(lvl, luck, minR || 0);
+    if (r === C.setR) { const S = C.sets[Math.floor(Math.random() * C.sets.length)], p = S.pieces[Math.floor(Math.random() * S.pieces.length)]; return { kind, b: S.id + '_' + p[0], r: C.setR, lvl: 1, n: 1 }; }
+    const b = C.gear[Math.floor(Math.random() * C.gear.length)];
+    return { kind, b: b.id, r, lvl: 1, n: 1 };
+  },
+  chestAdd(game, minR) {
+    const g = this.g; if (!g || g.role !== 'host') return;
+    const it = this.rollItem(g.kind, game.wave || game.lvl || 1, game.luck || 1, minR);
+    g.chest.push(it);
+    this.chestShow(game, it); game.coEv(['chest', it]);
+  },
+  chestShow(game, it) {
+    const D = it.kind === 'exp' ? ExpData : PlatData, R = D.rar(it);
+    game.fx.push({ txt: `Coffre commun : ${D.name(it)}`, c: R.color, x: 180, y: 400, t: 2.6, screen: true });
+  },
+  itemHtml(it) {
+    const D = it.kind === 'exp' ? ExpData : PlatData, R = D.rar(it), sl = D.C.slots.find(x => x.id === D.model(it).slot);
+    return { name: D.name(it), color: R.color, sub: `${R.name}${sl ? ' · ' + sl.icon + ' ' + sl.name : ''}` };
+  },
+  take(it) {
+    const D = it.kind === 'exp' ? ExpData : PlatData, s = Multi.real, e = D.get(s);
+    const item = { uid: e.next++, b: it.b, r: it.r, lvl: 1, n: 1 };
+    if (e.items.length >= 80 && !D.isSet(item)) e[D.C.cur] += D.recycleValue(item); else { e.items.push(item); e.fresh++; }
+    Store.touch(s);
+  },
+  /* Fin de partie : record d'équipe (gemmes) puis partage du coffre. */
+  reward(game, r) {
+    const g = this.g, s = Multi.real, kind = g.kind, info = MG_COOP[kind];
+    const t = Multi.team || {}; t.mg = t.mg || {};
+    const prev = t.mg[kind] || 0, cleared = r.cleared;
+    let gems = 0;
+    if (cleared > prev) { gems = (cleared - prev) * 3; for (let k = Math.floor(prev / 5) + 1; k * 5 <= cleared; k++) gems += 20; t.mg[kind] = cleared; if (Multi.teamKey) { s.coopTeams[Multi.teamKey] = t; } }
+    Store.touch(s);
+    const D = kind === 'exp' ? ExpData : PlatData, cur = D.C.sym, parts = [`${fmtBig(r.ec)} ${cur} ${D.C.curName}`];
+    if (r.crew) parts.push(`${r.crew} objet${r.crew > 1 ? 's' : ''} pour l’équipage`);
+    if (gems) parts.push(mgGrant(s, { gems }));
+    g.result = r;
+    return { summary: parts.join(' · '), title: r.quit ? 'Partie arrêtée' : cleared > prev ? 'Record d’équipe !' : 'Fin de la partie à deux',
+      text: `${info.units} franchis : ${cleared} · record de l’équipe : ${Math.max(prev, cleared)}.${r.quit ? ' Reprise possible depuis le salon.' : ''}` };
+  },
+  /* Carte de fin : zone de Shifumi pour le coffre, puis retour au salon. */
+  endCard(ov) {
+    const g = this.g; if (!g) return;
+    const card = ov.querySelector('.mgend'), btn = $('mgClose');
+    btn.textContent = Multi.linked && !g.solo ? 'Retour au salon' : 'Fermer';
+    const z = document.createElement('div'); z.id = 'sfZone'; card.insertBefore(z, card.querySelector('.row'));
+    if (g.role === 'host' && g.chest.length && Multi.linked && !g.solo && g.result && g.result.quit) {
+      const items = g.chest.splice(0); this.send({ t: 'xe', e: [['gift', items]] });
+      z.innerHTML = `<div class="sfbox"><p class="eyebrow">Coffre commun</p><p>Tu as quitté la partie : ${esc(Multi.themName)} garde le coffre (${items.length} objet${items.length > 1 ? 's' : ''}).</p></div>`;
+    } else if (g.role === 'host' && g.chest.length && Multi.linked && !g.solo) {
+      btn.hidden = true;
+      const items = g.chest.splice(0);
+      setTimeout(() => { this.send({ t: 'sfs', items }); Multi.sfStart(items); }, 600);
+    } else if (g.role === 'host' && g.chest.length) {
+      const items = g.chest.splice(0); for (const it of items) this.take(it);
+      z.innerHTML = `<div class="sfbox"><p class="eyebrow">Coffre commun</p><p>Ton coéquipier est parti : tu gardes tout (${items.length} objet${items.length > 1 ? 's' : ''}).</p></div>`;
+    } else if (Multi.sf && Multi.sf.i < Multi.sf.items.length) { btn.hidden = true; Multi.sfRender(); }
+    else if (g.role !== 'host' && Multi.linked && !g.solo) { btn.hidden = true; z.innerHTML = `<div class="sfbox"><p class="hint">Ouverture du coffre commun…</p></div>`; setTimeout(() => { if (!Multi.sf) { btn.hidden = false; z.innerHTML = ''; } }, 4000); }
+  },
+  sfDone() { const b = $('mgClose'); if (b) b.hidden = false; },
+  gift(items) { for (const it of items) this.take(it); Toast2.show(`${Multi.themName} t’a laissé le coffre commun : ${items.length} objet${items.length > 1 ? 's' : ''}`); },
+  after() {
+    if (!this.g) return false;
+    this.g = null;
+    if (Multi.linked) setTimeout(() => Multi.lobby(), 30); else App.show('events');
+    return true;
   }
 };
 
@@ -15414,9 +15786,20 @@ const Multi = {
   lobby() {
     if (!this.linked) { this.open(); return; }
     const host = this.role === 'host', md = MP_MODES[this.mode], coop = this.mode === 'coop', dis = host ? '' : 'disabled';
-    const modes = Object.entries(MP_MODES).map(([id, m]) => `<button type="button" class="mpmode${id === this.mode ? ' on' : ''}" data-mode="${id}" ${dis}><span>${m.icon}</span><b>${m.name}</b></button>`).join('');
+    const allModes = Object.assign({}, MP_MODES, MG_COOP);
+    if (MG_COOP[this.mode] && !this.mgOk(this.mode)) this.mode = 'coop';
+    const md2 = allModes[this.mode];
+    const modes = Object.entries(allModes).map(([id, m]) => { const ok = !MG_COOP[id] || this.mgOk(id); return `<button type="button" class="mpmode${id === this.mode ? ' on' : ''}${MG_COOP[id] ? ' ev' : ''}" data-mode="${id}" ${dis || (ok ? '' : 'disabled')}><span>${m.icon}</span><b>${m.name}</b>${ok ? '' : `<small>niv. ${Minigames.req(m.game)}</small>`}</button>`; }).join('');
     let mid;
-    if (coop) {
+    if (MG_COOP[this.mode]) {
+      const kind = this.mode, st = MgCoop.starts(kind), w = st.includes(this.mgStart) ? this.mgStart : st[st.length - 1], best = ((this.team && this.team.mg) || {})[kind] || 0, run = MgCoop.run(kind);
+      this.mgStart = w;
+      mid = `<div class="mplvl"><button class="btn small" type="button" id="mpLm" ${dis} aria-label="Départ précédent">−</button>` +
+        `<div><small>Départ</small><b>${md2.unit} ${w}</b><small>Record de l’équipe : ${best}</small></div>` +
+        `<button class="btn small" type="button" id="mpLp" ${dis} aria-label="Départ suivant">+</button></div>` +
+        (run ? `<button class="btn gold mpresume" type="button" id="mpResume" ${dis}>↻ Reprendre au ${md2.unit.toLowerCase()} ${run.wave}</button>` : '') +
+        `<p class="hint" style="text-align:center">Chacun joue avec son équipement et son atelier. Départ possible tous les 5 ${kind === 'exp' ? 'secteurs' : 'niveaux'} déjà atteints ensemble (des améliorations au hasard compensent les ${kind === 'exp' ? 'secteurs' : 'niveaux'} sautés).</p>`;
+    } else if (coop) {
       const t = this.team || { cleared: 0, stars: {} }, k = Math.min(this.coopK, this.coopMax()), lv = getCoopLevel(k), st = t.stars[k] || 0, pool = Coop.pool(t.cleared);
       mid = `<div class="mplvl"><button class="btn small" type="button" id="mpLm" ${dis} aria-label="Opération précédente">−</button>` +
         `<div><small>Opération ${k} · ${'★'.repeat(st)}${'☆'.repeat(3 - st)}</small><b>${esc(lv.name)}</b><small>${lv.waves} vagues · ${lv.paths ? '' : ''}${lv.branches.length + 1} entrées${lv.boss ? ' · boss' : ''}</small></div>` +
@@ -15434,7 +15817,7 @@ const Multi = {
     }
     Modal.open({ title: 'Partie à deux', html:
       `<div class="mpwho"><span class="mpdot"></span><b>${esc(this.name)}</b><i>${host ? 'hôte' : 'invité'}</i><span class="mpvs">+</span><b>${esc(this.themName)}</b><i>${host ? 'invité' : 'hôte'}</i></div>` +
-      `<div class="mpmodes">${modes}</div><p class="hint mpdesc">${esc(md.desc)}</p>` + mid +
+      `<div class="mpmodes">${modes}</div><p class="hint mpdesc">${esc(md2.desc)}</p>` + mid +
       (host ? '' : `<p class="hint" style="text-align:center">${esc(this.themName)} choisit le mode et le niveau.</p>`),
       actions: host ? [{ label: 'Quitter', fn: () => this.disconnect() }, { label: 'Lancer la partie', cls: 'primary', fn: () => this.launch() }]
         : [{ label: 'Quitter', fn: () => this.disconnect() }, { label: `En attente de ${this.themName}…`, keep: true, fn: () => Toast2.show(`${this.themName} lance la partie`) }] });
@@ -15442,11 +15825,17 @@ const Multi = {
     if (!host) return;
     $('modalCard').querySelectorAll('[data-mode]').forEach(b => { b.onclick = () => { this.mode = b.dataset.mode; this.pushLobby(); this.lobby(); }; });
     $('modalCard').querySelectorAll('[data-fair]').forEach(b => { b.onclick = () => { this.fair = b.dataset.fair === '1'; this.pushLobby(); this.lobby(); }; });
-    const step = d => { if (coop) this.coopK = clamp(this.coopK + d, 1, this.coopMax()); else this.level = clamp(this.level + d, 1, this.maxLevel()); this.pushLobby(); this.lobby(); };
+    const step = d => {
+      if (MG_COOP[this.mode]) { const st = MgCoop.starts(this.mode), i = clamp(st.indexOf(this.mgStart) + d, 0, st.length - 1); this.mgStart = st[i]; }
+      else if (coop) this.coopK = clamp(this.coopK + d, 1, this.coopMax()); else this.level = clamp(this.level + d, 1, this.maxLevel());
+      this.pushLobby(); this.lobby();
+    };
     $('mpLm').onclick = () => step(-1); $('mpLp').onclick = () => step(1);
     const r = $('mpResume'); if (r) r.onclick = () => { Modal.close(); this.launch(true); };
   },
-  pushLobby() { this.send({ t: 'lobby', mode: this.mode, level: this.level, k: this.coopK, fair: this.fair }); },
+  pushLobby() { this.send({ t: 'lobby', mode: this.mode, level: this.level, k: this.coopK, fair: this.fair, w: this.mgStart || 1 }); },
+  /* Événements à deux : il faut que les deux joueurs aient débloqué le jeu. */
+  mgOk(kind) { const req = Minigames.req(MG_COOP[kind].game); return (this.real.unlocked || 1) >= req && ((this.them && this.them.top) || 1) >= req; },
   inLobby() { return !$('modal').hidden && $('modalCard').querySelector('.mpmodes'); },
   disconnect() { this.send({ t: 'bye' }); setTimeout(() => Net.close(), 150); this.linked = false; this.them = null; if (this.game) this.leaveGame(); },
 
@@ -15458,7 +15847,8 @@ const Multi = {
     if (this.role !== 'host' || !this.linked) return;
     const coop = this.mode === 'coop', t = this.team, run = coop && resume && t.run ? t.run : null;
     const p = { mode: this.mode, fair: this.fair, run, level: this.level, k: coop ? (run ? run.k : Math.min(this.coopK, this.coopMax())) : 0, pool: coop ? Coop.pool(t.cleared) : null };
-    this.send({ t: 'prep', mode: p.mode, level: p.level, k: p.k, fair: p.fair, pool: p.pool, picks: run ? run.allowedBy : null });
+    if (MG_COOP[this.mode]) { const r = resume && MgCoop.run(this.mode); p.wave = r ? r.wave : this.mgStart || 1; p.resume = !!r; }
+    this.send({ t: 'prep', mode: p.mode, level: p.level, k: p.k, fair: p.fair, pool: p.pool, picks: run ? run.allowedBy : null, wave: p.wave, resume: p.resume });
     this.prepStart(p, run ? run.allowedBy.h : null);
   },
   prepStart(p, preset) {
@@ -15466,11 +15856,11 @@ const Multi = {
     this.prep = Object.assign(p, { me: { ids: preset || null, ready: false }, them: { ids: null, ready: false, mods: null } });
     if (preset) { this.sendPick(); this.readyView(); } else this.pickTowers();
   },
-  pickNeeded() { const p = this.prep; return p.mode === 'coop' ? p.pool.length > LOADOUT_MAX : Loadout.needed(this.real, p.level); },
+  pickNeeded() { const p = this.prep; return MG_COOP[p.mode] ? false : p.mode === 'coop' ? p.pool.length > LOADOUT_MAX : Loadout.needed(this.real, p.level); },
   pickTowers() {
     const p = this.prep; if (!p) return;
     this.prepView = false;
-    if (!this.pickNeeded()) { p.me.ids = p.mode === 'coop' ? p.pool.slice() : null; this.sendPick(); this.readyView(); return; }
+    if (!this.pickNeeded()) { p.me.ids = MG_COOP[p.mode] ? [] : p.mode === 'coop' ? p.pool.slice() : null; this.sendPick(); this.readyView(); return; }
     const title = p.mode === 'coop' ? `Tes tourelles · Opération ${p.k}` : `Tes tourelles · ${MP_MODES[p.mode].name}`;
     Loadout.pick(p.mode === 'coop' ? p.k : p.level, ids => { if (this.prep !== p) return; p.me.ids = ids; this.sendPick(); this.readyView(); },
       { pool: p.pool || undefined, title, ok: 'Valider', cancel: () => this.prepCancel() });
@@ -15479,13 +15869,15 @@ const Multi = {
   readyView() {
     const p = this.prep; if (!p || this.game) return;
     this.prepView = true;
-    const ids = p.me.ids || Loadout.unlocked(this.real, p.level).map(t => t.id);
+    const ids = MG_COOP[p.mode] ? [] : p.me.ids || Loadout.unlocked(this.real, p.level).map(t => t.id);
     const them = p.them.ready ? `<p class="mpready ok">✅ ${esc(this.themName)} est prêt${p.me.ready ? '' : ' : à toi !'}</p>`
       : p.them.ids || p.them.picked ? `<p class="mpready">⏳ ${esc(this.themName)} n’est pas encore prêt</p>`
       : `<p class="mpready">⏳ ${esc(this.themName)} choisit ses tourelles…</p>`;
-    const where = p.mode === 'coop' ? `Opération ${p.k} · ${esc(getCoopLevel(p.k).name)}` : `${MP_MODES[p.mode].icon} ${esc(MP_MODES[p.mode].name)} · niveau ${p.level}`;
+    const where = MG_COOP[p.mode] ? `${MG_COOP[p.mode].icon} ${esc(MG_COOP[p.mode].name)} · ${p.resume ? 'reprise au' : 'départ au'} ${MG_COOP[p.mode].unit.toLowerCase()} ${p.wave}` + (p.resume && !(MgCoop.run(p.mode) && MgCoop.run(p.mode).wave === p.wave) ? '<br><small>(ta sauvegarde ne correspond pas : tu repars avec des améliorations au hasard)</small>' : '')
+      : p.mode === 'coop' ? `Opération ${p.k} · ${esc(getCoopLevel(p.k).name)}` : `${MP_MODES[p.mode].icon} ${esc(MP_MODES[p.mode].name)} · niveau ${p.level}`;
     Modal.open({ title: p.me.ready ? 'Tu es prêt' : 'Prêt ?', html:
       `<p class="hint" style="text-align:center">${where}</p>` +
+      (MG_COOP[p.mode] ? `<p class="hint" style="text-align:center">${esc(MG_COOP[p.mode].desc)}</p>` : '') +
       `<div class="mptowers">${ids.map(id => `<canvas width="40" height="40" data-ticon="${id}" title="${esc(TOWER_BY_ID[id].name)}"></canvas>`).join('')}</div>` + them +
       (p.me.ready ? `<div class="mpwait"><i class="mpspin"></i><p>${p.them.ready ? 'C’est parti…' : `En attente de ${esc(this.themName)}…`}</p></div>` : ''),
       actions: p.me.ready
@@ -15499,6 +15891,12 @@ const Multi = {
   tryStart() {
     const p = this.prep; if (this.role !== 'host' || !p || !p.me.ready || !p.them.ready) return;
     this.prep = null; this.prepping = false; this.prepView = false;
+    if (MG_COOP[p.mode]) {
+      const seed = Math.floor(Math.random() * 1e9);
+      this.send({ t: 'start', mode: p.mode, wave: p.wave, resume: p.resume, seed });
+      this.begin({ mode: p.mode, role: 'host', wave: p.wave, resume: p.resume, seed });
+      return;
+    }
     if (p.mode === 'coop') {
       const pm = { h: Coop.mods(this.real), g: p.them.mods || Coop.mods(this.real) }, allowedBy = { h: p.me.ids, g: p.them.ids || p.pool.slice() }, snap = p.run ? p.run.snap : null;
       this.send({ t: 'start', mode: 'coop', k: p.k, pm, allowedBy, snap });
@@ -15509,6 +15907,7 @@ const Multi = {
     this.begin({ mode: p.mode, level: p.level, role: 'host', fair: p.fair }, p.me.ids);
   },
   begin(opt, ids) {
+    if (MG_COOP[opt.mode]) { MgCoop.start(opt); return; }
     this.myRes = null; this.oppRes = null; this.opp = null; this.dead = []; this.outbox = []; this.sendCd = 0; this.sf = null; this.pinMode = false;
     this.game = { mode: opt.mode, role: opt.role, level: opt.level, k: opt.k, ghost: opt.mode === 'coop' && opt.role === 'guest', host: opt.mode === 'coop' && opt.role === 'host', fair: !!opt.fair, t0: 0, eco: 0, ecoT: 6, buildT: 0, loot: [], savedW: -1, notes: {} };
     Modal.close();
@@ -15537,6 +15936,7 @@ const Multi = {
 
   /* ---------- Messages ---------- */
   onMsg(m) {
+    if (m.t === 'xs' || m.t === 'xe') { MgCoop.onMsg(m); return; }
     const b = GameView.battle, inGame = !!(this.game && b && b.multi);
     switch (m.t) {
       case 'hello':
@@ -15558,11 +15958,11 @@ const Multi = {
         if (this.role === 'host' && !m.final) { this.send({ t: 'team', rec: this.team, final: 1 }); this.coopK = this.coopMax(); this.pushLobby(); }
         if (this.inLobby()) this.lobby();
         return;
-      case 'lobby': this.mode = m.mode; this.level = m.level; this.coopK = m.k || 1; this.fair = !!m.fair; if (this.inLobby() || (!this.game && !this.prepping)) this.lobby(); return;
+      case 'lobby': if (MgCoop.g) return; this.mode = m.mode; this.level = m.level; this.coopK = m.k || 1; this.fair = !!m.fair; this.mgStart = m.w || 1; if (this.inLobby() || (!this.game && !this.prepping)) this.lobby(); return;
       case 'prep':
         if (this.game) this.leaveGame(true);
         this.mode = m.mode; this.level = m.level; this.fair = !!m.fair; if (m.k) this.coopK = m.k;
-        this.prepStart({ mode: m.mode, level: m.level, k: m.k, fair: !!m.fair, pool: m.pool, run: null }, m.picks ? m.picks.g : null);
+        this.prepStart({ mode: m.mode, level: m.level, k: m.k, fair: !!m.fair, pool: m.pool, run: null, wave: m.wave, resume: !!m.resume }, m.picks ? m.picks.g : null);
         return;
       case 'pick': if (this.prep) { this.prep.them.ids = m.ids; this.prep.them.picked = true; this.prep.them.mods = m.mods; if (this.prepView) this.readyView(); } return;
       case 'ready': if (this.prep) { this.prep.them.ready = !!m.on; if (this.prepView) this.readyView(); else if (m.on) Toast2.show(`${this.themName} est prêt`); this.tryStart(); } return;
@@ -15572,6 +15972,7 @@ const Multi = {
         if (this.game) this.leaveGame(true);
         this.mode = m.mode;
         if (m.mode === 'coop') { this.begin({ mode: 'coop', k: m.k, role: 'guest', pm: m.pm, allowedBy: m.allowedBy, snap: m.snap }); return; }
+        if (MG_COOP[m.mode]) { this.prep = null; this.prepView = false; this.begin({ mode: m.mode, role: 'guest', wave: m.wave, resume: m.resume, seed: m.seed }); return; }
         this.level = m.level; this.fair = !!m.fair;
         { const ids = this.prep && this.prep.me.ids; this.prep = null; this.prepView = false; this.begin({ mode: m.mode, level: m.level, role: 'guest', fair: m.fair }, ids || null); }
         return;
@@ -15603,6 +16004,7 @@ const Multi = {
     }
   },
   lost(bye) {
+    if (MgCoop.g) { this.linked = false; this.prep = null; this.prepping = false; this.prepView = false; MgCoop.lost(); return; }
     const b = GameView.battle, inGame = !!(this.game && b && b.multi);
     this.linked = false; this.prep = null; this.prepping = false; this.prepView = false;
     if (inGame && b.ghost) { this.leaveGame(); Modal.open({ title: 'Connexion perdue', html: `<p style="text-align:center">La liaison avec ${esc(this.themName)} est coupée${bye ? ' (il a quitté)' : ''}. L’opération est sauvegardée à la dernière vague terminée.</p>`, actions: [{ label: 'Retour à la carte', cls: 'primary' }] }); return; }
@@ -15988,17 +16390,32 @@ const Multi = {
   sfRender(reveal) {
     const sf = this.sf, z = $('sfZone'); if (!sf || !z) return;
     if (sf.i >= sf.items.length) {
+      if (sf.items[0] && sf.items[0].kind) {
+        z.innerHTML = `<div class="sfbox"><p class="eyebrow">Coffre commun partagé</p><p>${sf.won.length ? `Tu remportes : ${sf.won.map(it => { const h = MgCoop.itemHtml(it); return `<b style="color:${h.color}">${esc(h.name)}</b>`; }).join(', ')}` : 'Tu ne remportes rien cette fois.'}</p><p class="hint">Les objets gagnés sont dans ton ${sf.items[0].kind === 'exp' ? 'Hangar' : 'Vestiaire'}.</p></div>`;
+        MgCoop.sfDone(); return;
+      }
       z.innerHTML = `<div class="sfbox"><p class="eyebrow">Butin partagé</p><p>${sf.won.length ? `Tu remportes : ${sf.won.map(it => `<b style="color:${RARITY[it.r].color}">${esc(GEAR_BY_ID[it.t].name)}</b>`).join(', ')}` : 'Tu ne remportes rien cette fois.'}</p>` +
         `<p class="hint">Les objets gagnés vont dans ton équipement de coopération (salon › 🎒).</p></div>`;
       this.endButtons(); return;
     }
-    const it = sf.items[sf.i], R = RARITY[it.r], me = this.role === 'host' ? 'h' : 'g';
+    const it = sf.items[sf.i], me = this.role === 'host' ? 'h' : 'g';
+    if (it.kind) {
+      const h = MgCoop.itemHtml(it);
+      z.innerHTML = `<div class="sfbox"><p class="eyebrow">Coffre commun · objet ${sf.i + 1} / ${sf.items.length}</p><div class="sfitem" style="--rc:${h.color}"><div><b style="color:${h.color}">${esc(h.name)}</b><small>${esc(h.sub)}</small></div></div>` + this.sfPickHtml(reveal, me) + '</div>';
+      z.querySelectorAll('[data-rps]').forEach(bt => { bt.onclick = () => this.sfPick(+bt.dataset.rps); });
+      return;
+    }
+    const R = RARITY[it.r];
     z.innerHTML = `<div class="sfbox"><p class="eyebrow">Partage du butin · objet ${sf.i + 1} / ${sf.items.length}</p>` +
       `<div class="sfitem r${it.r}" style="--rc:${R.color}">${gearIcon(it, 44)}<div><b style="color:${R.color}">${esc(GEAR_BY_ID[it.t].name)}</b><small>${esc(R.name)} · ${esc(GEAR_SLOT_BY_ID[GEAR_BY_ID[it.t].slot].name)}</small><small>${Gear.stats(it).map(([st, v]) => esc(Gear.statText(st, v))).join(' · ')}</small></div></div>` +
-      (reveal ? `<div class="sfreveal"><span>${esc(this.name)}<b>${RPS[reveal[me]][1]}</b></span><i>vs</i><span>${esc(this.themName)}<b>${RPS[reveal[me === 'h' ? 'g' : 'h']][1]}</b></span></div><p class="sfres">${reveal.w === 'd' ? 'Égalité : on rejoue !' : reveal.w === me ? 'Tu remportes l’objet !' : `${esc(this.themName)} remporte l’objet`}</p>`
-        : `<div class="sfpick">${RPS.map(([n, ic], i) => `<button type="button" data-rps="${i}" class="${sf.mine === i ? 'on' : ''}" ${sf.mine !== null ? 'disabled' : ''} aria-label="${n}"><b>${ic}</b><small>${n}</small></button>`).join('')}</div>` +
-          `<p class="hint">${sf.mine === null ? 'Pierre, feuille ou ciseaux ? Un seul coup.' : `En attente de ${esc(this.themName)}…`}</p>`) + '</div>';
+      this.sfPickHtml(reveal, me) + '</div>';
     z.querySelectorAll('[data-rps]').forEach(bt => { bt.onclick = () => this.sfPick(+bt.dataset.rps); });
+  },
+  sfPickHtml(reveal, me) {
+    const sf = this.sf;
+    return reveal ? `<div class="sfreveal"><span>${esc(this.name)}<b>${RPS[reveal[me]][1]}</b></span><i>vs</i><span>${esc(this.themName)}<b>${RPS[reveal[me === 'h' ? 'g' : 'h']][1]}</b></span></div><p class="sfres">${reveal.w === 'd' ? 'Égalité : on rejoue !' : reveal.w === me ? 'Tu remportes l’objet !' : `${esc(this.themName)} remporte l’objet`}</p>`
+      : `<div class="sfpick">${RPS.map(([n, ic], i) => `<button type="button" data-rps="${i}" class="${sf.mine === i ? 'on' : ''}" ${sf.mine !== null ? 'disabled' : ''} aria-label="${n}"><b>${ic}</b><small>${n}</small></button>`).join('')}</div>` +
+        `<p class="hint">${sf.mine === null ? 'Pierre, feuille ou ciseaux ? Un seul coup.' : `En attente de ${esc(this.themName)}…`}</p>`;
   },
   sfPick(c) {
     const sf = this.sf; if (!sf || sf.mine !== null) return;
@@ -16019,7 +16436,7 @@ const Multi = {
     Sound.sfx && Sound.sfx(m.w === me ? 'up' : 'ui');
     setTimeout(() => {
       if (m.w !== 'd') {
-        if (m.w === me) { Coop.take(this.real, it); sf.won.push(it); } else sf.lost.push(it);
+        if (m.w === me) { if (it.kind) MgCoop.take(it); else Coop.take(this.real, it); sf.won.push(it); } else sf.lost.push(it);
         sf.i++;
       }
       sf.h = null; sf.g = null; sf.mine = null;
